@@ -25,12 +25,16 @@
             // 
             // dataGridViewClipboard
             // 
+            this.dataGridViewClipboard.AllowUserToAddRows = false;
+            this.dataGridViewClipboard.AllowUserToDeleteRows = false;
+            this.dataGridViewClipboard.AllowUserToResizeRows = false;
             this.dataGridViewClipboard.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewClipboard.Location = new System.Drawing.Point(18, 18);
             this.dataGridViewClipboard.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dataGridViewClipboard.Name = "dataGridViewClipboard";
+            this.dataGridViewClipboard.ReadOnly = true;
             this.dataGridViewClipboard.RowHeadersWidth = 62;
-            this.dataGridViewClipboard.Size = new System.Drawing.Size(840, 457);
+            this.dataGridViewClipboard.Size = new System.Drawing.Size(1356, 457);
             this.dataGridViewClipboard.TabIndex = 0;
             this.dataGridViewClipboard.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewClipboard_CellContentClick);
             // 
@@ -60,7 +64,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(876, 538);
+            this.ClientSize = new System.Drawing.Size(1387, 538);
             this.Controls.Add(this.btnDelete);
             this.Controls.Add(this.btnRefresh);
             this.Controls.Add(this.dataGridViewClipboard);
