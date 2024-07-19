@@ -33,12 +33,6 @@ namespace ClipboardManager
             logFile.AutoFlush = true;
         }
 
-        private void Log(string message)
-        {
-            string logMessage = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} - {message}";
-            Console.WriteLine(logMessage);  // This will output to the Debug console in Visual Studio
-            logFile.WriteLine(logMessage);  // This will write to the log file
-        }
 
         private void InitializeDataGridView()
         {
@@ -124,37 +118,6 @@ namespace ClipboardManager
         }
 
 
-        private void LogClipboardContents(string message)
-        {
-            Debug.WriteLine(message);
-            if (!NativeMethods.OpenClipboard(this.Handle))
-            {
-                Debug.WriteLine("Failed to open clipboard.");
-                return;
-            }
-
-            try
-            {
-                uint format = 0;
-                while ((format = NativeMethods.EnumClipboardFormats(format)) != 0)
-                {
-                    try
-                    {
-                        string formatInfo = GetFormatInfo(format);
-                        Debug.WriteLine(formatInfo);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"Error logging format {format}: {ex.Message}");
-                    }
-                }
-            }
-            finally
-            {
-                NativeMethods.CloseClipboard();
-            }
-            Debug.WriteLine("");
-        }
         private void RefreshClipboardItems()
         {
             Console.WriteLine("Starting RefreshClipboardItems");
@@ -264,17 +227,6 @@ namespace ClipboardManager
 
             Console.WriteLine("RefreshClipboardItems completed");
         }
-        private uint[] EnumerateClipboardFormats()
-        {
-            List<uint> formats = new List<uint>();
-            uint format = 0;
-            while ((format = NativeMethods.EnumClipboardFormats(format)) != 0)
-            {
-                Log($"Found format: {format}");
-                formats.Add(format);
-            }
-            return formats.ToArray();
-        }
 
 
         // Update data grid view with clipboard contents during refresh
@@ -298,62 +250,7 @@ namespace ClipboardManager
                 : GetStandardFormatName(format);
         }
 
-        private byte[] RetrieveClipboardData(uint format, IntPtr hData, UIntPtr dataSize)
-        {
-            Log($"RetrieveClipboardData called for format {format}");
-            if (hData == IntPtr.Zero)
-            {
-                Log($"Invalid handle for format {format}");
-                return null;
-            }
 
-            Log("Attempting to lock global memory");
-            IntPtr ptr = NativeMethods.GlobalLock(hData);
-            if (ptr == IntPtr.Zero)
-            {
-                Log($"GlobalLock failed for format {format}");
-                return null;
-            }
-
-            try
-            {
-                int size = (int)dataSize.ToUInt32();
-                Log($"Allocating byte array of size {size}");
-                byte[] data = new byte[size];
-                Log("Copying memory");
-                Marshal.Copy(ptr, data, 0, size);
-                Log("Memory copy completed");
-                return data;
-            }
-            catch (Exception ex)
-            {
-                Log($"Error copying data for format {format}: {ex.Message}");
-                Log($"Stack trace: {ex.StackTrace}");
-                return null;
-            }
-            finally
-            {
-                Log("Unlocking global memory");
-                NativeMethods.GlobalUnlock(hData);
-            }
-        }
-
-        private string GetDataPreview(ClipboardItem item)
-        {
-            if (item.Data == null)
-                return "N/A";
-
-            switch (item.FormatId)
-            {
-                case 1: // CF_TEXT
-                case 7: // CF_OEMTEXT
-                    return Encoding.Default.GetString(item.Data);
-                case 13: // CF_UNICODETEXT
-                    return Encoding.Unicode.GetString(item.Data);
-                default:
-                    return $"(Binary data: {item.DataSize} bytes)";
-            }
-        }
 
         private bool RemoveClipboardFormat(uint formatToRemove)
         {
@@ -546,76 +443,7 @@ namespace ClipboardManager
             public uint Format { get; set; }
             public IntPtr Data { get; set; }
         }
-        private string GetFormatInfo(uint format)
-        {
-            StringBuilder formatName = new StringBuilder(512);
-            NativeMethods.GetClipboardFormatName(format, formatName, formatName.Capacity);
-            string name = formatName.ToString();
 
-            if (string.IsNullOrEmpty(name))
-            {
-                name = GetStandardFormatName(format);
-            }
-
-            IntPtr hData = NativeMethods.GetClipboardData(format);
-            string size = hData != IntPtr.Zero ? NativeMethods.GlobalSize(hData).ToString() : "N/A";
-
-            // Handle potential encoding issues when retrieving data
-            string dataPreview = "Unable to retrieve data";
-            if (hData != IntPtr.Zero)
-            {
-                try
-                {
-                    IntPtr ptr = NativeMethods.GlobalLock(hData);
-                    if (ptr != IntPtr.Zero)
-                    {
-                        try
-                        {
-                            int dataSize = (int)NativeMethods.GlobalSize(hData).ToUInt32();
-                            byte[] data = new byte[dataSize];
-                            Marshal.Copy(ptr, data, 0, dataSize);
-
-                            // Try to get a preview of the data, handling potential encoding issues
-                            dataPreview = GetDataPreview(format, data);
-                        }
-                        finally
-                        {
-                            NativeMethods.GlobalUnlock(hData);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    dataPreview = $"Error retrieving data: {ex.Message}";
-                }
-            }
-
-            return $"Format: {format}, Name: {name}, Size: {size}, Preview: {dataPreview}";
-        }
-
-        private string GetDataPreview(uint format, byte[] data)
-        {
-            if (data == null || data.Length == 0)
-                return "N/A";
-
-            try
-            {
-                switch (format)
-                {
-                    case 1: // CF_TEXT
-                    case 7: // CF_OEMTEXT
-                        return Encoding.Default.GetString(data).Substring(0, Math.Min(50, data.Length));
-                    case 13: // CF_UNICODETEXT
-                        return Encoding.Unicode.GetString(data).Substring(0, Math.Min(50, data.Length / 2));
-                    default:
-                        return $"(Binary data: {data.Length} bytes)";
-                }
-            }
-            catch (Exception ex)
-            {
-                return $"Error previewing data: {ex.Message}";
-            }
-        }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
