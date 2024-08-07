@@ -6,6 +6,7 @@ using System.Text;
 using System.Diagnostics;
 using System.IO;
 using System.Drawing;
+using System.Linq;
 
 namespace ClipboardManager
 {
@@ -14,6 +15,18 @@ namespace ClipboardManager
         private List<ClipboardItem> clipboardItems = new List<ClipboardItem>();
 
         private StreamWriter logFile;
+
+        private static readonly Dictionary<uint, List<uint>> SynthesizedFormatsMap = new Dictionary<uint, List<uint>>()
+        {
+            { 2, new List<uint> { 8, 17 } }, // CF_BITMAP -> CF_DIB, CF_DIBV5
+            { 8, new List<uint> { 2, 9, 17 } }, // CF_DIB -> CF_BITMAP, CF_PALETTE, CF_DIBV5
+            { 17, new List<uint> { 2, 8, 9 } }, // CF_DIBV5 -> CF_BITMAP, CF_DIB, CF_PALETTE
+            { 14, new List<uint> { 3 } }, // CF_ENHMETAFILE -> CF_METAFILEPICT
+            { 3, new List<uint> { 14 } }, // CF_METAFILEPICT -> CF_ENHMETAFILE
+            { 7, new List<uint> { 1, 13 } }, // CF_OEMTEXT -> CF_TEXT, CF_UNICODETEXT
+            { 1, new List<uint> { 7, 13 } }, // CF_TEXT -> CF_OEMTEXT, CF_UNICODETEXT
+            { 13, new List<uint> { 7, 1 } }, // CF_UNICODETEXT -> CF_OEMTEXT, CF_TEXT
+        };
 
 
         public Form1()
@@ -25,6 +38,8 @@ namespace ClipboardManager
 
             // Initial tool settings
             dropdownContentsViewMode.SelectedIndex = 0; // Default index 0 is "Text" view mode
+
+
         }
 
         private void InitializeLogging()
@@ -118,6 +133,10 @@ namespace ClipboardManager
         {
             Console.WriteLine("Starting RefreshClipboardItems");
 
+            // Count the number of different data formats currently on the clipboard
+            int formatCount = NativeMethods.CountClipboardFormats();
+            Console.WriteLine($"Number of clipboard formats: {formatCount}");
+
             // Attempt to open the clipboard, retrying up to 10 times with a 10ms delay
             Console.WriteLine("Attempting to open clipboard");
             int retryCount = 10;  // Number of retries
@@ -144,6 +163,7 @@ namespace ClipboardManager
             try
             {
                 CopyClipboardData();
+                DetermineSynthesizedFormats();
             }
             finally
             {
@@ -243,10 +263,8 @@ namespace ClipboardManager
 
                     case 2: // CF_BITMAP
                         Console.WriteLine("Processing CF_BITMAP");
-                        using (Bitmap bmp = Bitmap.FromHbitmap(item.Handle))
-                        {
-                            dataInfo = $"Bitmap: {bmp.Width}x{bmp.Height}, {bmp.PixelFormat}";
-                        }
+                        dataInfo = ProcessBitmap(item.Handle, out processedData);
+                        item.DataSize = (ulong)processedData.Length;
                         break;
 
                     case 8: // CF_DIB
@@ -277,8 +295,60 @@ namespace ClipboardManager
                 }
 
                 item.Data = processedData; // Update the processed data in the item
+                string handleType = item.AssumedSynthesized ? "Synthesized" : "Standard"; // Determine handle type
 
-                UpdateClipboardItemsGridView(item.FormatName, item.FormatId.ToString(), "Handle", item.DataSize.ToString(), dataInfo);
+                UpdateClipboardItemsGridView(item.FormatName, item.FormatId.ToString(), handleType, item.DataSize.ToString(), dataInfo);
+            }
+        }
+
+        private void DetermineSynthesizedFormats()
+        {
+            List<uint> formatOrder = clipboardItems.Select(item => item.FormatId).ToList();
+
+            for (int i = 0; i < formatOrder.Count; i++)
+            {
+                uint currentFormat = formatOrder[i];
+                foreach (var kvp in SynthesizedFormatsMap)
+                {
+                    if (kvp.Value.Contains(currentFormat))
+                    {
+                        // If a synthesized format, check if it comes after the standard format
+                        int standardFormatIndex = formatOrder.IndexOf(kvp.Key);
+                        if (standardFormatIndex >= 0 && standardFormatIndex < i)
+                        {
+                            ClipboardItem item = clipboardItems.Find(ci => ci.FormatId == currentFormat);
+                            if (item != null)
+                            {
+                                item.AssumedSynthesized = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+
+        private bool IsSynthesizedFormat(uint previousFormat, uint currentFormat)
+        {
+            if (SynthesizedFormatsMap.ContainsKey(previousFormat))
+            {
+                return SynthesizedFormatsMap[previousFormat].Contains(currentFormat);
+            }
+            return false;
+        }
+
+        private string ProcessBitmap(IntPtr hBitmap, out byte[] bitmapData)
+        {
+            using (Bitmap bmp = Bitmap.FromHbitmap(hBitmap))
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+                    bitmapData = ms.ToArray();
+                    return $"Bitmap: {bmp.Width}x{bmp.Height}, {bmp.PixelFormat}";
+                }
             }
         }
 
@@ -641,11 +711,16 @@ namespace ClipboardManager
     {
         public string FormatName { get; set; }
         public uint FormatId { get; set; }
-        public IntPtr Handle { get; set; } // Added Handle property
+        public IntPtr Handle { get; set; }
         public ulong DataSize { get; set; } // Changed from uint to ulong
         public byte[] Data { get; set; }
         public byte[] RawData { get; set; }
+        public bool AssumedSynthesized { get; set; } // New property to indicate if the format is assumed to be synthesized
     }
+
+
+
+
 
 
     [StructLayout(LayoutKind.Sequential)]
@@ -731,7 +806,8 @@ namespace ClipboardManager
 
         [DllImport("gdi32.dll")]
         public static extern IntPtr CopyEnhMetaFile(IntPtr hemfSrc, string lpszFile);
-
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern int CountClipboardFormats();
 
 
         public const uint GMEM_MOVEABLE = 0x0002;
