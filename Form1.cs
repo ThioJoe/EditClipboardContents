@@ -536,7 +536,6 @@ namespace ClipboardManager
 
         private void dataGridViewClipboard_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            // Get the raw processedData for the selected clipboard item based on the clicked row, and display it in the rich text box as text
             if (e.RowIndex >= 0)
             {
                 DataGridViewRow selectedRow = dataGridViewClipboard.Rows[e.RowIndex];
@@ -546,19 +545,37 @@ namespace ClipboardManager
                     if (item != null)
                     {
                         richTextBoxContents.Clear();
-                        if (item.RawData != null)
-                        {
-                            // Display the raw processedData as a UTF-8 encoded string
-                            richTextBoxContents.Text = Encoding.UTF8.GetString(item.RawData);
-                        }
-                        else
-                        {
-                            richTextBoxContents.Text = "Data not available";
-                        }
+                        DisplayClipboardData(item);
                     }
                 }
             }
         }
+
+
+        private void DisplayClipboardData(ClipboardItem item)
+        {
+            if (item == null || item.RawData == null)
+            {
+                richTextBoxContents.Text = "Data not available";
+                return;
+            }
+
+            switch (dropdownContentsViewMode.SelectedIndex)
+            {
+                case 0: // Text view mode
+                    richTextBoxContents.Text = Encoding.UTF8.GetString(item.RawData);
+                    break;
+
+                case 1: // Hex view mode
+                    richTextBoxContents.Text = BitConverter.ToString(item.RawData).Replace("-", " ");
+                    break;
+
+                default:
+                    richTextBoxContents.Text = "Unknown view mode";
+                    break;
+            }
+        }
+
 
         private void toolStripButtonRefresh_Click(object sender, EventArgs e)
         {
@@ -597,7 +614,21 @@ namespace ClipboardManager
             UpdateToolLocations();
         }
 
-        
+        private void dropdownContentsViewMode_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (dataGridViewClipboard.SelectedRows.Count > 0)
+            {
+                DataGridViewRow selectedRow = dataGridViewClipboard.SelectedRows[0];
+                if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatId))
+                {
+                    ClipboardItem item = clipboardItems.Find(i => i.FormatId == formatId);
+                    if (item != null)
+                    {
+                        DisplayClipboardData(item);
+                    }
+                }
+            }
+        }
     }
 
     internal class ClipboardItem

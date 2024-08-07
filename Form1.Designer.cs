@@ -134,6 +134,7 @@
             // 
             // richTextBoxContents
             // 
+            this.richTextBoxContents.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.richTextBoxContents.Location = new System.Drawing.Point(3, 30);
             this.richTextBoxContents.Name = "richTextBoxContents";
             this.richTextBoxContents.Size = new System.Drawing.Size(717, 205);
@@ -180,6 +181,7 @@
             this.dropdownContentsViewMode.Name = "dropdownContentsViewMode";
             this.dropdownContentsViewMode.Size = new System.Drawing.Size(162, 21);
             this.dropdownContentsViewMode.TabIndex = 7;
+            this.dropdownContentsViewMode.SelectedIndexChanged += new System.EventHandler(this.dropdownContentsViewMode_SelectedIndexChanged);
             // 
             // Form1
             // 
