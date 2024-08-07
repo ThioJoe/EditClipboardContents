@@ -35,6 +35,7 @@
             this.labelSynthesizedTypeWarn = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.dropdownContentsViewMode = new System.Windows.Forms.ComboBox();
+            this.toolStripButtonSaveEdited = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -106,7 +107,8 @@
             this.toolStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripButtonRefresh,
-            this.toolStripButtonDelete});
+            this.toolStripButtonDelete,
+            this.toolStripButtonSaveEdited});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(742, 31);
@@ -198,6 +200,16 @@
             this.dropdownContentsViewMode.TabIndex = 7;
             this.dropdownContentsViewMode.SelectedIndexChanged += new System.EventHandler(this.dropdownContentsViewMode_SelectedIndexChanged);
             // 
+            // toolStripButtonSaveEdited
+            // 
+            this.toolStripButtonSaveEdited.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonSaveEdited.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonSaveEdited.Image")));
+            this.toolStripButtonSaveEdited.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonSaveEdited.Name = "toolStripButtonSaveEdited";
+            this.toolStripButtonSaveEdited.Size = new System.Drawing.Size(28, 28);
+            this.toolStripButtonSaveEdited.Text = "Save Edited Clipboard";
+            this.toolStripButtonSaveEdited.Click += new System.EventHandler(this.toolStripButtonSaveEdited_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -241,5 +253,6 @@
         private System.Windows.Forms.ComboBox dropdownContentsViewMode;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label labelSynthesizedTypeWarn;
+        private System.Windows.Forms.ToolStripButton toolStripButtonSaveEdited;
     }
 }

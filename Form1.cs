@@ -13,6 +13,7 @@ namespace ClipboardManager
     public partial class Form1 : Form
     {
         private List<ClipboardItem> clipboardItems = new List<ClipboardItem>();
+        private List<ClipboardItem> editedClipboardItems = new List<ClipboardItem>(); // Add this line
 
         private StreamWriter logFile;
 
@@ -640,8 +641,6 @@ namespace ClipboardManager
         {
             if (e.RowIndex >= 0)
             {
-                
-
                 DataGridViewRow selectedRow = dataGridViewClipboard.Rows[e.RowIndex];
                 if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatId))
                 {
@@ -661,6 +660,14 @@ namespace ClipboardManager
                     {
                         richTextBoxContents.Clear();
                         DisplayClipboardData(item);
+
+                        // Check if the item is already in the editedClipboardItems list
+                        ClipboardItem editedItem = editedClipboardItems.Find(i => i.FormatId == item.FormatId);
+                        if (editedItem == null)
+                        {
+                            // If not, add a copy of the item to the editedClipboardItems list
+                            editedClipboardItems.Add((ClipboardItem)item.Clone());
+                        }
                     }
                 }
             }
@@ -679,15 +686,71 @@ namespace ClipboardManager
             {
                 case 0: // Text view mode
                     richTextBoxContents.Text = Encoding.UTF8.GetString(item.RawData);
+                    richTextBoxContents.ReadOnly = true;
                     break;
 
                 case 1: // Hex view mode
                     richTextBoxContents.Text = BitConverter.ToString(item.RawData).Replace("-", " ");
+                    richTextBoxContents.ReadOnly = true;
+                    break;
+
+                case 2: // Hex (Editable) view mode
+                    richTextBoxContents.Text = BitConverter.ToString(item.RawData).Replace("-", " ");
+                    richTextBoxContents.ReadOnly = false;
                     break;
 
                 default:
                     richTextBoxContents.Text = "Unknown view mode";
                     break;
+            }
+        }
+
+
+        private void SaveClipboardData()
+        {
+            try
+            {
+                foreach (var item in editedClipboardItems)
+                {
+                    string hexString = richTextBoxContents.Text.Replace(" ", "");
+                    byte[] rawData = Enumerable.Range(0, hexString.Length)
+                        .Where(x => x % 2 == 0)
+                        .Select(x => Convert.ToByte(hexString.Substring(x, 2), 16))
+                        .ToArray();
+
+                    IntPtr hGlobal = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, (UIntPtr)rawData.Length);
+                    IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
+
+                    Marshal.Copy(rawData, 0, pGlobal, rawData.Length);
+                    NativeMethods.GlobalUnlock(hGlobal);
+
+                    item.RawData = rawData;
+                    item.Data = rawData;
+                    item.DataSize = (ulong)rawData.Length;
+                }
+
+                if (NativeMethods.OpenClipboard(this.Handle))
+                {
+                    NativeMethods.EmptyClipboard();
+
+                    foreach (var item in editedClipboardItems)
+                    {
+                        IntPtr hGlobal = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, (UIntPtr)item.Data.Length);
+                        IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
+
+                        Marshal.Copy(item.Data, 0, pGlobal, item.Data.Length);
+                        NativeMethods.GlobalUnlock(hGlobal);
+
+                        NativeMethods.SetClipboardData(item.FormatId, hGlobal);
+                    }
+
+                    NativeMethods.CloseClipboard();
+                    MessageBox.Show("Clipboard data saved successfully.");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to save clipboard data: {ex.Message}");
             }
         }
 
@@ -744,17 +807,28 @@ namespace ClipboardManager
                 }
             }
         }
+
+        private void toolStripButtonSaveEdited_Click(object sender, EventArgs e)
+        {
+            SaveClipboardData();
+            RefreshClipboardItems();
+        }
     }
 
-    internal class ClipboardItem
+    internal class ClipboardItem : ICloneable
     {
         public string FormatName { get; set; }
         public uint FormatId { get; set; }
         public IntPtr Handle { get; set; }
-        public ulong DataSize { get; set; } // Changed from uint to ulong
+        public ulong DataSize { get; set; }
         public byte[] Data { get; set; }
         public byte[] RawData { get; set; }
-        public bool AssumedSynthesized { get; set; } // New property to indicate if the format is assumed to be synthesized
+        public bool AssumedSynthesized { get; set; }
+
+        public object Clone()
+        {
+            return this.MemberwiseClone();
+        }
     }
 
 
