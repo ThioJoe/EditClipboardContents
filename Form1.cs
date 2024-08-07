@@ -146,6 +146,7 @@ namespace ClipboardManager
                     ulong dataSize = 0;
                     string dataInfo = "Not available";
                     byte[] rawData = null;
+                    byte[] data = null;
 
                     try
                     {
@@ -157,6 +158,7 @@ namespace ClipboardManager
                                 dataSize = (ulong)NativeMethods.GlobalSize(hData).ToUInt64();
                                 rawData = new byte[dataSize];
                                 Marshal.Copy(pData, rawData, 0, (int)dataSize);
+                                data = rawData;  // Initially, set data to rawData
 
                                 switch (format)
                                 {
@@ -165,6 +167,7 @@ namespace ClipboardManager
                                         using (Bitmap bmp = Bitmap.FromHbitmap(hData))
                                         {
                                             dataInfo = $"Bitmap: {bmp.Width}x{bmp.Height}, {bmp.PixelFormat}";
+                                            // You can set `data` to some processed form if needed
                                         }
                                         break;
 
@@ -175,17 +178,20 @@ namespace ClipboardManager
                                             Marshal.PtrToStringAnsi(pData) :
                                             Marshal.PtrToStringUni(pData);
                                         dataInfo = text.Length > 50 ? text.Substring(0, 50) + "..." : text;
+                                        data = format == 1 ? Encoding.ASCII.GetBytes(text) : Encoding.Unicode.GetBytes(text);  // Set data to the text bytes
                                         break;
 
                                     case 15: // CF_HDROP
                                         Console.WriteLine("Processing CF_HDROP");
                                         uint fileCount = NativeMethods.DragQueryFile(hData, 0xFFFFFFFF, null, 0);
                                         dataInfo = $"File Drop: {fileCount} file(s)";
+                                        // `data` is already rawData here
                                         break;
 
                                     default:
                                         Console.WriteLine($"Processing unknown format: {format}");
                                         dataInfo = $"Data size: {dataSize} bytes";
+                                        // `data` is already rawData here
                                         break;
                                 }
 
@@ -208,7 +214,8 @@ namespace ClipboardManager
                         FormatId = format,
                         HandleType = "Handle",
                         DataSize = dataSize,
-                        Data = rawData
+                        RawData = rawData,
+                        Data = data
                     };
 
                     clipboardItems.Add(item);
@@ -223,6 +230,7 @@ namespace ClipboardManager
 
             Console.WriteLine("RefreshClipboardItems completed");
         }
+
 
 
 
@@ -479,6 +487,11 @@ namespace ClipboardManager
 
         private void dataGridViewClipboard_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
+            
+        }
+
+        private void dataGridViewClipboard_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
             // Get the raw data for the selected clipboard item based on the clicked row, and display it in the rich text box as text
             if (e.RowIndex >= 0)
             {
@@ -502,8 +515,6 @@ namespace ClipboardManager
                 }
             }
         }
-
-
 
         private void toolStripButtonRefresh_Click(object sender, EventArgs e)
         {
@@ -541,6 +552,8 @@ namespace ClipboardManager
             // Resize data grid view to fit the form window
             UpdateToolLocations();
         }
+
+        
     }
 
     internal class ClipboardItem
