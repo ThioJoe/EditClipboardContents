@@ -32,9 +32,9 @@
             this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
             this.richTextBoxContents = new System.Windows.Forms.RichTextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.labelSynthesizedTypeWarn = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.dropdownContentsViewMode = new System.Windows.Forms.ComboBox();
-            this.labelSynthesizedTypeWarn = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -163,6 +163,17 @@
             this.splitContainer1.TabIndex = 6;
             this.splitContainer1.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer1_SplitterMoved);
             // 
+            // labelSynthesizedTypeWarn
+            // 
+            this.labelSynthesizedTypeWarn.AutoSize = true;
+            this.labelSynthesizedTypeWarn.Location = new System.Drawing.Point(4, 6);
+            this.labelSynthesizedTypeWarn.Name = "labelSynthesizedTypeWarn";
+            this.labelSynthesizedTypeWarn.Size = new System.Drawing.Size(402, 13);
+            this.labelSynthesizedTypeWarn.TabIndex = 9;
+            this.labelSynthesizedTypeWarn.Text = "⚠️ Note: Selected format type will be automatically re-created by Windows if dele" +
+    "ted\r\n";
+            this.labelSynthesizedTypeWarn.Visible = false;
+            // 
             // label1
             // 
             this.label1.AutoSize = true;
@@ -176,25 +187,16 @@
             // 
             this.dropdownContentsViewMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.dropdownContentsViewMode.FormattingEnabled = true;
+            this.dropdownContentsViewMode.ImeMode = System.Windows.Forms.ImeMode.Katakana;
             this.dropdownContentsViewMode.Items.AddRange(new object[] {
             "Text",
-            "Hex"});
+            "Hex",
+            "Hex (Editable)"});
             this.dropdownContentsViewMode.Location = new System.Drawing.Point(558, 3);
             this.dropdownContentsViewMode.Name = "dropdownContentsViewMode";
             this.dropdownContentsViewMode.Size = new System.Drawing.Size(162, 21);
             this.dropdownContentsViewMode.TabIndex = 7;
             this.dropdownContentsViewMode.SelectedIndexChanged += new System.EventHandler(this.dropdownContentsViewMode_SelectedIndexChanged);
-            // 
-            // labelSynthesizedTypeWarn
-            // 
-            this.labelSynthesizedTypeWarn.AutoSize = true;
-            this.labelSynthesizedTypeWarn.Location = new System.Drawing.Point(4, 6);
-            this.labelSynthesizedTypeWarn.Name = "labelSynthesizedTypeWarn";
-            this.labelSynthesizedTypeWarn.Size = new System.Drawing.Size(402, 13);
-            this.labelSynthesizedTypeWarn.TabIndex = 9;
-            this.labelSynthesizedTypeWarn.Text = "⚠️ Note: Selected format type will be automatically re-created by Windows if dele" +
-    "ted\r\n";
-            this.labelSynthesizedTypeWarn.Visible = false;
             // 
             // Form1
             // 
