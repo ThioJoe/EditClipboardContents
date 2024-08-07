@@ -34,6 +34,7 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.label1 = new System.Windows.Forms.Label();
             this.dropdownContentsViewMode = new System.Windows.Forms.ComboBox();
+            this.labelSynthesizedTypeWarn = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -153,6 +154,7 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.labelSynthesizedTypeWarn);
             this.splitContainer1.Panel2.Controls.Add(this.label1);
             this.splitContainer1.Panel2.Controls.Add(this.dropdownContentsViewMode);
             this.splitContainer1.Panel2.Controls.Add(this.richTextBoxContents);
@@ -182,6 +184,17 @@
             this.dropdownContentsViewMode.Size = new System.Drawing.Size(162, 21);
             this.dropdownContentsViewMode.TabIndex = 7;
             this.dropdownContentsViewMode.SelectedIndexChanged += new System.EventHandler(this.dropdownContentsViewMode_SelectedIndexChanged);
+            // 
+            // labelSynthesizedTypeWarn
+            // 
+            this.labelSynthesizedTypeWarn.AutoSize = true;
+            this.labelSynthesizedTypeWarn.Location = new System.Drawing.Point(4, 6);
+            this.labelSynthesizedTypeWarn.Name = "labelSynthesizedTypeWarn";
+            this.labelSynthesizedTypeWarn.Size = new System.Drawing.Size(402, 13);
+            this.labelSynthesizedTypeWarn.TabIndex = 9;
+            this.labelSynthesizedTypeWarn.Text = "⚠️ Note: Selected format type will be automatically re-created by Windows if dele" +
+    "ted\r\n";
+            this.labelSynthesizedTypeWarn.Visible = false;
             // 
             // Form1
             // 
@@ -225,5 +238,6 @@
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.ComboBox dropdownContentsViewMode;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label labelSynthesizedTypeWarn;
     }
 }

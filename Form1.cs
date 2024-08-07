@@ -16,6 +16,7 @@ namespace ClipboardManager
 
         private StreamWriter logFile;
 
+        // Dictionary of formats that can be synthesized from other formats, and which they can be synthesized to
         private static readonly Dictionary<uint, List<uint>> SynthesizedFormatsMap = new Dictionary<uint, List<uint>>()
         {
             { 2, new List<uint> { 8, 17 } }, // CF_BITMAP -> CF_DIB, CF_DIBV5
@@ -28,6 +29,20 @@ namespace ClipboardManager
             { 13, new List<uint> { 7, 1 } }, // CF_UNICODETEXT -> CF_OEMTEXT, CF_TEXT
         };
 
+        // List of format names that are potentially synthesized by Windows and will be re-created if removed
+        private static readonly List<string> SynthesizedFormatNames = new List<string>
+        {
+            "CF_LOCALE", // Not technically synthesized but will be re-created if CF_TEXT is set
+            "CF_DIB",
+            "CF_BITMAP",
+            "CF_DIBV5",
+            "CF_PALETTE",
+            "CF_ENHMETAFILE",
+            "CF_METAFILEPICT",
+            "CF_OEMTEXT",
+            "CF_TEXT",
+            "CF_UNICODETEXT",
+        };
 
         public Form1()
         {
@@ -299,6 +314,17 @@ namespace ClipboardManager
             {
                 uint currentFormat = formatOrder[i];
 
+                // Check for special cases first
+                if (currentFormat == 16) // CF_LOCALE - Auto created if CF_TEXT is set and CF_LOCALE doesn't exist already
+                {
+                    ClipboardItem item = clipboardItems.Find(ci => ci.FormatId == currentFormat);
+                    if (item != null)
+                    {
+                        item.AssumedSynthesized = true;
+                    }
+                    continue;
+                }
+
                 // If the current format is not a potential synthesized format, stop the loop
                 if (!synthesizeTargets.Contains(currentFormat))
                 {
@@ -336,6 +362,7 @@ namespace ClipboardManager
                 }
             }
         }
+
 
 
         private string ProcessBitmap(IntPtr hBitmap, out byte[] bitmapData)
@@ -613,10 +640,23 @@ namespace ClipboardManager
         {
             if (e.RowIndex >= 0)
             {
+                
+
                 DataGridViewRow selectedRow = dataGridViewClipboard.Rows[e.RowIndex];
                 if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatId))
                 {
                     ClipboardItem item = clipboardItems.Find(i => i.FormatId == formatId);
+
+                    // Check if it's a synthesized name in SynthesizedFormatNames and show a warning
+                    if (SynthesizedFormatNames.Contains(item.FormatName))
+                    {
+                        labelSynthesizedTypeWarn.Visible = true;
+                    }
+                    else
+                    {
+                        labelSynthesizedTypeWarn.Visible = false;
+                    }
+
                     if (item != null)
                     {
                         richTextBoxContents.Clear();
