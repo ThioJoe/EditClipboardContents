@@ -220,19 +220,25 @@ namespace ClipboardManager
 
             foreach (var item in clipboardItems)
             {
-                string dataInfo = "Not available";
+                string dataInfo = "N/A";
                 byte[] processedData = item.RawData;
 
                 switch (item.FormatId)
                 {
                     case 1: // CF_TEXT
+                        Console.WriteLine("Processing CF_TEXT");
+                        string asciiText = Encoding.ASCII.GetString(item.RawData);
+                        int asciiTextLength = asciiText.Length;
+                        dataInfo = $"Encoding: ASCII, Chars: {asciiTextLength}";
+                        processedData = Encoding.ASCII.GetBytes(asciiText);
+                        break;
+
                     case 13: // CF_UNICODETEXT
-                        Console.WriteLine($"Processing text format: {(item.FormatId == 1 ? "CF_TEXT" : "CF_UNICODETEXT")}");
-                        string text = item.FormatId == 1 ?
-                            Encoding.ASCII.GetString(item.RawData) :
-                            Encoding.Unicode.GetString(item.RawData);
-                        dataInfo = text.Length > 50 ? text.Substring(0, 50) + "..." : text;
-                        processedData = item.FormatId == 1 ? Encoding.ASCII.GetBytes(text) : Encoding.Unicode.GetBytes(text);
+                        Console.WriteLine("Processing CF_UNICODETEXT");
+                        string unicodeText = Encoding.Unicode.GetString(item.RawData);
+                        int unicodeTextLength = unicodeText.Length;
+                        dataInfo = $"Encoding: Unicode, Chars: {unicodeTextLength}";
+                        processedData = Encoding.Unicode.GetBytes(unicodeText);
                         break;
 
                     case 2: // CF_BITMAP
@@ -259,14 +265,14 @@ namespace ClipboardManager
                             NativeMethods.DragQueryFile(item.Handle, i, fileName, (uint)fileName.Capacity);
                             fileNames.AppendLine(fileName.ToString());
                         }
-                        dataInfo = $"File Drop: {fileCount} file(s)\n{fileNames}";
+                        dataInfo = $"File Drop: {fileCount} file(s)";
                         break;
 
                     // Add more cases for other formats as needed...
 
                     default:
                         Console.WriteLine($"Processing unknown format: {item.FormatId}");
-                        dataInfo = $"Data size: {item.DataSize} bytes";
+                        dataInfo = "N/A";
                         break;
                 }
 
