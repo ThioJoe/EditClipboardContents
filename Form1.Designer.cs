@@ -31,8 +31,13 @@
             this.toolStripButtonRefresh = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
             this.richTextBoxContents = new System.Windows.Forms.RichTextBox();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.toolStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
             this.SuspendLayout();
             // 
             // dataGridViewClipboard
@@ -41,11 +46,11 @@
             this.dataGridViewClipboard.AllowUserToDeleteRows = false;
             this.dataGridViewClipboard.AllowUserToResizeRows = false;
             this.dataGridViewClipboard.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridViewClipboard.Location = new System.Drawing.Point(12, 42);
+            this.dataGridViewClipboard.Location = new System.Drawing.Point(3, 3);
             this.dataGridViewClipboard.Name = "dataGridViewClipboard";
             this.dataGridViewClipboard.ReadOnly = true;
             this.dataGridViewClipboard.RowHeadersWidth = 62;
-            this.dataGridViewClipboard.Size = new System.Drawing.Size(904, 298);
+            this.dataGridViewClipboard.Size = new System.Drawing.Size(717, 235);
             this.dataGridViewClipboard.TabIndex = 0;
             this.dataGridViewClipboard.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewClipboard_CellContentClick);
             // 
@@ -99,7 +104,7 @@
             this.toolStripButtonDelete});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(925, 31);
+            this.toolStrip1.Size = new System.Drawing.Size(742, 31);
             this.toolStrip1.TabIndex = 3;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -125,20 +130,37 @@
             // 
             // richTextBoxContents
             // 
-            this.richTextBoxContents.Location = new System.Drawing.Point(12, 346);
+            this.richTextBoxContents.Location = new System.Drawing.Point(3, 3);
             this.richTextBoxContents.Name = "richTextBoxContents";
-            this.richTextBoxContents.Size = new System.Drawing.Size(904, 138);
+            this.richTextBoxContents.Size = new System.Drawing.Size(717, 232);
             this.richTextBoxContents.TabIndex = 4;
             this.richTextBoxContents.Text = "";
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Location = new System.Drawing.Point(8, 34);
+            this.splitContainer1.Name = "splitContainer1";
+            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.dataGridViewClipboard);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.richTextBoxContents);
+            this.splitContainer1.Size = new System.Drawing.Size(723, 483);
+            this.splitContainer1.SplitterDistance = 241;
+            this.splitContainer1.TabIndex = 6;
+            this.splitContainer1.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer1_SplitterMoved);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(925, 496);
-            this.Controls.Add(this.richTextBoxContents);
+            this.ClientSize = new System.Drawing.Size(742, 524);
+            this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.toolStrip1);
-            this.Controls.Add(this.dataGridViewClipboard);
             this.Menu = this.mainMenu1;
             this.Name = "Form1";
             this.Text = "Clipboard Manager";
@@ -147,6 +169,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).EndInit();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -166,5 +192,6 @@
         private System.Windows.Forms.ToolStripButton toolStripButtonRefresh;
         private System.Windows.Forms.ToolStripButton toolStripButtonDelete;
         private System.Windows.Forms.RichTextBox richTextBoxContents;
+        private System.Windows.Forms.SplitContainer splitContainer1;
     }
 }

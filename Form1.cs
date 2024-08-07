@@ -11,7 +11,7 @@ namespace ClipboardManager
 {
     public partial class Form1 : Form
     {
-        private int bottomBuffer = 50; // Adjust this value to set the desired buffer size
+        
 
         private List<ClipboardItem> clipboardItems = new List<ClipboardItem>();
 
@@ -71,13 +71,29 @@ namespace ClipboardManager
         private void UpdateToolLocations()
         {
             int titlebarAccomodate = 40;
-            int dataGridBottomPosition = this.Height - toolStrip1.Height - richTextBoxContents.Height - titlebarAccomodate;
+            int splitterBorderAccomodate = 5;
+            int bottomBuffer = 35; // Adjust this value to set the desired buffer size
+            
+            int splitterPanelsBottomPosition = this.Height - toolStrip1.Height - titlebarAccomodate;
+
+            // Resize splitContainer1 to fit the form
+            splitContainer1.Width = this.Width - 32;
+            splitContainer1.Height = splitterPanelsBottomPosition - bottomBuffer;
+
+            // Resize data grid within panel to match panel size
+            dataGridViewClipboard.Width = splitContainer1.Panel1.Width - splitterBorderAccomodate;
+            dataGridViewClipboard.Height = splitContainer1.Panel1.Height - splitterBorderAccomodate;
+            richTextBoxContents.Width = splitContainer1.Panel2.Width - splitterBorderAccomodate;
+            richTextBoxContents.Height = splitContainer1.Panel2.Height - splitterBorderAccomodate;
+
+            // This is the original code outside the split panels
+            //int dataGridBottomPosition = this.Height - toolStrip1.Height - richTextBoxContents.Height - titlebarAccomodate;
             // Resize dataGridViewClipboard to fit the form
-            dataGridViewClipboard.Width = this.Width - 40;
-            dataGridViewClipboard.Height = dataGridBottomPosition - bottomBuffer;
-            // Resize richTextBoxContents to fit the form
-            richTextBoxContents.Width = this.Width - 40;
-            richTextBoxContents.Location = new System.Drawing.Point(12, dataGridBottomPosition);
+            //dataGridViewClipboard.Width = this.Width - 40;
+            //dataGridViewClipboard.Height = dataGridBottomPosition - bottomBuffer;
+            //// Resize richTextBoxContents to fit the form
+            //richTextBoxContents.Width = this.Width - 40;
+            //richTextBoxContents.Location = new System.Drawing.Point(12, dataGridBottomPosition);
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -493,6 +509,12 @@ namespace ClipboardManager
                     MessageBox.Show("Unable to determine the format ID of the selected item.");
                 }
             }
+        }
+
+        private void splitContainer1_SplitterMoved(object sender, SplitterEventArgs e)
+        {
+            // Resize data grid view to fit the form window
+            UpdateToolLocations();
         }
     }
 
