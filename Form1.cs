@@ -118,17 +118,6 @@ namespace ClipboardManager
             RefreshClipboardItems();
         }
 
-        private void btnRefresh_Click(object sender, EventArgs e)
-        {
-            RefreshClipboardItems();
-        }
-
-        private void btnDelete_Click(object sender, EventArgs e)
-        {
-
-        }
-
-
         private void RefreshClipboardItems()
         {
             Console.WriteLine("Starting RefreshClipboardItems");
@@ -348,17 +337,6 @@ namespace ClipboardManager
             }
         }
 
-
-
-
-        private bool IsSynthesizedFormat(uint previousFormat, uint currentFormat)
-        {
-            if (SynthesizedFormatsMap.ContainsKey(previousFormat))
-            {
-                return SynthesizedFormatsMap[previousFormat].Contains(currentFormat);
-            }
-            return false;
-        }
 
         private string ProcessBitmap(IntPtr hBitmap, out byte[] bitmapData)
         {
