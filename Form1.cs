@@ -120,8 +120,23 @@ namespace ClipboardManager
             clipboardItems.Clear();
             dataGridViewClipboard.Rows.Clear();
 
+            // Attempt to open the clipboard, retrying up to 10 times with a 10ms delay
             Console.WriteLine("Attempting to open clipboard");
-            if (!NativeMethods.OpenClipboard(this.Handle))
+            int retryCount = 10;  // Number of retries
+            int retryDelay = 10;  // Delay in milliseconds
+            bool clipboardOpened = false;
+
+            for (int i = 0; i < retryCount; i++)
+            {
+                if (NativeMethods.OpenClipboard(this.Handle))
+                {
+                    clipboardOpened = true;
+                    break;
+                }
+                System.Threading.Thread.Sleep(retryDelay);
+            }
+
+            if (!clipboardOpened)
             {
                 Console.WriteLine("Failed to open clipboard");
                 MessageBox.Show("Failed to open clipboard.");
