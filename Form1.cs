@@ -70,14 +70,10 @@ namespace ClipboardManager
         //Function to fit data grid view to the form window
         private void UpdateToolLocations()
         {
-            int trueBottomPos = this.Height - 55;
+            int trueBottomPos = this.Height - 60;
             // Resize dataGridViewClipboard to fit the form
             dataGridViewClipboard.Width = this.Width - 40;
-            dataGridViewClipboard.Height = trueBottomPos - bottomBuffer; //55 To account for window title bar
-
-            // Keep buttons at the bottom of the form
-            btnRefresh.Location = new System.Drawing.Point(18, trueBottomPos - 20);
-            btnDelete.Location = new System.Drawing.Point(100, trueBottomPos - 20);
+            dataGridViewClipboard.Height = trueBottomPos - bottomBuffer;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -93,28 +89,7 @@ namespace ClipboardManager
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            if (dataGridViewClipboard.SelectedRows.Count > 0)
-            {
-                DataGridViewRow selectedRow = dataGridViewClipboard.SelectedRows[0];
-                if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatIdToRemove))
-                {
-                    //LogClipboardContents("Clipboard contents before removal:");
-                    if (RemoveClipboardFormat(formatIdToRemove))
-                    {
-                        //LogClipboardContents("Clipboard contents after removal:");
-                        //MessageBox.Show($"Format {formatIdToRemove} removed successfully.");
-                    }
-                    else
-                    {
-                        MessageBox.Show($"Failed to remove format {formatIdToRemove}.");
-                    }
-                    RefreshClipboardItems();
-                }
-                else
-                {
-                    MessageBox.Show("Unable to determine the format ID of the selected item.");
-                }
-            }
+
         }
 
 
@@ -483,6 +458,37 @@ namespace ClipboardManager
         private void dataGridViewClipboard_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
 
+        }
+
+        private void toolStripButtonRefresh_Click(object sender, EventArgs e)
+        {
+            RefreshClipboardItems();
+        }
+
+        private void toolStripButtonDelete_Click(object sender, EventArgs e)
+        {
+            if (dataGridViewClipboard.SelectedRows.Count > 0)
+            {
+                DataGridViewRow selectedRow = dataGridViewClipboard.SelectedRows[0];
+                if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatIdToRemove))
+                {
+                    //LogClipboardContents("Clipboard contents before removal:");
+                    if (RemoveClipboardFormat(formatIdToRemove))
+                    {
+                        //LogClipboardContents("Clipboard contents after removal:");
+                        //MessageBox.Show($"Format {formatIdToRemove} removed successfully.");
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Failed to remove format {formatIdToRemove}.");
+                    }
+                    RefreshClipboardItems();
+                }
+                else
+                {
+                    MessageBox.Show("Unable to determine the format ID of the selected item.");
+                }
+            }
         }
     }
 
