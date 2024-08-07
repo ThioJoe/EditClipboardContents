@@ -30,6 +30,7 @@
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonRefresh = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
+            this.richTextBoxContents = new System.Windows.Forms.RichTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -122,11 +123,20 @@
             this.toolStripButtonDelete.Text = "Delete Item From Clipboard";
             this.toolStripButtonDelete.Click += new System.EventHandler(this.toolStripButtonDelete_Click);
             // 
+            // richTextBoxContents
+            // 
+            this.richTextBoxContents.Location = new System.Drawing.Point(12, 346);
+            this.richTextBoxContents.Name = "richTextBoxContents";
+            this.richTextBoxContents.Size = new System.Drawing.Size(904, 138);
+            this.richTextBoxContents.TabIndex = 4;
+            this.richTextBoxContents.Text = "";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(925, 352);
+            this.ClientSize = new System.Drawing.Size(925, 496);
+            this.Controls.Add(this.richTextBoxContents);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.dataGridViewClipboard);
             this.Menu = this.mainMenu1;
@@ -155,5 +165,6 @@
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton toolStripButtonRefresh;
         private System.Windows.Forms.ToolStripButton toolStripButtonDelete;
+        private System.Windows.Forms.RichTextBox richTextBoxContents;
     }
 }

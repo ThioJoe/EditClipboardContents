@@ -70,10 +70,14 @@ namespace ClipboardManager
         //Function to fit data grid view to the form window
         private void UpdateToolLocations()
         {
-            int trueBottomPos = this.Height - 60;
+            int titlebarAccomodate = 40;
+            int dataGridBottomPosition = this.Height - toolStrip1.Height - richTextBoxContents.Height - titlebarAccomodate;
             // Resize dataGridViewClipboard to fit the form
             dataGridViewClipboard.Width = this.Width - 40;
-            dataGridViewClipboard.Height = trueBottomPos - bottomBuffer;
+            dataGridViewClipboard.Height = dataGridBottomPosition - bottomBuffer;
+            // Resize richTextBoxContents to fit the form
+            richTextBoxContents.Width = this.Width - 40;
+            richTextBoxContents.Location = new System.Drawing.Point(12, dataGridBottomPosition);
         }
 
         private void Form1_Load(object sender, EventArgs e)
