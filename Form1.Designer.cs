@@ -32,6 +32,8 @@
             this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
             this.richTextBoxContents = new System.Windows.Forms.RichTextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.label1 = new System.Windows.Forms.Label();
+            this.dropdownContentsViewMode = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -99,6 +101,7 @@
             // 
             // toolStrip1
             // 
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripButtonRefresh,
@@ -131,9 +134,9 @@
             // 
             // richTextBoxContents
             // 
-            this.richTextBoxContents.Location = new System.Drawing.Point(3, 3);
+            this.richTextBoxContents.Location = new System.Drawing.Point(3, 30);
             this.richTextBoxContents.Name = "richTextBoxContents";
-            this.richTextBoxContents.Size = new System.Drawing.Size(717, 232);
+            this.richTextBoxContents.Size = new System.Drawing.Size(717, 205);
             this.richTextBoxContents.TabIndex = 4;
             this.richTextBoxContents.Text = "";
             // 
@@ -149,11 +152,34 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.label1);
+            this.splitContainer1.Panel2.Controls.Add(this.dropdownContentsViewMode);
             this.splitContainer1.Panel2.Controls.Add(this.richTextBoxContents);
             this.splitContainer1.Size = new System.Drawing.Size(723, 483);
             this.splitContainer1.SplitterDistance = 241;
             this.splitContainer1.TabIndex = 6;
             this.splitContainer1.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer1_SplitterMoved);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(489, 6);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(63, 13);
+            this.label1.TabIndex = 8;
+            this.label1.Text = "View Mode:";
+            // 
+            // dropdownContentsViewMode
+            // 
+            this.dropdownContentsViewMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.dropdownContentsViewMode.FormattingEnabled = true;
+            this.dropdownContentsViewMode.Items.AddRange(new object[] {
+            "Text",
+            "Hex"});
+            this.dropdownContentsViewMode.Location = new System.Drawing.Point(558, 3);
+            this.dropdownContentsViewMode.Name = "dropdownContentsViewMode";
+            this.dropdownContentsViewMode.Size = new System.Drawing.Size(162, 21);
+            this.dropdownContentsViewMode.TabIndex = 7;
             // 
             // Form1
             // 
@@ -172,6 +198,7 @@
             this.toolStrip1.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
+            this.splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -194,5 +221,7 @@
         private System.Windows.Forms.ToolStripButton toolStripButtonDelete;
         private System.Windows.Forms.RichTextBox richTextBoxContents;
         private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.ComboBox dropdownContentsViewMode;
+        private System.Windows.Forms.Label label1;
     }
 }

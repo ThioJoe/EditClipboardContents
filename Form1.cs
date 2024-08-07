@@ -11,8 +11,6 @@ namespace ClipboardManager
 {
     public partial class Form1 : Form
     {
-        
-
         private List<ClipboardItem> clipboardItems = new List<ClipboardItem>();
 
         private StreamWriter logFile;
@@ -24,6 +22,9 @@ namespace ClipboardManager
             InitializeLogging();
             InitializeDataGridView();
             UpdateToolLocations();
+
+            // Initial tool settings
+            dropdownContentsViewMode.SelectedIndex = 0; // Default index 0 is "Text" view mode
         }
 
         private void InitializeLogging()
@@ -67,7 +68,7 @@ namespace ClipboardManager
             UpdateToolLocations();
         }
 
-        //Function to fit data grid view to the form window
+        //Function to fit processedData grid view to the form window
         private void UpdateToolLocations()
         {
             int titlebarAccomodate = 40;
@@ -80,7 +81,7 @@ namespace ClipboardManager
             splitContainer1.Width = this.Width - 32;
             splitContainer1.Height = splitterPanelsBottomPosition - bottomBuffer;
 
-            // Resize data grid within panel to match panel size
+            // Resize processedData grid within panel to match panel size
             dataGridViewClipboard.Width = splitContainer1.Panel1.Width - splitterBorderAccomodate;
             dataGridViewClipboard.Height = splitContainer1.Panel1.Height - splitterBorderAccomodate;
             richTextBoxContents.Width = splitContainer1.Panel2.Width - splitterBorderAccomodate;
@@ -161,12 +162,12 @@ namespace ClipboardManager
                     ulong dataSize = 0;
                     string dataInfo = "Not available";
                     byte[] rawData = null;
-                    byte[] data = null;
+                    byte[] processedData = null;
 
                     try
                     {
                         // For some reason the CF_BITMAP format needs to be processed differently and this works to put it before the global lock
-                        // Will probably need to edit this to still let it get data/rawdata
+                        // Will probably need to edit this to still let it get processedData/rawdata
                         switch (format)
                         {
                             case 2: // CF_BITMAP
@@ -187,7 +188,7 @@ namespace ClipboardManager
                                         dataSize = (ulong)NativeMethods.GlobalSize(hData).ToUInt64();
                                         rawData = new byte[dataSize];
                                         Marshal.Copy(pData, rawData, 0, (int)dataSize);
-                                        data = rawData;  // Initially, set data to rawData
+                                        processedData = rawData;  // Initially, set processedData to rawData
 
                                         switch (format)
                                         {
@@ -198,7 +199,7 @@ namespace ClipboardManager
                                                     Marshal.PtrToStringAnsi(pData) :
                                                     Marshal.PtrToStringUni(pData);
                                                 dataInfo = text.Length > 50 ? text.Substring(0, 50) + "..." : text;
-                                                data = format == 1 ? Encoding.ASCII.GetBytes(text) : Encoding.Unicode.GetBytes(text);
+                                                processedData = format == 1 ? Encoding.ASCII.GetBytes(text) : Encoding.Unicode.GetBytes(text);
                                                 break;
 
                                             case 8: // CF_DIB
@@ -240,7 +241,7 @@ namespace ClipboardManager
                                                 Console.WriteLine("Processing CF_OEMTEXT");
                                                 string oemText = Marshal.PtrToStringAnsi(pData);
                                                 dataInfo = oemText.Length > 50 ? oemText.Substring(0, 50) + "..." : oemText;
-                                                data = Encoding.ASCII.GetBytes(oemText);
+                                                processedData = Encoding.ASCII.GetBytes(oemText);
                                                 break;
 
                                             case 9: // CF_PALETTE
@@ -281,7 +282,7 @@ namespace ClipboardManager
                         HandleType = "Handle",
                         DataSize = dataSize,
                         RawData = rawData,
-                        Data = data
+                        Data = processedData
                     };
 
                     clipboardItems.Add(item);
@@ -303,7 +304,7 @@ namespace ClipboardManager
 
 
 
-        // Update data grid view with clipboard contents during refresh
+        // Update processedData grid view with clipboard contents during refresh
         private void UpdateClipboardItemsGridView(string formatName, string formatID, string handleType, string dataSize, string dataPreview)
         {
             dataGridViewClipboard.Rows.Add(formatName, formatID, handleType, dataSize, dataPreview);
@@ -561,7 +562,7 @@ namespace ClipboardManager
 
         private void dataGridViewClipboard_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            // Get the raw data for the selected clipboard item based on the clicked row, and display it in the rich text box as text
+            // Get the raw processedData for the selected clipboard item based on the clicked row, and display it in the rich text box as text
             if (e.RowIndex >= 0)
             {
                 DataGridViewRow selectedRow = dataGridViewClipboard.Rows[e.RowIndex];
@@ -573,7 +574,7 @@ namespace ClipboardManager
                         richTextBoxContents.Clear();
                         if (item.RawData != null)
                         {
-                            // Display the raw data as a UTF-8 encoded string
+                            // Display the raw processedData as a UTF-8 encoded string
                             richTextBoxContents.Text = Encoding.UTF8.GetString(item.RawData);
                         }
                         else
@@ -618,7 +619,7 @@ namespace ClipboardManager
 
         private void splitContainer1_SplitterMoved(object sender, SplitterEventArgs e)
         {
-            // Resize data grid view to fit the form window
+            // Resize processedData grid view to fit the form window
             UpdateToolLocations();
         }
 
