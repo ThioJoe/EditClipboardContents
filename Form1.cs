@@ -145,56 +145,57 @@ namespace ClipboardManager
 
                     ulong dataSize = 0;
                     string dataInfo = "Not available";
+                    byte[] rawData = null;
 
                     try
                     {
-                        switch (format)
+                        IntPtr pData = NativeMethods.GlobalLock(hData);
+                        if (pData != IntPtr.Zero)
                         {
-                            case 2: // CF_BITMAP
-                                Console.WriteLine("Processing CF_BITMAP");
-                                using (Bitmap bmp = Bitmap.FromHbitmap(hData))
-                                {
-                                    dataSize = (ulong)(bmp.Width * bmp.Height * (Image.GetPixelFormatSize(bmp.PixelFormat) / 8));
-                                    dataInfo = $"Bitmap: {bmp.Width}x{bmp.Height}, {bmp.PixelFormat}";
-                                }
-                                break;
-
-                            case 1:  // CF_TEXT
-                            case 13: // CF_UNICODETEXT
-                                Console.WriteLine($"Processing text format: {(format == 1 ? "CF_TEXT" : "CF_UNICODETEXT")}");
+                            try
+                            {
                                 dataSize = (ulong)NativeMethods.GlobalSize(hData).ToUInt64();
-                                IntPtr pData = NativeMethods.GlobalLock(hData);
-                                if (pData != IntPtr.Zero)
+                                rawData = new byte[dataSize];
+                                Marshal.Copy(pData, rawData, 0, (int)dataSize);
+
+                                switch (format)
                                 {
-                                    try
-                                    {
-                                        dataInfo = format == 1 ?
+                                    case 2: // CF_BITMAP
+                                        Console.WriteLine("Processing CF_BITMAP");
+                                        using (Bitmap bmp = Bitmap.FromHbitmap(hData))
+                                        {
+                                            dataInfo = $"Bitmap: {bmp.Width}x{bmp.Height}, {bmp.PixelFormat}";
+                                        }
+                                        break;
+
+                                    case 1:  // CF_TEXT
+                                    case 13: // CF_UNICODETEXT
+                                        Console.WriteLine($"Processing text format: {(format == 1 ? "CF_TEXT" : "CF_UNICODETEXT")}");
+                                        string text = format == 1 ?
                                             Marshal.PtrToStringAnsi(pData) :
                                             Marshal.PtrToStringUni(pData);
-                                        dataInfo = dataInfo.Length > 50 ? dataInfo.Substring(0, 50) + "..." : dataInfo;
-                                    }
-                                    finally
-                                    {
-                                        NativeMethods.GlobalUnlock(hData);
-                                    }
+                                        dataInfo = text.Length > 50 ? text.Substring(0, 50) + "..." : text;
+                                        break;
+
+                                    case 15: // CF_HDROP
+                                        Console.WriteLine("Processing CF_HDROP");
+                                        uint fileCount = NativeMethods.DragQueryFile(hData, 0xFFFFFFFF, null, 0);
+                                        dataInfo = $"File Drop: {fileCount} file(s)";
+                                        break;
+
+                                    default:
+                                        Console.WriteLine($"Processing unknown format: {format}");
+                                        dataInfo = $"Data size: {dataSize} bytes";
+                                        break;
                                 }
-                                break;
 
-                            case 15: // CF_HDROP
-                                Console.WriteLine("Processing CF_HDROP");
-                                dataSize = (ulong)NativeMethods.GlobalSize(hData).ToUInt64();
-                                uint fileCount = NativeMethods.DragQueryFile(hData, 0xFFFFFFFF, null, 0);
-                                dataInfo = $"File Drop: {fileCount} file(s)";
-                                break;
-
-                            default:
-                                Console.WriteLine($"Processing unknown format: {format}");
-                                dataSize = (ulong)NativeMethods.GlobalSize(hData).ToUInt64();
-                                dataInfo = $"Data size: {dataSize} bytes";
-                                break;
+                                Console.WriteLine($"Processed format: {format}, Size: {dataSize}, Info: {dataInfo}");
+                            }
+                            finally
+                            {
+                                NativeMethods.GlobalUnlock(hData);
+                            }
                         }
-
-                        Console.WriteLine($"Processed format: {format}, Size: {dataSize}, Info: {dataInfo}");
                     }
                     catch (Exception ex)
                     {
@@ -207,11 +208,11 @@ namespace ClipboardManager
                         FormatId = format,
                         HandleType = "Handle",
                         DataSize = dataSize,
-                        Data = null
+                        Data = rawData
                     };
 
                     clipboardItems.Add(item);
-                    UpdateClipboardItems(formatName, format.ToString(), "Handle", dataSize.ToString(), dataInfo);
+                    UpdateClipboardItemsGridView(formatName, format.ToString(), "Handle", dataSize.ToString(), dataInfo);
                 }
             }
             finally
@@ -224,8 +225,9 @@ namespace ClipboardManager
         }
 
 
+
         // Update data grid view with clipboard contents during refresh
-        private void UpdateClipboardItems(string formatName, string formatID, string handleType, string dataSize, string dataPreview)
+        private void UpdateClipboardItemsGridView(string formatName, string formatID, string handleType, string dataSize, string dataPreview)
         {
             dataGridViewClipboard.Rows.Add(formatName, formatID, handleType, dataSize, dataPreview);
 
@@ -477,8 +479,31 @@ namespace ClipboardManager
 
         private void dataGridViewClipboard_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-
+            // Get the raw data for the selected clipboard item based on the clicked row, and display it in the rich text box as text
+            if (e.RowIndex >= 0)
+            {
+                DataGridViewRow selectedRow = dataGridViewClipboard.Rows[e.RowIndex];
+                if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatId))
+                {
+                    ClipboardItem item = clipboardItems.Find(i => i.FormatId == formatId);
+                    if (item != null)
+                    {
+                        richTextBoxContents.Clear();
+                        if (item.RawData != null)
+                        {
+                            // Display the raw data as a UTF-8 encoded string
+                            richTextBoxContents.Text = Encoding.UTF8.GetString(item.RawData);
+                        }
+                        else
+                        {
+                            richTextBoxContents.Text = "Data not available";
+                        }
+                    }
+                }
+            }
         }
+
+
 
         private void toolStripButtonRefresh_Click(object sender, EventArgs e)
         {
@@ -525,6 +550,7 @@ namespace ClipboardManager
         public string HandleType { get; set; }
         public ulong DataSize { get; set; }  // Changed from uint to ulong
         public byte[] Data { get; set; }
+        public byte[] RawData { get; set; }
     }
 
     [StructLayout(LayoutKind.Sequential)]
