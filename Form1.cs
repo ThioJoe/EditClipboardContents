@@ -304,17 +304,38 @@ namespace ClipboardManager
         private void DetermineSynthesizedFormats()
         {
             List<uint> formatOrder = clipboardItems.Select(item => item.FormatId).ToList();
+            HashSet<uint> synthesizeTargets = new HashSet<uint>(SynthesizedFormatsMap.SelectMany(kvp => kvp.Value));
 
-            for (int i = 0; i < formatOrder.Count; i++)
+            for (int i = formatOrder.Count - 1; i >= 0; i--)
             {
                 uint currentFormat = formatOrder[i];
+
+                // If the current format is not a potential synthesized format, stop the loop
+                if (!synthesizeTargets.Contains(currentFormat))
+                {
+                    break;
+                }
+
                 foreach (var kvp in SynthesizedFormatsMap)
                 {
                     if (kvp.Value.Contains(currentFormat))
                     {
-                        // If a synthesized format, check if it comes after the standard format
-                        int standardFormatIndex = formatOrder.IndexOf(kvp.Key);
-                        if (standardFormatIndex >= 0 && standardFormatIndex < i)
+                        bool isSynthesized = false;
+
+                        // Check previous formats to determine if they are the origin format
+                        for (int j = i - 1; j >= 0; j--)
+                        {
+                            uint potentialOriginFormat = formatOrder[j];
+
+                            if (kvp.Key == potentialOriginFormat)
+                            {
+                                // Mark as synthesized since we found an origin format before the current format
+                                isSynthesized = true;
+                                break;
+                            }
+                        }
+
+                        if (isSynthesized)
                         {
                             ClipboardItem item = clipboardItems.Find(ci => ci.FormatId == currentFormat);
                             if (item != null)
