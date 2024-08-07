@@ -40,14 +40,14 @@ namespace ClipboardManager
             dataGridViewClipboard.Columns.Add("FormatId", "Format ID");
             dataGridViewClipboard.Columns.Add("HandleType", "Handle Type");
             dataGridViewClipboard.Columns.Add("DataSize", "Data Size");
-            dataGridViewClipboard.Columns.Add("Data", "Data");
+            dataGridViewClipboard.Columns.Add("DataInfo", "Data Info");
 
             // Set AutoSizeMode for each column individually
             
             dataGridViewClipboard.Columns["FormatId"].AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
             dataGridViewClipboard.Columns["HandleType"].AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
             dataGridViewClipboard.Columns["DataSize"].AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
-            dataGridViewClipboard.Columns["Data"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            dataGridViewClipboard.Columns["DataInfo"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
 
             dataGridViewClipboard.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewClipboard.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
