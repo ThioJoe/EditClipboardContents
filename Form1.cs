@@ -177,7 +177,13 @@ namespace ClipboardManager
             }
 
             ProcessClipboardData();
+            CloneClipboardItems(); // Clone clipboardItems to editedClipboardItems
             Console.WriteLine("RefreshClipboardItems completed");
+        }
+
+        private void CloneClipboardItems()
+        {
+            editedClipboardItems = clipboardItems.Select(item => (ClipboardItem)item.Clone()).ToList();
         }
 
 
@@ -644,7 +650,7 @@ namespace ClipboardManager
                 DataGridViewRow selectedRow = dataGridViewClipboard.Rows[e.RowIndex];
                 if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatId))
                 {
-                    ClipboardItem item = clipboardItems.Find(i => i.FormatId == formatId);
+                    ClipboardItem item = editedClipboardItems.Find(i => i.FormatId == formatId); // Use editedClipboardItems
 
                     // Check if it's a synthesized name in SynthesizedFormatNames and show a warning
                     if (SynthesizedFormatNames.Contains(item.FormatName))
@@ -660,14 +666,6 @@ namespace ClipboardManager
                     {
                         richTextBoxContents.Clear();
                         DisplayClipboardData(item);
-
-                        // Check if the item is already in the editedClipboardItems list
-                        ClipboardItem editedItem = editedClipboardItems.Find(i => i.FormatId == item.FormatId);
-                        if (editedItem == null)
-                        {
-                            // If not, add a copy of the item to the editedClipboardItems list
-                            editedClipboardItems.Add((ClipboardItem)item.Clone());
-                        }
                     }
                 }
             }
@@ -827,7 +825,16 @@ namespace ClipboardManager
 
         public object Clone()
         {
-            return this.MemberwiseClone();
+            return new ClipboardItem
+            {
+                FormatName = this.FormatName,
+                FormatId = this.FormatId,
+                Handle = this.Handle,
+                DataSize = this.DataSize,
+                Data = (byte[])this.Data?.Clone(),
+                RawData = (byte[])this.RawData?.Clone(),
+                AssumedSynthesized = this.AssumedSynthesized
+            };
         }
     }
 
