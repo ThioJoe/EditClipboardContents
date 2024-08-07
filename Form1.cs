@@ -182,8 +182,13 @@ namespace ClipboardManager
                                         using (Bitmap bmp = Bitmap.FromHbitmap(hData))
                                         {
                                             dataInfo = $"Bitmap: {bmp.Width}x{bmp.Height}, {bmp.PixelFormat}";
-                                            // You can set `data` to some processed form if needed
                                         }
+                                        break;
+
+                                    case 8: // CF_DIB
+                                    case 17: // CF_DIBV5
+                                        Console.WriteLine($"Processing bitmap format: {(format == 8 ? "CF_DIB" : "CF_DIBV5")}");
+                                        dataInfo = $"{formatName}, Size: {dataSize} bytes";
                                         break;
 
                                     case 1:  // CF_TEXT
@@ -193,20 +198,58 @@ namespace ClipboardManager
                                             Marshal.PtrToStringAnsi(pData) :
                                             Marshal.PtrToStringUni(pData);
                                         dataInfo = text.Length > 50 ? text.Substring(0, 50) + "..." : text;
-                                        data = format == 1 ? Encoding.ASCII.GetBytes(text) : Encoding.Unicode.GetBytes(text);  // Set data to the text bytes
+                                        data = format == 1 ? Encoding.ASCII.GetBytes(text) : Encoding.Unicode.GetBytes(text);
                                         break;
 
                                     case 15: // CF_HDROP
                                         Console.WriteLine("Processing CF_HDROP");
                                         uint fileCount = NativeMethods.DragQueryFile(hData, 0xFFFFFFFF, null, 0);
-                                        dataInfo = $"File Drop: {fileCount} file(s)";
-                                        // `data` is already rawData here
+                                        StringBuilder fileNames = new StringBuilder();
+                                        for (uint i = 0; i < fileCount; i++)
+                                        {
+                                            StringBuilder fileName = new StringBuilder(260);
+                                            NativeMethods.DragQueryFile(hData, i, fileName, (uint)fileName.Capacity);  // Corrected line
+                                            fileNames.AppendLine(fileName.ToString());
+                                        }
+                                        dataInfo = $"File Drop: {fileCount} file(s)\n{fileNames}";
+                                        break;
+
+                                    case 14: // CF_ENHMETAFILE
+                                        Console.WriteLine("Processing CF_ENHMETAFILE");
+                                        dataInfo = "Enhanced Metafile";
+                                        break;
+
+                                    case 16: // CF_LOCALE
+                                        Console.WriteLine("Processing CF_LOCALE");
+                                        uint localeId = (uint)Marshal.ReadInt32(pData);
+                                        dataInfo = $"Locale ID: {localeId}";
+                                        break;
+
+                                    case 3: // CF_METAFILEPICT
+                                        Console.WriteLine("Processing CF_METAFILEPICT");
+                                        dataInfo = "Metafile Picture";
+                                        break;
+
+                                    case 7: // CF_OEMTEXT
+                                        Console.WriteLine("Processing CF_OEMTEXT");
+                                        string oemText = Marshal.PtrToStringAnsi(pData);
+                                        dataInfo = oemText.Length > 50 ? oemText.Substring(0, 50) + "..." : oemText;
+                                        data = Encoding.ASCII.GetBytes(oemText);
+                                        break;
+
+                                    case 9: // CF_PALETTE
+                                        Console.WriteLine("Processing CF_PALETTE");
+                                        dataInfo = "Color Palette";
+                                        break;
+
+                                    case 12: // CF_WAVE
+                                        Console.WriteLine("Processing CF_WAVE");
+                                        dataInfo = $"Wave Audio, Size: {dataSize} bytes";
                                         break;
 
                                     default:
                                         Console.WriteLine($"Processing unknown format: {format}");
                                         dataInfo = $"Data size: {dataSize} bytes";
-                                        // `data` is already rawData here
                                         break;
                                 }
 
@@ -245,6 +288,7 @@ namespace ClipboardManager
 
             Console.WriteLine("RefreshClipboardItems completed");
         }
+
 
 
 
