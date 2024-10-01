@@ -51,6 +51,22 @@ namespace ClipboardManager
             "CF_UNICODETEXT",
         };
 
+        private bool IsFormatUsingHGlobal(uint format)
+        {
+            switch (format)
+            {
+                case 2:  // CF_BITMAP
+                case 3:  // CF_METAFILEPICT
+                case 14: // CF_ENHMETAFILE
+                case 15: // CF_HDROP (Handle to an HDROP structure)
+                case 9:  // Palette
+                    return false;
+                default:
+                    return true;
+            }
+        }
+
+
         public Form1()
         {
             InitializeComponent();
@@ -204,7 +220,6 @@ namespace ClipboardManager
                 string formatName = GetClipboardFormatName(format);
                 Console.WriteLine($"Processing format: {format} ({formatName})");
 
-                // hData for handle to data
                 IntPtr hData = NativeMethods.GetClipboardData(format);
                 if (hData == IntPtr.Zero)
                 {
@@ -217,20 +232,29 @@ namespace ClipboardManager
 
                 try
                 {
-                    // pdata for pointer to data
-                    IntPtr pData = NativeMethods.GlobalLock(hData);
-                    if (pData != IntPtr.Zero)
+                    if (IsFormatUsingHGlobal(format))
                     {
-                        try
+                        IntPtr pData = NativeMethods.GlobalLock(hData);
+                        if (pData != IntPtr.Zero)
                         {
-                            dataSize = (ulong)NativeMethods.GlobalSize(hData).ToUInt64();
-                            rawData = new byte[dataSize]; // Create variable to hold necessary amount of raw data based on dataSize
-                            Marshal.Copy(pData, rawData, 0, (int)dataSize);
+                            try
+                            {
+                                dataSize = (ulong)NativeMethods.GlobalSize(hData).ToUInt64();
+                                rawData = new byte[dataSize];
+                                Marshal.Copy(pData, rawData, 0, (int)dataSize);
+                            }
+                            finally
+                            {
+                                NativeMethods.GlobalUnlock(hData);
+                            }
                         }
-                        finally
-                        {
-                            NativeMethods.GlobalUnlock(hData);
-                        }
+                    }
+                    else
+                    {
+                        // Handle other formats appropriately
+                        // For CF_BITMAP, CF_METAFILEPICT, CF_ENHMETAFILE, CF_HDROP, etc.
+                        dataSize = 0; // Size may not be applicable
+                        rawData = null; // Data extraction not performed here
                     }
                 }
                 catch (Exception ex)
@@ -242,15 +266,17 @@ namespace ClipboardManager
                 {
                     FormatName = formatName,
                     FormatId = format,
-                    Handle = hData, // Set the handle
+                    Handle = hData,
                     DataSize = dataSize,
                     RawData = rawData,
-                    Data = rawData // Initially, set Data to rawData
+                    Data = rawData
                 };
 
                 clipboardItems.Add(item);
             }
         }
+
+
 
 
         private void ProcessClipboardData()
@@ -701,10 +727,29 @@ namespace ClipboardManager
             if (item == null || item.RawData == null)
             {
                 richTextBoxContents.Text = "Data not available";
+                richTextBoxContents.ForeColor = Color.Red;
                 return;
             }
 
-            switch (dropdownContentsViewMode.SelectedIndex)
+            int modeIndex = dropdownContentsViewMode.SelectedIndex;
+
+            // For data larger than 50K, display a warning and don't display the data unless the checkbox is checked
+            if (modeIndex != 3 && item.RawData.Length > 50000)
+            {
+                if (!menuItemShowLargeHex.Checked)
+                {
+                    richTextBoxContents.Text = "Data is too large to display preview.\nThis can be changed in the options menu, but the program may freeze for large amounts of data.";
+                    // Set color to red
+                    richTextBoxContents.ForeColor = Color.Red;
+                    return;
+                }
+            }
+
+            // Set color to black for default
+            richTextBoxContents.ForeColor = Color.Black;
+
+
+            switch (modeIndex)
             {
                 case 0: // Text view mode
                     richTextBoxContents.Text = Encoding.UTF8.GetString(item.RawData);
@@ -719,6 +764,10 @@ namespace ClipboardManager
                 case 2: // Hex (Editable) view mode
                     richTextBoxContents.Text = BitConverter.ToString(item.RawData).Replace("-", " ");
                     richTextBoxContents.ReadOnly = false;
+                    break;
+                case 3: // Object / Struct View
+                    richTextBoxContents.Text = FormatInspector.InspectFormat(formatName: GetStandardFormatName(item.FormatId), data: item.RawData);
+                    richTextBoxContents.ReadOnly = true;
                     break;
 
                 default:
@@ -1016,7 +1065,11 @@ namespace ClipboardManager
             return hexString.ToString();
         }
 
-        
+        private void menuItemShowLargeHex_Click(object sender, EventArgs e)
+        {
+            // Toggle the check based on the current state
+            menuItemShowLargeHex.Checked = !menuItemShowLargeHex.Checked;
+        }
     }
 
     internal class ClipboardItem : ICloneable

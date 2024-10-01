@@ -24,9 +24,12 @@
             this.menuMainFile = new System.Windows.Forms.MenuItem();
             this.menuFile_ExportAsRawHex = new System.Windows.Forms.MenuItem();
             this.menuItem_ExportSelectedAsFile = new System.Windows.Forms.MenuItem();
+            this.menuItem_ExportSelectedStruct = new System.Windows.Forms.MenuItem();
             this.menuMainEdit = new System.Windows.Forms.MenuItem();
             this.menuEdit_CopyAsText = new System.Windows.Forms.MenuItem();
             this.menuMainView = new System.Windows.Forms.MenuItem();
+            this.menuItem1 = new System.Windows.Forms.MenuItem();
+            this.menuItemShowLargeHex = new System.Windows.Forms.MenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonRefresh = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
@@ -37,7 +40,7 @@
             this.labelSynthesizedTypeWarn = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.dropdownContentsViewMode = new System.Windows.Forms.ComboBox();
-            this.menuItem_ExportSelectedStruct = new System.Windows.Forms.MenuItem();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -66,7 +69,8 @@
             this.mainMenu1.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this.menuMainFile,
             this.menuMainEdit,
-            this.menuMainView});
+            this.menuMainView,
+            this.menuItem1});
             // 
             // menuMainFile
             // 
@@ -89,6 +93,12 @@
             this.menuItem_ExportSelectedAsFile.Text = "Export Selected As File (ToDo)";
             this.menuItem_ExportSelectedAsFile.Click += new System.EventHandler(this.menuItem1_Click);
             // 
+            // menuItem_ExportSelectedStruct
+            // 
+            this.menuItem_ExportSelectedStruct.Index = 2;
+            this.menuItem_ExportSelectedStruct.Text = "Export Selected Struct Info";
+            this.menuItem_ExportSelectedStruct.Click += new System.EventHandler(this.menuItem_ExportSelectedStruct_Click);
+            // 
             // menuMainEdit
             // 
             this.menuMainEdit.Index = 1;
@@ -106,6 +116,19 @@
             // 
             this.menuMainView.Index = 2;
             this.menuMainView.Text = "View";
+            // 
+            // menuItem1
+            // 
+            this.menuItem1.Index = 3;
+            this.menuItem1.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuItemShowLargeHex});
+            this.menuItem1.Text = "Options";
+            // 
+            // menuItemShowLargeHex
+            // 
+            this.menuItemShowLargeHex.Index = 0;
+            this.menuItemShowLargeHex.Text = "Show Hex For Large Files";
+            this.menuItemShowLargeHex.Click += new System.EventHandler(this.menuItemShowLargeHex_Click);
             // 
             // toolStrip1
             // 
@@ -220,18 +243,13 @@
             this.dropdownContentsViewMode.Items.AddRange(new object[] {
             "Text",
             "Hex",
-            "Hex (Editable)"});
+            "Hex (Editable)",
+            "Object / Struct Details"});
             this.dropdownContentsViewMode.Location = new System.Drawing.Point(558, 3);
             this.dropdownContentsViewMode.Name = "dropdownContentsViewMode";
             this.dropdownContentsViewMode.Size = new System.Drawing.Size(162, 21);
             this.dropdownContentsViewMode.TabIndex = 7;
             this.dropdownContentsViewMode.SelectedIndexChanged += new System.EventHandler(this.dropdownContentsViewMode_SelectedIndexChanged);
-            // 
-            // menuItem_ExportSelectedStruct
-            // 
-            this.menuItem_ExportSelectedStruct.Index = 2;
-            this.menuItem_ExportSelectedStruct.Text = "Export Selected Struct Info";
-            this.menuItem_ExportSelectedStruct.Click += new System.EventHandler(this.menuItem_ExportSelectedStruct_Click);
             // 
             // Form1
             // 
@@ -279,5 +297,8 @@
         private System.Windows.Forms.ToolStripButton toolStripButtonSaveEdited;
         private System.Windows.Forms.ToolStripButton toolStripButtonExportSelected;
         private System.Windows.Forms.MenuItem menuItem_ExportSelectedStruct;
+        private System.Windows.Forms.MenuItem menuItem1;
+        private System.Windows.Forms.MenuItem menuItemShowLargeHex;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }
