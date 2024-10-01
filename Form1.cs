@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Drawing;
 using System.Linq;
+using System.Windows.Forms.VisualStyles;
 
 namespace ClipboardManager
 {
@@ -792,17 +793,41 @@ namespace ClipboardManager
 
         private void dropdownContentsViewMode_SelectedIndexChanged(object sender, EventArgs e)
         {
+            ClipboardItem item = GetSelectedClipboardItem();
+            if (item != null)
+            {
+                DisplayClipboardData(item);
+            }
+        }
+
+        private ClipboardItem GetSelectedClipboardItem()
+        {
             if (dataGridViewClipboard.SelectedRows.Count > 0)
             {
                 DataGridViewRow selectedRow = dataGridViewClipboard.SelectedRows[0];
                 if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatId))
                 {
-                    ClipboardItem item = clipboardItems.Find(i => i.FormatId == formatId);
-                    if (item != null)
-                    {
-                        DisplayClipboardData(item);
-                    }
+                    return clipboardItems.Find(i => i.FormatId == formatId);
                 }
+            }
+            return null;
+        }
+
+        private string[] GetSelectedItemInfo()
+        {
+            if (dataGridViewClipboard.SelectedRows.Count > 0)
+            {
+                DataGridViewRow selectedRow = dataGridViewClipboard.SelectedRows[0];
+                string formatName = selectedRow.Cells["FormatName"].Value.ToString();
+                string formatId = selectedRow.Cells["FormatId"].Value.ToString();
+                string handleType = selectedRow.Cells["HandleType"].Value.ToString();
+                string dataSize = selectedRow.Cells["DataSize"].Value.ToString();
+                string dataInfo = selectedRow.Cells["DataInfo"].Value.ToString();
+                return new string[] { formatName, formatId, handleType, dataSize, dataInfo };
+            }
+            else
+            {
+                return null;
             }
         }
 
@@ -810,6 +835,21 @@ namespace ClipboardManager
         {
             SaveClipboardData();
             RefreshClipboardItems();
+        }
+
+        private void menuFile_ExportAs_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void menuItem1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void menuEdit_CopyAsText_Click(object sender, EventArgs e)
+        {
+
         }
     }
 

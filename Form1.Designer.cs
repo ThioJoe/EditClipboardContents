@@ -30,12 +30,12 @@
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonRefresh = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonSaveEdited = new System.Windows.Forms.ToolStripButton();
             this.richTextBoxContents = new System.Windows.Forms.RichTextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.labelSynthesizedTypeWarn = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.dropdownContentsViewMode = new System.Windows.Forms.ComboBox();
-            this.toolStripButtonSaveEdited = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -77,12 +77,14 @@
             // menuFile_ExportAs
             // 
             this.menuFile_ExportAs.Index = 0;
-            this.menuFile_ExportAs.Text = "Export Selected As Raw";
+            this.menuFile_ExportAs.Text = "Export Selected As Raw (ToDo)";
+            this.menuFile_ExportAs.Click += new System.EventHandler(this.menuFile_ExportAs_Click);
             // 
             // menuItem1
             // 
             this.menuItem1.Index = 1;
-            this.menuItem1.Text = "Export Selected ";
+            this.menuItem1.Text = "Export Selected (ToDo)";
+            this.menuItem1.Click += new System.EventHandler(this.menuItem1_Click);
             // 
             // menuMainEdit
             // 
@@ -94,7 +96,8 @@
             // menuEdit_CopyAsText
             // 
             this.menuEdit_CopyAsText.Index = 0;
-            this.menuEdit_CopyAsText.Text = "Copy As Text";
+            this.menuEdit_CopyAsText.Text = "Copy As Text (ToDo)";
+            this.menuEdit_CopyAsText.Click += new System.EventHandler(this.menuEdit_CopyAsText_Click);
             // 
             // menuMainView
             // 
@@ -111,7 +114,7 @@
             this.toolStripButtonSaveEdited});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(742, 31);
+            this.toolStrip1.Size = new System.Drawing.Size(742, 33);
             this.toolStrip1.TabIndex = 3;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -121,7 +124,7 @@
             this.toolStripButtonRefresh.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonRefresh.Image")));
             this.toolStripButtonRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonRefresh.Name = "toolStripButtonRefresh";
-            this.toolStripButtonRefresh.Size = new System.Drawing.Size(28, 28);
+            this.toolStripButtonRefresh.Size = new System.Drawing.Size(34, 28);
             this.toolStripButtonRefresh.Text = "Refresh";
             this.toolStripButtonRefresh.Click += new System.EventHandler(this.toolStripButtonRefresh_Click);
             // 
@@ -131,9 +134,19 @@
             this.toolStripButtonDelete.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonDelete.Image")));
             this.toolStripButtonDelete.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonDelete.Name = "toolStripButtonDelete";
-            this.toolStripButtonDelete.Size = new System.Drawing.Size(28, 28);
+            this.toolStripButtonDelete.Size = new System.Drawing.Size(34, 28);
             this.toolStripButtonDelete.Text = "Delete Item From Clipboard";
             this.toolStripButtonDelete.Click += new System.EventHandler(this.toolStripButtonDelete_Click);
+            // 
+            // toolStripButtonSaveEdited
+            // 
+            this.toolStripButtonSaveEdited.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonSaveEdited.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonSaveEdited.Image")));
+            this.toolStripButtonSaveEdited.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonSaveEdited.Name = "toolStripButtonSaveEdited";
+            this.toolStripButtonSaveEdited.Size = new System.Drawing.Size(34, 28);
+            this.toolStripButtonSaveEdited.Text = "Save Edited Clipboard";
+            this.toolStripButtonSaveEdited.Click += new System.EventHandler(this.toolStripButtonSaveEdited_Click);
             // 
             // richTextBoxContents
             // 
@@ -199,16 +212,6 @@
             this.dropdownContentsViewMode.Size = new System.Drawing.Size(162, 21);
             this.dropdownContentsViewMode.TabIndex = 7;
             this.dropdownContentsViewMode.SelectedIndexChanged += new System.EventHandler(this.dropdownContentsViewMode_SelectedIndexChanged);
-            // 
-            // toolStripButtonSaveEdited
-            // 
-            this.toolStripButtonSaveEdited.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButtonSaveEdited.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonSaveEdited.Image")));
-            this.toolStripButtonSaveEdited.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonSaveEdited.Name = "toolStripButtonSaveEdited";
-            this.toolStripButtonSaveEdited.Size = new System.Drawing.Size(28, 28);
-            this.toolStripButtonSaveEdited.Text = "Save Edited Clipboard";
-            this.toolStripButtonSaveEdited.Click += new System.EventHandler(this.toolStripButtonSaveEdited_Click);
             // 
             // Form1
             // 
