@@ -887,7 +887,8 @@ namespace ClipboardManager
             {
                 Bitmap bitmap = CF_DIBV5ToBitmap(itemToExport.Data);
 
-                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp");
+                string nameStem = selectedItemInfo["FormatName"];
+                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
                     bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
@@ -896,14 +897,14 @@ namespace ClipboardManager
         }
 
         // Function to display save dialog and save the clipboard data to a file
-        private SaveFileDialog SaveFileDialog(string extension = "dat")
+        private SaveFileDialog SaveFileDialog(string extension = "dat", string defaultFileNameStem = "clipboard_data")
         {
             if (string.IsNullOrEmpty(extension))
             {
                 extension = "dat";
             }
 
-            string defaultFileName = $"clipboard_data.{extension}";
+            string defaultFileName = $"{defaultFileNameStem}.{extension}";
             
             SaveFileDialog saveFileDialog = new SaveFileDialog();
             saveFileDialog.Filter = "All files (*.*)|*.*";
@@ -961,11 +962,13 @@ namespace ClipboardManager
             {
                 return;
             }
-            SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "txt");
+
+            string nameStem = selectedItemInfo["FormatName"] + "_RawHex";
+            SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "txt", defaultFileNameStem: nameStem);
             if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
             {
                 // Get the hex information
-                string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToExport.FormatId), data: itemToExport.RawData, allowLargeHex: menuItemShowLargeHex.Checked);
+                string data = BitConverter.ToString(itemToExport.RawData).Replace("-", " ");
                 // Save the data to a file
                 File.WriteAllText(saveFileDialogResult.FileName, data);
             }
@@ -982,7 +985,8 @@ namespace ClipboardManager
                 return;
             }
 
-            SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "txt");
+            string nameStem = selectedItemInfo["FormatName"] + "_StructInfo";
+            SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "txt", defaultFileNameStem: nameStem);
             if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
             {
                 // Get the hex information
@@ -1007,7 +1011,7 @@ namespace ClipboardManager
 
         private void menuItem1_Click(object sender, EventArgs e)
         {
-
+            toolStripButtonExportSelected_Click(null, null);
         }
 
         private void menuEdit_CopyAsText_Click(object sender, EventArgs e)
