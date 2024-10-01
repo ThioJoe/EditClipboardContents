@@ -1217,7 +1217,7 @@ namespace ClipboardManager
         {"CF_WAVE", new FormatInfo {Value = 12, Kind = "data", HandleOutput = "Standard wave format audio data"}}
         };
 
-        public static string InspectFormat(string formatName, object data, string indent = "")
+        public static string InspectFormat(string formatName, byte[] data, string indent = "")
         {
             if (!FormatDictionary.TryGetValue(formatName, out FormatInfo formatInfo))
             {
@@ -1230,45 +1230,48 @@ namespace ClipboardManager
             result.AppendLine($"{indent}Kind: {formatInfo.Kind}");
             result.AppendLine($"{indent}Handle Output: {formatInfo.HandleOutput}");
 
-            if (formatInfo.Kind == "struct" && formatInfo.StructType != null)
+            if (formatInfo.Kind == "struct" && formatInfo.StructType != null && data != null)
             {
-                result.AppendLine($"{indent}Struct Definition:");
+                result.AppendLine($"{indent}Struct Definition and Values:");
                 var fields = formatInfo.StructType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+                int offset = 0;
                 foreach (var field in fields)
                 {
                     result.AppendLine($"{indent}  {field.FieldType.Name} {field.Name}");
+
+                    if (offset < data.Length)
+                    {
+                        object fieldValue = ReadValueFromBytes(data, ref offset, field.FieldType);
+                        string valueStr = GetValueString(fieldValue);
+                        result.AppendLine($"{indent}    Value: {valueStr}");
+                    }
+                    else
+                    {
+                        result.AppendLine($"{indent}    Value: [Data not available]");
+                    }
                 }
             }
-
-            if (data != null)
+            else if (data != null)
             {
                 result.AppendLine($"{indent}Data:");
-                switch (formatInfo.Kind)
-                {
-                    case "struct":
-                        result.Append(InspectStruct(data, indent + "  "));
-                        break;
-                    case "typedef":
-                        result.AppendLine($"{indent}  {data}");
-                        break;
-                    case "data":
-                        if (data is string)
-                        {
-                            result.AppendLine($"{indent}  {data}");
-                        }
-                        else if (data is byte[] bytes)
-                        {
-                            result.AppendLine($"{indent}  {BitConverter.ToString(bytes)}");
-                        }
-                        else
-                        {
-                            result.AppendLine($"{indent}  {data}");
-                        }
-                        break;
-                }
+                result.AppendLine($"{indent}  {BitConverter.ToString(data)}");
             }
 
             return result.ToString();
+        }
+
+        private static string GetValueString(object value)
+        {
+            if (value == null)
+                return "null";
+
+            if (value is IntPtr ptr)
+            {
+                return $"0x{ptr.ToInt64():X}";
+            }
+
+            return value.ToString();
         }
 
         private static string InspectStruct(object structObject, string indent)
@@ -1285,8 +1288,11 @@ namespace ClipboardManager
             {
                 object value = field.GetValue(structObject);
                 string hexValue = GetHexString(value, indent + "  ");
+                string bytesValue = GetBytesString(value);
 
-                result.AppendLine($"{indent}{field.FieldType.Name} {field.Name} = {hexValue}");
+                result.AppendLine($"{indent}{field.FieldType.Name} {field.Name}:");
+                result.AppendLine($"{indent}  Value: {hexValue}");
+                result.AppendLine($"{indent}  Bytes: {bytesValue}");
             }
 
             return result.ToString();
@@ -1302,27 +1308,102 @@ namespace ClipboardManager
 
             if (valueType.IsPrimitive || valueType == typeof(decimal))
             {
-                byte[] bytes = GetBytes(value);
-                return BitConverter.ToString(bytes).Replace("-", " ");
+                return value.ToString();
             }
             else if (valueType.IsEnum)
             {
-                byte[] bytes = GetBytes(Convert.ChangeType(value, Enum.GetUnderlyingType(valueType)));
-                return BitConverter.ToString(bytes).Replace("-", " ");
+                return $"{value} ({(int)value})";
             }
             else if (valueType.IsValueType)
             {
                 // Recursively inspect nested structs
                 return Environment.NewLine + InspectStruct(value, indent);
             }
-            else if (valueType == typeof(Guid))
+            else if (valueType == typeof(IntPtr))
             {
-                byte[] bytes = ((Guid)value).ToByteArray();
-                return BitConverter.ToString(bytes).Replace("-", " ");
+                return $"0x{((IntPtr)value).ToInt64():X}";
             }
             else
             {
                 return value.ToString();
+            }
+        }
+
+        private static string GetBytesString(object value)
+        {
+            if (value == null)
+                return "null";
+
+            try
+            {
+                byte[] bytes = GetBytes(value);
+                return BitConverter.ToString(bytes).Replace("-", " ");
+            }
+            catch (ArgumentException)
+            {
+                return "Unable to get bytes for this type";
+            }
+        }
+
+        private static object ReadValueFromBytes(byte[] data, ref int offset, Type fieldType)
+        {
+            if (fieldType == typeof(byte))
+            {
+                return data[offset++];
+            }
+            else if (fieldType == typeof(short) || fieldType == typeof(ushort))
+            {
+                var value = BitConverter.ToInt16(data, offset);
+                offset += 2;
+                return value;
+            }
+            else if (fieldType == typeof(int) || fieldType == typeof(uint))
+            {
+                var value = BitConverter.ToInt32(data, offset);
+                offset += 4;
+                return value;
+            }
+            else if (fieldType == typeof(long) || fieldType == typeof(ulong))
+            {
+                var value = BitConverter.ToInt64(data, offset);
+                offset += 8;
+                return value;
+            }
+            else if (fieldType == typeof(float))
+            {
+                var value = BitConverter.ToSingle(data, offset);
+                offset += 4;
+                return value;
+            }
+            else if (fieldType == typeof(double))
+            {
+                var value = BitConverter.ToDouble(data, offset);
+                offset += 8;
+                return value;
+            }
+            else if (fieldType == typeof(bool))
+            {
+                var value = BitConverter.ToBoolean(data, offset);
+                offset += 1;
+                return value;
+            }
+            else if (fieldType == typeof(char))
+            {
+                var value = BitConverter.ToChar(data, offset);
+                offset += 2;
+                return value;
+            }
+            else if (fieldType == typeof(IntPtr) || fieldType == typeof(UIntPtr))
+            {
+                var size = IntPtr.Size;
+                var value = size == 4 ? BitConverter.ToInt32(data, offset) : BitConverter.ToInt64(data, offset);
+                offset += size;
+                return new IntPtr(value);
+            }
+            else
+            {
+                // For complex types, we'll just return the type name
+                return $"[{fieldType.Name}]";
             }
         }
 
@@ -1345,7 +1426,6 @@ namespace ClipboardManager
             if (type == typeof(DateTime)) return BitConverter.GetBytes(((DateTime)value).Ticks);
             if (type == typeof(IntPtr)) return BitConverter.GetBytes(((IntPtr)value).ToInt64());
             if (type == typeof(UIntPtr)) return BitConverter.GetBytes(((UIntPtr)value).ToUInt64());
-            if (type == typeof(Guid)) return ((Guid)value).ToByteArray();
             if (type == typeof(decimal))
             {
                 int[] bits = decimal.GetBits((decimal)value);
