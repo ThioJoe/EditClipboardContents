@@ -917,7 +917,7 @@ namespace ClipboardManager
             if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
             {
                 // Get the hex information
-                string data = StructInspector.InspectStruct(itemToExport);
+                string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToExport.FormatId), data: itemToExport.RawData);
                 // Save the data to a file
                 File.WriteAllText(saveFileDialogResult.FileName, data);
             }
@@ -938,7 +938,7 @@ namespace ClipboardManager
             if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
             {
                 // Get the hex information
-                string data = StructInspector.InspectStruct(itemToExport);
+                string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToExport.FormatId), data: itemToExport.RawData);
                 // TO DO - Export details of each object in the struct
 
                 // Save the data to a file
@@ -1122,18 +1122,97 @@ namespace ClipboardManager
         public const uint GMEM_MOVEABLE = 0x0002;
     }
 
-    public static class StructInspector
+
+    public static class FormatInspector
     {
-        public static string InspectStruct(object structObject, string indent = "")
+        public class FormatInfo
+        {
+            public uint Value { get; set; }
+            public string Kind { get; set; }
+            public string HandleOutput { get; set; }
+        }
+
+        private static readonly Dictionary<string, FormatInfo> FormatDictionary = new Dictionary<string, FormatInfo>
+    {
+        {"CF_BITMAP", new FormatInfo {Value = 2, Kind = "typedef", HandleOutput = "HBITMAP"}},
+        {"CF_DIB", new FormatInfo {Value = 8, Kind = "struct", HandleOutput = "BITMAPINFO followed by bitmap bits"}},
+        {"CF_DIBV5", new FormatInfo {Value = 17, Kind = "struct", HandleOutput = "BITMAPV5HEADER followed by color space info and bitmap bits"}},
+        {"CF_DIF", new FormatInfo {Value = 5, Kind = "data", HandleOutput = "Software Arts' Data Interchange Format"}},
+        {"CF_DSPBITMAP", new FormatInfo {Value = 0x0082, Kind = "data", HandleOutput = "Bitmap display data"}},
+        {"CF_DSPENHMETAFILE", new FormatInfo {Value = 0x008E, Kind = "data", HandleOutput = "Enhanced metafile display data"}},
+        {"CF_DSPMETAFILEPICT", new FormatInfo {Value = 0x0083, Kind = "data", HandleOutput = "Metafile picture display data"}},
+        {"CF_DSPTEXT", new FormatInfo {Value = 0x0081, Kind = "data", HandleOutput = "Text display data"}},
+        {"CF_ENHMETAFILE", new FormatInfo {Value = 14, Kind = "typedef", HandleOutput = "HENHMETAFILE"}},
+        {"CF_GDIOBJFIRST", new FormatInfo {Value = 0x0300, Kind = "data", HandleOutput = "Start of range of integers for application-defined GDI object formats"}},
+        {"CF_GDIOBJLAST", new FormatInfo {Value = 0x03FF, Kind = "data", HandleOutput = "End of range of integers for application-defined GDI object formats"}},
+        {"CF_HDROP", new FormatInfo {Value = 15, Kind = "typedef", HandleOutput = "HDROP (list of files)"}},
+        {"CF_LOCALE", new FormatInfo {Value = 16, Kind = "typedef", HandleOutput = "LCID (locale identifier)"}},
+        {"CF_METAFILEPICT", new FormatInfo {Value = 3, Kind = "struct", HandleOutput = "METAFILEPICT"}},
+        {"CF_OEMTEXT", new FormatInfo {Value = 7, Kind = "data", HandleOutput = "Text in OEM character set"}},
+        {"CF_OWNERDISPLAY", new FormatInfo {Value = 0x0080, Kind = "data", HandleOutput = "Owner-display format data"}},
+        {"CF_PALETTE", new FormatInfo {Value = 9, Kind = "typedef", HandleOutput = "HPALETTE"}},
+        {"CF_PENDATA", new FormatInfo {Value = 10, Kind = "data", HandleOutput = "Pen computing extension data"}},
+        {"CF_PRIVATEFIRST", new FormatInfo {Value = 0x0200, Kind = "data", HandleOutput = "Start of range of integers for private clipboard formats"}},
+        {"CF_PRIVATELAST", new FormatInfo {Value = 0x02FF, Kind = "data", HandleOutput = "End of range of integers for private clipboard formats"}},
+        {"CF_RIFF", new FormatInfo {Value = 11, Kind = "data", HandleOutput = "Complex audio data, can be represented in a CF_WAVE standard wave format."}},
+        {"CF_SYLK", new FormatInfo {Value = 4, Kind = "data", HandleOutput = "Microsoft Symbolic Link format (SYLK)"}},
+        {"CF_TEXT", new FormatInfo {Value = 1, Kind = "data", HandleOutput = "ANSI text"}},
+        {"CF_TIFF", new FormatInfo {Value = 6, Kind = "data", HandleOutput = "Tagged-image file format"}},
+        {"CF_UNICODETEXT", new FormatInfo {Value = 13, Kind = "data", HandleOutput = "Unicode text"}},
+        {"CF_WAVE", new FormatInfo {Value = 12, Kind = "data", HandleOutput = "Standard wave format audio data"}}
+    };
+
+        public static string InspectFormat(string formatName, object data, string indent = "")
+        {
+            if (!FormatDictionary.TryGetValue(formatName, out FormatInfo formatInfo))
+            {
+                return $"{indent}Unknown format: {formatName}";
+            }
+
+            StringBuilder result = new StringBuilder();
+            result.AppendLine($"{indent}Format: {formatName}");
+            result.AppendLine($"{indent}Value: 0x{formatInfo.Value:X4}");
+            result.AppendLine($"{indent}Kind: {formatInfo.Kind}");
+            result.AppendLine($"{indent}Handle Output: {formatInfo.HandleOutput}");
+
+            if (data != null)
+            {
+                result.AppendLine($"{indent}Data:");
+                switch (formatInfo.Kind)
+                {
+                    case "struct":
+                        result.Append(InspectStruct(data, indent + "  "));
+                        break;
+                    case "typedef":
+                        result.AppendLine($"{indent}  {data}");
+                        break;
+                    case "data":
+                        if (data is string)
+                        {
+                            result.AppendLine($"{indent}  {data}");
+                        }
+                        else if (data is byte[] bytes)
+                        {
+                            result.AppendLine($"{indent}  {BitConverter.ToString(bytes)}");
+                        }
+                        else
+                        {
+                            result.AppendLine($"{indent}  {data}");
+                        }
+                        break;
+                }
+            }
+
+            return result.ToString();
+        }
+
+        private static string InspectStruct(object structObject, string indent)
         {
             if (structObject == null)
                 return $"{indent}null";
 
             StringBuilder result = new StringBuilder();
             Type type = structObject.GetType();
-
-            result.AppendLine($"{indent}Struct: {type.Name}");
-            result.AppendLine($"{indent}Fields:");
 
             FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
@@ -1142,7 +1221,7 @@ namespace ClipboardManager
                 object value = field.GetValue(structObject);
                 string hexValue = GetHexString(value, indent + "  ");
 
-                result.AppendLine($"{indent}  {field.FieldType.Name} {field.Name} = {hexValue}");
+                result.AppendLine($"{indent}{field.FieldType.Name} {field.Name} = {hexValue}");
             }
 
             return result.ToString();
@@ -1211,7 +1290,6 @@ namespace ClipboardManager
                 }
                 return bytes.ToArray();
             }
-            
 
             throw new ArgumentException($"Unsupported type: {type.FullName}", nameof(value));
         }
