@@ -8,6 +8,11 @@ using System.IO;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms.VisualStyles;
+using System.Drawing.Imaging;
+using System.Reflection;
+
+// My classes
+using static EditClipboardItems.ClipboardFormats;
 
 namespace ClipboardManager
 {
@@ -76,7 +81,7 @@ namespace ClipboardManager
             dataGridViewClipboard.Columns.Add("DataInfo", "Data Info");
 
             // Set AutoSizeMode for each column individually
-            
+
             dataGridViewClipboard.Columns["FormatId"].AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
             dataGridViewClipboard.Columns["HandleType"].AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
             dataGridViewClipboard.Columns["DataSize"].AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
@@ -106,7 +111,7 @@ namespace ClipboardManager
             int titlebarAccomodate = 40;
             int splitterBorderAccomodate = 5;
             int bottomBuffer = 35; // Adjust this value to set the desired buffer size
-            
+
             int splitterPanelsBottomPosition = this.Height - toolStrip1.Height - titlebarAccomodate;
 
             // Resize splitContainer1 to fit the form
@@ -169,7 +174,6 @@ namespace ClipboardManager
             try
             {
                 CopyClipboardData();
-                DetermineSynthesizedFormats();
             }
             finally
             {
@@ -177,6 +181,7 @@ namespace ClipboardManager
                 NativeMethods.CloseClipboard();
             }
 
+            DetermineSynthesizedFormats();
             ProcessClipboardData();
             CloneClipboardItems(); // Clone clipboardItems to editedClipboardItems
             Console.WriteLine("RefreshClipboardItems completed");
@@ -199,6 +204,7 @@ namespace ClipboardManager
                 string formatName = GetClipboardFormatName(format);
                 Console.WriteLine($"Processing format: {format} ({formatName})");
 
+                // hData for handle to data
                 IntPtr hData = NativeMethods.GetClipboardData(format);
                 if (hData == IntPtr.Zero)
                 {
@@ -211,13 +217,14 @@ namespace ClipboardManager
 
                 try
                 {
+                    // pdata for pointer to data
                     IntPtr pData = NativeMethods.GlobalLock(hData);
                     if (pData != IntPtr.Zero)
                     {
                         try
                         {
                             dataSize = (ulong)NativeMethods.GlobalSize(hData).ToUInt64();
-                            rawData = new byte[dataSize];
+                            rawData = new byte[dataSize]; // Create variable to hold necessary amount of raw data based on dataSize
                             Marshal.Copy(pData, rawData, 0, (int)dataSize);
                         }
                         finally
@@ -635,13 +642,29 @@ namespace ClipboardManager
                 case 15: return "CF_HDROP";
                 case 16: return "CF_LOCALE";
                 case 17: return "CF_DIBV5";
-                default: return $"Unknown Format ({format})";
+                case 0x0080: return "CF_OWNERDISPLAY";
+                case 0x0081: return "CF_DSPTEXT";
+                case 0x0082: return "CF_DSPBITMAP";
+                case 0x0083: return "CF_DSPMETAFILEPICT";
+                case 0x008E: return "CF_DSPENHMETAFILE";
             }
+
+            if (format >= 0x0200 && format <= 0x02FF)
+            {
+                return $"CF_PRIVATEFIRST-CF_PRIVATELAST ({format:X4})";
+            }
+
+            if (format >= 0x0300 && format <= 0x03FF)
+            {
+                return $"CF_GDIOBJFIRST-CF_GDIOBJLAST ({format:X4})";
+            }
+
+            return $"Unknown Format ({format:X4})";
         }
 
         private void dataGridViewClipboard_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            
+
         }
 
         private void dataGridViewClipboard_CellClick(object sender, DataGridViewCellEventArgs e)
@@ -793,14 +816,57 @@ namespace ClipboardManager
 
         private void dropdownContentsViewMode_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ClipboardItem item = GetSelectedClipboardItem();
+            ClipboardItem item = GetSelectedClipboardItemObject();
             if (item != null)
             {
                 DisplayClipboardData(item);
             }
         }
 
-        private ClipboardItem GetSelectedClipboardItem()
+        private void toolStripButtonExportSelected_Click(object sender, EventArgs e)
+        {
+            // Get the clipboard item and its info
+            ClipboardItem itemToExport = GetSelectedClipboardItemObject();
+            Dictionary<string, string> selectedItemInfo = GetSelectedItemInfo();
+
+            if (itemToExport == null)
+            {
+                return;
+            }
+
+            // If it's a DIBV5 format, convert it to a bitmap
+            if (itemToExport.FormatId == 17)
+            {
+                Bitmap bitmap = CF_DIBV5ToBitmap(itemToExport.Data);
+
+                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp");
+                if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
+                {
+                    bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
+                }
+            }
+        }
+
+        // Function to display save dialog and save the clipboard data to a file
+        private SaveFileDialog SaveFileDialog(string extension = "dat")
+        {
+            if (string.IsNullOrEmpty(extension))
+            {
+                extension = "dat";
+            }
+
+            string defaultFileName = $"clipboard_data.{extension}";
+            
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "All files (*.*)|*.*";
+            saveFileDialog.FilterIndex = 1;
+            saveFileDialog.RestoreDirectory = true;
+            saveFileDialog.FileName = defaultFileName;
+
+            return saveFileDialog;
+        }
+
+        private ClipboardItem GetSelectedClipboardItemObject()
         {
             if (dataGridViewClipboard.SelectedRows.Count > 0)
             {
@@ -813,17 +879,19 @@ namespace ClipboardManager
             return null;
         }
 
-        private string[] GetSelectedItemInfo()
+        private Dictionary<string, string> GetSelectedItemInfo()
         {
             if (dataGridViewClipboard.SelectedRows.Count > 0)
             {
                 DataGridViewRow selectedRow = dataGridViewClipboard.SelectedRows[0];
-                string formatName = selectedRow.Cells["FormatName"].Value.ToString();
-                string formatId = selectedRow.Cells["FormatId"].Value.ToString();
-                string handleType = selectedRow.Cells["HandleType"].Value.ToString();
-                string dataSize = selectedRow.Cells["DataSize"].Value.ToString();
-                string dataInfo = selectedRow.Cells["DataInfo"].Value.ToString();
-                return new string[] { formatName, formatId, handleType, dataSize, dataInfo };
+                return new Dictionary<string, string>
+                {
+                    ["FormatName"] = selectedRow.Cells["FormatName"].Value.ToString(),
+                    ["FormatId"] = selectedRow.Cells["FormatId"].Value.ToString(),
+                    ["HandleType"] = selectedRow.Cells["HandleType"].Value.ToString(),
+                    ["DataSize"] = selectedRow.Cells["DataSize"].Value.ToString(),
+                    ["DataInfo"] = selectedRow.Cells["DataInfo"].Value.ToString()
+                };
             }
             else
             {
@@ -837,9 +905,56 @@ namespace ClipboardManager
             RefreshClipboardItems();
         }
 
-        private void menuFile_ExportAs_Click(object sender, EventArgs e)
+        private void menuFile_ExportAsRawHex_Click(object sender, EventArgs e)
         {
+            ClipboardItem itemToExport = GetSelectedClipboardItemObject();
+            Dictionary<string, string> selectedItemInfo = GetSelectedItemInfo();
+            if (itemToExport == null)
+            {
+                return;
+            }
+            SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "txt");
+            if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
+            {
+                // Get the hex information
+                string data = StructInspector.InspectStruct(itemToExport);
+                // Save the data to a file
+                File.WriteAllText(saveFileDialogResult.FileName, data);
+            }
+        }
 
+        private void menuItem_ExportSelectedStruct_Click(object sender, EventArgs e)
+        {
+            // Get the clipboard item and its info
+            ClipboardItem itemToExport = GetSelectedClipboardItemObject();
+            Dictionary<string, string> selectedItemInfo = GetSelectedItemInfo();
+
+            if (itemToExport == null)
+            {
+                return;
+            }
+
+            SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "txt");
+            if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
+            {
+                // Get the hex information
+                string data = StructInspector.InspectStruct(itemToExport);
+                // TO DO - Export details of each object in the struct
+
+                // Save the data to a file
+                File.WriteAllText(saveFileDialogResult.FileName, data);
+            }
+
+            //// If it's DIBV5 format use special hex conversion
+            //if (itemToExport.FormatId == 17)
+            //{
+            //    string hexString = CF_DIBV5ToHex(itemToExport.Data);
+            //    SaveFileDialog saveFileDialogResult = SaveFileDialog();
+            //    if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
+            //    {
+            //        File.WriteAllText(saveFileDialogResult.FileName, hexString);
+            //    }
+            //}
         }
 
         private void menuItem1_Click(object sender, EventArgs e)
@@ -851,6 +966,56 @@ namespace ClipboardManager
         {
 
         }
+
+        private static Bitmap CF_DIBV5ToBitmap(byte[] data)
+        {
+            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+            var bmi = (BITMAPV5HEADER)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(BITMAPV5HEADER));
+            Bitmap bitmap = new Bitmap((int)bmi.bV5Width, (int)bmi.bV5Height, -
+                                       (int)(bmi.bV5SizeImage / bmi.bV5Height), PixelFormat.Format32bppArgb,
+                                       new IntPtr(handle.AddrOfPinnedObject().ToInt32()
+                                       + bmi.bV5Size + (bmi.bV5Height - 1)
+                                       * (int)(bmi.bV5SizeImage / bmi.bV5Height)));
+            handle.Free();
+            return bitmap;
+        }
+
+        // Function to extract CF_DIBV5 structure into its hex components
+        private static string CF_DIBV5ToHex(byte[] data)
+        {
+            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+            var bmi = (BITMAPV5HEADER)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(BITMAPV5HEADER));
+            StringBuilder hexString = new StringBuilder();
+
+            hexString.Append($"bV5Size: {bmi.bV5Size:X4}\n");
+            hexString.Append($"bV5Width: {bmi.bV5Width:X4}\n");
+            hexString.Append($"bV5Height: {bmi.bV5Height:X4}\n");
+            hexString.Append($"bV5Planes: {bmi.bV5Planes:X4}\n");
+            hexString.Append($"bV5BitCount: {bmi.bV5BitCount:X4}\n");
+            hexString.Append($"bV5Compression: {bmi.bV5Compression:X4}\n");
+            hexString.Append($"bV5SizeImage: {bmi.bV5SizeImage:X4}\n");
+            hexString.Append($"bV5XPelsPerMeter: {bmi.bV5XPelsPerMeter:X4}\n");
+            hexString.Append($"bV5YPelsPerMeter: {bmi.bV5YPelsPerMeter:X4}\n");
+            hexString.Append($"bV5ClrUsed: {bmi.bV5ClrUsed:X4}\n");
+            hexString.Append($"bV5ClrImportant: {bmi.bV5ClrImportant:X4}\n");
+            hexString.Append($"bV5RedMask: {bmi.bV5RedMask:X4}\n");
+            hexString.Append($"bV5GreenMask: {bmi.bV5GreenMask:X4}\n");
+            hexString.Append($"bV5BlueMask: {bmi.bV5BlueMask:X4}\n");
+            hexString.Append($"bV5AlphaMask: {bmi.bV5AlphaMask:X4}\n");
+            hexString.Append($"bV5CSType: {bmi.bV5CSType:X4}\n");
+            hexString.Append($"bV5Endpoints: {bmi.bV5Endpoints:X4}\n");
+            hexString.Append($"bV5GammaRed: {bmi.bV5GammaRed:X4}\n");
+            hexString.Append($"bV5GammaGreen: {bmi.bV5GammaGreen:X4}\n");
+            hexString.Append($"bV5GammaBlue: {bmi.bV5GammaBlue:X4}\n");
+            hexString.Append($"bV5Intent: {bmi.bV5Intent:X4}\n");
+            hexString.Append($"bV5ProfileData: {bmi.bV5ProfileData:X4}\n");
+            hexString.Append($"bV5ProfileSize: {bmi.bV5ProfileSize:X4}\n");
+            hexString.Append($"bV5Reserved: {bmi.bV5Reserved:X4}\n");
+            handle.Free();
+
+            return hexString.ToString();
+        }
+        
     }
 
     internal class ClipboardItem : ICloneable
@@ -878,22 +1043,6 @@ namespace ClipboardManager
         }
     }
 
-
-
-
-
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct BITMAP
-    {
-        public int bmType;
-        public int bmWidth;
-        public int bmHeight;
-        public int bmWidthBytes;
-        public ushort bmPlanes;
-        public ushort bmBitsPixel;
-        public IntPtr bmBits;
-    }
 
     internal static class NativeMethods
     {
@@ -971,6 +1120,101 @@ namespace ClipboardManager
 
 
         public const uint GMEM_MOVEABLE = 0x0002;
+    }
+
+    public static class StructInspector
+    {
+        public static string InspectStruct(object structObject, string indent = "")
+        {
+            if (structObject == null)
+                return $"{indent}null";
+
+            StringBuilder result = new StringBuilder();
+            Type type = structObject.GetType();
+
+            result.AppendLine($"{indent}Struct: {type.Name}");
+            result.AppendLine($"{indent}Fields:");
+
+            FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+            foreach (FieldInfo field in fields)
+            {
+                object value = field.GetValue(structObject);
+                string hexValue = GetHexString(value, indent + "  ");
+
+                result.AppendLine($"{indent}  {field.FieldType.Name} {field.Name} = {hexValue}");
+            }
+
+            return result.ToString();
+        }
+
+        private static string GetHexString(object value, string indent)
+        {
+            if (value == null)
+                return "null";
+
+            Type valueType = value.GetType();
+
+            if (valueType.IsPrimitive || valueType == typeof(decimal))
+            {
+                byte[] bytes = GetBytes(value);
+                return BitConverter.ToString(bytes).Replace("-", " ");
+            }
+            else if (valueType.IsEnum)
+            {
+                byte[] bytes = GetBytes(Convert.ChangeType(value, Enum.GetUnderlyingType(valueType)));
+                return BitConverter.ToString(bytes).Replace("-", " ");
+            }
+            else if (valueType.IsValueType)
+            {
+                // Recursively inspect nested structs
+                return Environment.NewLine + InspectStruct(value, indent);
+            }
+            else if (valueType == typeof(Guid))
+            {
+                byte[] bytes = ((Guid)value).ToByteArray();
+                return BitConverter.ToString(bytes).Replace("-", " ");
+            }
+            else
+            {
+                return value.ToString();
+            }
+        }
+
+        private static byte[] GetBytes(object value)
+        {
+            Type type = value.GetType();
+
+            if (type == typeof(bool)) return BitConverter.GetBytes((bool)value);
+            if (type == typeof(char)) return BitConverter.GetBytes((char)value);
+            if (type == typeof(double)) return BitConverter.GetBytes((double)value);
+            if (type == typeof(short)) return BitConverter.GetBytes((short)value);
+            if (type == typeof(int)) return BitConverter.GetBytes((int)value);
+            if (type == typeof(long)) return BitConverter.GetBytes((long)value);
+            if (type == typeof(float)) return BitConverter.GetBytes((float)value);
+            if (type == typeof(ushort)) return BitConverter.GetBytes((ushort)value);
+            if (type == typeof(uint)) return BitConverter.GetBytes((uint)value);
+            if (type == typeof(ulong)) return BitConverter.GetBytes((ulong)value);
+            if (type == typeof(byte)) return new[] { (byte)value };
+            if (type == typeof(sbyte)) return new[] { (byte)(sbyte)value };
+            if (type == typeof(DateTime)) return BitConverter.GetBytes(((DateTime)value).Ticks);
+            if (type == typeof(IntPtr)) return BitConverter.GetBytes(((IntPtr)value).ToInt64());
+            if (type == typeof(UIntPtr)) return BitConverter.GetBytes(((UIntPtr)value).ToUInt64());
+            if (type == typeof(Guid)) return ((Guid)value).ToByteArray();
+            if (type == typeof(decimal))
+            {
+                int[] bits = decimal.GetBits((decimal)value);
+                List<byte> bytes = new List<byte>();
+                foreach (int part in bits)
+                {
+                    bytes.AddRange(BitConverter.GetBytes(part));
+                }
+                return bytes.ToArray();
+            }
+            
+
+            throw new ArgumentException($"Unsupported type: {type.FullName}", nameof(value));
+        }
     }
 
 }
