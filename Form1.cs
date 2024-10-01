@@ -1015,6 +1015,7 @@ namespace ClipboardManager
 
             return hexString.ToString();
         }
+
         
     }
 
@@ -1130,13 +1131,14 @@ namespace ClipboardManager
             public uint Value { get; set; }
             public string Kind { get; set; }
             public string HandleOutput { get; set; }
+            public Type StructType { get; set; }
         }
 
         private static readonly Dictionary<string, FormatInfo> FormatDictionary = new Dictionary<string, FormatInfo>
-    {
+        {
         {"CF_BITMAP", new FormatInfo {Value = 2, Kind = "typedef", HandleOutput = "HBITMAP"}},
-        {"CF_DIB", new FormatInfo {Value = 8, Kind = "struct", HandleOutput = "BITMAPINFO followed by bitmap bits"}},
-        {"CF_DIBV5", new FormatInfo {Value = 17, Kind = "struct", HandleOutput = "BITMAPV5HEADER followed by color space info and bitmap bits"}},
+        {"CF_DIB", new FormatInfo {Value = 8, Kind = "struct", HandleOutput = "BITMAPINFO followed by bitmap bits", StructType = typeof(BITMAPINFO)}},
+        {"CF_DIBV5", new FormatInfo {Value = 17, Kind = "struct", HandleOutput = "BITMAPV5HEADER followed by color space info and bitmap bits", StructType = typeof(BITMAPV5HEADER)}},
         {"CF_DIF", new FormatInfo {Value = 5, Kind = "data", HandleOutput = "Software Arts' Data Interchange Format"}},
         {"CF_DSPBITMAP", new FormatInfo {Value = 0x0082, Kind = "data", HandleOutput = "Bitmap display data"}},
         {"CF_DSPENHMETAFILE", new FormatInfo {Value = 0x008E, Kind = "data", HandleOutput = "Enhanced metafile display data"}},
@@ -1147,7 +1149,7 @@ namespace ClipboardManager
         {"CF_GDIOBJLAST", new FormatInfo {Value = 0x03FF, Kind = "data", HandleOutput = "End of range of integers for application-defined GDI object formats"}},
         {"CF_HDROP", new FormatInfo {Value = 15, Kind = "typedef", HandleOutput = "HDROP (list of files)"}},
         {"CF_LOCALE", new FormatInfo {Value = 16, Kind = "typedef", HandleOutput = "LCID (locale identifier)"}},
-        {"CF_METAFILEPICT", new FormatInfo {Value = 3, Kind = "struct", HandleOutput = "METAFILEPICT"}},
+        {"CF_METAFILEPICT", new FormatInfo {Value = 3, Kind = "struct", HandleOutput = "METAFILEPICT", StructType = typeof(METAFILEPICT)}},
         {"CF_OEMTEXT", new FormatInfo {Value = 7, Kind = "data", HandleOutput = "Text in OEM character set"}},
         {"CF_OWNERDISPLAY", new FormatInfo {Value = 0x0080, Kind = "data", HandleOutput = "Owner-display format data"}},
         {"CF_PALETTE", new FormatInfo {Value = 9, Kind = "typedef", HandleOutput = "HPALETTE"}},
@@ -1160,7 +1162,7 @@ namespace ClipboardManager
         {"CF_TIFF", new FormatInfo {Value = 6, Kind = "data", HandleOutput = "Tagged-image file format"}},
         {"CF_UNICODETEXT", new FormatInfo {Value = 13, Kind = "data", HandleOutput = "Unicode text"}},
         {"CF_WAVE", new FormatInfo {Value = 12, Kind = "data", HandleOutput = "Standard wave format audio data"}}
-    };
+        };
 
         public static string InspectFormat(string formatName, object data, string indent = "")
         {
@@ -1174,6 +1176,16 @@ namespace ClipboardManager
             result.AppendLine($"{indent}Value: 0x{formatInfo.Value:X4}");
             result.AppendLine($"{indent}Kind: {formatInfo.Kind}");
             result.AppendLine($"{indent}Handle Output: {formatInfo.HandleOutput}");
+
+            if (formatInfo.Kind == "struct" && formatInfo.StructType != null)
+            {
+                result.AppendLine($"{indent}Struct Definition:");
+                var fields = formatInfo.StructType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                foreach (var field in fields)
+                {
+                    result.AppendLine($"{indent}  {field.FieldType.Name} {field.Name}");
+                }
+            }
 
             if (data != null)
             {
@@ -1226,6 +1238,7 @@ namespace ClipboardManager
 
             return result.ToString();
         }
+
 
         private static string GetHexString(object value, string indent)
         {
