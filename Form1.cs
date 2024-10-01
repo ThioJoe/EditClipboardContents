@@ -77,7 +77,6 @@ namespace ClipboardManager
             // Initial tool settings
             dropdownContentsViewMode.SelectedIndex = 0; // Default index 0 is "Text" view mode
 
-
         }
 
         private void InitializeLogging()
@@ -126,7 +125,7 @@ namespace ClipboardManager
         {
             int titlebarAccomodate = 40;
             int splitterBorderAccomodate = 5;
-            int bottomBuffer = 35; // Adjust this value to set the desired buffer size
+            int bottomBuffer = 27; // Adjust this value to set the desired buffer size
 
             int splitterPanelsBottomPosition = this.Height - toolStrip1.Height - titlebarAccomodate;
 
@@ -138,7 +137,7 @@ namespace ClipboardManager
             dataGridViewClipboard.Width = splitContainer1.Panel1.Width - splitterBorderAccomodate;
             dataGridViewClipboard.Height = splitContainer1.Panel1.Height - splitterBorderAccomodate;
             richTextBoxContents.Width = splitContainer1.Panel2.Width - splitterBorderAccomodate;
-            richTextBoxContents.Height = splitContainer1.Panel2.Height - splitterBorderAccomodate;
+            richTextBoxContents.Height = splitContainer1.Panel2.Height - splitterBorderAccomodate - bottomBuffer;
 
             // This is the original code outside the split panels
             //int dataGridBottomPosition = this.Height - toolStrip1.Height - richTextBoxContents.Height - titlebarAccomodate;
@@ -766,7 +765,7 @@ namespace ClipboardManager
                     richTextBoxContents.ReadOnly = false;
                     break;
                 case 3: // Object / Struct View
-                    richTextBoxContents.Text = FormatInspector.InspectFormat(formatName: GetStandardFormatName(item.FormatId), data: item.RawData);
+                    richTextBoxContents.Text = FormatInspector.InspectFormat(formatName: GetStandardFormatName(item.FormatId), data: item.RawData, allowLargeHex: menuItemShowLargeHex.Checked);
                     richTextBoxContents.ReadOnly = true;
                     break;
 
@@ -966,7 +965,7 @@ namespace ClipboardManager
             if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
             {
                 // Get the hex information
-                string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToExport.FormatId), data: itemToExport.RawData);
+                string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToExport.FormatId), data: itemToExport.RawData, allowLargeHex: menuItemShowLargeHex.Checked);
                 // Save the data to a file
                 File.WriteAllText(saveFileDialogResult.FileName, data);
             }
@@ -987,7 +986,7 @@ namespace ClipboardManager
             if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
             {
                 // Get the hex information
-                string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToExport.FormatId), data: itemToExport.RawData);
+                string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToExport.FormatId), data: itemToExport.RawData, allowLargeHex: menuItemShowLargeHex.Checked);
                 // TO DO - Export details of each object in the struct
 
                 // Save the data to a file
@@ -1217,7 +1216,7 @@ namespace ClipboardManager
         {"CF_WAVE", new FormatInfo {Value = 12, Kind = "data", HandleOutput = "Standard wave format audio data"}}
         };
 
-        public static string InspectFormat(string formatName, byte[] data, string indent = "")
+        public static string InspectFormat(string formatName, byte[] data, string indent = "", bool allowLargeHex=false)
         {
             if (!FormatDictionary.TryGetValue(formatName, out FormatInfo formatInfo))
             {
@@ -1226,36 +1225,29 @@ namespace ClipboardManager
 
             StringBuilder result = new StringBuilder();
             result.AppendLine($"{indent}Format: {formatName}");
-            result.AppendLine($"{indent}Value: 0x{formatInfo.Value:X4}");
-            result.AppendLine($"{indent}Kind: {formatInfo.Kind}");
+            result.AppendLine($"{indent}Format ID: {formatInfo.Value}");
+            //result.AppendLine($"{indent}Kind: {formatInfo.Kind}");
             result.AppendLine($"{indent}Handle Output: {formatInfo.HandleOutput}");
 
             if (formatInfo.Kind == "struct" && formatInfo.StructType != null && data != null)
             {
                 result.AppendLine($"{indent}Struct Definition and Values:");
-                var fields = formatInfo.StructType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
                 int offset = 0;
-                foreach (var field in fields)
-                {
-                    result.AppendLine($"{indent}  {field.FieldType.Name} {field.Name}");
-
-                    if (offset < data.Length)
-                    {
-                        object fieldValue = ReadValueFromBytes(data, ref offset, field.FieldType);
-                        string valueStr = GetValueString(fieldValue);
-                        result.AppendLine($"{indent}    Value: {valueStr}");
-                    }
-                    else
-                    {
-                        result.AppendLine($"{indent}    Value: [Data not available]");
-                    }
-                }
+                InspectStruct(formatInfo.StructType, data, ref result, indent + "  ", ref offset);
             }
             else if (data != null)
             {
-                result.AppendLine($"{indent}Data:");
-                result.AppendLine($"{indent}  {BitConverter.ToString(data)}");
+                result.AppendLine($"\n{indent}Data:");
+                // Display if not too big
+                if (allowLargeHex || data.Length <= 50000)
+                {
+                    result.AppendLine($"{BitConverter.ToString(data).Replace("-", " ")}");
+                }
+                else
+                {
+                    result.AppendLine($"{indent}  [Data too large to display. Export raw hex data instead]");
+                }
+
             }
 
             return result.ToString();
@@ -1271,31 +1263,50 @@ namespace ClipboardManager
                 return $"0x{ptr.ToInt64():X}";
             }
 
+            Type valueType = value.GetType();
+            if (valueType.IsValueType && !valueType.IsPrimitive && valueType != typeof(IntPtr))
+            {
+                // For nested structs, we'll return a placeholder
+                return $"[{valueType.Name}]";
+            }
+
             return value.ToString();
         }
 
-        private static string InspectStruct(object structObject, string indent)
+        private static void InspectStruct(Type structType, byte[] data, ref StringBuilder result, string indent, ref int offset)
         {
-            if (structObject == null)
-                return $"{indent}null";
+            var fields = structType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-            StringBuilder result = new StringBuilder();
-            Type type = structObject.GetType();
-
-            FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-            foreach (FieldInfo field in fields)
+            foreach (var field in fields)
             {
-                object value = field.GetValue(structObject);
-                string hexValue = GetHexString(value, indent + "  ");
-                string bytesValue = GetBytesString(value);
+                result.AppendLine($"{indent}{field.FieldType.Name} {field.Name}");
 
-                result.AppendLine($"{indent}{field.FieldType.Name} {field.Name}:");
-                result.AppendLine($"{indent}  Value: {hexValue}");
-                result.AppendLine($"{indent}  Bytes: {bytesValue}");
+                if (offset < data.Length)
+                {
+                    if (field.FieldType.IsValueType && !field.FieldType.IsPrimitive && field.FieldType != typeof(IntPtr))
+                    {
+                        // Nested struct
+                        result.AppendLine($"{indent}  Value:");
+                        InspectStruct(field.FieldType, data, ref result, indent + "    ", ref offset);
+                    }
+                    else if (field.FieldType.IsArray)
+                    {
+                        // Array field (like RGBQUAD[])
+                        result.AppendLine($"{indent}  Value: [Array of {field.FieldType.GetElementType().Name}]");
+                        // Note: We don't process array contents here as the length is unknown
+                    }
+                    else
+                    {
+                        object fieldValue = ReadValueFromBytes(data, ref offset, field.FieldType);
+                        string valueStr = GetValueString(fieldValue);
+                        result.AppendLine($"{indent}  Value: {valueStr}");
+                    }
+                }
+                else
+                {
+                    result.AppendLine($"{indent}  Value: [Data not available]");
+                }
             }
-
-            return result.ToString();
         }
 
 
@@ -1314,10 +1325,10 @@ namespace ClipboardManager
             {
                 return $"{value} ({(int)value})";
             }
-            else if (valueType.IsValueType)
+            else if (valueType.IsValueType && !valueType.IsPrimitive)
             {
-                // Recursively inspect nested structs
-                return Environment.NewLine + InspectStruct(value, indent);
+                // For nested structs, we'll return a placeholder
+                return $"[{valueType.Name}]";
             }
             else if (valueType == typeof(IntPtr))
             {
