@@ -119,7 +119,7 @@ namespace ClipboardManager
         // Update processedData grid view with clipboard contents during refresh
         private void UpdateClipboardItemsGridView(string formatName, string formatID, string handleType, string dataSize, string dataPreview, byte[] rawData)
         {
-            string textPreview = TryParseText(rawData);
+            string textPreview = TryParseText(rawData, maxLength: 150, prefixEncodingType: true);
 
             dataGridViewClipboard.Rows.Add(formatName, formatID, handleType, dataSize, dataPreview, textPreview);
 
@@ -236,7 +236,7 @@ namespace ClipboardManager
             {
                 if (prefixEncodingType)
                 {
-                    result = "[UTF-16] " + utf16Result;
+                    result = "[UTF-16]  " + utf16Result;
                 }
                 else
                 {
@@ -247,7 +247,7 @@ namespace ClipboardManager
             {
                 if (prefixEncodingType)
                 {
-                    result = "[UTF-8] " + utf8Result;
+                    result = "[UTF-8]    " + utf8Result;
                 }
                 else
                 {
@@ -891,7 +891,7 @@ namespace ClipboardManager
             switch (modeIndex)
             {
                 case 0: // Text view mode
-                    richTextBoxContents.Text = Encoding.UTF8.GetString(item.RawData);
+                    richTextBoxContents.Text = TryParseText(item.RawData, maxLength: 0, prefixEncodingType: false);
                     richTextBoxContents.ReadOnly = true;
                     break;
 
