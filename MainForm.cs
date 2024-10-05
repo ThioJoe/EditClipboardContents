@@ -94,24 +94,102 @@ namespace ClipboardManager
             dataGridViewClipboard.Columns.Add("HandleType", "Handle Type");
             dataGridViewClipboard.Columns.Add("DataSize", "Data Size");
             dataGridViewClipboard.Columns.Add("DataInfo", "Data Info");
+            dataGridViewClipboard.Columns.Add("TextPreview", "Text Preview");
 
-            // Set AutoSizeMode for each column individually
+            // Set autosize for all columns
+            foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
+            {
+                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            }
 
-            dataGridViewClipboard.Columns["FormatId"].AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
-            dataGridViewClipboard.Columns["HandleType"].AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
-            dataGridViewClipboard.Columns["DataSize"].AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
-            dataGridViewClipboard.Columns["DataInfo"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-
-            dataGridViewClipboard.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            // Set default AutoSizeMode
+            //dataGridViewClipboard.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewClipboard.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
 
-            // Reisize auto
+            // Set Resizable
             dataGridViewClipboard.Columns["FormatName"].Resizable = DataGridViewTriState.True;
-            dataGridViewClipboard.Columns["FormatName"].AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
+            dataGridViewClipboard.Columns["TextPreview"].Resizable = DataGridViewTriState.True;
+            dataGridViewClipboard.Columns["DataInfo"].Resizable = DataGridViewTriState.True;
 
 
             // Hide the row headers (the leftmost column)
             dataGridViewClipboard.RowHeadersVisible = false;
+        }
+
+        // Update processedData grid view with clipboard contents during refresh
+        private void UpdateClipboardItemsGridView(string formatName, string formatID, string handleType, string dataSize, string dataPreview, byte[] rawData)
+        {
+            string textPreview = TryParseText(rawData);
+
+            dataGridViewClipboard.Rows.Add(formatName, formatID, handleType, dataSize, dataPreview, textPreview);
+
+            // Temporarily set AutoSizeMode to calculate proper widths
+            foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
+            {
+                // Manually set width to minimal 5 to be resized auto later. Apparently autosize will only make columns larger, not smaller
+                column.Width = 5;
+
+                if (column.Name != "TextPreview")
+                {
+                    // Use all cells instead of displayed cells, otherwise those scrolled out of view won't count
+                    column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+                    
+                }
+            }
+
+            // Allow layout to update
+            dataGridViewClipboard.PerformLayout();
+
+            // Set final column properties
+            foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
+            {
+                // Keep the TextPreview column as fill
+                if (column.Name == "TextPreview")
+                {
+                    continue;
+                }
+                int originalWidth = column.Width;
+                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+                column.Resizable = DataGridViewTriState.True;
+
+                if (column.Name == "FormatName")
+                {
+                    column.Width = originalWidth + 20; // Add some padding
+                } else
+                {
+                    column.Width = originalWidth + 0; // For some reason this is necessary after setting resizable and autosize modes
+                }
+            }
+
+            // Ensure TextPreview fills remaining space
+            dataGridViewClipboard.Columns["TextPreview"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            dataGridViewClipboard.Columns["TextPreview"].Resizable = DataGridViewTriState.True;
+
+            // If DataInfo is too long, manually set a max width
+            if (dataGridViewClipboard.Columns["DataInfo"].Width > 200)
+            {
+                dataGridViewClipboard.Columns["DataInfo"].Width = 200;
+            }
+
+            //dataGridViewClipboard.Refresh();
+        }
+
+        // Function to try and parse the raw data for text if it is text
+        private string TryParseText(byte[] rawData, int maxLength = 150)
+        {
+            try
+            {
+                string textPreview = Encoding.UTF8.GetString(rawData);
+                if (textPreview.Length > maxLength)
+                {
+                    textPreview = textPreview.Substring(0, maxLength) + "...";
+                }
+                return textPreview;
+            }
+            catch (Exception)
+            {
+                return "";
+            }
         }
 
 
@@ -341,7 +419,7 @@ namespace ClipboardManager
                 item.Data = processedData; // Update the processed data in the item
                 string handleType = item.AssumedSynthesized ? "Synthesized" : "Standard"; // Determine handle type
 
-                UpdateClipboardItemsGridView(item.FormatName, item.FormatId.ToString(), handleType, item.DataSize.ToString(), dataInfo);
+                UpdateClipboardItemsGridView(formatName: item.FormatName, formatID: item.FormatId.ToString(), handleType: handleType, dataSize: item.DataSize.ToString(), dataPreview: dataInfo, rawData: item.RawData);
             }
         }
 
@@ -419,20 +497,6 @@ namespace ClipboardManager
         }
 
 
-
-        // Update processedData grid view with clipboard contents during refresh
-        private void UpdateClipboardItemsGridView(string formatName, string formatID, string handleType, string dataSize, string dataPreview)
-        {
-            dataGridViewClipboard.Rows.Add(formatName, formatID, handleType, dataSize, dataPreview);
-
-            // Set column widths
-            dataGridViewClipboard.Columns["FormatName"].AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
-            int originalWidth = (int)dataGridViewClipboard.Columns["FormatName"].Width;
-            dataGridViewClipboard.Columns["FormatName"].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-            dataGridViewClipboard.Columns["FormatName"].Width = originalWidth + 15;
-        }
-
-
         private string GetClipboardFormatName(uint format)
         {
             StringBuilder formatName = new StringBuilder(256);
@@ -440,7 +504,6 @@ namespace ClipboardManager
                 ? formatName.ToString()
                 : GetStandardFormatName(format);
         }
-
 
 
         private bool RemoveClipboardFormat(uint formatToRemove)
@@ -1072,6 +1135,14 @@ namespace ClipboardManager
         {
             // Toggle the check based on the current state
             menuItemShowLargeHex.Checked = !menuItemShowLargeHex.Checked;
+        }
+
+        private void buttonTestResize_Click(object sender, EventArgs e)
+        {
+            // Get the clipboard item and its info
+            ClipboardItem itemToExport = GetSelectedClipboardItemObject();
+            Dictionary<string, string> selectedItemInfo = GetSelectedItemInfo();
+
         }
     }
 
