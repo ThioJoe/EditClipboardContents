@@ -16,7 +16,7 @@ using static EditClipboardItems.ClipboardFormats;
 
 namespace ClipboardManager
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         private List<ClipboardItem> clipboardItems = new List<ClipboardItem>();
         private List<ClipboardItem> editedClipboardItems = new List<ClipboardItem>(); // Add this line
@@ -67,7 +67,7 @@ namespace ClipboardManager
         }
 
 
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
             InitializeLogging();
