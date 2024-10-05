@@ -41,7 +41,6 @@
             this.label1 = new System.Windows.Forms.Label();
             this.dropdownContentsViewMode = new System.Windows.Forms.ComboBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.buttonTestResize = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -144,7 +143,7 @@
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
-            this.toolStrip1.Size = new System.Drawing.Size(1490, 38);
+            this.toolStrip1.Size = new System.Drawing.Size(1490, 33);
             this.toolStrip1.TabIndex = 3;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -154,7 +153,7 @@
             this.toolStripButtonRefresh.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonRefresh.Image")));
             this.toolStripButtonRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonRefresh.Name = "toolStripButtonRefresh";
-            this.toolStripButtonRefresh.Size = new System.Drawing.Size(34, 33);
+            this.toolStripButtonRefresh.Size = new System.Drawing.Size(34, 28);
             this.toolStripButtonRefresh.Text = "Refresh";
             this.toolStripButtonRefresh.Click += new System.EventHandler(this.toolStripButtonRefresh_Click);
             // 
@@ -261,22 +260,11 @@
             this.dropdownContentsViewMode.TabIndex = 7;
             this.dropdownContentsViewMode.SelectedIndexChanged += new System.EventHandler(this.dropdownContentsViewMode_SelectedIndexChanged);
             // 
-            // buttonTestResize
-            // 
-            this.buttonTestResize.Location = new System.Drawing.Point(1103, 13);
-            this.buttonTestResize.Name = "buttonTestResize";
-            this.buttonTestResize.Size = new System.Drawing.Size(75, 31);
-            this.buttonTestResize.TabIndex = 7;
-            this.buttonTestResize.Text = "AutoSize";
-            this.buttonTestResize.UseVisualStyleBackColor = true;
-            this.buttonTestResize.Click += new System.EventHandler(this.buttonTestResize_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1490, 968);
-            this.Controls.Add(this.buttonTestResize);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.toolStrip1);
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -322,6 +310,5 @@
         private System.Windows.Forms.MenuItem menuItem1;
         private System.Windows.Forms.MenuItem menuItemShowLargeHex;
         private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.Button buttonTestResize;
     }
 }

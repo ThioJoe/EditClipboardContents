@@ -175,22 +175,99 @@ namespace ClipboardManager
         }
 
         // Function to try and parse the raw data for text if it is text
-        private string TryParseText(byte[] rawData, int maxLength = 150)
+        private string TryParseText(byte[] rawData, int maxLength = 150, bool prefixEncodingType = false)
         {
-            try
-            {
-                string textPreview = Encoding.UTF8.GetString(rawData);
-                if (textPreview.Length > maxLength)
-                {
-                    textPreview = textPreview.Substring(0, maxLength) + "...";
-                }
-                return textPreview;
-            }
-            catch (Exception)
+            if (rawData == null || rawData.Length == 0)
             {
                 return "";
             }
+
+            // Create encodings that throw on invalid bytes
+            var utf8Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+            var utf16Encoding = new UnicodeEncoding(bigEndian: false, byteOrderMark: true, throwOnInvalidBytes: true);
+
+            string utf8Result = "";
+            string utf16Result = "";
+
+            // Try UTF-8
+            try
+            {
+                utf8Result = utf8Encoding.GetString(rawData);
+            }
+            catch (DecoderFallbackException)
+            {
+                // Invalid UTF-8, utf8Result remains empty
+            }
+
+            // Try UTF-16
+            try
+            {
+                utf16Result = utf16Encoding.GetString(rawData);
+            }
+            catch (DecoderFallbackException)
+            {
+                // Invalid UTF-16, utf16Result remains empty
+            }
+
+            string result;
+            bool likelyUTF16 = false;
+            int nullCount = 0;
+            double nullRatio = 0;
+
+            // Improved UTF-16 detection
+            if (!string.IsNullOrEmpty(utf16Result))
+            {
+                // Count the number of null characters in the UTF-8 result, indicating that it's likely UTF-16
+                nullCount = utf8Result.Count(c => c == '\0');
+                nullRatio = (double)nullCount / utf16Result.Length;
+
+                // If more than some percentage of characters are null, it's likely UTF-16
+                if (nullRatio > 0.80)
+                {
+                    likelyUTF16 = true;
+                }
+            }
+
+            // Strip out null characters from both results. By now UTF-16 should not have any null characters since it's been decoded
+            utf8Result = utf8Result.Replace("\0", "");
+            utf16Result = utf16Result.Replace("\0", "");
+
+            if (likelyUTF16 && !string.IsNullOrEmpty(utf16Result))
+            {
+                if (prefixEncodingType)
+                {
+                    result = "[UTF-16] " + utf16Result;
+                }
+                else
+                {
+                    result = utf16Result;
+                }
+            }
+            else if (!string.IsNullOrEmpty(utf8Result))
+            {
+                if (prefixEncodingType)
+                {
+                    result = "[UTF-8] " + utf8Result;
+                }
+                else
+                {
+                    result = utf8Result;
+                }
+            }
+            else
+            {
+                result = "";
+            }
+
+            // Truncate if necessary. Can be set to not truncate by setting maxLength to 0 or less
+            if (maxLength > 0 && result.Length > maxLength)
+            {
+                result = result.Substring(0, maxLength) + "...";
+            }
+
+            return result;
         }
+
 
 
         private void MainForm_Resize(object sender, EventArgs e)
