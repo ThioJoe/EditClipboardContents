@@ -22,14 +22,15 @@
             this.dataGridViewClipboard = new System.Windows.Forms.DataGridView();
             this.mainMenu1 = new System.Windows.Forms.MainMenu(this.components);
             this.menuMainFile = new System.Windows.Forms.MenuItem();
-            this.menuFile_ExportAsRawHex = new System.Windows.Forms.MenuItem();
-            this.menuItem_ExportSelectedAsFile = new System.Windows.Forms.MenuItem();
-            this.menuItem_ExportSelectedStruct = new System.Windows.Forms.MenuItem();
+            this.menuFile_ExportSelectedAsRawHex = new System.Windows.Forms.MenuItem();
+            this.menuFile_ExportSelectedAsFile = new System.Windows.Forms.MenuItem();
+            this.menuFile_ExportSelectedStruct = new System.Windows.Forms.MenuItem();
             this.menuMainEdit = new System.Windows.Forms.MenuItem();
             this.menuEdit_CopyObjectInfoAsText = new System.Windows.Forms.MenuItem();
             this.menuEdit_CopyHexAsText = new System.Windows.Forms.MenuItem();
             this.menuEdit_CopyEditedHexAsText = new System.Windows.Forms.MenuItem();
             this.menuItem3 = new System.Windows.Forms.MenuItem();
+            this.menuEdit_CopyEntireTable = new System.Windows.Forms.MenuItem();
             this.menuEdit_CopySelectedRows = new System.Windows.Forms.MenuItem();
             this.menuMainView = new System.Windows.Forms.MenuItem();
             this.menuItemOptions = new System.Windows.Forms.MenuItem();
@@ -89,28 +90,28 @@
             // 
             this.menuMainFile.Index = 0;
             this.menuMainFile.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-            this.menuFile_ExportAsRawHex,
-            this.menuItem_ExportSelectedAsFile,
-            this.menuItem_ExportSelectedStruct});
+            this.menuFile_ExportSelectedAsRawHex,
+            this.menuFile_ExportSelectedAsFile,
+            this.menuFile_ExportSelectedStruct});
             this.menuMainFile.Text = "File";
             // 
-            // menuFile_ExportAsRawHex
+            // menuFile_ExportSelectedAsRawHex
             // 
-            this.menuFile_ExportAsRawHex.Index = 0;
-            this.menuFile_ExportAsRawHex.Text = "Export Selected As Raw Hex";
-            this.menuFile_ExportAsRawHex.Click += new System.EventHandler(this.menuFile_ExportAsRawHex_Click);
+            this.menuFile_ExportSelectedAsRawHex.Index = 0;
+            this.menuFile_ExportSelectedAsRawHex.Text = "Export Selected As Raw Hex";
+            this.menuFile_ExportSelectedAsRawHex.Click += new System.EventHandler(this.menuFile_ExportSelectedAsRawHex_Click);
             // 
-            // menuItem_ExportSelectedAsFile
+            // menuFile_ExportSelectedAsFile
             // 
-            this.menuItem_ExportSelectedAsFile.Index = 1;
-            this.menuItem_ExportSelectedAsFile.Text = "Export Selected As File";
-            this.menuItem_ExportSelectedAsFile.Click += new System.EventHandler(this.menuItem_ExportSelectedAsFile_Click);
+            this.menuFile_ExportSelectedAsFile.Index = 1;
+            this.menuFile_ExportSelectedAsFile.Text = "Export Selected As File";
+            this.menuFile_ExportSelectedAsFile.Click += new System.EventHandler(this.menuFile_ExportSelectedAsFile_Click);
             // 
-            // menuItem_ExportSelectedStruct
+            // menuFile_ExportSelectedStruct
             // 
-            this.menuItem_ExportSelectedStruct.Index = 2;
-            this.menuItem_ExportSelectedStruct.Text = "Export Selected Object Info";
-            this.menuItem_ExportSelectedStruct.Click += new System.EventHandler(this.menuItem_ExportSelectedStruct_Click);
+            this.menuFile_ExportSelectedStruct.Index = 2;
+            this.menuFile_ExportSelectedStruct.Text = "Export Selected Object Info";
+            this.menuFile_ExportSelectedStruct.Click += new System.EventHandler(this.menuFile_ExportSelectedStruct_Click);
             // 
             // menuMainEdit
             // 
@@ -120,6 +121,7 @@
             this.menuEdit_CopyHexAsText,
             this.menuEdit_CopyEditedHexAsText,
             this.menuItem3,
+            this.menuEdit_CopyEntireTable,
             this.menuEdit_CopySelectedRows});
             this.menuMainEdit.Text = "Edit";
             // 
@@ -147,9 +149,15 @@
             this.menuItem3.Index = 3;
             this.menuItem3.Text = "-";
             // 
+            // menuEdit_CopyEntireTable
+            // 
+            this.menuEdit_CopyEntireTable.Index = 4;
+            this.menuEdit_CopyEntireTable.Text = "Copy All Table Data";
+            this.menuEdit_CopyEntireTable.Click += new System.EventHandler(this.menuEdit_CopyEntireTable_Click);
+            // 
             // menuEdit_CopySelectedRows
             // 
-            this.menuEdit_CopySelectedRows.Index = 4;
+            this.menuEdit_CopySelectedRows.Index = 5;
             this.menuEdit_CopySelectedRows.Text = "Copy Selected Table Rows";
             this.menuEdit_CopySelectedRows.Click += new System.EventHandler(this.menuEdit_CopySelectedRows_Click);
             // 
@@ -402,10 +410,10 @@
         private System.Windows.Forms.DataGridView dataGridViewClipboard;
         private System.Windows.Forms.MainMenu mainMenu1;
         private System.Windows.Forms.MenuItem menuMainFile;
-        private System.Windows.Forms.MenuItem menuFile_ExportAsRawHex;
+        private System.Windows.Forms.MenuItem menuFile_ExportSelectedAsRawHex;
         private System.Windows.Forms.MenuItem menuMainEdit;
         private System.Windows.Forms.MenuItem menuEdit_CopyHexAsText;
-        private System.Windows.Forms.MenuItem menuItem_ExportSelectedAsFile;
+        private System.Windows.Forms.MenuItem menuFile_ExportSelectedAsFile;
         private System.Windows.Forms.MenuItem menuMainView;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton toolStripButtonRefresh;
@@ -417,7 +425,7 @@
         private System.Windows.Forms.Label labelSynthesizedTypeWarn;
         private System.Windows.Forms.ToolStripButton toolStripButtonSaveEdited;
         private System.Windows.Forms.ToolStripButton toolStripButtonExportSelected;
-        private System.Windows.Forms.MenuItem menuItem_ExportSelectedStruct;
+        private System.Windows.Forms.MenuItem menuFile_ExportSelectedStruct;
         private System.Windows.Forms.MenuItem menuItemOptions;
         private System.Windows.Forms.MenuItem menuOptions_ShowLargeHex;
         private System.Windows.Forms.ToolTip toolTip1;
@@ -433,5 +441,6 @@
         private System.Windows.Forms.MenuItem menuOptions_TableModeMenu;
         private System.Windows.Forms.MenuItem menuOptions_CommaSeparation;
         private System.Windows.Forms.MenuItem menuOptions_PreFormatted;
+        private System.Windows.Forms.MenuItem menuEdit_CopyEntireTable;
     }
 }

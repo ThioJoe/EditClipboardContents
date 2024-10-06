@@ -1450,7 +1450,7 @@ namespace ClipboardManager
             UpdateEditControlsVisibility();
         }
 
-        private void menuFile_ExportAsRawHex_Click(object sender, EventArgs e)
+        private void menuFile_ExportSelectedAsRawHex_Click(object sender, EventArgs e)
         {
             ClipboardItem itemToExport = GetSelectedClipboardItemObject();
             if (itemToExport == null)
@@ -1469,7 +1469,7 @@ namespace ClipboardManager
             }
         }
 
-        private void menuItem_ExportSelectedStruct_Click(object sender, EventArgs e)
+        private void menuFile_ExportSelectedStruct_Click(object sender, EventArgs e)
         {
             // Get the clipboard selectedItem and its info
             ClipboardItem itemToExport = GetSelectedClipboardItemObject();
@@ -1501,7 +1501,7 @@ namespace ClipboardManager
             //}
         }
 
-        private void menuItem_ExportSelectedAsFile_Click(object sender, EventArgs e)
+        private void menuFile_ExportSelectedAsFile_Click(object sender, EventArgs e)
         {
             toolStripButtonExportSelected_Click(null, null);
         }
@@ -1711,10 +1711,22 @@ namespace ClipboardManager
             {
                 // Assume focus of the first selected row if multiple are selected
                 ChangeCellFocus(dataGridViewClipboard.SelectedRows[0].Index);
+
+                // Enable menu buttons that require a selectedItem
+                menuEdit_CopySelectedRows.Enabled = true;
+                menuFile_ExportSelectedAsRawHex.Enabled = true;
+                menuFile_ExportSelectedStruct.Enabled = true;
+                menuFile_ExportSelectedAsFile.Enabled = true;
             }
             else
             {
                 richTextBoxContents.Clear();
+
+                // Disable menu buttons that require a selectedItem
+                menuEdit_CopySelectedRows.Enabled = false;
+                menuFile_ExportSelectedAsRawHex.Enabled = false;
+                menuFile_ExportSelectedStruct.Enabled = false;
+                menuFile_ExportSelectedAsFile.Enabled = false;
             }
         }
 
@@ -1767,7 +1779,16 @@ namespace ClipboardManager
             {
                 return;
             }
+            copyTableRows(copyEntireTable: false);
+        }
 
+        private void menuEdit_CopyEntireTable_Click(object sender, EventArgs e)
+        {
+            copyTableRows(copyEntireTable: true);
+        }
+
+        private void copyTableRows(bool copyEntireTable = false)
+        {
             // Get the selected rows and put them in a list, each row a list of strings for the cell values
             List<List<string>> selectedRowsContents = new List<List<string>>();
 
@@ -1779,12 +1800,26 @@ namespace ClipboardManager
                 selectedRowsContents.Add(headerRow);
             }
 
-            // Create a list of selected rows based on index so we can get them in the desired order, same as displayed
-            var selectedRowIndices = dataGridViewClipboard.SelectedRows.Cast<DataGridViewRow>()
-                .Select(row => row.Index)
-                .ToList();
-            // Sort the indices to match the display order. This should still be correct regardless of sorting mode clicked on the header bar
-            selectedRowIndices.Sort();
+
+            // Determine which rows need to be copied. Either entire table or just selected rows based on function argument
+            List<int> selectedRowIndices = new List<int>();
+            if (!copyEntireTable)
+            {
+                // Create a list of selected rows based on index so we can get them in the desired order, same as displayed
+                selectedRowIndices = dataGridViewClipboard.SelectedRows.Cast<DataGridViewRow>()
+                    .Select(row => row.Index)
+                    .ToList();
+                // Sort the indices to match the display order. This should still be correct regardless of sorting mode clicked on the header bar
+                selectedRowIndices.Sort();
+            }
+            else
+            {
+                // If copying the entire table, just get all the rows
+                selectedRowIndices = dataGridViewClipboard.Rows.Cast<DataGridViewRow>()
+                    .Select(row => row.Index)
+                    .ToList();
+            }
+
 
             foreach (int rowIndex in selectedRowIndices)
             {
@@ -1863,8 +1898,6 @@ namespace ClipboardManager
             // Copy the list to the clipboard
             Clipboard.SetText(finalCombinedString);
         }
-
-        
 
         private void menuOptions_IncludeRowHeaders_Click(object sender, EventArgs e)
         {
