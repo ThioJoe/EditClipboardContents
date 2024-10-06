@@ -377,24 +377,24 @@ namespace ClipboardManager
 
             int splitterPanelsBottomPosition = this.Height - toolStrip1.Height - titlebarAccomodate;
 
-            // Resize splitContainer1 to fit the form
-            splitContainer1.Width = this.Width - 32;
-            splitContainer1.Height = splitterPanelsBottomPosition - bottomBuffer;
+            // Resize splitContainerMain to fit the form
+            splitContainerMain.Width = this.Width - 32;
+            splitContainerMain.Height = splitterPanelsBottomPosition - bottomBuffer;
+
+            // Resize splitterContainer_InnerTextBoxes to fit the form
+            splitterContainer_InnerTextBoxes.Width = splitContainerMain.Width;
+            richTextBoxContents.Width = splitterContainer_InnerTextBoxes.Panel1.Width;
+            richTextBox_HexPlaintext.Width = splitterContainer_InnerTextBoxes.Panel2.Width;
+
+            splitterContainer_InnerTextBoxes.Height = splitContainerMain.Panel2.Height;
 
             // Resize processedData grid within panel to match panel size
-            dataGridViewClipboard.Width = splitContainer1.Panel1.Width - splitterBorderAccomodate;
-            dataGridViewClipboard.Height = splitContainer1.Panel1.Height - splitterBorderAccomodate;
-            richTextBoxContents.Width = splitContainer1.Panel2.Width - splitterBorderAccomodate;
-            richTextBoxContents.Height = splitContainer1.Panel2.Height - splitterBorderAccomodate - bottomBuffer;
+            dataGridViewClipboard.Width = splitContainerMain.Panel1.Width - splitterBorderAccomodate;
+            dataGridViewClipboard.Height = splitContainerMain.Panel1.Height - splitterBorderAccomodate;
+            //richTextBoxContents.Width = splitContainerMain.Panel2.Width - splitterBorderAccomodate;
+            richTextBoxContents.Height = splitContainerMain.Panel2.Height - splitterBorderAccomodate - bottomBuffer;
 
-            // This is the original code outside the split panels
-            //int dataGridBottomPosition = this.Height - toolStrip1.Height - richTextBoxContents.Height - titlebarAccomodate;
-            // Resize dataGridViewClipboard to fit the form
-            //dataGridViewClipboard.Width = this.Width - 40;
-            //dataGridViewClipboard.Height = dataGridBottomPosition - bottomBuffer;
-            //// Resize richTextBoxContents to fit the form
-            //richTextBoxContents.Width = this.Width - 40;
-            //richTextBoxContents.Location = new System.Drawing.Point(12, dataGridBottomPosition);
+            
         }
 
         private void Form1_Load(object sender, EventArgs e)

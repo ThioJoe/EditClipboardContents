@@ -23,6 +23,7 @@
             this.contextMenuStrip_dataGridView = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.copyCellToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyRowDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.copySelectedRowsNoHeaderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainMenu1 = new System.Windows.Forms.MainMenu(this.components);
             this.menuMainFile = new System.Windows.Forms.MenuItem();
             this.menuFile_ExportSelectedAsRawHex = new System.Windows.Forms.MenuItem();
@@ -49,7 +50,9 @@
             this.toolStripButtonSaveEdited = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonExportSelected = new System.Windows.Forms.ToolStripButton();
             this.richTextBoxContents = new System.Windows.Forms.RichTextBox();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.splitContainerMain = new System.Windows.Forms.SplitContainer();
+            this.splitterContainer_InnerTextBoxes = new System.Windows.Forms.SplitContainer();
+            this.richTextBox_HexPlaintext = new System.Windows.Forms.RichTextBox();
             this.labelSynthesizedTypeWarn = new System.Windows.Forms.Label();
             this.buttonResetEdit = new System.Windows.Forms.Button();
             this.buttonApplyEdit = new System.Windows.Forms.Button();
@@ -57,14 +60,17 @@
             this.dropdownContentsViewMode = new System.Windows.Forms.ComboBox();
             this.labelPendingChanges = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.copySelectedRowsNoHeaderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.contextMenuStrip_dataGridView.SuspendLayout();
             this.toolStrip1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).BeginInit();
+            this.splitContainerMain.Panel1.SuspendLayout();
+            this.splitContainerMain.Panel2.SuspendLayout();
+            this.splitContainerMain.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitterContainer_InnerTextBoxes)).BeginInit();
+            this.splitterContainer_InnerTextBoxes.Panel1.SuspendLayout();
+            this.splitterContainer_InnerTextBoxes.Panel2.SuspendLayout();
+            this.splitterContainer_InnerTextBoxes.SuspendLayout();
             this.SuspendLayout();
             // 
             // dataGridViewClipboard
@@ -93,7 +99,7 @@
             this.copyRowDataToolStripMenuItem,
             this.copySelectedRowsNoHeaderToolStripMenuItem});
             this.contextMenuStrip_dataGridView.Name = "contextMenuStrip_dataGridView";
-            this.contextMenuStrip_dataGridView.Size = new System.Drawing.Size(249, 92);
+            this.contextMenuStrip_dataGridView.Size = new System.Drawing.Size(249, 70);
             this.contextMenuStrip_dataGridView.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip_dataGridView_Opening);
             // 
             // copyCellToolStripMenuItem
@@ -109,6 +115,13 @@
             this.copyRowDataToolStripMenuItem.Size = new System.Drawing.Size(248, 22);
             this.copyRowDataToolStripMenuItem.Text = "Copy Selected Rows";
             this.copyRowDataToolStripMenuItem.Click += new System.EventHandler(this.copyRowDataToolStripMenuItem_Click);
+            // 
+            // copySelectedRowsNoHeaderToolStripMenuItem
+            // 
+            this.copySelectedRowsNoHeaderToolStripMenuItem.Name = "copySelectedRowsNoHeaderToolStripMenuItem";
+            this.copySelectedRowsNoHeaderToolStripMenuItem.Size = new System.Drawing.Size(248, 22);
+            this.copySelectedRowsNoHeaderToolStripMenuItem.Text = "Copy Selected Rows (No Header)";
+            this.copySelectedRowsNoHeaderToolStripMenuItem.Click += new System.EventHandler(this.copySelectedRowsNoHeaderToolStripMenuItem_Click);
             // 
             // mainMenu1
             // 
@@ -309,35 +322,61 @@
             // richTextBoxContents
             // 
             this.richTextBoxContents.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.richTextBoxContents.Location = new System.Drawing.Point(3, 30);
+            this.richTextBoxContents.Location = new System.Drawing.Point(3, 3);
             this.richTextBoxContents.Name = "richTextBoxContents";
             this.richTextBoxContents.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
-            this.richTextBoxContents.Size = new System.Drawing.Size(973, 278);
+            this.richTextBoxContents.Size = new System.Drawing.Size(625, 274);
             this.richTextBoxContents.TabIndex = 4;
             this.richTextBoxContents.Text = "";
             // 
-            // splitContainer1
+            // splitContainerMain
             // 
-            this.splitContainer1.Location = new System.Drawing.Point(8, 34);
-            this.splitContainer1.Name = "splitContainer1";
-            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            this.splitContainerMain.Location = new System.Drawing.Point(8, 34);
+            this.splitContainerMain.Name = "splitContainerMain";
+            this.splitContainerMain.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
-            // splitContainer1.Panel1
+            // splitContainerMain.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.dataGridViewClipboard);
+            this.splitContainerMain.Panel1.Controls.Add(this.dataGridViewClipboard);
             // 
-            // splitContainer1.Panel2
+            // splitContainerMain.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.labelSynthesizedTypeWarn);
-            this.splitContainer1.Panel2.Controls.Add(this.buttonResetEdit);
-            this.splitContainer1.Panel2.Controls.Add(this.buttonApplyEdit);
-            this.splitContainer1.Panel2.Controls.Add(this.label1);
-            this.splitContainer1.Panel2.Controls.Add(this.dropdownContentsViewMode);
-            this.splitContainer1.Panel2.Controls.Add(this.richTextBoxContents);
-            this.splitContainer1.Size = new System.Drawing.Size(977, 586);
-            this.splitContainer1.SplitterDistance = 272;
-            this.splitContainer1.TabIndex = 6;
-            this.splitContainer1.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer1_SplitterMoved);
+            this.splitContainerMain.Panel2.Controls.Add(this.splitterContainer_InnerTextBoxes);
+            this.splitContainerMain.Panel2.Controls.Add(this.labelSynthesizedTypeWarn);
+            this.splitContainerMain.Panel2.Controls.Add(this.buttonResetEdit);
+            this.splitContainerMain.Panel2.Controls.Add(this.buttonApplyEdit);
+            this.splitContainerMain.Panel2.Controls.Add(this.label1);
+            this.splitContainerMain.Panel2.Controls.Add(this.dropdownContentsViewMode);
+            this.splitContainerMain.Size = new System.Drawing.Size(977, 586);
+            this.splitContainerMain.SplitterDistance = 272;
+            this.splitContainerMain.TabIndex = 6;
+            this.splitContainerMain.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer1_SplitterMoved);
+            // 
+            // splitterContainer_InnerTextBoxes
+            // 
+            this.splitterContainer_InnerTextBoxes.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.splitterContainer_InnerTextBoxes.Location = new System.Drawing.Point(0, 30);
+            this.splitterContainer_InnerTextBoxes.Name = "splitterContainer_InnerTextBoxes";
+            // 
+            // splitterContainer_InnerTextBoxes.Panel1
+            // 
+            this.splitterContainer_InnerTextBoxes.Panel1.Controls.Add(this.richTextBoxContents);
+            // 
+            // splitterContainer_InnerTextBoxes.Panel2
+            // 
+            this.splitterContainer_InnerTextBoxes.Panel2.Controls.Add(this.richTextBox_HexPlaintext);
+            this.splitterContainer_InnerTextBoxes.Size = new System.Drawing.Size(977, 280);
+            this.splitterContainer_InnerTextBoxes.SplitterDistance = 631;
+            this.splitterContainer_InnerTextBoxes.TabIndex = 13;
+            // 
+            // richTextBox_HexPlaintext
+            // 
+            this.richTextBox_HexPlaintext.Location = new System.Drawing.Point(4, 4);
+            this.richTextBox_HexPlaintext.Name = "richTextBox_HexPlaintext";
+            this.richTextBox_HexPlaintext.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
+            this.richTextBox_HexPlaintext.Size = new System.Drawing.Size(335, 276);
+            this.richTextBox_HexPlaintext.TabIndex = 0;
+            this.richTextBox_HexPlaintext.Text = "";
             // 
             // labelSynthesizedTypeWarn
             // 
@@ -411,19 +450,12 @@
             this.labelPendingChanges.Text = "*Pending Changes - Click Save Icon to apply to clipboard";
             this.labelPendingChanges.Visible = false;
             // 
-            // copySelectedRowsNoHeaderToolStripMenuItem
-            // 
-            this.copySelectedRowsNoHeaderToolStripMenuItem.Name = "copySelectedRowsNoHeaderToolStripMenuItem";
-            this.copySelectedRowsNoHeaderToolStripMenuItem.Size = new System.Drawing.Size(248, 22);
-            this.copySelectedRowsNoHeaderToolStripMenuItem.Text = "Copy Selected Rows (No Header)";
-            this.copySelectedRowsNoHeaderToolStripMenuItem.Click += new System.EventHandler(this.copySelectedRowsNoHeaderToolStripMenuItem_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(993, 629);
-            this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.splitContainerMain);
             this.Controls.Add(this.labelPendingChanges);
             this.Controls.Add(this.toolStrip1);
             this.Menu = this.mainMenu1;
@@ -435,11 +467,15 @@
             this.contextMenuStrip_dataGridView.ResumeLayout(false);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            this.splitContainer1.Panel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
+            this.splitContainerMain.Panel1.ResumeLayout(false);
+            this.splitContainerMain.Panel2.ResumeLayout(false);
+            this.splitContainerMain.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).EndInit();
+            this.splitContainerMain.ResumeLayout(false);
+            this.splitterContainer_InnerTextBoxes.Panel1.ResumeLayout(false);
+            this.splitterContainer_InnerTextBoxes.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitterContainer_InnerTextBoxes)).EndInit();
+            this.splitterContainer_InnerTextBoxes.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -459,7 +495,7 @@
         private System.Windows.Forms.ToolStripButton toolStripButtonRefresh;
         private System.Windows.Forms.ToolStripButton toolStripButtonDelete;
         private System.Windows.Forms.RichTextBox richTextBoxContents;
-        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.SplitContainer splitContainerMain;
         private System.Windows.Forms.ComboBox dropdownContentsViewMode;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label labelSynthesizedTypeWarn;
@@ -486,5 +522,7 @@
         private System.Windows.Forms.ToolStripMenuItem copyCellToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem copyRowDataToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem copySelectedRowsNoHeaderToolStripMenuItem;
+        private System.Windows.Forms.SplitContainer splitterContainer_InnerTextBoxes;
+        private System.Windows.Forms.RichTextBox richTextBox_HexPlaintext;
     }
 }
