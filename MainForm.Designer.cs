@@ -20,6 +20,9 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.dataGridViewClipboard = new System.Windows.Forms.DataGridView();
+            this.contextMenuStrip_dataGridView = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.copyCellToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.copyRowDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainMenu1 = new System.Windows.Forms.MainMenu(this.components);
             this.menuMainFile = new System.Windows.Forms.MenuItem();
             this.menuFile_ExportSelectedAsRawHex = new System.Windows.Forms.MenuItem();
@@ -55,6 +58,7 @@
             this.labelPendingChanges = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
+            this.contextMenuStrip_dataGridView.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -68,6 +72,7 @@
             this.dataGridViewClipboard.AllowUserToDeleteRows = false;
             this.dataGridViewClipboard.AllowUserToResizeRows = false;
             this.dataGridViewClipboard.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridViewClipboard.ContextMenuStrip = this.contextMenuStrip_dataGridView;
             this.dataGridViewClipboard.Location = new System.Drawing.Point(3, 3);
             this.dataGridViewClipboard.Name = "dataGridViewClipboard";
             this.dataGridViewClipboard.ReadOnly = true;
@@ -75,9 +80,32 @@
             this.dataGridViewClipboard.Size = new System.Drawing.Size(971, 266);
             this.dataGridViewClipboard.TabIndex = 0;
             this.dataGridViewClipboard.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewClipboard_CellClick);
+            this.dataGridViewClipboard.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridViewClipboard_CellMouseDown);
             this.dataGridViewClipboard.SelectionChanged += new System.EventHandler(this.dataGridViewClipboard_SelectionChanged);
             this.dataGridViewClipboard.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dataGridViewClipboard_KeyDown);
             this.dataGridViewClipboard.MouseEnter += new System.EventHandler(this.dataGridViewClipboard_MouseEnter);
+            // 
+            // contextMenuStrip_dataGridView
+            // 
+            this.contextMenuStrip_dataGridView.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.copyCellToolStripMenuItem,
+            this.copyRowDataToolStripMenuItem});
+            this.contextMenuStrip_dataGridView.Name = "contextMenuStrip_dataGridView";
+            this.contextMenuStrip_dataGridView.Size = new System.Drawing.Size(181, 48);
+            // 
+            // copyCellToolStripMenuItem
+            // 
+            this.copyCellToolStripMenuItem.Name = "copyCellToolStripMenuItem";
+            this.copyCellToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.copyCellToolStripMenuItem.Text = "Copy Single Cell";
+            this.copyCellToolStripMenuItem.Click += new System.EventHandler(this.copyCellToolStripMenuItem_Click);
+            // 
+            // copyRowDataToolStripMenuItem
+            // 
+            this.copyRowDataToolStripMenuItem.Name = "copyRowDataToolStripMenuItem";
+            this.copyRowDataToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.copyRowDataToolStripMenuItem.Text = "Copy Selected Rows";
+            this.copyRowDataToolStripMenuItem.Click += new System.EventHandler(this.copyRowDataToolStripMenuItem_Click);
             // 
             // mainMenu1
             // 
@@ -388,12 +416,12 @@
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.labelPendingChanges);
             this.Controls.Add(this.toolStrip1);
-            this.Menu = this.mainMenu1;
             this.Name = "MainForm";
             this.Text = "Clipboard Manager";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.Resize += new System.EventHandler(this.MainForm_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).EndInit();
+            this.contextMenuStrip_dataGridView.ResumeLayout(false);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);
@@ -443,5 +471,8 @@
         private System.Windows.Forms.MenuItem menuOptions_CommaSeparation;
         private System.Windows.Forms.MenuItem menuOptions_PreFormatted;
         private System.Windows.Forms.MenuItem menuEdit_CopyEntireTable;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip_dataGridView;
+        private System.Windows.Forms.ToolStripMenuItem copyCellToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem copyRowDataToolStripMenuItem;
     }
 }

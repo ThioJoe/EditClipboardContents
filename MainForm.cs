@@ -165,7 +165,7 @@ namespace ClipboardManager
                 // If the index has changed, update selection
                 if (newIndex != currentIndex)
                 {
-                    //dataGridViewClipboard.ClearSelection();
+                    dataGridViewClipboard.ClearSelection();
                     dataGridViewClipboard.Rows[newIndex].Selected = true;
                     dataGridViewClipboard.CurrentCell = dataGridViewClipboard.Rows[newIndex].Cells[0];
 
@@ -981,11 +981,18 @@ namespace ClipboardManager
             UpdateEditControlsVisibility();
         }
 
-        private void ChangeCellFocus(int rowIndex)
+        private void ChangeCellFocus(int rowIndex, int cellIndex = -1)
         {
             if (rowIndex >= 0)
             {
+                // Set the selected cell if a valid cell index is provided
+                if (cellIndex >= 0)
+                {
+                    dataGridViewClipboard.CurrentCell = dataGridViewClipboard.Rows[rowIndex].Cells[cellIndex];
+                }
+
                 DataGridViewRow selectedRow = dataGridViewClipboard.Rows[rowIndex];
+                // Updates the text box with data for the selected row's format
                 if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatId))
                 {
                     ClipboardItem item = editedClipboardItems.Find(i => i.FormatId == formatId); // Use editedClipboardItems
@@ -1993,6 +2000,46 @@ namespace ClipboardManager
             {
                 e.Handled = true;  // Prevents the default copy operation
                 copyTableRows(copyEntireTable: null); // Null means entire table will be copied if no rows are selected, otherwise just selected rows
+            }
+        }
+
+        private void copyRowDataToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            copyTableRows(copyEntireTable: false);
+        }
+
+        private void copyCellToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // Get the contents of the selected cell
+            string cellContents = dataGridViewClipboard.CurrentCell.Value.ToString();
+            // Copy the cell contents to the clipboard
+            Clipboard.SetText(cellContents);
+        }
+
+        private void dataGridViewClipboard_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right && e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            {
+                bool isClickedRowSelected = false;
+
+                // Check if the clicked row is part of the current selection
+                foreach (DataGridViewRow row in dataGridViewClipboard.SelectedRows)
+                {
+                    if (row.Index == e.RowIndex)
+                    {
+                        isClickedRowSelected = true;
+                        break;
+                    }
+                }
+
+                // If the clicked row is not part of the current selection, clear the selection and re-set the clicked row as the only selected row
+                if (!isClickedRowSelected)
+                {
+                    dataGridViewClipboard.ClearSelection();
+                    dataGridViewClipboard.Rows[e.RowIndex].Cells[e.ColumnIndex].Selected = true;
+                    // Change the cell focus
+                    ChangeCellFocus(rowIndex: e.RowIndex, cellIndex: e.ColumnIndex);
+                }
             }
         }
 
