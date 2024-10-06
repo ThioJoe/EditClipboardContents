@@ -1172,7 +1172,15 @@ namespace ClipboardManager
             {
                 Bitmap bitmap = CF_DIBV5ToBitmap(itemToExport.Data);
 
-                
+                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
+                if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
+                {
+                    bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
+                }
+            }
+            else if (itemToExport.FormatId == 8) // CF_DIB
+            {
+                Bitmap bitmap = CF_DIBToBitmap(itemToExport.Data);
                 SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
@@ -1323,13 +1331,63 @@ namespace ClipboardManager
         {
             GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
             var bmi = (BITMAPV5HEADER)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(BITMAPV5HEADER));
-            Bitmap bitmap = new Bitmap((int)bmi.bV5Width, (int)bmi.bV5Height, -
-                                       (int)(bmi.bV5SizeImage / bmi.bV5Height), PixelFormat.Format32bppArgb,
-                                       new IntPtr(handle.AddrOfPinnedObject().ToInt32()
-                                       + bmi.bV5Size + (bmi.bV5Height - 1)
-                                       * (int)(bmi.bV5SizeImage / bmi.bV5Height)));
+            Bitmap bitmap = new Bitmap(
+                (int)bmi.bV5Width,
+                (int)bmi.bV5Height,
+                -(int)(bmi.bV5SizeImage / bmi.bV5Height),
+                PixelFormat.Format32bppArgb,
+                new IntPtr(
+                    handle.AddrOfPinnedObject().ToInt32()
+                    + bmi.bV5Size
+                    + (bmi.bV5Height - 1) * (int)(bmi.bV5SizeImage / bmi.bV5Height)
+                )
+            );
             handle.Free();
             return bitmap;
+        }
+
+        private static Bitmap CF_DIBToBitmap(byte[] data)
+        {
+            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+            try
+            {
+                var bmi = (BITMAPINFO)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(BITMAPINFO));
+                int width = bmi.bmiHeader.biWidth;
+                int height = Math.Abs(bmi.bmiHeader.biHeight); // Handle both top-down and bottom-up DIBs
+                PixelFormat pixelFormat;
+
+                switch (bmi.bmiHeader.biBitCount)
+                {
+                    case 24:
+                        pixelFormat = PixelFormat.Format24bppRgb;
+                        break;
+                    case 32:
+                        pixelFormat = PixelFormat.Format32bppArgb;
+                        break;
+                    default:
+                        throw new NotSupportedException($"Bit depth {bmi.bmiHeader.biBitCount} is not supported.");
+                }
+
+                int stride = ((width * bmi.bmiHeader.biBitCount + 31) / 32) * 4;
+                int imageSize = stride * height;
+
+                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPINFOHEADER)));
+                if (bmi.bmiHeader.biHeight > 0) // Bottom-up DIB
+                {
+                    scan0 = new IntPtr(scan0.ToInt64() + (height - 1) * stride);
+                    stride = -stride;
+                }
+
+                Bitmap bitmap = new Bitmap(width, height, stride, pixelFormat, scan0);
+
+                // Create a new bitmap to return, because the original one is tied to the pinned memory
+                Bitmap result = new Bitmap(bitmap);
+                return result;
+            }
+            finally
+            {
+                handle.Free();
+            }
         }
 
         // Function to extract CF_DIBV5 structure into its hex components
