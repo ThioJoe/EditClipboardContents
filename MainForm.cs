@@ -1327,23 +1327,54 @@ namespace ClipboardManager
 
         }
 
-        private static Bitmap CF_DIBV5ToBitmap(byte[] data)
+        public static Bitmap CF_DIBV5ToBitmap(byte[] data)
         {
             GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-            var bmi = (BITMAPV5HEADER)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(BITMAPV5HEADER));
-            Bitmap bitmap = new Bitmap(
-                (int)bmi.bV5Width,
-                (int)bmi.bV5Height,
-                -(int)(bmi.bV5SizeImage / bmi.bV5Height),
-                PixelFormat.Format32bppArgb,
-                new IntPtr(
-                    handle.AddrOfPinnedObject().ToInt32()
-                    + bmi.bV5Size
-                    + (bmi.bV5Height - 1) * (int)(bmi.bV5SizeImage / bmi.bV5Height)
-                )
-            );
-            handle.Free();
-            return bitmap;
+            try
+            {
+                var bmi = (BITMAPV5HEADER)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(BITMAPV5HEADER));
+
+                int width = Math.Abs(bmi.bV5Width);  // Ensure positive width
+                int height = Math.Abs(bmi.bV5Height); // Ensure positive height
+                PixelFormat pixelFormat;
+
+                switch (bmi.bV5BitCount)
+                {
+                    case 24:
+                        pixelFormat = PixelFormat.Format24bppRgb;
+                        break;
+                    case 32:
+                        pixelFormat = PixelFormat.Format32bppArgb;
+                        break;
+                    default:
+                        throw new NotSupportedException($"Bit depth {bmi.bV5BitCount} is not supported.");
+                }
+
+                int stride = ((width * bmi.bV5BitCount + 31) / 32) * 4;
+                bool isTopDown = bmi.bV5Height < 0;
+
+                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + bmi.bV5Size);
+                if (!isTopDown)
+                {
+                    scan0 = new IntPtr(scan0.ToInt64() + (height - 1) * stride);
+                    stride = -stride;
+                }
+
+                Bitmap bitmap = new Bitmap(width, height, stride, pixelFormat, scan0);
+
+                // Create a new bitmap to return, because the original one is tied to the pinned memory
+                Bitmap result = new Bitmap(bitmap);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in CF_DIBV5ToBitmap: {ex.Message}");
+                throw;
+            }
+            finally
+            {
+                handle.Free();
+            }
         }
 
         private static Bitmap CF_DIBToBitmap(byte[] data)
