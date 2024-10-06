@@ -86,6 +86,9 @@ namespace ClipboardManager
             InitializeDataGridView();
             UpdateToolLocations();
 
+            //Padding currentMainPadding = splitContainerMain.Panel1.Padding;
+            //currentMainPadding.Bottom = 40;
+
             // Initial tool settings
             dropdownContentsViewMode.SelectedIndex = 0; // Default index 0 is "Text" view mode
 
@@ -373,7 +376,7 @@ namespace ClipboardManager
         {
             int titlebarAccomodate = 40;
             int splitterBorderAccomodate = 5;
-            int bottomBuffer = 27; // Adjust this value to set the desired buffer size
+            int bottomBuffer = 30; // Adjust this value to set the desired buffer size
 
             int splitterPanelsBottomPosition = this.Height - toolStrip1.Height - titlebarAccomodate;
 
@@ -383,18 +386,19 @@ namespace ClipboardManager
 
             // Resize splitterContainer_InnerTextBoxes to fit the form
             splitterContainer_InnerTextBoxes.Width = splitContainerMain.Width;
+            splitterContainer_InnerTextBoxes.Height = splitContainerMain.Panel2.Height - splitterBorderAccomodate - bottomBuffer;
+
+            // Auto-resize the text boxes to match the panels
             richTextBoxContents.Width = splitterContainer_InnerTextBoxes.Panel1.Width;
             richTextBox_HexPlaintext.Width = splitterContainer_InnerTextBoxes.Panel2.Width;
+            richTextBoxContents.Height = splitterContainer_InnerTextBoxes.Height;
+            richTextBox_HexPlaintext.Height = splitterContainer_InnerTextBoxes.Height;
 
-            splitterContainer_InnerTextBoxes.Height = splitContainerMain.Panel2.Height;
 
             // Resize processedData grid within panel to match panel size
             dataGridViewClipboard.Width = splitContainerMain.Panel1.Width - splitterBorderAccomodate;
             dataGridViewClipboard.Height = splitContainerMain.Panel1.Height - splitterBorderAccomodate;
-            //richTextBoxContents.Width = splitContainerMain.Panel2.Width - splitterBorderAccomodate;
-            richTextBoxContents.Height = splitContainerMain.Panel2.Height - splitterBorderAccomodate - bottomBuffer;
 
-            
         }
 
         private void Form1_Load(object sender, EventArgs e)
