@@ -175,6 +175,7 @@
             // 
             // menuOptions_IncludeRowHeaders
             // 
+            this.menuOptions_IncludeRowHeaders.Checked = true;
             this.menuOptions_IncludeRowHeaders.Index = 1;
             this.menuOptions_IncludeRowHeaders.Text = "Include Headers When Copying Table";
             this.menuOptions_IncludeRowHeaders.Click += new System.EventHandler(this.menuOptions_IncludeRowHeaders_Click);

@@ -1823,8 +1823,35 @@ namespace ClipboardManager
             }
             else if (menuOptions_PreFormatted.Checked)
             {
-                // If the option to separate by commas is enabled, join the cells with commas
-                finalCombinedString = string.Join("\n", selectedRowsContents.Select(row => string.Join(", ", row)));
+                // Get the maximum width of each column
+                var columnWidths = selectedRowsContents
+                    .SelectMany(row => row.Select((cell, i) => new { i, len = cell?.Length ?? 0 }))
+                    .GroupBy(x => x.i, x => x.len)
+                    .Select(g => g.Max())
+                    .ToList();
+
+                // Create the format string
+                string formatString = string.Join(" | ", columnWidths.Select((width, i) => $"{{{{{{i}},-{width}}}}}"));
+
+                // Format each row
+                var formattedRows = selectedRowsContents.Select(row =>
+                {
+                    var paddedRow = row.Concat(Enumerable.Repeat(string.Empty, columnWidths.Count - row.Count)).ToArray();
+                    var args = paddedRow.Cast<object>().ToArray();
+                    try
+                    {
+                        return string.Format(formatString, args);
+                    }
+                    catch (FormatException)
+                    {
+                        // If formatting fails, fall back to a simple join.
+                        // Without this it throws errors - Possibly because of empty text preview cells but I haven't tested enough to be sure. This handles it though.
+                        return string.Join(" | ", paddedRow.Select((cell, i) => cell.PadRight(columnWidths[i])));
+                    }
+                });
+
+                // Join the rows
+                finalCombinedString = string.Join(Environment.NewLine, formattedRows);
             }
             // Shouldn't get to this point but have it just in case as a fallback
             else
@@ -1836,6 +1863,8 @@ namespace ClipboardManager
             // Copy the list to the clipboard
             Clipboard.SetText(finalCombinedString);
         }
+
+        
 
         private void menuOptions_IncludeRowHeaders_Click(object sender, EventArgs e)
         {
