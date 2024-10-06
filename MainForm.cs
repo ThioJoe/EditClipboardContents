@@ -1807,11 +1807,17 @@ namespace ClipboardManager
             List<List<string>> selectedRowsContents = new List<List<string>>();
 
             // If option to include headers is enabled, add that first
+            bool includeHeader = true; // Adding this to make it easier to determine later for pre-formatting
             if (menuOptions_IncludeRowHeaders.Checked && forceNoHeader != true)
             {
                 // Just get the contents of the header row only
                 List<string> headerRow = dataGridViewClipboard.Columns.Cast<DataGridViewColumn>().Select(col => col.HeaderText).ToList();
                 selectedRowsContents.Add(headerRow);
+                includeHeader = true;
+            }
+            else
+            {
+                includeHeader = false;
             }
 
             // if copyEntire Table is null, then automatically assume entire table if no rows are selected
@@ -1885,7 +1891,7 @@ namespace ClipboardManager
             else if (menuOptions_PreFormatted.Checked)
             {
                 // Get the maximum width of each column
-                var columnWidths = selectedRowsContents
+                List<int> columnWidths = selectedRowsContents
                     .SelectMany(row => row.Select((cell, i) => new { i, len = cell?.Length ?? 0 }))
                     .GroupBy(x => x.i, x => x.len)
                     .Select(g => g.Max())
@@ -1894,11 +1900,18 @@ namespace ClipboardManager
                 // Create the format string
                 string formatString = string.Join(" | ", columnWidths.Select((width, i) => $"{{{{{{i}},-{width}}}}}"));
 
-                // Format each row
-                var formattedRows = selectedRowsContents.Select(row =>
+                // If including headers, create a separator row to add into the 2nd position
+                if (includeHeader)
                 {
-                    var paddedRow = row.Concat(Enumerable.Repeat(string.Empty, columnWidths.Count - row.Count)).ToArray();
-                    var args = paddedRow.Cast<object>().ToArray();
+                    List<string> separatorRow = columnWidths.Select(width => new string('-', width)).ToList();
+                    selectedRowsContents.Insert(1, separatorRow);
+                }
+
+                // Format each row
+                IEnumerable<string> formattedRows = selectedRowsContents.Select(row =>
+                {
+                    string[] paddedRow = row.Concat(Enumerable.Repeat(string.Empty, columnWidths.Count - row.Count)).ToArray();
+                    object[] args = paddedRow.Cast<object>().ToArray();
                     try
                     {
                         return string.Format(formatString, args);
