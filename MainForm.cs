@@ -66,6 +66,12 @@ namespace ClipboardManager
             }
         }
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            dataGridViewClipboard.MouseWheel += dataGridViewClipboard_MouseWheel;
+        }
+
 
         public MainForm()
         {
@@ -111,9 +117,66 @@ namespace ClipboardManager
             dataGridViewClipboard.Columns["TextPreview"].Resizable = DataGridViewTriState.True;
             dataGridViewClipboard.Columns["DataInfo"].Resizable = DataGridViewTriState.True;
 
-
             // Hide the row headers (the leftmost column)
             dataGridViewClipboard.RowHeadersVisible = false;
+
+            // Add event handler for scroll wheel
+            dataGridViewClipboard.MouseWheel += new MouseEventHandler(dataGridViewClipboard_MouseWheel);
+        }
+
+        private void dataGridViewClipboard_MouseWheel(object sender, MouseEventArgs e)
+        {
+            if (((HandledMouseEventArgs)e).Handled == true)
+            {
+                return;
+            }
+            //// Ensure the DataGridView has focus
+            //if (!dataGridViewClipboard.Focused)
+            //{
+            //    dataGridViewClipboard.Focus();
+            //}
+
+            // Determine direction: -1 for up, 1 for down
+            int direction = e.Delta > 0 ? -1 : 1;
+
+            // Get current selected row index
+            int currentIndex = dataGridViewClipboard.CurrentCell?.RowIndex ?? -1;
+
+            if (currentIndex != -1)
+            {
+                // Calculate new index
+                int newIndex = currentIndex + direction;
+
+                // Ensure new index is within bounds
+                int rowCount = dataGridViewClipboard.Rows.Count;
+                if (newIndex < 0)
+                {
+                    newIndex = 0;
+                }
+                else if (newIndex >= rowCount)
+                {
+                    newIndex = rowCount - 1;
+                }
+
+                // If the index has changed, update selection
+                if (newIndex != currentIndex)
+                {
+                    dataGridViewClipboard.ClearSelection();
+                    dataGridViewClipboard.Rows[newIndex].Selected = true;
+                    dataGridViewClipboard.CurrentCell = dataGridViewClipboard.Rows[newIndex].Cells[0];
+
+                    // Ensure the selected row is visible
+                    dataGridViewClipboard.FirstDisplayedScrollingRowIndex = newIndex;
+                }
+
+                ChangeCellFocus(newIndex);
+
+            }
+
+            
+
+            // Mark as handled because the event might get fired multiple times per scroll
+            ((HandledMouseEventArgs)e).Handled = true;
         }
 
         // Update processedData grid view with clipboard contents during refresh
@@ -827,16 +890,17 @@ namespace ClipboardManager
             return $"Unknown Format ({format:X4})";
         }
 
-        private void dataGridViewClipboard_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
-        }
 
         private void dataGridViewClipboard_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex >= 0)
+            ChangeCellFocus(e.RowIndex);
+        }
+
+        private void ChangeCellFocus(int rowIndex)
+        {
+            if (rowIndex >= 0)
             {
-                DataGridViewRow selectedRow = dataGridViewClipboard.Rows[e.RowIndex];
+                DataGridViewRow selectedRow = dataGridViewClipboard.Rows[rowIndex];
                 if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatId))
                 {
                     ClipboardItem item = editedClipboardItems.Find(i => i.FormatId == formatId); // Use editedClipboardItems
@@ -1220,6 +1284,12 @@ namespace ClipboardManager
             ClipboardItem itemToExport = GetSelectedClipboardItemObject();
             Dictionary<string, string> selectedItemInfo = GetSelectedItemInfo();
 
+        }
+
+        // Give focus to control when mouse enters
+        private void dataGridViewClipboard_MouseEnter(object sender, EventArgs e)
+        {
+            dataGridViewClipboard.Focus();
         }
     }
 

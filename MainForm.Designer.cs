@@ -63,7 +63,7 @@
             this.dataGridViewClipboard.Size = new System.Drawing.Size(1457, 415);
             this.dataGridViewClipboard.TabIndex = 0;
             this.dataGridViewClipboard.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewClipboard_CellClick);
-            this.dataGridViewClipboard.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewClipboard_CellContentClick);
+            this.dataGridViewClipboard.MouseEnter += new System.EventHandler(this.dataGridViewClipboard_MouseEnter);
             // 
             // mainMenu1
             // 
