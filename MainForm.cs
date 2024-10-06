@@ -1065,42 +1065,83 @@ namespace ClipboardManager
         {
             try
             {
+                // First, process the edited hex string of the actively selected clipboard item
                 foreach (var item in editedClipboardItems)
                 {
+                    // Check if item matches currently selected clipboard item
+                    if (item.FormatId != GetSelectedClipboardItemObject().FormatId)
+                    {
+                        continue;
+                    }
+                    // Check if the item is in hex mode
+                    if (dropdownContentsViewMode.SelectedIndex != 2)
+                    {
+                        MessageBox.Show("To update the clipboard, you must be in hex edit mode for the selected item.");
+                        return;
+                    }
+
                     string hexString = richTextBoxContents.Text.Replace(" ", "");
                     byte[] rawData = Enumerable.Range(0, hexString.Length)
                         .Where(x => x % 2 == 0)
                         .Select(x => Convert.ToByte(hexString.Substring(x, 2), 16))
                         .ToArray();
-
-                    IntPtr hGlobal = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, (UIntPtr)rawData.Length);
-                    IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
-
-                    Marshal.Copy(rawData, 0, pGlobal, rawData.Length);
-                    NativeMethods.GlobalUnlock(hGlobal);
-
                     item.RawData = rawData;
-                    item.Data = rawData;
                     item.DataSize = (ulong)rawData.Length;
                 }
 
+                // Now, save the processed data to the clipboard
                 if (NativeMethods.OpenClipboard(this.Handle))
                 {
                     NativeMethods.EmptyClipboard();
 
                     foreach (var item in editedClipboardItems)
                     {
-                        IntPtr hGlobal = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, (UIntPtr)item.Data.Length);
-                        IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
+                        if (item.RawData != null && item.RawData.Length > 0)
+                        {
+                            IntPtr hGlobal = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, (UIntPtr)item.RawData.Length);
+                            if (hGlobal != IntPtr.Zero)
+                            {
+                                IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
+                                if (pGlobal != IntPtr.Zero)
+                                {
+                                    try
+                                    {
+                                        Marshal.Copy(item.RawData, 0, pGlobal, item.RawData.Length);
+                                    }
+                                    finally
+                                    {
+                                        NativeMethods.GlobalUnlock(hGlobal);
+                                    }
 
-                        Marshal.Copy(item.Data, 0, pGlobal, item.Data.Length);
-                        NativeMethods.GlobalUnlock(hGlobal);
-
-                        NativeMethods.SetClipboardData(item.FormatId, hGlobal);
+                                    if (NativeMethods.SetClipboardData(item.FormatId, hGlobal) == IntPtr.Zero)
+                                    {
+                                        NativeMethods.GlobalFree(hGlobal);
+                                        Console.WriteLine($"Failed to set clipboard data for format: {item.FormatId}");
+                                    }
+                                }
+                                else
+                                {
+                                    NativeMethods.GlobalFree(hGlobal);
+                                    Console.WriteLine($"Failed to lock memory for format: {item.FormatId}");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Failed to allocate memory for format: {item.FormatId}");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"No data to set for format: {item.FormatId}");
+                        }
                     }
 
                     NativeMethods.CloseClipboard();
                     MessageBox.Show("Clipboard data saved successfully.");
+                }
+                else
+                {
+                    MessageBox.Show("Failed to open clipboard.");
                 }
             }
             catch (Exception ex)
