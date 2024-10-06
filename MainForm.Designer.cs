@@ -38,8 +38,11 @@
             this.richTextBoxContents = new System.Windows.Forms.RichTextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.labelSynthesizedTypeWarn = new System.Windows.Forms.Label();
+            this.buttonResetEdit = new System.Windows.Forms.Button();
+            this.buttonApplyEdit = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.dropdownContentsViewMode = new System.Windows.Forms.ComboBox();
+            this.labelPendingChanges = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.toolStrip1.SuspendLayout();
@@ -55,14 +58,14 @@
             this.dataGridViewClipboard.AllowUserToDeleteRows = false;
             this.dataGridViewClipboard.AllowUserToResizeRows = false;
             this.dataGridViewClipboard.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridViewClipboard.Location = new System.Drawing.Point(4, 5);
-            this.dataGridViewClipboard.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.dataGridViewClipboard.Location = new System.Drawing.Point(3, 3);
             this.dataGridViewClipboard.Name = "dataGridViewClipboard";
             this.dataGridViewClipboard.ReadOnly = true;
             this.dataGridViewClipboard.RowHeadersWidth = 62;
-            this.dataGridViewClipboard.Size = new System.Drawing.Size(1457, 415);
+            this.dataGridViewClipboard.Size = new System.Drawing.Size(971, 266);
             this.dataGridViewClipboard.TabIndex = 0;
             this.dataGridViewClipboard.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewClipboard_CellClick);
+            this.dataGridViewClipboard.SelectionChanged += new System.EventHandler(this.dataGridViewClipboard_SelectionChanged);
             this.dataGridViewClipboard.MouseEnter += new System.EventHandler(this.dataGridViewClipboard_MouseEnter);
             // 
             // mainMenu1
@@ -142,8 +145,8 @@
             this.toolStripButtonExportSelected});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
-            this.toolStrip1.Size = new System.Drawing.Size(1490, 33);
+            this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 2, 0);
+            this.toolStrip1.Size = new System.Drawing.Size(993, 31);
             this.toolStrip1.TabIndex = 3;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -153,7 +156,7 @@
             this.toolStripButtonRefresh.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonRefresh.Image")));
             this.toolStripButtonRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonRefresh.Name = "toolStripButtonRefresh";
-            this.toolStripButtonRefresh.Size = new System.Drawing.Size(34, 28);
+            this.toolStripButtonRefresh.Size = new System.Drawing.Size(28, 28);
             this.toolStripButtonRefresh.Text = "Refresh";
             this.toolStripButtonRefresh.Click += new System.EventHandler(this.toolStripButtonRefresh_Click);
             // 
@@ -163,7 +166,7 @@
             this.toolStripButtonDelete.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonDelete.Image")));
             this.toolStripButtonDelete.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonDelete.Name = "toolStripButtonDelete";
-            this.toolStripButtonDelete.Size = new System.Drawing.Size(34, 28);
+            this.toolStripButtonDelete.Size = new System.Drawing.Size(28, 28);
             this.toolStripButtonDelete.Text = "Delete Item From Clipboard";
             this.toolStripButtonDelete.Click += new System.EventHandler(this.toolStripButtonDelete_Click);
             // 
@@ -173,7 +176,7 @@
             this.toolStripButtonSaveEdited.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonSaveEdited.Image")));
             this.toolStripButtonSaveEdited.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonSaveEdited.Name = "toolStripButtonSaveEdited";
-            this.toolStripButtonSaveEdited.Size = new System.Drawing.Size(34, 28);
+            this.toolStripButtonSaveEdited.Size = new System.Drawing.Size(28, 28);
             this.toolStripButtonSaveEdited.Text = "Save Edited Clipboard";
             this.toolStripButtonSaveEdited.Click += new System.EventHandler(this.toolStripButtonSaveEdited_Click);
             // 
@@ -183,25 +186,23 @@
             this.toolStripButtonExportSelected.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonExportSelected.Image")));
             this.toolStripButtonExportSelected.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonExportSelected.Name = "toolStripButtonExportSelected";
-            this.toolStripButtonExportSelected.Size = new System.Drawing.Size(34, 28);
+            this.toolStripButtonExportSelected.Size = new System.Drawing.Size(28, 28);
             this.toolStripButtonExportSelected.Text = "toolStripButton1";
             this.toolStripButtonExportSelected.Click += new System.EventHandler(this.toolStripButtonExportSelected_Click);
             // 
             // richTextBoxContents
             // 
             this.richTextBoxContents.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.richTextBoxContents.Location = new System.Drawing.Point(4, 46);
-            this.richTextBoxContents.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.richTextBoxContents.Location = new System.Drawing.Point(3, 30);
             this.richTextBoxContents.Name = "richTextBoxContents";
             this.richTextBoxContents.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
-            this.richTextBoxContents.Size = new System.Drawing.Size(1457, 426);
+            this.richTextBoxContents.Size = new System.Drawing.Size(973, 278);
             this.richTextBoxContents.TabIndex = 4;
             this.richTextBoxContents.Text = "";
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Location = new System.Drawing.Point(12, 52);
-            this.splitContainer1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.splitContainer1.Location = new System.Drawing.Point(8, 34);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -212,34 +213,56 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.labelSynthesizedTypeWarn);
+            this.splitContainer1.Panel2.Controls.Add(this.buttonResetEdit);
+            this.splitContainer1.Panel2.Controls.Add(this.buttonApplyEdit);
             this.splitContainer1.Panel2.Controls.Add(this.label1);
             this.splitContainer1.Panel2.Controls.Add(this.dropdownContentsViewMode);
             this.splitContainer1.Panel2.Controls.Add(this.richTextBoxContents);
-            this.splitContainer1.Size = new System.Drawing.Size(1465, 902);
-            this.splitContainer1.SplitterDistance = 419;
-            this.splitContainer1.SplitterWidth = 6;
+            this.splitContainer1.Size = new System.Drawing.Size(977, 586);
+            this.splitContainer1.SplitterDistance = 272;
             this.splitContainer1.TabIndex = 6;
             this.splitContainer1.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer1_SplitterMoved);
             // 
             // labelSynthesizedTypeWarn
             // 
             this.labelSynthesizedTypeWarn.AutoSize = true;
-            this.labelSynthesizedTypeWarn.Location = new System.Drawing.Point(383, 13);
-            this.labelSynthesizedTypeWarn.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelSynthesizedTypeWarn.Location = new System.Drawing.Point(243, 6);
             this.labelSynthesizedTypeWarn.Name = "labelSynthesizedTypeWarn";
-            this.labelSynthesizedTypeWarn.Size = new System.Drawing.Size(594, 20);
+            this.labelSynthesizedTypeWarn.Size = new System.Drawing.Size(402, 13);
             this.labelSynthesizedTypeWarn.TabIndex = 9;
             this.labelSynthesizedTypeWarn.Text = "⚠️ Note: Selected format type will be automatically re-created by Windows if dele" +
     "ted\r\n";
             this.labelSynthesizedTypeWarn.Visible = false;
             // 
+            // buttonResetEdit
+            // 
+            this.buttonResetEdit.Enabled = false;
+            this.buttonResetEdit.Location = new System.Drawing.Point(890, 3);
+            this.buttonResetEdit.Name = "buttonResetEdit";
+            this.buttonResetEdit.Size = new System.Drawing.Size(83, 23);
+            this.buttonResetEdit.TabIndex = 11;
+            this.buttonResetEdit.Text = "Reset Edit";
+            this.buttonResetEdit.UseVisualStyleBackColor = true;
+            this.buttonResetEdit.Click += new System.EventHandler(this.buttonResetEdit_Click);
+            // 
+            // buttonApplyEdit
+            // 
+            this.buttonApplyEdit.Enabled = false;
+            this.buttonApplyEdit.Location = new System.Drawing.Point(809, 3);
+            this.buttonApplyEdit.Name = "buttonApplyEdit";
+            this.buttonApplyEdit.Size = new System.Drawing.Size(75, 23);
+            this.buttonApplyEdit.TabIndex = 10;
+            this.buttonApplyEdit.Text = "Apply Edit";
+            this.buttonApplyEdit.UseVisualStyleBackColor = true;
+            this.buttonApplyEdit.Visible = false;
+            this.buttonApplyEdit.Click += new System.EventHandler(this.buttonApplyEdit_Click);
+            // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(14, 13);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label1.Location = new System.Drawing.Point(9, 8);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(91, 20);
+            this.label1.Size = new System.Drawing.Size(63, 13);
             this.label1.TabIndex = 8;
             this.label1.Text = "View Mode:";
             // 
@@ -253,21 +276,30 @@
             "Hex",
             "Hex (Editable)",
             "Object / Struct Details"});
-            this.dropdownContentsViewMode.Location = new System.Drawing.Point(113, 5);
-            this.dropdownContentsViewMode.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.dropdownContentsViewMode.Location = new System.Drawing.Point(75, 3);
             this.dropdownContentsViewMode.Name = "dropdownContentsViewMode";
-            this.dropdownContentsViewMode.Size = new System.Drawing.Size(241, 28);
+            this.dropdownContentsViewMode.Size = new System.Drawing.Size(162, 21);
             this.dropdownContentsViewMode.TabIndex = 7;
             this.dropdownContentsViewMode.SelectedIndexChanged += new System.EventHandler(this.dropdownContentsViewMode_SelectedIndexChanged);
             // 
+            // labelPendingChanges
+            // 
+            this.labelPendingChanges.AutoSize = true;
+            this.labelPendingChanges.Location = new System.Drawing.Point(704, 9);
+            this.labelPendingChanges.Name = "labelPendingChanges";
+            this.labelPendingChanges.Size = new System.Drawing.Size(277, 13);
+            this.labelPendingChanges.TabIndex = 12;
+            this.labelPendingChanges.Text = "*Pending Changes - Click Save Icon to apply to clipboard";
+            this.labelPendingChanges.Visible = false;
+            // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1490, 968);
+            this.ClientSize = new System.Drawing.Size(993, 629);
             this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.labelPendingChanges);
             this.Controls.Add(this.toolStrip1);
-            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Menu = this.mainMenu1;
             this.Name = "MainForm";
             this.Text = "Clipboard Manager";
@@ -310,5 +342,8 @@
         private System.Windows.Forms.MenuItem menuItem1;
         private System.Windows.Forms.MenuItem menuItemShowLargeHex;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Button buttonApplyEdit;
+        private System.Windows.Forms.Button buttonResetEdit;
+        private System.Windows.Forms.Label labelPendingChanges;
     }
 }

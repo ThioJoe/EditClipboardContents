@@ -25,6 +25,8 @@ namespace ClipboardManager
 
         private StreamWriter logFile;
 
+        public static bool hasPendingChanges = false;
+
         // Dictionary of formats that can be synthesized from other formats, and which they can be synthesized to
         private static readonly Dictionary<uint, List<uint>> SynthesizedFormatsMap = new Dictionary<uint, List<uint>>()
         {
@@ -163,7 +165,7 @@ namespace ClipboardManager
                 // If the index has changed, update selection
                 if (newIndex != currentIndex)
                 {
-                    dataGridViewClipboard.ClearSelection();
+                    //dataGridViewClipboard.ClearSelection();
                     dataGridViewClipboard.Rows[newIndex].Selected = true;
                     dataGridViewClipboard.CurrentCell = dataGridViewClipboard.Rows[newIndex].Cells[0];
 
@@ -253,7 +255,8 @@ namespace ClipboardManager
                 dataGridViewClipboard.Columns["DataInfo"].Width = 200;
             }
 
-            //dataGridViewClipboard.Refresh();
+            // Reset selection to the first row
+            dataGridViewClipboard.ClearSelection();
         }
 
         // Function to try and parse the raw data for text if it is text
@@ -435,15 +438,15 @@ namespace ClipboardManager
 
             DetermineSynthesizedFormats();
             ProcessClipboardData();
-            CloneClipboardItems(); // Clone clipboardItems to editedClipboardItems
+            CloneClipboardItemsToEditedVariable(); // Clone clipboardItems to editedClipboardItems
+
             Console.WriteLine("RefreshClipboardItems completed");
         }
 
-        private void CloneClipboardItems()
+        private void CloneClipboardItemsToEditedVariable()
         {
             editedClipboardItems = clipboardItems.Select(item => (ClipboardItem)item.Clone()).ToList();
         }
-
 
 
         private void CopyClipboardData()
@@ -581,7 +584,7 @@ namespace ClipboardManager
 
                     case 8: // CF_DIB
                     case 17: // CF_DIBV5
-                        //Console.WriteLine($"Processing bitmap format: {(item.FormatId == 8 ? "CF_DIB" : "CF_DIBV5")}");
+                        //Console.WriteLine($"Processing bitmap format: {(selectedItem.FormatId == 8 ? "CF_DIB" : "CF_DIBV5")}");
                         dataInfoList.Add($"Format: {item.FormatName}");
                         dataInfoList.Add($"Size: {item.DataSize} bytes");
                         break;
@@ -607,13 +610,13 @@ namespace ClipboardManager
                     // Add more cases for other formats as needed...
 
                     default:
-                        //Console.WriteLine($"Processing unknown format: {item.FormatId}");
+                        //Console.WriteLine($"Processing unknown format: {selectedItem.FormatId}");
                         dataInfoList.Add("");
                         break;
                 }
 
-                item.Data = processedData; // Update the processed data in the item
-                item.DataInfoList = dataInfoList; // Update the data info in the item
+                item.Data = processedData; // Update the processed data in the selectedItem
+                item.DataInfoList = dataInfoList; // Update the data info in the selectedItem
                 string handleType = item.AssumedSynthesized ? "Synthesized" : "Standard"; // Determine handle type
 
                 UpdateClipboardItemsGridView(formatName: item.FormatName, formatID: item.FormatId.ToString(), handleType: handleType, dataSize: item.DataSize.ToString(), dataInfo: item.DataInfoString, rawData: item.RawData);
@@ -975,6 +978,7 @@ namespace ClipboardManager
         private void dataGridViewClipboard_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             ChangeCellFocus(e.RowIndex);
+            UpdateEditControlsVisibility();
         }
 
         private void ChangeCellFocus(int rowIndex)
@@ -986,6 +990,14 @@ namespace ClipboardManager
                 {
                     ClipboardItem item = editedClipboardItems.Find(i => i.FormatId == formatId); // Use editedClipboardItems
 
+                    if (item == null)
+                    {
+                        return;
+                    }
+
+                    richTextBoxContents.Clear();
+                    DisplayClipboardData(item);
+
                     // Check if it's a synthesized name in SynthesizedFormatNames and show a warning
                     if (SynthesizedFormatNames.Contains(item.FormatName))
                     {
@@ -994,12 +1006,6 @@ namespace ClipboardManager
                     else
                     {
                         labelSynthesizedTypeWarn.Visible = false;
-                    }
-
-                    if (item != null)
-                    {
-                        richTextBoxContents.Clear();
-                        DisplayClipboardData(item);
                     }
                 }
             }
@@ -1065,15 +1071,15 @@ namespace ClipboardManager
         {
             try
             {
-                // First, process the edited hex string of the actively selected clipboard item
+                // First, process the edited hex string of the actively selected clipboard selectedItem
                 foreach (var item in editedClipboardItems)
                 {
-                    // Check if item matches currently selected clipboard item
+                    // Check if selectedItem matches currently selected clipboard selectedItem
                     if (item.FormatId != GetSelectedClipboardItemObject().FormatId)
                     {
                         continue;
                     }
-                    // Check if the item is in hex mode
+                    // Check if the selectedItem is in hex mode
                     if (dropdownContentsViewMode.SelectedIndex != 2)
                     {
                         MessageBox.Show("To update the clipboard, you must be in hex edit mode for the selected item.");
@@ -1154,6 +1160,8 @@ namespace ClipboardManager
         private void toolStripButtonRefresh_Click(object sender, EventArgs e)
         {
             RefreshClipboardItems();
+            hasPendingChanges = false;
+            UpdateEditControlsVisibility();
         }
 
         private void toolStripButtonDelete_Click(object sender, EventArgs e)
@@ -1190,16 +1198,80 @@ namespace ClipboardManager
 
         private void dropdownContentsViewMode_SelectedIndexChanged(object sender, EventArgs e)
         {
+            // Indexes:
+            // 0: Text
+            // 1: Hex
+            // 2: Hex (Editable)
+            // 3: Object / Struct View
+
             ClipboardItem item = GetSelectedClipboardItemObject();
-            if (item != null)
+            if (item == null)
             {
-                DisplayClipboardData(item);
+                return;
             }
+
+            DisplayClipboardData(item);
+
+            // Show buttons and labels for edited mode
+            UpdateEditControlsVisibility();
+        }
+
+        private void UpdateEditControlsVisibility(ClipboardItem selectedItem = null, ClipboardItem selectedEditedItem = null)
+        {
+            if (selectedItem == null)
+            {
+                selectedItem = GetSelectedClipboardItemObject();
+            }
+            if (selectedEditedItem == null)
+            {
+                selectedEditedItem = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
+            }
+
+            // Visibility updates to make regardless of view mode and selected item
+            if (hasPendingChanges)
+            {
+                labelPendingChanges.Visible = true;
+            }
+            else
+            {
+                labelPendingChanges.Visible = false;
+            }
+
+            // Beyond here, we need a selected item
+            if (selectedItem == null || selectedEditedItem == null)
+            {
+                buttonResetEdit.Enabled = false;
+                buttonApplyEdit.Enabled = false;
+                return;
+            }
+
+            // Updates based on selected selectedItem only, regardless of view mode
+            if (selectedEditedItem.HasPendingEdit)
+            {
+                buttonResetEdit.Enabled = true;
+            }
+            else
+            {
+                buttonResetEdit.Enabled = false;
+            }
+
+            // Show apply edit button if the selectedItem is in hex edit mode
+            if (dropdownContentsViewMode.SelectedIndex == 2)
+            {
+                buttonApplyEdit.Enabled = true;
+                buttonApplyEdit.Visible = true;
+            }
+            else
+            {
+                buttonApplyEdit.Enabled = false;
+                buttonApplyEdit.Visible = false;
+            }
+
         }
 
         private void toolStripButtonExportSelected_Click(object sender, EventArgs e)
         {
-            // Get the clipboard item and its info
+            // Get the clipboard selectedItem and its info
             ClipboardItem itemToExport = GetSelectedClipboardItemObject();
 
             if (itemToExport == null)
@@ -1283,14 +1355,22 @@ namespace ClipboardManager
             return saveFileDialog;
         }
 
-        private ClipboardItem GetSelectedClipboardItemObject()
+        private ClipboardItem GetSelectedClipboardItemObject(bool returnEditedItemVersion = false)
         {
             if (dataGridViewClipboard.SelectedRows.Count > 0)
             {
                 DataGridViewRow selectedRow = dataGridViewClipboard.SelectedRows[0];
                 if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatId))
                 {
-                    return clipboardItems.Find(i => i.FormatId == formatId);
+                    if (returnEditedItemVersion)
+                    {
+                        return editedClipboardItems.Find(i => i.FormatId == formatId);
+                    }
+                    else
+                    {
+                        return clipboardItems.Find(i => i.FormatId == formatId);
+                    }
+                    
                 }
             }
             return null;
@@ -1320,6 +1400,8 @@ namespace ClipboardManager
         {
             SaveClipboardData();
             RefreshClipboardItems();
+            hasPendingChanges = false;
+            UpdateEditControlsVisibility();
         }
 
         private void menuFile_ExportAsRawHex_Click(object sender, EventArgs e)
@@ -1343,7 +1425,7 @@ namespace ClipboardManager
 
         private void menuItem_ExportSelectedStruct_Click(object sender, EventArgs e)
         {
-            // Get the clipboard item and its info
+            // Get the clipboard selectedItem and its info
             ClipboardItem itemToExport = GetSelectedClipboardItemObject();
             if (itemToExport == null)
             {
@@ -1477,6 +1559,48 @@ namespace ClipboardManager
             }
         }
 
+        // Updates selected clipboard selectedItem in editedClipboardItems list. Does not update the actual clipboard.
+        private void UpdateEditedClipboardItem(int formatId, byte[] rawData, bool setPending = true)
+        {
+            // Match the selectedItem in the editedClipboardItems list
+            for (int i = 0; i < editedClipboardItems.Count; i++)
+            {
+                if (editedClipboardItems[i].FormatId == formatId)
+                {
+                    editedClipboardItems[i].RawData = rawData;
+                    editedClipboardItems[i].DataSize = (ulong)rawData.Length;
+                    editedClipboardItems[i].HasPendingEdit = setPending;
+                    return;
+                }
+            }
+        }
+
+        // Converts the hex string in the hex view to a byte array and updates the clipboard selectedItem in editedClipboardItems
+        private void buttonApplyEdit_Click(object sender, EventArgs e)
+        {
+            // Get the hex string from the hex view
+            string hexString = richTextBoxContents.Text.Replace(" ", "");
+            byte[] rawData = Enumerable.Range(0, hexString.Length)
+                .Where(x => x % 2 == 0)
+                .Select(x => Convert.ToByte(hexString.Substring(x, 2), 16))
+                .ToArray();
+            // Get the format ID of the selected clipboard selectedItem
+            int formatId = (int)GetSelectedClipboardItemObject().FormatId;
+
+            // Check if the edited data is actually different from the original data, apply the change and set hasPendingChanges accordingly
+            if (!GetSelectedClipboardItemObject().Data.SequenceEqual(rawData))
+            {
+                UpdateEditedClipboardItem(formatId, rawData);
+                hasPendingChanges = true;
+            }
+            else
+            {
+                // Don't change hasPendingChanges to false because there might be other items with pending changes
+            }
+
+            UpdateEditControlsVisibility();
+        }
+
         // Function to extract CF_DIBV5 structure into its hex components
         private static string CF_DIBV5ToHex(byte[] data)
         {
@@ -1524,6 +1648,33 @@ namespace ClipboardManager
         {
             dataGridViewClipboard.Focus();
         }
+
+        private void buttonResetEdit_Click(object sender, EventArgs e)
+        {
+            // Get the original item's data and apply it to the edited item
+            UpdateEditedClipboardItem((int)GetSelectedClipboardItemObject().FormatId, GetSelectedClipboardItemObject().Data, setPending: false);
+
+            // Check if any edited items have pending changes, and update the pending changes label if necessary
+            hasPendingChanges = editedClipboardItems.Any(i => i.HasPendingEdit);
+
+            // Update the view
+            DisplayClipboardData(GetSelectedClipboardItemObject());
+            UpdateEditControlsVisibility();
+
+        }
+
+        private void dataGridViewClipboard_SelectionChanged(object sender, EventArgs e)
+        {
+            if (dataGridViewClipboard.SelectedRows.Count > 0)
+            {
+                // Assume focus of the first selected row if multiple are selected
+                ChangeCellFocus(dataGridViewClipboard.SelectedRows[0].Index);
+            }
+            else
+            {
+                richTextBoxContents.Clear();
+            }
+        }
     }
 
     public class ClipboardItem : ICloneable
@@ -1537,6 +1688,7 @@ namespace ClipboardManager
         public bool AssumedSynthesized { get; set; }
         public List<string> DataInfoList { get; set; }
         public string DataInfoString => string.Join(", ", DataInfoList ?? new List<string>());
+        public bool HasPendingEdit { get; set; } = false;
 
         public object Clone()
         {
@@ -1549,7 +1701,8 @@ namespace ClipboardManager
                 Data = (byte[])this.Data?.Clone(),
                 RawData = (byte[])this.RawData?.Clone(),
                 AssumedSynthesized = this.AssumedSynthesized,
-                DataInfoList = new List<string>(this.DataInfoList ?? new List<string>())
+                DataInfoList = new List<string>(this.DataInfoList ?? new List<string>()),
+                HasPendingEdit = false
             };
         }
     }
@@ -1695,7 +1848,7 @@ namespace ClipboardManager
             if (!string.IsNullOrEmpty(fullItem.DataInfoString))
             {
                 result.AppendLine($"{indent}Data Info:");
-                // Add each item in DataInfoList to the result indented
+                // Add each selectedItem in DataInfoList to the result indented
                 foreach (string dataInfoItem in fullItem.DataInfoList)
                 {
                     result.AppendLine($"{indent}  {dataInfoItem}");
