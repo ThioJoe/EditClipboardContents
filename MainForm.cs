@@ -11,6 +11,8 @@ using System.Windows.Forms.VisualStyles;
 using System.Drawing.Imaging;
 using System.Reflection;
 
+#pragma warning disable IDE1006 // Disable messages about Naming Styles
+
 // My classes
 using static EditClipboardItems.ClipboardFormats;
 using System.Globalization;
@@ -1069,7 +1071,7 @@ namespace ClipboardManager
                     richTextBoxContents.ReadOnly = false;
                     break;
                 case 3: // Object / Struct View
-                    richTextBoxContents.Text = FormatInspector.InspectFormat(formatName: GetStandardFormatName(item.FormatId), data: item.RawData, fullItem: item, allowLargeHex: menuOptions_ShowLargeHex.Checked);
+                    richTextBoxContents.Text = FormatInspector.InspectFormat(formatName: GetStandardFormatName(item.FormatId), data: item.RawData, fullItem: item);
                     richTextBoxContents.ReadOnly = true;
                     break;
 
@@ -1404,12 +1406,14 @@ namespace ClipboardManager
             }
 
             string defaultFileName = $"{defaultFileNameStem}.{extension}";
-            
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "All files (*.*)|*.*";
-            saveFileDialog.FilterIndex = 1;
-            saveFileDialog.RestoreDirectory = true;
-            saveFileDialog.FileName = defaultFileName;
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "All files (*.*)|*.*",
+                FilterIndex = 1,
+                RestoreDirectory = true,
+                FileName = defaultFileName
+            };
 
             return saveFileDialog;
         }
@@ -1435,25 +1439,6 @@ namespace ClipboardManager
             return null;
         }
 
-        private Dictionary<string, string> GetDataGridItemContents()
-        {
-            if (dataGridViewClipboard.SelectedRows.Count > 0)
-            {
-                DataGridViewRow selectedRow = dataGridViewClipboard.SelectedRows[0];
-                return new Dictionary<string, string>
-                {
-                    ["FormatName"] = selectedRow.Cells["FormatName"].Value.ToString(),
-                    ["FormatId"] = selectedRow.Cells["FormatId"].Value.ToString(),
-                    ["HandleType"] = selectedRow.Cells["HandleType"].Value.ToString(),
-                    ["DataSize"] = selectedRow.Cells["DataSize"].Value.ToString(),
-                    ["DataInfo"] = selectedRow.Cells["DataInfo"].Value.ToString()
-                };
-            }
-            else
-            {
-                return null;
-            }
-        }
 
         private void toolStripButtonSaveEdited_Click(object sender, EventArgs e)
         {
@@ -1495,7 +1480,7 @@ namespace ClipboardManager
             if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
             {
                 // Get the hex information
-                string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToExport.FormatId), data: itemToExport.RawData, fullItem: itemToExport, allowLargeHex: menuOptions_ShowLargeHex.Checked);
+                string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToExport.FormatId), data: itemToExport.RawData, fullItem: itemToExport);
                 // TO DO - Export details of each object in the struct
 
                 // Save the data to a file
@@ -1593,7 +1578,6 @@ namespace ClipboardManager
                 }
 
                 int stride = ((width * bmi.bmiHeader.biBitCount + 31) / 32) * 4;
-                int imageSize = stride * height;
 
                 IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPINFOHEADER)));
                 if (bmi.bmiHeader.biHeight > 0) // Bottom-up DIB
@@ -1654,42 +1638,6 @@ namespace ClipboardManager
             }
 
             UpdateEditControlsVisibility();
-        }
-
-        // Function to extract CF_DIBV5 structure into its hex components
-        private static string CF_DIBV5ToHex(byte[] data)
-        {
-            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-            var bmi = (BITMAPV5HEADER)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(BITMAPV5HEADER));
-            StringBuilder hexString = new StringBuilder();
-
-            hexString.Append($"bV5Size: {bmi.bV5Size:X4}\n");
-            hexString.Append($"bV5Width: {bmi.bV5Width:X4}\n");
-            hexString.Append($"bV5Height: {bmi.bV5Height:X4}\n");
-            hexString.Append($"bV5Planes: {bmi.bV5Planes:X4}\n");
-            hexString.Append($"bV5BitCount: {bmi.bV5BitCount:X4}\n");
-            hexString.Append($"bV5Compression: {bmi.bV5Compression:X4}\n");
-            hexString.Append($"bV5SizeImage: {bmi.bV5SizeImage:X4}\n");
-            hexString.Append($"bV5XPelsPerMeter: {bmi.bV5XPelsPerMeter:X4}\n");
-            hexString.Append($"bV5YPelsPerMeter: {bmi.bV5YPelsPerMeter:X4}\n");
-            hexString.Append($"bV5ClrUsed: {bmi.bV5ClrUsed:X4}\n");
-            hexString.Append($"bV5ClrImportant: {bmi.bV5ClrImportant:X4}\n");
-            hexString.Append($"bV5RedMask: {bmi.bV5RedMask:X4}\n");
-            hexString.Append($"bV5GreenMask: {bmi.bV5GreenMask:X4}\n");
-            hexString.Append($"bV5BlueMask: {bmi.bV5BlueMask:X4}\n");
-            hexString.Append($"bV5AlphaMask: {bmi.bV5AlphaMask:X4}\n");
-            hexString.Append($"bV5CSType: {bmi.bV5CSType:X4}\n");
-            hexString.Append($"bV5Endpoints: {bmi.bV5Endpoints:X4}\n");
-            hexString.Append($"bV5GammaRed: {bmi.bV5GammaRed:X4}\n");
-            hexString.Append($"bV5GammaGreen: {bmi.bV5GammaGreen:X4}\n");
-            hexString.Append($"bV5GammaBlue: {bmi.bV5GammaBlue:X4}\n");
-            hexString.Append($"bV5Intent: {bmi.bV5Intent:X4}\n");
-            hexString.Append($"bV5ProfileData: {bmi.bV5ProfileData:X4}\n");
-            hexString.Append($"bV5ProfileSize: {bmi.bV5ProfileSize:X4}\n");
-            hexString.Append($"bV5Reserved: {bmi.bV5Reserved:X4}\n");
-            handle.Free();
-
-            return hexString.ToString();
         }
 
         private void menuItemShowLargeHex_Click(object sender, EventArgs e)
@@ -1767,7 +1715,7 @@ namespace ClipboardManager
                 return;
             }
             // Get the struct / object info that would be displayed in object view of rich text box and copy it to clipboard
-            string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToCopy.FormatId), data: itemToCopy.RawData, fullItem: itemToCopy, allowLargeHex: menuOptions_ShowLargeHex.Checked);
+            string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToCopy.FormatId), data: itemToCopy.RawData, fullItem: itemToCopy);
             Clipboard.SetText(data);
         }
 
@@ -2230,7 +2178,7 @@ namespace ClipboardManager
         {"CF_WAVE", new FormatInfo {Value = 12, Kind = "data", HandleOutput = "Standard wave format audio data"}}
         };
 
-        public static string InspectFormat(string formatName, byte[] data, ClipboardItem fullItem, string indent = "", bool allowLargeHex=false)
+        public static string InspectFormat(string formatName, byte[] data, ClipboardItem fullItem, string indent = "")
         {
             if (!FormatDictionary.TryGetValue(formatName, out FormatInfo formatInfo))
             {
@@ -2260,21 +2208,6 @@ namespace ClipboardManager
                 int offset = 0;
                 InspectStruct(formatInfo.StructType, data, ref result, indent + "  ", ref offset);
             }
-            
-            //else if (data != null)
-            //{
-            //    result.AppendLine($"\n{indent}Data:");
-            //    // Display if not too big
-            //    if (allowLargeHex || data.Length <= 50000)
-            //    {
-            //        result.AppendLine($"{BitConverter.ToString(data).Replace("-", " ")}");
-            //    }
-            //    else
-            //    {
-            //        result.AppendLine($"{indent}  [Data too large to display. Export raw hex data instead]");
-            //    }
-
-            //}
 
             return result.ToString();
         }
@@ -2335,52 +2268,6 @@ namespace ClipboardManager
             }
         }
 
-
-        private static string GetHexString(object value, string indent)
-        {
-            if (value == null)
-                return "null";
-
-            Type valueType = value.GetType();
-
-            if (valueType.IsPrimitive || valueType == typeof(decimal))
-            {
-                return value.ToString();
-            }
-            else if (valueType.IsEnum)
-            {
-                return $"{value} ({(int)value})";
-            }
-            else if (valueType.IsValueType && !valueType.IsPrimitive)
-            {
-                // For nested structs, we'll return a placeholder
-                return $"[{valueType.Name}]";
-            }
-            else if (valueType == typeof(IntPtr))
-            {
-                return $"0x{((IntPtr)value).ToInt64():X}";
-            }
-            else
-            {
-                return value.ToString();
-            }
-        }
-
-        private static string GetBytesString(object value)
-        {
-            if (value == null)
-                return "null";
-
-            try
-            {
-                byte[] bytes = GetBytes(value);
-                return BitConverter.ToString(bytes).Replace("-", " ");
-            }
-            catch (ArgumentException)
-            {
-                return "Unable to get bytes for this type";
-            }
-        }
 
         private static object ReadValueFromBytes(byte[] data, ref int offset, Type fieldType)
         {
@@ -2444,38 +2331,6 @@ namespace ClipboardManager
             }
         }
 
-        private static byte[] GetBytes(object value)
-        {
-            Type type = value.GetType();
-
-            if (type == typeof(bool)) return BitConverter.GetBytes((bool)value);
-            if (type == typeof(char)) return BitConverter.GetBytes((char)value);
-            if (type == typeof(double)) return BitConverter.GetBytes((double)value);
-            if (type == typeof(short)) return BitConverter.GetBytes((short)value);
-            if (type == typeof(int)) return BitConverter.GetBytes((int)value);
-            if (type == typeof(long)) return BitConverter.GetBytes((long)value);
-            if (type == typeof(float)) return BitConverter.GetBytes((float)value);
-            if (type == typeof(ushort)) return BitConverter.GetBytes((ushort)value);
-            if (type == typeof(uint)) return BitConverter.GetBytes((uint)value);
-            if (type == typeof(ulong)) return BitConverter.GetBytes((ulong)value);
-            if (type == typeof(byte)) return new[] { (byte)value };
-            if (type == typeof(sbyte)) return new[] { (byte)(sbyte)value };
-            if (type == typeof(DateTime)) return BitConverter.GetBytes(((DateTime)value).Ticks);
-            if (type == typeof(IntPtr)) return BitConverter.GetBytes(((IntPtr)value).ToInt64());
-            if (type == typeof(UIntPtr)) return BitConverter.GetBytes(((UIntPtr)value).ToUInt64());
-            if (type == typeof(decimal))
-            {
-                int[] bits = decimal.GetBits((decimal)value);
-                List<byte> bytes = new List<byte>();
-                foreach (int part in bits)
-                {
-                    bytes.AddRange(BitConverter.GetBytes(part));
-                }
-                return bytes.ToArray();
-            }
-
-            throw new ArgumentException($"Unsupported type: {type.FullName}", nameof(value));
-        }
     }
 
 }
