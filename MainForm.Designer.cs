@@ -32,10 +32,13 @@
             this.menuItem3 = new System.Windows.Forms.MenuItem();
             this.menuEdit_CopySelectedRows = new System.Windows.Forms.MenuItem();
             this.menuMainView = new System.Windows.Forms.MenuItem();
-            this.menuItem1 = new System.Windows.Forms.MenuItem();
+            this.menuItemOptions = new System.Windows.Forms.MenuItem();
             this.menuOptions_ShowLargeHex = new System.Windows.Forms.MenuItem();
             this.menuOptions_IncludeRowHeaders = new System.Windows.Forms.MenuItem();
+            this.menuOptions_TableModeMenu = new System.Windows.Forms.MenuItem();
+            this.menuOptions_PreFormatted = new System.Windows.Forms.MenuItem();
             this.menuOptions_TabSeparation = new System.Windows.Forms.MenuItem();
+            this.menuOptions_CommaSeparation = new System.Windows.Forms.MenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonRefresh = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
@@ -80,7 +83,7 @@
             this.menuMainFile,
             this.menuMainEdit,
             this.menuMainView,
-            this.menuItem1});
+            this.menuItemOptions});
             // 
             // menuMainFile
             // 
@@ -155,14 +158,14 @@
             this.menuMainView.Index = 2;
             this.menuMainView.Text = "View";
             // 
-            // menuItem1
+            // menuItemOptions
             // 
-            this.menuItem1.Index = 3;
-            this.menuItem1.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuItemOptions.Index = 3;
+            this.menuItemOptions.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this.menuOptions_ShowLargeHex,
             this.menuOptions_IncludeRowHeaders,
-            this.menuOptions_TabSeparation});
-            this.menuItem1.Text = "Options";
+            this.menuOptions_TableModeMenu});
+            this.menuItemOptions.Text = "Options";
             // 
             // menuOptions_ShowLargeHex
             // 
@@ -176,11 +179,33 @@
             this.menuOptions_IncludeRowHeaders.Text = "Include Headers When Copying Table";
             this.menuOptions_IncludeRowHeaders.Click += new System.EventHandler(this.menuOptions_IncludeRowHeaders_Click);
             // 
+            // menuOptions_TableModeMenu
+            // 
+            this.menuOptions_TableModeMenu.Index = 2;
+            this.menuOptions_TableModeMenu.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuOptions_PreFormatted,
+            this.menuOptions_TabSeparation,
+            this.menuOptions_CommaSeparation});
+            this.menuOptions_TableModeMenu.Text = "Table Copying Mode";
+            // 
+            // menuOptions_PreFormatted
+            // 
+            this.menuOptions_PreFormatted.Checked = true;
+            this.menuOptions_PreFormatted.Index = 0;
+            this.menuOptions_PreFormatted.Text = "Pre-Formatted";
+            this.menuOptions_PreFormatted.Click += new System.EventHandler(this.menuOptions_PreFormatted_Click);
+            // 
             // menuOptions_TabSeparation
             // 
-            this.menuOptions_TabSeparation.Index = 2;
-            this.menuOptions_TabSeparation.Text = "Use Tab Separation When Copying Table";
+            this.menuOptions_TabSeparation.Index = 1;
+            this.menuOptions_TabSeparation.Text = "Single-Tab Separation";
             this.menuOptions_TabSeparation.Click += new System.EventHandler(this.menuOptions_TabSeparation_Click);
+            // 
+            // menuOptions_CommaSeparation
+            // 
+            this.menuOptions_CommaSeparation.Index = 2;
+            this.menuOptions_CommaSeparation.Text = "Comma Separation";
+            this.menuOptions_CommaSeparation.Click += new System.EventHandler(this.menuOptions_CommaSeparation_Click);
             // 
             // toolStrip1
             // 
@@ -392,7 +417,7 @@
         private System.Windows.Forms.ToolStripButton toolStripButtonSaveEdited;
         private System.Windows.Forms.ToolStripButton toolStripButtonExportSelected;
         private System.Windows.Forms.MenuItem menuItem_ExportSelectedStruct;
-        private System.Windows.Forms.MenuItem menuItem1;
+        private System.Windows.Forms.MenuItem menuItemOptions;
         private System.Windows.Forms.MenuItem menuOptions_ShowLargeHex;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Button buttonApplyEdit;
@@ -404,5 +429,8 @@
         private System.Windows.Forms.MenuItem menuEdit_CopySelectedRows;
         private System.Windows.Forms.MenuItem menuOptions_IncludeRowHeaders;
         private System.Windows.Forms.MenuItem menuOptions_TabSeparation;
+        private System.Windows.Forms.MenuItem menuOptions_TableModeMenu;
+        private System.Windows.Forms.MenuItem menuOptions_CommaSeparation;
+        private System.Windows.Forms.MenuItem menuOptions_PreFormatted;
     }
 }

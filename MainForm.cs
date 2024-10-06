@@ -1768,13 +1768,15 @@ namespace ClipboardManager
                 return;
             }
 
-            // Get the selected rows and put them in a list
-            List<string> selectedRowsContents = new List<string>();
+            // Get the selected rows and put them in a list, each row a list of strings for the cell values
+            List<List<string>> selectedRowsContents = new List<List<string>>();
 
             // If option to include headers is enabled, add that first
             if (menuOptions_IncludeRowHeaders.Checked)
             {
-                selectedRowsContents.Add(string.Join(", ", dataGridViewClipboard.Columns.Cast<DataGridViewColumn>().Select(col => col.HeaderText)));
+                // Just get the contents of the header row only
+                List<string> headerRow = dataGridViewClipboard.Columns.Cast<DataGridViewColumn>().Select(col => col.HeaderText).ToList();
+                selectedRowsContents.Add(headerRow);
             }
 
             // Create a list of selected rows based on index so we can get them in the desired order, same as displayed
@@ -1795,13 +1797,44 @@ namespace ClipboardManager
                     rowCells.RemoveAt(rowCells.Count - 1);
                 }
 
-                // Join the cell values with commas to create a CSV-like string
-                string rowContents = string.Join(", ", rowCells);
-
-                selectedRowsContents.Add(rowContents);
+                selectedRowsContents.Add(rowCells);
             }
+
+            // Remove any newlines from the cells of all rows
+            for (int i = 0; i < selectedRowsContents.Count; i++)
+            {
+                for (int j = 0; j < selectedRowsContents[i].Count; j++)
+                {
+                    selectedRowsContents[i][j] = selectedRowsContents[i][j].Replace("\n", " ");
+                }
+            }
+
+            string finalCombinedString = "";
+
+            // If the option to separate by tabs is enabled, join the cells with tabs
+            if (menuOptions_TabSeparation.Checked)
+            {
+                finalCombinedString = string.Join("\n", selectedRowsContents.Select(row => string.Join("\t", row)));
+            }
+            else if (menuOptions_CommaSeparation.Checked)
+            {
+                // If the option to separate by commas is enabled, join the cells with commas
+                finalCombinedString = string.Join("\n", selectedRowsContents.Select(row => string.Join(", ", row)));
+            }
+            else if (menuOptions_PreFormatted.Checked)
+            {
+                // If the option to separate by commas is enabled, join the cells with commas
+                finalCombinedString = string.Join("\n", selectedRowsContents.Select(row => string.Join(", ", row)));
+            }
+            // Shouldn't get to this point but have it just in case as a fallback
+            else
+            {
+                // Otherwise, join the cells with newlines
+                finalCombinedString = string.Join("\n", selectedRowsContents.Select(row => string.Join(", ", row)));
+            }
+
             // Copy the list to the clipboard
-            Clipboard.SetText(string.Join("\n", selectedRowsContents));
+            Clipboard.SetText(finalCombinedString);
         }
 
         private void menuOptions_IncludeRowHeaders_Click(object sender, EventArgs e)
@@ -1810,11 +1843,75 @@ namespace ClipboardManager
             menuOptions_IncludeRowHeaders.Checked = !menuOptions_IncludeRowHeaders.Checked;
         }
 
+        // ---------------------- Table Copy Formatting Options ----------------------
         private void menuOptions_TabSeparation_Click(object sender, EventArgs e)
         {
-            // Toggle the check based on the current state
-            menuOptions_TabSeparation.Checked = !menuOptions_TabSeparation.Checked;
+            // Use pattern matchin to get the text of the clicked item and pass it in to the function automatically
+            if (sender is MenuItem clickedItem)
+            {
+                setCopyModeChecks(clickedItem.Text);
+            }
         }
+
+        private void menuOptions_CommaSeparation_Click(object sender, EventArgs e)
+        {
+            if (sender is MenuItem clickedItem)
+            {
+                setCopyModeChecks(clickedItem.Text);
+            }
+        }
+
+        private void menuOptions_PreFormatted_Click(object sender, EventArgs e)
+        {
+            if (sender is MenuItem clickedItem)
+            {
+                setCopyModeChecks(clickedItem.Text);
+            }
+        }
+
+        private void setCopyModeChecks(string newlyCheckedOption)
+        {
+            // Newly checked option is the text of the menu item that was just checked
+            // Uncheck all other options and make sure the newly checked option is checked (this also handles if it was already checked)
+
+            // Find the Options menu item
+            MenuItem optionsMenuItem = null;
+            foreach (MenuItem menuItem in mainMenu1.MenuItems)
+            {
+                if (menuItem.Text == "Options")
+                {
+                    optionsMenuItem = menuItem;
+                    break;
+                }
+            }
+
+            if (optionsMenuItem != null)
+            {
+                // Find the "Table Copying Mode" sub-menu
+                MenuItem tableCopyingModeMenuItem = null;
+                foreach (MenuItem subMenuItem in optionsMenuItem.MenuItems)
+                {
+                    if (subMenuItem.Text == "Table Copying Mode")
+                    {
+                        tableCopyingModeMenuItem = subMenuItem;
+                        break;
+                    }
+                }
+
+                if (tableCopyingModeMenuItem != null)
+                {
+                    // Iterate through the items in the "Table Copying Mode" sub-menu
+                    foreach (MenuItem item in tableCopyingModeMenuItem.MenuItems)
+                    {
+                        // Uncheck all items except the newly checked one. And ensure the clicked one is checked.
+                        item.Checked = (item.Text == newlyCheckedOption);
+                    }
+                }
+            }
+
+        }
+
+        // -----------------------------------------------------------------------------
     }
 
     public class ClipboardItem : ICloneable
