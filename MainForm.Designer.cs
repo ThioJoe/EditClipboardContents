@@ -416,6 +416,7 @@
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.labelPendingChanges);
             this.Controls.Add(this.toolStrip1);
+            this.Menu = this.mainMenu1;
             this.Name = "MainForm";
             this.Text = "Clipboard Manager";
             this.Load += new System.EventHandler(this.Form1_Load);
