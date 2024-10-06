@@ -1026,7 +1026,7 @@ namespace ClipboardManager
             // For data larger than 50K, display a warning and don't display the data unless the checkbox is checked
             if (modeIndex != 3 && item.RawData.Length > 50000)
             {
-                if (!menuItemShowLargeHex.Checked)
+                if (!menuOptions_ShowLargeHex.Checked)
                 {
                     richTextBoxContents.Text = "Data is too large to display preview.\nThis can be changed in the options menu, but the program may freeze for large amounts of data.";
                     // Set color to red
@@ -1056,7 +1056,7 @@ namespace ClipboardManager
                     richTextBoxContents.ReadOnly = false;
                     break;
                 case 3: // Object / Struct View
-                    richTextBoxContents.Text = FormatInspector.InspectFormat(formatName: GetStandardFormatName(item.FormatId), data: item.RawData, fullItem: item, allowLargeHex: menuItemShowLargeHex.Checked);
+                    richTextBoxContents.Text = FormatInspector.InspectFormat(formatName: GetStandardFormatName(item.FormatId), data: item.RawData, fullItem: item, allowLargeHex: menuOptions_ShowLargeHex.Checked);
                     richTextBoxContents.ReadOnly = true;
                     break;
 
@@ -1482,7 +1482,7 @@ namespace ClipboardManager
             if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
             {
                 // Get the hex information
-                string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToExport.FormatId), data: itemToExport.RawData, fullItem: itemToExport, allowLargeHex: menuItemShowLargeHex.Checked);
+                string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToExport.FormatId), data: itemToExport.RawData, fullItem: itemToExport, allowLargeHex: menuOptions_ShowLargeHex.Checked);
                 // TO DO - Export details of each object in the struct
 
                 // Save the data to a file
@@ -1682,7 +1682,7 @@ namespace ClipboardManager
         private void menuItemShowLargeHex_Click(object sender, EventArgs e)
         {
             // Toggle the check based on the current state
-            menuItemShowLargeHex.Checked = !menuItemShowLargeHex.Checked;
+            menuOptions_ShowLargeHex.Checked = !menuOptions_ShowLargeHex.Checked;
         }
 
         // Give focus to control when mouse enters
@@ -1742,7 +1742,7 @@ namespace ClipboardManager
                 return;
             }
             // Get the struct / object info that would be displayed in object view of rich text box and copy it to clipboard
-            string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToCopy.FormatId), data: itemToCopy.RawData, fullItem: itemToCopy, allowLargeHex: menuItemShowLargeHex.Checked);
+            string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToCopy.FormatId), data: itemToCopy.RawData, fullItem: itemToCopy, allowLargeHex: menuOptions_ShowLargeHex.Checked);
             Clipboard.SetText(data);
         }
 
@@ -1758,6 +1758,62 @@ namespace ClipboardManager
             // Get the hex information that would be displayed in the hex view and copy it to clipboard
             string data = BitConverter.ToString(itemToCopy.RawData).Replace("-", " ");
             Clipboard.SetText(data);
+        }
+
+        private void menuEdit_CopySelectedRows_Click(object sender, EventArgs e)
+        {
+            // If no rows are selected, do nothing
+            if (dataGridViewClipboard.SelectedRows.Count == 0)
+            {
+                return;
+            }
+
+            // Get the selected rows and put them in a list
+            List<string> selectedRowsContents = new List<string>();
+
+            // If option to include headers is enabled, add that first
+            if (menuOptions_IncludeRowHeaders.Checked)
+            {
+                selectedRowsContents.Add(string.Join(", ", dataGridViewClipboard.Columns.Cast<DataGridViewColumn>().Select(col => col.HeaderText)));
+            }
+
+            // Create a list of selected rows based on index so we can get them in the desired order, same as displayed
+            var selectedRowIndices = dataGridViewClipboard.SelectedRows.Cast<DataGridViewRow>()
+                .Select(row => row.Index)
+                .ToList();
+            // Sort the indices to match the display order. This should still be correct regardless of sorting mode clicked on the header bar
+            selectedRowIndices.Sort();
+
+            foreach (int rowIndex in selectedRowIndices)
+            {
+                DataGridViewRow row = dataGridViewClipboard.Rows[rowIndex];
+                // Create an array of the cell values so we can manage them individually if necessary
+                List<string> rowCells = row.Cells.Cast<DataGridViewCell>().Select(cell => cell.Value.ToString()).ToList();
+                // If the last cell is empty, remove it from the list
+                if (string.IsNullOrEmpty(rowCells.Last()))
+                {
+                    rowCells.RemoveAt(rowCells.Count - 1);
+                }
+
+                // Join the cell values with commas to create a CSV-like string
+                string rowContents = string.Join(", ", rowCells);
+
+                selectedRowsContents.Add(rowContents);
+            }
+            // Copy the list to the clipboard
+            Clipboard.SetText(string.Join("\n", selectedRowsContents));
+        }
+
+        private void menuOptions_IncludeRowHeaders_Click(object sender, EventArgs e)
+        {
+            // Toggle the check based on the current state
+            menuOptions_IncludeRowHeaders.Checked = !menuOptions_IncludeRowHeaders.Checked;
+        }
+
+        private void menuOptions_TabSeparation_Click(object sender, EventArgs e)
+        {
+            // Toggle the check based on the current state
+            menuOptions_TabSeparation.Checked = !menuOptions_TabSeparation.Checked;
         }
     }
 
