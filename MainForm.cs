@@ -14,6 +14,7 @@ using System.Reflection;
 // My classes
 using static EditClipboardItems.ClipboardFormats;
 using System.Globalization;
+using System.Net.NetworkInformation;
 
 namespace ClipboardManager
 {
@@ -179,11 +180,25 @@ namespace ClipboardManager
         }
 
         // Update processedData grid view with clipboard contents during refresh
-        private void UpdateClipboardItemsGridView(string formatName, string formatID, string handleType, string dataSize, string dataPreview, byte[] rawData)
+        private void UpdateClipboardItemsGridView(string formatName, string formatID, string handleType, string dataSize, string dataInfo, byte[] rawData)
         {
-            string textPreview = TryParseText(rawData, maxLength: 150, prefixEncodingType: true);
+            // Preprocess certain info
+            string textPreview = TryParseText(rawData, maxLength: 150, prefixEncodingType: false);
+            string dataInfoString = dataInfo;
 
-            dataGridViewClipboard.Rows.Add(formatName, formatID, handleType, dataSize, dataPreview, textPreview);
+            if (string.IsNullOrEmpty(dataInfo))
+            {
+                dataInfoString = "N/A";
+            }
+
+            // Manually handle certain known formats
+            if (formatName == "CF_LOCALE") 
+            {
+                textPreview = "";
+            }
+
+            // Add info to the grid view, then will be resized
+            dataGridViewClipboard.Rows.Add(formatName, formatID, handleType, dataSize, dataInfoString, textPreview);
 
             // Temporarily set AutoSizeMode to calculate proper widths
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
@@ -195,7 +210,12 @@ namespace ClipboardManager
                 {
                     // Use all cells instead of displayed cells, otherwise those scrolled out of view won't count
                     column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-                    
+                }
+
+                if (column.Name == "DataInfo" && string.IsNullOrEmpty(dataInfo))
+                {
+                    // Make this cell in this column gray text
+                    dataGridViewClipboard.Rows[dataGridViewClipboard.Rows.Count - 1].Cells[column.Name].Style.ForeColor = Color.Gray;
                 }
             }
 
@@ -302,7 +322,7 @@ namespace ClipboardManager
                 }
                 else
                 {
-                    result = utf16Result;
+                    result = " " + utf16Result;
                 }
             }
             else if (!string.IsNullOrEmpty(utf8Result))
@@ -313,7 +333,7 @@ namespace ClipboardManager
                 }
                 else
                 {
-                    result = utf8Result;
+                    result = " " + utf8Result;
                 }
             }
             else
@@ -499,37 +519,42 @@ namespace ClipboardManager
 
             foreach (var item in clipboardItems)
             {
-                string dataInfo = "N/A";
+                List<string> dataInfoList = new List<string>();
                 byte[] processedData = item.RawData;
 
                 switch (item.FormatId)
                 {
                     case 1: // CF_TEXT
                         //Console.WriteLine("Processing CF_TEXT");
-                        string asciiText = Encoding.ASCII.GetString(item.RawData);
-                        int asciiTextLength = asciiText.Length;
-                        dataInfo = $"Encoding: ASCII, Chars: {asciiTextLength}";
-                        processedData = Encoding.ASCII.GetBytes(asciiText);
+                        processedData = ProcessCFText(item.RawData);
+                        string ansiText = Encoding.Default.GetString(processedData);
+                        int asciiTextLength = ansiText.Length;
+                        dataInfoList.Add($"Encoding: ANSI");
+                        dataInfoList.Add($"Chars: {asciiTextLength}");
+                        //dataInfo = $"Encoding: ASCII, Chars: {asciiTextLength}";
+                        
                         break;
 
                     case 13: // CF_UNICODETEXT
                         //Console.WriteLine("Processing CF_UNICODETEXT");
                         string unicodeText = Encoding.Unicode.GetString(item.RawData);
                         int unicodeTextLength = unicodeText.Length;
-                        dataInfo = $"Encoding: Unicode, Chars: {unicodeTextLength}";
+                        dataInfoList.Add($"Encoding: Unicode");
+                        dataInfoList.Add($"Chars: {unicodeTextLength}");
                         processedData = Encoding.Unicode.GetBytes(unicodeText);
                         break;
 
                     case 2: // CF_BITMAP
                         //Console.WriteLine("Processing CF_BITMAP");
-                        dataInfo = ProcessBitmap(item.Handle, out processedData);
+                        dataInfoList = ProcessBitmap(item.Handle, out processedData);
                         item.DataSize = (ulong)processedData.Length;
                         break;
 
                     case 8: // CF_DIB
                     case 17: // CF_DIBV5
                         //Console.WriteLine($"Processing bitmap format: {(item.FormatId == 8 ? "CF_DIB" : "CF_DIBV5")}");
-                        dataInfo = $"{item.FormatName}, Size: {item.DataSize} bytes";
+                        dataInfoList.Add($"Format: {item.FormatName}");
+                        dataInfoList.Add($"Size: {item.DataSize} bytes");
                         break;
 
                     case 15: // CF_HDROP
@@ -542,26 +567,27 @@ namespace ClipboardManager
                             NativeMethods.DragQueryFile(item.Handle, i, fileName, (uint)fileName.Capacity);
                             fileNames.AppendLine(fileName.ToString());
                         }
-                        dataInfo = $"File Drop: {fileCount} file(s)";
+                        dataInfoList.Add($"File Drop: {fileCount} file(s)");
                         break;
 
                     case 16: // CF_LOCALE
                         //Console.WriteLine("Processing CF_LOCALE");
-                        dataInfo = ProcessCFLocale(item.RawData);
+                        dataInfoList.Add(ProcessCFLocale(item.RawData));
                         break;
 
                     // Add more cases for other formats as needed...
 
                     default:
                         //Console.WriteLine($"Processing unknown format: {item.FormatId}");
-                        dataInfo = "";
+                        dataInfoList.Add("");
                         break;
                 }
 
                 item.Data = processedData; // Update the processed data in the item
+                item.DataInfoList = dataInfoList; // Update the data info in the item
                 string handleType = item.AssumedSynthesized ? "Synthesized" : "Standard"; // Determine handle type
 
-                UpdateClipboardItemsGridView(formatName: item.FormatName, formatID: item.FormatId.ToString(), handleType: handleType, dataSize: item.DataSize.ToString(), dataPreview: dataInfo, rawData: item.RawData);
+                UpdateClipboardItemsGridView(formatName: item.FormatName, formatID: item.FormatId.ToString(), handleType: handleType, dataSize: item.DataSize.ToString(), dataInfo: item.DataInfoString, rawData: item.RawData);
             }
         }
 
@@ -622,6 +648,23 @@ namespace ClipboardManager
                 }
             }
         }
+        
+        // Convert to ASCII Bytes
+        private byte[] ProcessCFText(byte[] data)
+        {
+            // Use Windows-1252 encoding (commonly referred to as ANSI in Windows)
+            Encoding ansiEncoding = Encoding.GetEncoding(1252);
+
+            // Convert bytes to string, stopping at the first null character
+            string text = "";
+            for (int i = 0; i < data.Length; i++)
+            {
+                if (data[i] == 0) break; // Stop at null terminator
+                text += (char)data[i];
+            }
+
+            return ansiEncoding.GetBytes(text);
+        }
 
         private string ProcessCFLocale(byte[] rawBytes)
         {
@@ -646,15 +689,20 @@ namespace ClipboardManager
             return dataInfo;
         }
 
-        private string ProcessBitmap(IntPtr hBitmap, out byte[] bitmapData)
+        private List<string> ProcessBitmap(IntPtr hBitmap, out byte[] bitmapData)
         {
+            List<string> bitmapDataInfo = new List<string>();
+
             using (Bitmap bmp = Bitmap.FromHbitmap(hBitmap))
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
                     bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-                    bitmapData = ms.ToArray();
-                    return $"Bitmap: {bmp.Width}x{bmp.Height}, {bmp.PixelFormat}";
+                    bitmapData = ms.ToArray(); // Save the bitmap data, not sure if i need it
+                    bitmapDataInfo.Add($"Size:{bmp.Width}x{bmp.Height}");
+                    bitmapDataInfo.Add($"Format: {bmp.PixelFormat}");
+
+                    return bitmapDataInfo;
                 }
             }
         }
@@ -1154,7 +1202,7 @@ namespace ClipboardManager
             return null;
         }
 
-        private Dictionary<string, string> GetSelectedItemInfo()
+        private Dictionary<string, string> GetDataGridItemContents()
         {
             if (dataGridViewClipboard.SelectedRows.Count > 0)
             {
@@ -1312,6 +1360,8 @@ namespace ClipboardManager
         public byte[] Data { get; set; }
         public byte[] RawData { get; set; }
         public bool AssumedSynthesized { get; set; }
+        public List<string> DataInfoList { get; set; }
+        public string DataInfoString => string.Join(", ", DataInfoList ?? new List<string>());
 
         public object Clone()
         {
@@ -1323,7 +1373,8 @@ namespace ClipboardManager
                 DataSize = this.DataSize,
                 Data = (byte[])this.Data?.Clone(),
                 RawData = (byte[])this.RawData?.Clone(),
-                AssumedSynthesized = this.AssumedSynthesized
+                AssumedSynthesized = this.AssumedSynthesized,
+                DataInfoList = new List<string>(this.DataInfoList ?? new List<string>())
             };
         }
     }
@@ -1420,6 +1471,11 @@ namespace ClipboardManager
 
         private static readonly Dictionary<string, FormatInfo> FormatDictionary = new Dictionary<string, FormatInfo>
         {
+        // "Kinds" of formats:
+        //  - typedef: A simple typedef, like CF_TEXT or CF_BITMAP
+        //  - struct: A complex structure, like CF_DIB or CF_METAFILEPICT
+        //  - data: A simple data format, like CF_OEMTEXT or CF_WAVE
+
         {"CF_BITMAP", new FormatInfo {Value = 2, Kind = "typedef", HandleOutput = "HBITMAP"}},
         {"CF_DIB", new FormatInfo {Value = 8, Kind = "struct", HandleOutput = "BITMAPINFO followed by bitmap bits", StructType = typeof(BITMAPINFO)}},
         {"CF_DIBV5", new FormatInfo {Value = 17, Kind = "struct", HandleOutput = "BITMAPV5HEADER followed by color space info and bitmap bits", StructType = typeof(BITMAPV5HEADER)}},
@@ -1432,7 +1488,7 @@ namespace ClipboardManager
         {"CF_GDIOBJFIRST", new FormatInfo {Value = 0x0300, Kind = "data", HandleOutput = "Start of range of integers for application-defined GDI object formats"}},
         {"CF_GDIOBJLAST", new FormatInfo {Value = 0x03FF, Kind = "data", HandleOutput = "End of range of integers for application-defined GDI object formats"}},
         {"CF_HDROP", new FormatInfo {Value = 15, Kind = "typedef", HandleOutput = "HDROP (list of files)"}},
-        {"CF_LOCALE", new FormatInfo {Value = 16, Kind = "typedef", HandleOutput = "LCID (locale identifier)"}},
+        {"CF_LOCALE", new FormatInfo {Value = 16, Kind = "data", HandleOutput = "LCID (locale identifier)"}},
         {"CF_METAFILEPICT", new FormatInfo {Value = 3, Kind = "struct", HandleOutput = "METAFILEPICT", StructType = typeof(METAFILEPICT)}},
         {"CF_OEMTEXT", new FormatInfo {Value = 7, Kind = "data", HandleOutput = "Text in OEM character set"}},
         {"CF_OWNERDISPLAY", new FormatInfo {Value = 0x0080, Kind = "data", HandleOutput = "Owner-display format data"}},
@@ -1467,20 +1523,30 @@ namespace ClipboardManager
                 int offset = 0;
                 InspectStruct(formatInfo.StructType, data, ref result, indent + "  ", ref offset);
             }
-            else if (data != null)
+            else if (formatInfo.Kind == "data" && !string.IsNullOrEmpty(fullItem.DataInfoString))
             {
-                result.AppendLine($"\n{indent}Data:");
-                // Display if not too big
-                if (allowLargeHex || data.Length <= 50000)
+                result.AppendLine($"{indent}Data Info:");
+                // Add each item in DataInfoList to the result indented
+                foreach (string dataInfoItem in fullItem.DataInfoList)
                 {
-                    result.AppendLine($"{BitConverter.ToString(data).Replace("-", " ")}");
-                }
-                else
-                {
-                    result.AppendLine($"{indent}  [Data too large to display. Export raw hex data instead]");
+                    result.AppendLine($"{indent}  {dataInfoItem}");
                 }
 
             }
+            //else if (data != null)
+            //{
+            //    result.AppendLine($"\n{indent}Data:");
+            //    // Display if not too big
+            //    if (allowLargeHex || data.Length <= 50000)
+            //    {
+            //        result.AppendLine($"{BitConverter.ToString(data).Replace("-", " ")}");
+            //    }
+            //    else
+            //    {
+            //        result.AppendLine($"{indent}  [Data too large to display. Export raw hex data instead]");
+            //    }
+
+            //}
 
             return result.ToString();
         }
