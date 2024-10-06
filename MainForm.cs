@@ -13,6 +13,7 @@ using System.Reflection;
 
 // My classes
 using static EditClipboardItems.ClipboardFormats;
+using System.Globalization;
 
 namespace ClipboardManager
 {
@@ -172,8 +173,6 @@ namespace ClipboardManager
                 ChangeCellFocus(newIndex);
 
             }
-
-            
 
             // Mark as handled because the event might get fired multiple times per scroll
             ((HandledMouseEventArgs)e).Handled = true;
@@ -494,8 +493,6 @@ namespace ClipboardManager
         }
 
 
-
-
         private void ProcessClipboardData()
         {
             dataGridViewClipboard.Rows.Clear();
@@ -508,7 +505,7 @@ namespace ClipboardManager
                 switch (item.FormatId)
                 {
                     case 1: // CF_TEXT
-                        Console.WriteLine("Processing CF_TEXT");
+                        //Console.WriteLine("Processing CF_TEXT");
                         string asciiText = Encoding.ASCII.GetString(item.RawData);
                         int asciiTextLength = asciiText.Length;
                         dataInfo = $"Encoding: ASCII, Chars: {asciiTextLength}";
@@ -516,7 +513,7 @@ namespace ClipboardManager
                         break;
 
                     case 13: // CF_UNICODETEXT
-                        Console.WriteLine("Processing CF_UNICODETEXT");
+                        //Console.WriteLine("Processing CF_UNICODETEXT");
                         string unicodeText = Encoding.Unicode.GetString(item.RawData);
                         int unicodeTextLength = unicodeText.Length;
                         dataInfo = $"Encoding: Unicode, Chars: {unicodeTextLength}";
@@ -524,19 +521,19 @@ namespace ClipboardManager
                         break;
 
                     case 2: // CF_BITMAP
-                        Console.WriteLine("Processing CF_BITMAP");
+                        //Console.WriteLine("Processing CF_BITMAP");
                         dataInfo = ProcessBitmap(item.Handle, out processedData);
                         item.DataSize = (ulong)processedData.Length;
                         break;
 
                     case 8: // CF_DIB
                     case 17: // CF_DIBV5
-                        Console.WriteLine($"Processing bitmap format: {(item.FormatId == 8 ? "CF_DIB" : "CF_DIBV5")}");
+                        //Console.WriteLine($"Processing bitmap format: {(item.FormatId == 8 ? "CF_DIB" : "CF_DIBV5")}");
                         dataInfo = $"{item.FormatName}, Size: {item.DataSize} bytes";
                         break;
 
                     case 15: // CF_HDROP
-                        Console.WriteLine("Processing CF_HDROP");
+                        //Console.WriteLine("Processing CF_HDROP");
                         uint fileCount = NativeMethods.DragQueryFile(item.Handle, 0xFFFFFFFF, null, 0);
                         StringBuilder fileNames = new StringBuilder();
                         for (uint i = 0; i < fileCount; i++)
@@ -548,11 +545,16 @@ namespace ClipboardManager
                         dataInfo = $"File Drop: {fileCount} file(s)";
                         break;
 
+                    case 16: // CF_LOCALE
+                        //Console.WriteLine("Processing CF_LOCALE");
+                        dataInfo = ProcessCFLocale(item.RawData);
+                        break;
+
                     // Add more cases for other formats as needed...
 
                     default:
-                        Console.WriteLine($"Processing unknown format: {item.FormatId}");
-                        dataInfo = "N/A";
+                        //Console.WriteLine($"Processing unknown format: {item.FormatId}");
+                        dataInfo = "";
                         break;
                 }
 
@@ -621,7 +623,28 @@ namespace ClipboardManager
             }
         }
 
-
+        private string ProcessCFLocale(byte[] rawBytes)
+        {
+            string dataInfo;
+            if (rawBytes.Length >= 4)
+            {
+                int lcid = BitConverter.ToInt32(rawBytes, 0);
+                try
+                {
+                    CultureInfo culture = new CultureInfo(lcid);
+                    dataInfo = $"Locale: {culture.Name} (LCID: {lcid})";
+                }
+                catch (CultureNotFoundException)
+                {
+                    dataInfo = $"Unknown Locale (LCID: {lcid})";
+                }
+            }
+            else
+            {
+                dataInfo = "Invalid CF_LOCALE data";
+            }
+            return dataInfo;
+        }
 
         private string ProcessBitmap(IntPtr hBitmap, out byte[] bitmapData)
         {
@@ -969,7 +992,7 @@ namespace ClipboardManager
                     richTextBoxContents.ReadOnly = false;
                     break;
                 case 3: // Object / Struct View
-                    richTextBoxContents.Text = FormatInspector.InspectFormat(formatName: GetStandardFormatName(item.FormatId), data: item.RawData, allowLargeHex: menuItemShowLargeHex.Checked);
+                    richTextBoxContents.Text = FormatInspector.InspectFormat(formatName: GetStandardFormatName(item.FormatId), data: item.RawData, fullItem: item, allowLargeHex: menuItemShowLargeHex.Checked);
                     richTextBoxContents.ReadOnly = true;
                     break;
 
@@ -1079,7 +1102,6 @@ namespace ClipboardManager
         {
             // Get the clipboard item and its info
             ClipboardItem itemToExport = GetSelectedClipboardItemObject();
-            Dictionary<string, string> selectedItemInfo = GetSelectedItemInfo();
 
             if (itemToExport == null)
             {
@@ -1091,7 +1113,7 @@ namespace ClipboardManager
             {
                 Bitmap bitmap = CF_DIBV5ToBitmap(itemToExport.Data);
 
-                string nameStem = selectedItemInfo["FormatName"];
+                string nameStem = itemToExport.FormatName;
                 SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
@@ -1161,13 +1183,12 @@ namespace ClipboardManager
         private void menuFile_ExportAsRawHex_Click(object sender, EventArgs e)
         {
             ClipboardItem itemToExport = GetSelectedClipboardItemObject();
-            Dictionary<string, string> selectedItemInfo = GetSelectedItemInfo();
             if (itemToExport == null)
             {
                 return;
             }
 
-            string nameStem = selectedItemInfo["FormatName"] + "_RawHex";
+            string nameStem = itemToExport.FormatName + "_RawHex";
             SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "txt", defaultFileNameStem: nameStem);
             if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
             {
@@ -1182,19 +1203,16 @@ namespace ClipboardManager
         {
             // Get the clipboard item and its info
             ClipboardItem itemToExport = GetSelectedClipboardItemObject();
-            Dictionary<string, string> selectedItemInfo = GetSelectedItemInfo();
-
             if (itemToExport == null)
             {
                 return;
             }
-
-            string nameStem = selectedItemInfo["FormatName"] + "_StructInfo";
+            string nameStem = itemToExport.FormatName + "_StructInfo";
             SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "txt", defaultFileNameStem: nameStem);
             if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
             {
                 // Get the hex information
-                string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToExport.FormatId), data: itemToExport.RawData, allowLargeHex: menuItemShowLargeHex.Checked);
+                string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToExport.FormatId), data: itemToExport.RawData, fullItem: itemToExport, allowLargeHex: menuItemShowLargeHex.Checked);
                 // TO DO - Export details of each object in the struct
 
                 // Save the data to a file
@@ -1278,14 +1296,6 @@ namespace ClipboardManager
             menuItemShowLargeHex.Checked = !menuItemShowLargeHex.Checked;
         }
 
-        private void buttonTestResize_Click(object sender, EventArgs e)
-        {
-            // Get the clipboard item and its info
-            ClipboardItem itemToExport = GetSelectedClipboardItemObject();
-            Dictionary<string, string> selectedItemInfo = GetSelectedItemInfo();
-
-        }
-
         // Give focus to control when mouse enters
         private void dataGridViewClipboard_MouseEnter(object sender, EventArgs e)
         {
@@ -1293,7 +1303,7 @@ namespace ClipboardManager
         }
     }
 
-    internal class ClipboardItem : ICloneable
+    public class ClipboardItem : ICloneable
     {
         public string FormatName { get; set; }
         public uint FormatId { get; set; }
@@ -1438,7 +1448,7 @@ namespace ClipboardManager
         {"CF_WAVE", new FormatInfo {Value = 12, Kind = "data", HandleOutput = "Standard wave format audio data"}}
         };
 
-        public static string InspectFormat(string formatName, byte[] data, string indent = "", bool allowLargeHex=false)
+        public static string InspectFormat(string formatName, byte[] data, ClipboardItem fullItem, string indent = "", bool allowLargeHex=false)
         {
             if (!FormatDictionary.TryGetValue(formatName, out FormatInfo formatInfo))
             {
