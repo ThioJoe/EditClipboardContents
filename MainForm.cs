@@ -22,7 +22,7 @@ namespace ClipboardManager
 {
     public partial class MainForm : Form
     {
-        private List<ClipboardItem> clipboardItems = new List<ClipboardItem>();
+        private readonly List<ClipboardItem> clipboardItems = new List<ClipboardItem>();
         private List<ClipboardItem> editedClipboardItems = new List<ClipboardItem>(); // Add this line
 
         private StreamWriter logFile;
