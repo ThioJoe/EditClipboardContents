@@ -485,10 +485,24 @@ namespace ClipboardManager
                             }
                         }
                     }
+                    else if (format == 2) // CF_BITMAP
+                    {
+                        // Handle CF_BITMAP
+                        IntPtr hBitmap = hData; // hData is the HBITMAP handle
+
+                        using (Bitmap bitmap = Image.FromHbitmap(hBitmap))
+                        {
+                            using (MemoryStream ms = new MemoryStream())
+                            {
+                                bitmap.Save(ms, ImageFormat.Bmp);
+                                rawData = ms.ToArray();
+                                dataSize = (ulong)rawData.Length;
+                            }
+                        }
+                    }
                     else
                     {
                         // Handle other formats appropriately
-                        // For CF_BITMAP, CF_METAFILEPICT, CF_ENHMETAFILE, CF_HDROP, etc.
                         dataSize = 0; // Size may not be applicable
                         rawData = null; // Data extraction not performed here
                     }
@@ -546,9 +560,24 @@ namespace ClipboardManager
 
                     case 2: // CF_BITMAP
                         //Console.WriteLine("Processing CF_BITMAP");
-                        dataInfoList = ProcessBitmap(item.Handle, out processedData);
-                        item.DataSize = (ulong)processedData.Length;
+                        using (Bitmap bmp = Bitmap.FromHbitmap(item.Handle))
+                        {
+                            using (MemoryStream ms = new MemoryStream())
+                            {
+                                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+                                processedData = ms.ToArray();
+                                item.RawData = processedData;
+                                item.DataSize = (ulong)processedData.Length;
+
+                                dataInfoList = new List<string>
+                                {
+                                    $"Size: {bmp.Width}x{bmp.Height}",
+                                    $"Format: {bmp.PixelFormat}"
+                                };
+                            }
+                        }
                         break;
+
 
                     case 8: // CF_DIB
                     case 17: // CF_DIBV5
@@ -688,25 +717,6 @@ namespace ClipboardManager
             }
             return dataInfo;
         }
-
-        private List<string> ProcessBitmap(IntPtr hBitmap, out byte[] bitmapData)
-        {
-            List<string> bitmapDataInfo = new List<string>();
-
-            using (Bitmap bmp = Bitmap.FromHbitmap(hBitmap))
-            {
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-                    bitmapData = ms.ToArray(); // Save the bitmap data, not sure if i need it
-                    bitmapDataInfo.Add($"Size:{bmp.Width}x{bmp.Height}");
-                    bitmapDataInfo.Add($"Format: {bmp.PixelFormat}");
-
-                    return bitmapDataInfo;
-                }
-            }
-        }
-
 
         private string GetClipboardFormatName(uint format)
         {
@@ -1155,18 +1165,38 @@ namespace ClipboardManager
             {
                 return;
             }
+            string nameStem = itemToExport.FormatName;
 
             // If it's a DIBV5 format, convert it to a bitmap
             if (itemToExport.FormatId == 17)
             {
                 Bitmap bitmap = CF_DIBV5ToBitmap(itemToExport.Data);
 
-                string nameStem = itemToExport.FormatName;
+                
                 SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
                     bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
                 }
+            }
+            else if (itemToExport.FormatId == 2) // CF_BITMAP
+            {
+                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
+                if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
+                {
+                    // Assuming itemToExport.Data contains the raw bitmap data
+                    using (MemoryStream ms = new MemoryStream(itemToExport.Data))
+                    {
+                        using (Bitmap bitmap = new Bitmap(ms))
+                        {
+                            bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Unsupported format for export.", "Export Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -1517,13 +1547,7 @@ namespace ClipboardManager
             //result.AppendLine($"{indent}Kind: {formatInfo.Kind}");
             result.AppendLine($"{indent}Handle Output: {formatInfo.HandleOutput}");
 
-            if (formatInfo.Kind == "struct" && formatInfo.StructType != null && data != null)
-            {
-                result.AppendLine($"{indent}Struct Definition and Values:");
-                int offset = 0;
-                InspectStruct(formatInfo.StructType, data, ref result, indent + "  ", ref offset);
-            }
-            else if (formatInfo.Kind == "data" && !string.IsNullOrEmpty(fullItem.DataInfoString))
+            if (!string.IsNullOrEmpty(fullItem.DataInfoString))
             {
                 result.AppendLine($"{indent}Data Info:");
                 // Add each item in DataInfoList to the result indented
@@ -1531,8 +1555,16 @@ namespace ClipboardManager
                 {
                     result.AppendLine($"{indent}  {dataInfoItem}");
                 }
-
+                result.AppendLine("");
             }
+
+            if (formatInfo.Kind == "struct" && formatInfo.StructType != null && data != null)
+            {
+                result.AppendLine($"{indent}Struct Definition and Values:");
+                int offset = 0;
+                InspectStruct(formatInfo.StructType, data, ref result, indent + "  ", ref offset);
+            }
+            
             //else if (data != null)
             //{
             //    result.AppendLine($"\n{indent}Data:");
