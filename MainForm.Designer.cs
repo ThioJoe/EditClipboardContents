@@ -91,8 +91,8 @@
             // menuItem_ExportSelectedAsFile
             // 
             this.menuItem_ExportSelectedAsFile.Index = 1;
-            this.menuItem_ExportSelectedAsFile.Text = "Export Selected As File (ToDo)";
-            this.menuItem_ExportSelectedAsFile.Click += new System.EventHandler(this.menuItem1_Click);
+            this.menuItem_ExportSelectedAsFile.Text = "Export Selected As File";
+            this.menuItem_ExportSelectedAsFile.Click += new System.EventHandler(this.menuItem_ExportSelectedAsFile_Click);
             // 
             // menuItem_ExportSelectedStruct
             // 
