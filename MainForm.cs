@@ -255,7 +255,7 @@ namespace ClipboardManager
                 dataGridViewClipboard.Columns["DataInfo"].Width = 200;
             }
 
-            // Reset selection to the first row
+            // Reset selection to none
             dataGridViewClipboard.ClearSelection();
         }
 
@@ -1159,8 +1159,30 @@ namespace ClipboardManager
 
         private void toolStripButtonRefresh_Click(object sender, EventArgs e)
         {
+            int selectedFormatId = -1;
+            // New scope, only need item for this operation
+            {
+                ClipboardItem item = GetSelectedClipboardItemObject();
+                if (item != null)
+                {
+                    selectedFormatId = (int)item.FormatId;
+                }
+            }
+
             RefreshClipboardItems();
             hasPendingChanges = false;
+
+            // If the new clipboard data contains the same format as the previously selected item, re-select it
+            if (selectedFormatId > 0 && clipboardItems != null && clipboardItems.Any(ci => ci.FormatId == selectedFormatId))
+            {
+                // If format id is still in the new clipboard, select it
+                int rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells["FormatId"].Value.ToString() == selectedFormatId.ToString());
+                if (rowIndex >= 0)
+                {
+                    dataGridViewClipboard.Rows[rowIndex].Selected = true;
+                    dataGridViewClipboard.FirstDisplayedScrollingRowIndex = rowIndex;
+                }
+            }
             UpdateEditControlsVisibility();
         }
 
@@ -1235,6 +1257,12 @@ namespace ClipboardManager
             else
             {
                 labelPendingChanges.Visible = false;
+                // Reset all row colors to black
+                foreach (DataGridViewRow row in dataGridViewClipboard.Rows)
+                {
+                    row.DefaultCellStyle.ForeColor = SystemColors.ControlText;
+                    row.DefaultCellStyle.SelectionForeColor = SystemColors.HighlightText;
+                }
             }
 
             // Beyond here, we need a selected item
@@ -1243,6 +1271,21 @@ namespace ClipboardManager
                 buttonResetEdit.Enabled = false;
                 buttonApplyEdit.Enabled = false;
                 return;
+            }
+
+            // For any items in editedClipboardItems that has pending changes, make its row text color red
+            foreach (var editedItem in editedClipboardItems)
+            {
+                if (editedItem.HasPendingEdit)
+                {
+                    int rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells["FormatId"].Value.ToString() == editedItem.FormatId.ToString());
+                    if (rowIndex >= 0)
+                    {
+                        dataGridViewClipboard.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.Red;
+                        // Also text color while selected
+                        dataGridViewClipboard.Rows[rowIndex].DefaultCellStyle.SelectionForeColor = Color.Yellow;
+                    }
+                }
             }
 
             // Updates based on selected selectedItem only, regardless of view mode

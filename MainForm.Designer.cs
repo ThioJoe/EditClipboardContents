@@ -178,6 +178,7 @@
             this.toolStripButtonSaveEdited.Name = "toolStripButtonSaveEdited";
             this.toolStripButtonSaveEdited.Size = new System.Drawing.Size(28, 28);
             this.toolStripButtonSaveEdited.Text = "Save Edited Clipboard";
+            this.toolStripButtonSaveEdited.ToolTipText = "Re-Write clipboard with edited data";
             this.toolStripButtonSaveEdited.Click += new System.EventHandler(this.toolStripButtonSaveEdited_Click);
             // 
             // toolStripButtonExportSelected
@@ -188,6 +189,7 @@
             this.toolStripButtonExportSelected.Name = "toolStripButtonExportSelected";
             this.toolStripButtonExportSelected.Size = new System.Drawing.Size(28, 28);
             this.toolStripButtonExportSelected.Text = "toolStripButton1";
+            this.toolStripButtonExportSelected.ToolTipText = "Export selected item data as file";
             this.toolStripButtonExportSelected.Click += new System.EventHandler(this.toolStripButtonExportSelected_Click);
             // 
             // richTextBoxContents
@@ -285,7 +287,8 @@
             // labelPendingChanges
             // 
             this.labelPendingChanges.AutoSize = true;
-            this.labelPendingChanges.Location = new System.Drawing.Point(704, 9);
+            this.labelPendingChanges.ForeColor = System.Drawing.Color.Firebrick;
+            this.labelPendingChanges.Location = new System.Drawing.Point(702, 12);
             this.labelPendingChanges.Name = "labelPendingChanges";
             this.labelPendingChanges.Size = new System.Drawing.Size(277, 13);
             this.labelPendingChanges.TabIndex = 12;
