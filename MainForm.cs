@@ -1787,7 +1787,8 @@ namespace ClipboardManager
             copyTableRows(copyEntireTable: true);
         }
 
-        private void copyTableRows(bool copyEntireTable = false)
+        // Copies the selected rows to the clipboard, or the entire table if chosen. Null automatically determines entire table if no rows are selected, otherwise just selected
+        private void copyTableRows(bool? copyEntireTable = false)
         {
             // Get the selected rows and put them in a list, each row a list of strings for the cell values
             List<List<string>> selectedRowsContents = new List<List<string>>();
@@ -1800,10 +1801,22 @@ namespace ClipboardManager
                 selectedRowsContents.Add(headerRow);
             }
 
+            // if copyEntire Table is null, then automatically assume entire table if no rows are selected
+            if (copyEntireTable == null)
+            {
+                if (dataGridViewClipboard.SelectedRows.Count > 0)
+                {
+                    copyEntireTable = false;
+                }
+                else
+                {
+                    copyEntireTable = true;
+                }
+            }
 
             // Determine which rows need to be copied. Either entire table or just selected rows based on function argument
             List<int> selectedRowIndices = new List<int>();
-            if (!copyEntireTable)
+            if (copyEntireTable == false)
             {
                 // Create a list of selected rows based on index so we can get them in the desired order, same as displayed
                 selectedRowIndices = dataGridViewClipboard.SelectedRows.Cast<DataGridViewRow>()
@@ -1812,9 +1825,9 @@ namespace ClipboardManager
                 // Sort the indices to match the display order. This should still be correct regardless of sorting mode clicked on the header bar
                 selectedRowIndices.Sort();
             }
+            // The case where copying the entire table - Get all rows
             else
             {
-                // If copying the entire table, just get all the rows
                 selectedRowIndices = dataGridViewClipboard.Rows.Cast<DataGridViewRow>()
                     .Select(row => row.Index)
                     .ToList();
@@ -1971,6 +1984,16 @@ namespace ClipboardManager
                 }
             }
 
+        }
+
+        private void dataGridViewClipboard_KeyDown(object sender, KeyEventArgs e)
+        {
+            // If the user presses Ctrl+C, copy the selected rows to the clipboard
+            if (e.Control && e.KeyCode == Keys.C)
+            {
+                e.Handled = true;  // Prevents the default copy operation
+                copyTableRows(copyEntireTable: null); // Null means entire table will be copied if no rows are selected, otherwise just selected rows
+            }
         }
 
         // -----------------------------------------------------------------------------
