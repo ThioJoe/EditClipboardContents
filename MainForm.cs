@@ -121,6 +121,12 @@ namespace ClipboardManager
             dataGridViewClipboard.Columns["TextPreview"].Resizable = DataGridViewTriState.True;
             dataGridViewClipboard.Columns["DataInfo"].Resizable = DataGridViewTriState.True;
 
+            // Add padding to the text preview column
+            // Get the current padding for text preview column
+            Padding textPreviewPadding = dataGridViewClipboard.Columns["TextPreview"].DefaultCellStyle.Padding;
+            textPreviewPadding.Left = 3;
+            dataGridViewClipboard.Columns["TextPreview"].DefaultCellStyle.Padding = textPreviewPadding;
+
             // Hide the row headers (the leftmost column)
             dataGridViewClipboard.RowHeadersVisible = false;
 
@@ -325,7 +331,7 @@ namespace ClipboardManager
                 }
                 else
                 {
-                    result = " " + utf16Result;
+                    result = utf16Result;
                 }
             }
             else if (!string.IsNullOrEmpty(utf8Result))
@@ -336,7 +342,7 @@ namespace ClipboardManager
                 }
                 else
                 {
-                    result = " " + utf8Result;
+                    result = utf8Result;
                 }
             }
             else
