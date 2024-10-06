@@ -57,6 +57,7 @@
             this.dropdownContentsViewMode = new System.Windows.Forms.ComboBox();
             this.labelPendingChanges = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.copySelectedRowsNoHeaderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.contextMenuStrip_dataGridView.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -89,21 +90,23 @@
             // 
             this.contextMenuStrip_dataGridView.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.copyCellToolStripMenuItem,
-            this.copyRowDataToolStripMenuItem});
+            this.copyRowDataToolStripMenuItem,
+            this.copySelectedRowsNoHeaderToolStripMenuItem});
             this.contextMenuStrip_dataGridView.Name = "contextMenuStrip_dataGridView";
-            this.contextMenuStrip_dataGridView.Size = new System.Drawing.Size(181, 48);
+            this.contextMenuStrip_dataGridView.Size = new System.Drawing.Size(249, 92);
+            this.contextMenuStrip_dataGridView.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip_dataGridView_Opening);
             // 
             // copyCellToolStripMenuItem
             // 
             this.copyCellToolStripMenuItem.Name = "copyCellToolStripMenuItem";
-            this.copyCellToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.copyCellToolStripMenuItem.Size = new System.Drawing.Size(248, 22);
             this.copyCellToolStripMenuItem.Text = "Copy Single Cell";
             this.copyCellToolStripMenuItem.Click += new System.EventHandler(this.copyCellToolStripMenuItem_Click);
             // 
             // copyRowDataToolStripMenuItem
             // 
             this.copyRowDataToolStripMenuItem.Name = "copyRowDataToolStripMenuItem";
-            this.copyRowDataToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.copyRowDataToolStripMenuItem.Size = new System.Drawing.Size(248, 22);
             this.copyRowDataToolStripMenuItem.Text = "Copy Selected Rows";
             this.copyRowDataToolStripMenuItem.Click += new System.EventHandler(this.copyRowDataToolStripMenuItem_Click);
             // 
@@ -408,6 +411,13 @@
             this.labelPendingChanges.Text = "*Pending Changes - Click Save Icon to apply to clipboard";
             this.labelPendingChanges.Visible = false;
             // 
+            // copySelectedRowsNoHeaderToolStripMenuItem
+            // 
+            this.copySelectedRowsNoHeaderToolStripMenuItem.Name = "copySelectedRowsNoHeaderToolStripMenuItem";
+            this.copySelectedRowsNoHeaderToolStripMenuItem.Size = new System.Drawing.Size(248, 22);
+            this.copySelectedRowsNoHeaderToolStripMenuItem.Text = "Copy Selected Rows (No Header)";
+            this.copySelectedRowsNoHeaderToolStripMenuItem.Click += new System.EventHandler(this.copySelectedRowsNoHeaderToolStripMenuItem_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -475,5 +485,6 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip_dataGridView;
         private System.Windows.Forms.ToolStripMenuItem copyCellToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem copyRowDataToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem copySelectedRowsNoHeaderToolStripMenuItem;
     }
 }

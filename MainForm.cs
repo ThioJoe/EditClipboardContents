@@ -1795,13 +1795,13 @@ namespace ClipboardManager
         }
 
         // Copies the selected rows to the clipboard, or the entire table if chosen. Null automatically determines entire table if no rows are selected, otherwise just selected
-        private void copyTableRows(bool? copyEntireTable = false)
+        private void copyTableRows(bool? copyEntireTable = false, bool forceNoHeader = false)
         {
             // Get the selected rows and put them in a list, each row a list of strings for the cell values
             List<List<string>> selectedRowsContents = new List<List<string>>();
 
             // If option to include headers is enabled, add that first
-            if (menuOptions_IncludeRowHeaders.Checked)
+            if (menuOptions_IncludeRowHeaders.Checked && forceNoHeader != true)
             {
                 // Just get the contents of the header row only
                 List<string> headerRow = dataGridViewClipboard.Columns.Cast<DataGridViewColumn>().Select(col => col.HeaderText).ToList();
@@ -1860,7 +1860,7 @@ namespace ClipboardManager
             {
                 for (int j = 0; j < selectedRowsContents[i].Count; j++)
                 {
-                    selectedRowsContents[i][j] = selectedRowsContents[i][j].Replace("\n", " ");
+                    selectedRowsContents[i][j] = selectedRowsContents[i][j].Replace("\n", " ").Replace("\r", " ");
                 }
             }
 
@@ -2016,6 +2016,11 @@ namespace ClipboardManager
             Clipboard.SetText(cellContents);
         }
 
+        private void copySelectedRowsNoHeaderToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            copyTableRows(copyEntireTable: false, forceNoHeader: true);
+        }
+
         private void dataGridViewClipboard_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right && e.RowIndex >= 0 && e.ColumnIndex >= 0)
@@ -2041,6 +2046,11 @@ namespace ClipboardManager
                     ChangeCellFocus(rowIndex: e.RowIndex, cellIndex: e.ColumnIndex);
                 }
             }
+        }
+
+        private void contextMenuStrip_dataGridView_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+
         }
 
         // -----------------------------------------------------------------------------
