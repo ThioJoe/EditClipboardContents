@@ -26,7 +26,9 @@
             this.menuItem_ExportSelectedAsFile = new System.Windows.Forms.MenuItem();
             this.menuItem_ExportSelectedStruct = new System.Windows.Forms.MenuItem();
             this.menuMainEdit = new System.Windows.Forms.MenuItem();
-            this.menuEdit_CopyAsText = new System.Windows.Forms.MenuItem();
+            this.menuEdit_CopyObjectInfoAsText = new System.Windows.Forms.MenuItem();
+            this.menuEdit_CopyHexAsText = new System.Windows.Forms.MenuItem();
+            this.menuEdit_CopyEditedHexAsText = new System.Windows.Forms.MenuItem();
             this.menuMainView = new System.Windows.Forms.MenuItem();
             this.menuItem1 = new System.Windows.Forms.MenuItem();
             this.menuItemShowLargeHex = new System.Windows.Forms.MenuItem();
@@ -100,21 +102,36 @@
             // menuItem_ExportSelectedStruct
             // 
             this.menuItem_ExportSelectedStruct.Index = 2;
-            this.menuItem_ExportSelectedStruct.Text = "Export Selected Struct Info";
+            this.menuItem_ExportSelectedStruct.Text = "Export Selected Object Info";
             this.menuItem_ExportSelectedStruct.Click += new System.EventHandler(this.menuItem_ExportSelectedStruct_Click);
             // 
             // menuMainEdit
             // 
             this.menuMainEdit.Index = 1;
             this.menuMainEdit.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-            this.menuEdit_CopyAsText});
+            this.menuEdit_CopyObjectInfoAsText,
+            this.menuEdit_CopyHexAsText,
+            this.menuEdit_CopyEditedHexAsText});
             this.menuMainEdit.Text = "Edit";
             // 
-            // menuEdit_CopyAsText
+            // menuEdit_CopyObjectInfoAsText
             // 
-            this.menuEdit_CopyAsText.Index = 0;
-            this.menuEdit_CopyAsText.Text = "Copy As Text (ToDo)";
-            this.menuEdit_CopyAsText.Click += new System.EventHandler(this.menuEdit_CopyAsText_Click);
+            this.menuEdit_CopyObjectInfoAsText.Index = 0;
+            this.menuEdit_CopyObjectInfoAsText.Text = "Copy Object Info As Text";
+            this.menuEdit_CopyObjectInfoAsText.Click += new System.EventHandler(this.menuEdit_CopyObjectInfoAsText_Click);
+            // 
+            // menuEdit_CopyHexAsText
+            // 
+            this.menuEdit_CopyHexAsText.Index = 1;
+            this.menuEdit_CopyHexAsText.Text = "Copy Hex Data As Text";
+            this.menuEdit_CopyHexAsText.Click += new System.EventHandler(this.menuEdit_CopyHexAsText_Click);
+            // 
+            // menuEdit_CopyEditedHexAsText
+            // 
+            this.menuEdit_CopyEditedHexAsText.Enabled = false;
+            this.menuEdit_CopyEditedHexAsText.Index = 2;
+            this.menuEdit_CopyEditedHexAsText.Text = "Copy Edited Hex As Text";
+            this.menuEdit_CopyEditedHexAsText.Click += new System.EventHandler(this.menuEdit_CopyEditedHexAsText_Click);
             // 
             // menuMainView
             // 
@@ -238,6 +255,7 @@
             // 
             // buttonResetEdit
             // 
+            this.buttonResetEdit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonResetEdit.Enabled = false;
             this.buttonResetEdit.Location = new System.Drawing.Point(890, 3);
             this.buttonResetEdit.Name = "buttonResetEdit";
@@ -249,6 +267,7 @@
             // 
             // buttonApplyEdit
             // 
+            this.buttonApplyEdit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonApplyEdit.Enabled = false;
             this.buttonApplyEdit.Location = new System.Drawing.Point(809, 3);
             this.buttonApplyEdit.Name = "buttonApplyEdit";
@@ -328,7 +347,7 @@
         private System.Windows.Forms.MenuItem menuMainFile;
         private System.Windows.Forms.MenuItem menuFile_ExportAsRawHex;
         private System.Windows.Forms.MenuItem menuMainEdit;
-        private System.Windows.Forms.MenuItem menuEdit_CopyAsText;
+        private System.Windows.Forms.MenuItem menuEdit_CopyHexAsText;
         private System.Windows.Forms.MenuItem menuItem_ExportSelectedAsFile;
         private System.Windows.Forms.MenuItem menuMainView;
         private System.Windows.Forms.ToolStrip toolStrip1;
@@ -348,5 +367,7 @@
         private System.Windows.Forms.Button buttonApplyEdit;
         private System.Windows.Forms.Button buttonResetEdit;
         private System.Windows.Forms.Label labelPendingChanges;
+        private System.Windows.Forms.MenuItem menuEdit_CopyObjectInfoAsText;
+        private System.Windows.Forms.MenuItem menuEdit_CopyEditedHexAsText;
     }
 }

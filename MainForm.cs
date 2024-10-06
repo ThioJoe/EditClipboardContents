@@ -185,7 +185,7 @@ namespace ClipboardManager
         private void UpdateClipboardItemsGridView(string formatName, string formatID, string handleType, string dataSize, string dataInfo, byte[] rawData)
         {
             // Preprocess certain info
-            string textPreview = TryParseText(rawData, maxLength: 150, prefixEncodingType: false);
+            string textPreview = TryParseText(rawData, maxLength: 200, prefixEncodingType: false);
             string dataInfoString = dataInfo;
 
             if (string.IsNullOrEmpty(dataInfo))
@@ -1265,11 +1265,12 @@ namespace ClipboardManager
                 }
             }
 
-            // Beyond here, we need a selected item
+            // Beyond here, we need a selected item. If there isn't one, set some buttons that require a selectedItem to be disabled
             if (selectedItem == null || selectedEditedItem == null)
             {
                 buttonResetEdit.Enabled = false;
                 buttonApplyEdit.Enabled = false;
+                menuEdit_CopyEditedHexAsText.Enabled = false;
                 return;
             }
 
@@ -1292,10 +1293,12 @@ namespace ClipboardManager
             if (selectedEditedItem.HasPendingEdit)
             {
                 buttonResetEdit.Enabled = true;
+                menuEdit_CopyEditedHexAsText.Enabled = true;
             }
             else
             {
                 buttonResetEdit.Enabled = false;
+                menuEdit_CopyEditedHexAsText.Enabled = false;
             }
 
             // Show apply edit button if the selectedItem is in hex edit mode
@@ -1350,7 +1353,7 @@ namespace ClipboardManager
                 SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
-                    // Assuming itemToExport.Data contains the raw bitmap data
+                    // Assuming itemToCopy.Data contains the raw bitmap data
                     using (MemoryStream ms = new MemoryStream(itemToExport.Data))
                     {
                         using (Bitmap bitmap = new Bitmap(ms))
@@ -1487,9 +1490,9 @@ namespace ClipboardManager
             }
 
             //// If it's DIBV5 format use special hex conversion
-            //if (itemToExport.FormatId == 17)
+            //if (itemToCopy.FormatId == 17)
             //{
-            //    string hexString = CF_DIBV5ToHex(itemToExport.Data);
+            //    string hexString = CF_DIBV5ToHex(itemToCopy.Data);
             //    SaveFileDialog saveFileDialogResult = SaveFileDialog();
             //    if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
             //    {
@@ -1503,10 +1506,6 @@ namespace ClipboardManager
             toolStripButtonExportSelected_Click(null, null);
         }
 
-        private void menuEdit_CopyAsText_Click(object sender, EventArgs e)
-        {
-
-        }
 
         public static Bitmap CF_DIBV5ToBitmap(byte[] data)
         {
@@ -1717,6 +1716,48 @@ namespace ClipboardManager
             {
                 richTextBoxContents.Clear();
             }
+        }
+
+        private void menuEdit_CopyHexAsText_Click(object sender, EventArgs e)
+        {
+            // Get the clipboard selectedItem and its info
+            ClipboardItem itemToCopy = GetSelectedClipboardItemObject();
+            if (itemToCopy == null)
+            {
+                return;
+            }
+            // Get the hex information that would be displayed in the hex view
+            string data = BitConverter.ToString(itemToCopy.RawData).Replace("-", " ");
+
+            // Copy the hex information to the clipboard
+            Clipboard.SetText(data);
+        }
+
+        private void menuEdit_CopyObjectInfoAsText_Click(object sender, EventArgs e)
+        {
+            // Get the clipboard selectedItem and its info
+            ClipboardItem itemToCopy = GetSelectedClipboardItemObject();
+            if (itemToCopy == null)
+            {
+                return;
+            }
+            // Get the struct / object info that would be displayed in object view of rich text box and copy it to clipboard
+            string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToCopy.FormatId), data: itemToCopy.RawData, fullItem: itemToCopy, allowLargeHex: menuItemShowLargeHex.Checked);
+            Clipboard.SetText(data);
+        }
+
+        private void menuEdit_CopyEditedHexAsText_Click(object sender, EventArgs e)
+        {
+            // Get the edited clipboard selectedItem and its info
+            ClipboardItem itemToCopy = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
+            if (itemToCopy == null)
+            {
+                return;
+            }
+
+            // Get the hex information that would be displayed in the hex view and copy it to clipboard
+            string data = BitConverter.ToString(itemToCopy.RawData).Replace("-", " ");
+            Clipboard.SetText(data);
         }
     }
 
