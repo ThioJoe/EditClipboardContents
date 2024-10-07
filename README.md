@@ -1,7 +1,10 @@
 # Edit Clipboard Contents
 
-An advanced Windows application for deep inspection and editing of raw clipboard contents.
+#### Windows application for inspection and editing of raw clipboard contents
 
+<p align="center">
+<img alt="Main application Window Screenshot" width=750 src=https://github.com/user-attachments/assets/910b392b-4e92-4933-8d19-757166860757>
+</p>
 
 ## ✔️ Key Features
 
