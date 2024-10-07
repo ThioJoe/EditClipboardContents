@@ -100,8 +100,9 @@ namespace ClipboardManager
 
             // Initial tool settings
             dropdownContentsViewMode.SelectedIndex = 0; // Default index 0 is "Text" view mode
+            dropdownHexToTextEncoding.SelectedIndex = 0; // Default index 0 is "UTF-8" encoding
 
-            
+
         }
 
         private void InitializeLogging()
@@ -1072,9 +1073,6 @@ namespace ClipboardManager
             // Set color to black for default
             richTextBoxContents.ForeColor = Color.Black;
 
-            Encoding utf8 = Encoding.UTF8;
-            Encoding utf16 = Encoding.Unicode;
-
             switch (modeIndex)
             {
                 case 0: // Text view mode
@@ -1086,20 +1084,22 @@ namespace ClipboardManager
                     // Show hex data in the left panel text box
                     richTextBoxContents.Text = BitConverter.ToString(item.RawData).Replace("-", " ");
                     richTextBoxContents.ReadOnly = true;
-                    // Convert raw data to plaintext as UTF-8 and show in the right panel text box
-                    richTextBox_HexPlaintext.Text = TryParseText(rawData: item.RawData);
+                    UpdatePlaintextFromHexView();
                     break;
 
                 case 2: // Hex (Editable) view mode
+                    richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
                     richTextBoxContents.Text = BitConverter.ToString(item.RawData).Replace("-", " ");
+                    richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
+
                     richTextBoxContents.ReadOnly = false;
-
-                    // Convert raw data to plaintext as UTF-8 and show in the right panel text box
-                    richTextBox_HexPlaintext.Text = utf8.GetString(item.RawData);
-
+                    UpdatePlaintextFromHexView();
                     break;
                 case 3: // Object / Struct View
+                    richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
                     richTextBoxContents.Text = FormatInspector.InspectFormat(formatName: GetStandardFormatName(item.FormatId), data: item.RawData, fullItem: item);
+                    richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
+
                     richTextBoxContents.ReadOnly = true;
                     break;
 
@@ -1109,6 +1109,116 @@ namespace ClipboardManager
             }
         }
 
+        private void UpdatePlaintextFromHexView()
+        {
+            // Set encoding mode based on dropdown
+            Encoding encodingToUse;
+            if (dropdownHexToTextEncoding.SelectedIndex == 0) // UTF-8
+            {
+                encodingToUse = Encoding.UTF8;
+            }
+            else if (dropdownHexToTextEncoding.SelectedIndex == 1) // UTF-16
+            {
+                encodingToUse = Encoding.Unicode;
+            }
+            else
+            {
+                encodingToUse = Encoding.UTF8;
+            }
+
+            // Use the text from the other text box to ensure the text is up to date
+            string textToConvert = richTextBoxContents.Text.Replace(" ", "");
+
+            byte[] byteData = new byte[0];
+
+            if (!string.IsNullOrEmpty(textToConvert))
+            {
+                if (textToConvert.Length % 2 != 0)
+                {
+                    // If the length is odd, add a space to the end
+                    //textToConvert += " ";
+                }
+                try
+                {
+                    byteData = Enumerable.Range(0, textToConvert.Length)
+                    .Where(x => x % 2 == 0)
+                    .Select(x => Convert.ToByte(textToConvert.Substring(x, 2), 16))
+                    .ToArray();
+                }
+                // Probably not text
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error converting hex to text: {ex.Message}");
+                }
+
+            }
+
+            string plaintextRaw = encodingToUse.GetString(byteData); // This could contain null characters
+            string plaintext;
+
+            if (checkBoxPlainTextEditing.Checked)
+            {
+                // If the checkbox is checked, show null characters as dots
+                plaintext = plaintextRaw.Replace("\0", "\\0");
+            }
+            else
+            {
+                plaintext = plaintextRaw.Replace("\0", "."); // Remove null characters
+            }
+
+            // Convert the bytes to text and update the text box. First disable textchanged event to prevent infinite loop
+            richTextBox_HexPlaintext.TextChanged -= richTextBox_HexPlaintext_TextChanged;
+            richTextBox_HexPlaintext.Text = plaintext;
+            richTextBox_HexPlaintext.TextChanged += richTextBox_HexPlaintext_TextChanged;
+        }
+
+        // Converts the text in the hex text box to hex and updates the other text box. Encoding based on dropdown
+        private void UpdateHexViewChanges()
+        {
+            Encoding encoding = Encoding.UTF8;
+            if (dropdownHexToTextEncoding.SelectedIndex == 0) // UTF-8
+            {
+                encoding = Encoding.UTF8;
+            }
+            else if (dropdownHexToTextEncoding.SelectedIndex == 1) // UTF-16
+            {
+                encoding = Encoding.Unicode;
+            }
+            else
+            {
+                encoding = Encoding.UTF8;
+            }
+
+            // Get the text from the plaintext box
+            string text = UnescapeString(richTextBox_HexPlaintext.Text);
+
+
+            // Convert the text to bytes
+            byte[] byteData = encoding.GetBytes(text);
+
+            // Convert the bytes to hex
+            string hexString = BitConverter.ToString(byteData).Replace("-", " ");
+
+            // Update the hex text box. First disable textchanged event to prevent infinite loop
+            richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
+            richTextBoxContents.Text = hexString;
+            richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
+
+        }
+
+        private string UnescapeString (string inputString)
+        {
+            inputString = inputString.Replace("\\0", "\0");
+            inputString = inputString.Replace("\\a", "\a");
+            inputString = inputString.Replace("\\b", "\b");
+            inputString = inputString.Replace("\\f", "\f");
+            inputString = inputString.Replace("\\n", "\n");
+            inputString = inputString.Replace("\\r", "\r");
+            inputString = inputString.Replace("\\t", "\t");
+            inputString = inputString.Replace("\\v", "\v");
+
+            return inputString;
+        }
 
         private void SaveClipboardData()
         {
@@ -1320,6 +1430,17 @@ namespace ClipboardManager
                 splitterContainer_InnerTextBoxes.Panel2Collapsed = true;
             }
             UpdateToolLocations(); // Ensure the text boxes in the hex view are properly sized after collapsing the hex view panel
+
+            // Make the "plaintext editing" checkbox visible only in hex edit mode
+            if (dropdownContentsViewMode.SelectedIndex == 2)
+            {
+                checkBoxPlainTextEditing.Visible = true;
+            }
+            else
+            {
+                checkBoxPlainTextEditing.Checked = false;
+                checkBoxPlainTextEditing.Visible = false;
+            }
 
             // Beyond here, we need a selected item. If there isn't one, set some buttons that require a selectedItem to be disabled
             if (selectedItem == null || selectedEditedItem == null)
@@ -2064,6 +2185,36 @@ namespace ClipboardManager
         private void splitterContainer_InnerTextBoxes_SplitterMoved(object sender, SplitterEventArgs e)
         {
             UpdateToolLocations();
+        }
+
+        private void dropdownHexToTextEncoding_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdatePlaintextFromHexView();
+        }
+
+        private void richTextBoxContents_TextChanged(object sender, EventArgs e)
+        {
+            // Only update if in edit mode
+            if (dropdownContentsViewMode.SelectedIndex == 2)
+            {
+                UpdatePlaintextFromHexView();
+            }
+            
+        }
+
+        private void richTextBox_HexPlaintext_TextChanged(object sender, EventArgs e)
+        {
+            // Only bother if in edit mode
+            if (dropdownContentsViewMode.SelectedIndex == 2)
+            {
+                UpdateHexViewChanges();
+                
+            }
+        }
+
+        private void checkBoxPlainTextEditing_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdatePlaintextFromHexView();
         }
 
         // -----------------------------------------------------------------------------

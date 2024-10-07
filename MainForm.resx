@@ -215,4 +215,18 @@
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>234, 15</value>
   </metadata>
+  <data name="checkBoxPlainTextEditing.ToolTip" xml:space="preserve">
+    <value>Be sure to select the correct encoding to edit with.
+
+If you see lots of periods in the text, those are likely null
+characters that were converted, and you probably
+therefore want to use UTF-16.
+
+The plaintext will be converted directly back to bytes, so when
+editing in plaintext, null characters are represented by \0
+so that you can use that to signify a null character.
+
+Still, the conversion from plaintext to hex might not be perfect,
+so if accuracy is important, just edit the hex values directly!</value>
+  </data>
 </root>
