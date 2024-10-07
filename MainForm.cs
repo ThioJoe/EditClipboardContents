@@ -23,8 +23,6 @@ namespace ClipboardManager
 {
     public partial class MainForm : Form
     {
-        public const string VERSION = "0.1.0";
-
         private readonly List<ClipboardItem> clipboardItems = new List<ClipboardItem>();
         private List<ClipboardItem> editedClipboardItems = new List<ClipboardItem>(); // Add this line
 
@@ -35,6 +33,10 @@ namespace ClipboardManager
 
         // Variables to store info about initial GUI state
         public int hexTextBoxTopBuffer { get; init; }
+
+        // Get version number from assembly
+        static System.Version versionFull = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        public readonly string versionString = $"{versionFull.Major}.{versionFull.Minor}.{versionFull.Build}";
 
         // Dictionary of formats that can be synthesized from other formats, and which they can be synthesized to
         private static readonly Dictionary<uint, List<uint>> SynthesizedFormatsMap = new Dictionary<uint, List<uint>>()
@@ -99,6 +101,11 @@ namespace ClipboardManager
             dropdownContentsViewMode.SelectedIndex = 0; // Default index 0 is "Text" view mode
             dropdownHexToTextEncoding.SelectedIndex = 0; // Default index 0 is "UTF-8" encoding
 
+            // Set color of toolstrip manually because it doesn't set it apparently
+            toolStrip1.BackColor = SystemColors.Control;
+
+            // Set the version number label
+            labelVersion.Text = $"Version {versionString}";
 
         }
 
@@ -2504,8 +2511,8 @@ namespace ClipboardManager
         private void menuHelp_About_Click(object sender, EventArgs e)
         {
             // Show message box
-            MessageBox.Show("Edit Clipboard Items\n\n" +
-                "Version: " + VERSION + "\n\n" +
+            MessageBox.Show("Edit Clipboard Contents\n\n" +
+                "Version: " + versionString + "\n\n" +
                 "Author: ThioJoe" +
                 "   (https://github.com/ThioJoe)", 
                 "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
