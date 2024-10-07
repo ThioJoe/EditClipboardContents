@@ -26,8 +26,6 @@ namespace ClipboardManager
         private readonly List<ClipboardItem> clipboardItems = new List<ClipboardItem>();
         private List<ClipboardItem> editedClipboardItems = new List<ClipboardItem>(); // Add this line
 
-        private StreamWriter logFile;
-
         public static bool hasPendingChanges = false;
         public static bool enableSplitHexView = false;
 
@@ -93,7 +91,6 @@ namespace ClipboardManager
             InitializeComponent();
             hexTextBoxTopBuffer = richTextBoxContents.Height - richTextBox_HexPlaintext.Height;
 
-            InitializeLogging();
             InitializeDataGridView();
             UpdateToolLocations();
 
@@ -128,13 +125,6 @@ namespace ClipboardManager
         {
             float scaleFactor = this.DeviceDpi / 96f; // 96 is the default DPI
             return (int)(originalValue * scaleFactor);
-        }
-
-        private void InitializeLogging()
-        {
-            string logPath = Path.Combine(Application.StartupPath, "clipboard_log.txt");
-            logFile = new StreamWriter(logPath, true);
-            logFile.AutoFlush = true;
         }
 
 
@@ -980,11 +970,6 @@ namespace ClipboardManager
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
-            if (logFile != null)
-            {
-                logFile.Close();
-                logFile.Dispose();
-            }
         }
 
         private string GetStandardFormatName(uint format)
