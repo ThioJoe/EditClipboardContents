@@ -104,6 +104,21 @@ namespace ClipboardManager
             // Set color of toolstrip manually because it doesn't set it apparently
             toolStrip1.BackColor = SystemColors.Control;
 
+            // Set colors of splitter panels so the splitter bar is visible. See: https://stackoverflow.com/questions/2392492/making-splitter-visible-for-split-panel
+                // First set backcolors of the inner pannels to something other than default control - To force non-inheritance
+            //splitContainerMain.Panel1.BackColor = SystemColors.ControlLight;
+            //splitContainerMain.Panel2.BackColor = SystemColors.ControlLight;
+            //splitterContainer_InnerTextBoxes.Panel1.BackColor = SystemColors.ControlLight;
+            //splitterContainer_InnerTextBoxes.Panel2.BackColor = SystemColors.ControlLight;
+            //// Set backcolor of splitter container to desired splitter bar color
+            //splitContainerMain.BackColor = Color.White;
+            //splitterContainer_InnerTextBoxes.BackColor = Color.White;
+            //// Set backcolor of inner panels back to default control
+            //splitContainerMain.Panel1.BackColor = SystemColors.Control;
+            //splitContainerMain.Panel2.BackColor = SystemColors.Control;
+            //splitterContainer_InnerTextBoxes.Panel1.BackColor = SystemColors.Control;
+            //splitterContainer_InnerTextBoxes.Panel2.BackColor = SystemColors.Control;
+
             // Set the version number label
             labelVersion.Text = $"Version {versionString}";
 
@@ -414,6 +429,8 @@ namespace ClipboardManager
                 splitterContainer_InnerTextBoxes.Panel2Collapsed = true;
             }
 
+            splitterContainer_InnerTextBoxes.SplitterWidth = 10;
+
             // Auto-resize the text boxes to match the panels
             richTextBoxContents.Height = splitterContainer_InnerTextBoxes.Height;
             richTextBox_HexPlaintext.Height = splitterContainer_InnerTextBoxes.Height - hexTextBoxTopBuffer; // Adds some space for encoding selection dropdown. Based on initial GUI settings.
@@ -422,7 +439,7 @@ namespace ClipboardManager
 
             // Resize processedData grid within panel to match panel size
             dataGridViewClipboard.Width = splitContainerMain.Panel1.Width;
-            dataGridViewClipboard.Height = splitContainerMain.Panel1.Height;
+            dataGridViewClipboard.Height = splitContainerMain.Panel1.Height - CompensateDPI(3);
 
         }
 
