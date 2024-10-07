@@ -2390,42 +2390,92 @@ namespace ClipboardManager
         {
             int plaintextLength = 0;
             string text = richTextBoxContents.Text;
+            bool isUtf16 = dropdownHexToTextEncoding.SelectedIndex == 1;
 
-            for (int i = start; i < start + length && i < text.Length; i += 3)
+            string rawSelectedTextSection = text.Substring(start, length);
+            string cleanedText = rawSelectedTextSection.Replace(" ", "");
+
+            int byteSize = isUtf16 ? 4 : 2;
+
+            for (int i = 0; i < cleanedText.Length; i += byteSize)
             {
-                if (i + 1 < text.Length) // Ensure we have at least two characters for a byte
+                if ((i + byteSize - 1) < cleanedText.Length)
                 {
-                    string byteStr = text.Substring(i, 2);
-                    if (byte.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out byte b))
+                    string byteStr = cleanedText.Substring(i, byteSize);
+                    if (byteSize == 2)
                     {
-                        if (editMode)
+                        if (byte.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out byte b))
                         {
-                            switch (b)
-                            {
-                                case 0x00: // \0
-                                case 0x07: // \a
-                                case 0x08: // \b
-                                case 0x0C: // \f
-                                case 0x0A: // \n
-                                case 0x0D: // \r
-                                case 0x09: // \t
-                                case 0x0B: // \v
-                                    plaintextLength += 2; // These are represented as two characters in edit mode
-                                    break;
-                                default:
-                                    plaintextLength += 1;
-                                    break;
-                            }
+                            ProcessByte(b);
                         }
-                        else
+                    }
+                    else if (byteSize == 4)
+                    {
+                        if (ushort.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out ushort us))
                         {
-                            plaintextLength += 1; // In non-edit mode, each byte is one character (including '.')
+                            ProcessUtf16(us);
                         }
                     }
                 }
             }
 
-            return plaintextLength;
+            void ProcessByte(byte b)
+            {
+                if (editMode)
+                {
+                    switch (b)
+                    {
+                        case 0x00: // \0
+                        case 0x07: // \a
+                        case 0x08: // \b
+                        case 0x0C: // \f
+                        case 0x0A: // \n
+                        case 0x0D: // \r
+                        case 0x09: // \t
+                        case 0x0B: // \v
+                            plaintextLength += 4; // These are represented as two characters in edit mode
+                            break;
+                        default:
+                            plaintextLength += 2; // Normal character
+                            break;
+                    }
+                }
+                else
+                {
+                    plaintextLength += 2; // UTF-8 mode
+                }
+            }
+
+            void ProcessUtf16(ushort us)
+            {
+                if (editMode)
+                {
+                    switch (us)
+                    {
+                        case 0x0000: // \0
+                        case 0x0007: // \a
+                        case 0x0008: // \b
+                        case 0x000C: // \f
+                        case 0x000A: // \n
+                        case 0x000D: // \r
+                        case 0x0009: // \t
+                        case 0x000B: // \v
+                            plaintextLength += 4; // These are represented as two characters in edit mode
+                            break;
+                        default:
+                            plaintextLength += 2; // Normal character
+                            break;
+                    }
+                }
+                else
+                {
+                    plaintextLength += 2; // UTF-16 mode, one character per 16-bit value
+                }
+            }
+
+            // All lengths are multiplied by two so that we can divide by two now and account for UTF-16
+            // Otherwise we would have had to use 0.5 for the UTF-16 case
+            return plaintextLength / 2; 
         }
 
         // -----------------------------------------------------------------------------
