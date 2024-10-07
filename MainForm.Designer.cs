@@ -307,7 +307,7 @@
             this.toolStripButtonDelete.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonDelete.Image")));
             this.toolStripButtonDelete.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonDelete.Name = "toolStripButtonDelete";
-            this.toolStripButtonDelete.Size = new System.Drawing.Size(52, 52);
+            this.toolStripButtonDelete.Size = new System.Drawing.Size(46, 46);
             this.toolStripButtonDelete.Text = "Delete Selected Item From Clipboard";
             this.toolStripButtonDelete.Click += new System.EventHandler(this.toolStripButtonDelete_Click);
             // 
@@ -317,7 +317,7 @@
             this.toolStripButtonSaveEdited.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonSaveEdited.Image")));
             this.toolStripButtonSaveEdited.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonSaveEdited.Name = "toolStripButtonSaveEdited";
-            this.toolStripButtonSaveEdited.Size = new System.Drawing.Size(52, 52);
+            this.toolStripButtonSaveEdited.Size = new System.Drawing.Size(46, 46);
             this.toolStripButtonSaveEdited.Text = "Save Edits To Clipboard";
             this.toolStripButtonSaveEdited.ToolTipText = "Re-Write clipboard with edited data";
             this.toolStripButtonSaveEdited.Click += new System.EventHandler(this.toolStripButtonSaveEdited_Click);
@@ -328,7 +328,7 @@
             this.toolStripButtonExportSelected.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonExportSelected.Image")));
             this.toolStripButtonExportSelected.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonExportSelected.Name = "toolStripButtonExportSelected";
-            this.toolStripButtonExportSelected.Size = new System.Drawing.Size(52, 52);
+            this.toolStripButtonExportSelected.Size = new System.Drawing.Size(46, 46);
             this.toolStripButtonExportSelected.Text = "Export selected item data as file";
             this.toolStripButtonExportSelected.ToolTipText = "Export selected item data as file";
             this.toolStripButtonExportSelected.Click += new System.EventHandler(this.toolStripButtonExportSelected_Click);
