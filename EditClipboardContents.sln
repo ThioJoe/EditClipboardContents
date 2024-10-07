@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.34928.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EditClipboardItems", "EditClipboardItems.csproj", "{89742039-925E-42AF-9DAF-A3DD0C7D064B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EditClipboardContents", "EditClipboardContents.csproj", "{89742039-925E-42AF-9DAF-A3DD0C7D064B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

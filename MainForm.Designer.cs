@@ -44,6 +44,7 @@
             this.menuOptions_TabSeparation = new System.Windows.Forms.MenuItem();
             this.menuOptions_CommaSeparation = new System.Windows.Forms.MenuItem();
             this.menuItemHelp = new System.Windows.Forms.MenuItem();
+            this.menuHelp_About = new System.Windows.Forms.MenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonRefresh = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
@@ -63,7 +64,6 @@
             this.dropdownContentsViewMode = new System.Windows.Forms.ComboBox();
             this.labelPendingChanges = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.menuHelp_About = new System.Windows.Forms.MenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.contextMenuStrip_dataGridView.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -267,6 +267,12 @@
             this.menuHelp_About});
             this.menuItemHelp.Text = "Help";
             // 
+            // menuHelp_About
+            // 
+            this.menuHelp_About.Index = 0;
+            this.menuHelp_About.Text = "About";
+            this.menuHelp_About.Click += new System.EventHandler(this.menuHelp_About_Click);
+            // 
             // toolStrip1
             // 
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
@@ -290,7 +296,7 @@
             this.toolStripButtonRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonRefresh.Name = "toolStripButtonRefresh";
             this.toolStripButtonRefresh.Size = new System.Drawing.Size(28, 28);
-            this.toolStripButtonRefresh.Text = "Refresh";
+            this.toolStripButtonRefresh.Text = "Reload From Clipboard";
             this.toolStripButtonRefresh.Click += new System.EventHandler(this.toolStripButtonRefresh_Click);
             // 
             // toolStripButtonDelete
@@ -300,7 +306,7 @@
             this.toolStripButtonDelete.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonDelete.Name = "toolStripButtonDelete";
             this.toolStripButtonDelete.Size = new System.Drawing.Size(28, 28);
-            this.toolStripButtonDelete.Text = "Delete Item From Clipboard";
+            this.toolStripButtonDelete.Text = "Delete Selected Item From Clipboard";
             this.toolStripButtonDelete.Click += new System.EventHandler(this.toolStripButtonDelete_Click);
             // 
             // toolStripButtonSaveEdited
@@ -310,7 +316,7 @@
             this.toolStripButtonSaveEdited.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonSaveEdited.Name = "toolStripButtonSaveEdited";
             this.toolStripButtonSaveEdited.Size = new System.Drawing.Size(28, 28);
-            this.toolStripButtonSaveEdited.Text = "Save Edited Clipboard";
+            this.toolStripButtonSaveEdited.Text = "Save Edits To Clipboard";
             this.toolStripButtonSaveEdited.ToolTipText = "Re-Write clipboard with edited data";
             this.toolStripButtonSaveEdited.Click += new System.EventHandler(this.toolStripButtonSaveEdited_Click);
             // 
@@ -321,7 +327,7 @@
             this.toolStripButtonExportSelected.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonExportSelected.Name = "toolStripButtonExportSelected";
             this.toolStripButtonExportSelected.Size = new System.Drawing.Size(28, 28);
-            this.toolStripButtonExportSelected.Text = "toolStripButton1";
+            this.toolStripButtonExportSelected.Text = "Export selected item data as file";
             this.toolStripButtonExportSelected.ToolTipText = "Export selected item data as file";
             this.toolStripButtonExportSelected.Click += new System.EventHandler(this.toolStripButtonExportSelected_Click);
             // 
@@ -506,12 +512,6 @@
             this.labelPendingChanges.Text = "*Pending Changes - Click Save Icon to apply to clipboard";
             this.labelPendingChanges.Visible = false;
             // 
-            // menuHelp_About
-            // 
-            this.menuHelp_About.Index = 0;
-            this.menuHelp_About.Text = "About";
-            this.menuHelp_About.Click += new System.EventHandler(this.menuHelp_About_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -520,9 +520,10 @@
             this.Controls.Add(this.splitContainerMain);
             this.Controls.Add(this.labelPendingChanges);
             this.Controls.Add(this.toolStrip1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Menu = this.mainMenu1;
             this.Name = "MainForm";
-            this.Text = "Clipboard Manager";
+            this.Text = "Edit Clipboard Contents";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.Resize += new System.EventHandler(this.MainForm_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).EndInit();
