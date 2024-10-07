@@ -17,6 +17,7 @@ using System.Globalization;
 // My classes
 using static EditClipboardItems.ClipboardFormats;
 using System.Drawing.Text;
+using System.Text.RegularExpressions;
 
 
 namespace ClipboardManager
@@ -1823,7 +1824,24 @@ namespace ClipboardManager
         private void buttonApplyEdit_Click(object sender, EventArgs e)
         {
             // Get the hex string from the hex view
-            string hexString = richTextBoxContents.Text.Replace(" ", "");
+            string hexString = Regex.Replace(richTextBoxContents.Text, @"\s", "");
+
+            // Ensure valid number of characters and the text is valid Hex
+            if (hexString.Length % 2 != 0)
+            {
+                MessageBox.Show($"Invalid hex data. There must be an even number of hex characters (spaces and whitespace are ignored).\n\nInput length was: {hexString.Length}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Check for invalid characters
+            Match invalidMatch = Regex.Match(hexString, @"[^0-9a-fA-F]");
+            if (invalidMatch.Success)
+            {
+                string invalidChars = string.Join(", ", hexString.Where(c => !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))).Distinct());
+                MessageBox.Show($"Invalid hex data. Please ensure the text box only contains valid hex characters (0-9, A-F).\n\nInvalid characters found: {invalidChars}\n\n(Spaces and whitespace are automatically ignored)", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             byte[] rawData = Enumerable.Range(0, hexString.Length)
                 .Where(x => x % 2 == 0)
                 .Select(x => Convert.ToByte(hexString.Substring(x, 2), 16))
