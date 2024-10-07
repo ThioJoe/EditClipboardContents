@@ -1165,8 +1165,10 @@ namespace ClipboardManager
 
             // Convert the bytes to text and update the text box. First disable textchanged event to prevent infinite loop
             richTextBox_HexPlaintext.TextChanged -= richTextBox_HexPlaintext_TextChanged;
+            richTextBox_HexPlaintext.SelectionChanged -= richTextBox_HexPlaintext_SelectionChanged;
             richTextBox_HexPlaintext.Text = plaintext;
             richTextBox_HexPlaintext.TextChanged += richTextBox_HexPlaintext_TextChanged;
+            richTextBox_HexPlaintext.SelectionChanged += richTextBox_HexPlaintext_SelectionChanged;
         }
 
         // Converts the text in the hex text box to hex and updates the other text box. Encoding based on dropdown
@@ -1198,8 +1200,10 @@ namespace ClipboardManager
 
             // Update the hex text box. First disable textchanged event to prevent infinite loop
             richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
+            richTextBoxContents.SelectionChanged -= richTextBoxContents_SelectionChanged;
             richTextBoxContents.Text = hexString;
             richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
+            richTextBoxContents.SelectionChanged += richTextBoxContents_SelectionChanged;
 
         }
 
@@ -2298,6 +2302,13 @@ namespace ClipboardManager
                 prevSelectionLength = selLength;
             }
 
+            // Get the length of the selection
+            int selectionLength = richTextBoxContents.SelectionLength;
+            if (selectionLength == 0) // Probably just a click, not even a selection
+            {
+                return;
+            }
+
             if (dropdownContentsViewMode.SelectedIndex == 2 || dropdownContentsViewMode.SelectedIndex == 1)
             {
                 //RoundSelection();
@@ -2308,6 +2319,13 @@ namespace ClipboardManager
 
         private void richTextBox_HexPlaintext_SelectionChanged(object sender, EventArgs e)
         {
+            // Get the length of the selection
+            int selectionLength = richTextBox_HexPlaintext.SelectionLength;
+            if (selectionLength == 0) // Probably just a click, not even a selection
+            {
+                return;
+            }
+
             if (dropdownContentsViewMode.SelectedIndex == 2 || dropdownContentsViewMode.SelectedIndex == 1)
             {
                 SyncPlaintextToHex();
