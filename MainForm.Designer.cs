@@ -36,7 +36,6 @@
             this.menuItem3 = new System.Windows.Forms.MenuItem();
             this.menuEdit_CopyEntireTable = new System.Windows.Forms.MenuItem();
             this.menuEdit_CopySelectedRows = new System.Windows.Forms.MenuItem();
-            this.menuMainView = new System.Windows.Forms.MenuItem();
             this.menuItemOptions = new System.Windows.Forms.MenuItem();
             this.menuOptions_ShowLargeHex = new System.Windows.Forms.MenuItem();
             this.menuOptions_IncludeRowHeaders = new System.Windows.Forms.MenuItem();
@@ -44,6 +43,7 @@
             this.menuOptions_PreFormatted = new System.Windows.Forms.MenuItem();
             this.menuOptions_TabSeparation = new System.Windows.Forms.MenuItem();
             this.menuOptions_CommaSeparation = new System.Windows.Forms.MenuItem();
+            this.menuItemHelp = new System.Windows.Forms.MenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonRefresh = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
@@ -63,6 +63,7 @@
             this.dropdownContentsViewMode = new System.Windows.Forms.ComboBox();
             this.labelPendingChanges = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.menuHelp_About = new System.Windows.Forms.MenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.contextMenuStrip_dataGridView.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -131,8 +132,8 @@
             this.mainMenu1.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this.menuMainFile,
             this.menuMainEdit,
-            this.menuMainView,
-            this.menuItemOptions});
+            this.menuItemOptions,
+            this.menuItemHelp});
             // 
             // menuMainFile
             // 
@@ -209,14 +210,9 @@
             this.menuEdit_CopySelectedRows.Text = "Copy Selected Table Rows";
             this.menuEdit_CopySelectedRows.Click += new System.EventHandler(this.menuEdit_CopySelectedRows_Click);
             // 
-            // menuMainView
-            // 
-            this.menuMainView.Index = 2;
-            this.menuMainView.Text = "View";
-            // 
             // menuItemOptions
             // 
-            this.menuItemOptions.Index = 3;
+            this.menuItemOptions.Index = 2;
             this.menuItemOptions.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this.menuOptions_ShowLargeHex,
             this.menuOptions_IncludeRowHeaders,
@@ -263,6 +259,13 @@
             this.menuOptions_CommaSeparation.Index = 2;
             this.menuOptions_CommaSeparation.Text = "Comma Separation";
             this.menuOptions_CommaSeparation.Click += new System.EventHandler(this.menuOptions_CommaSeparation_Click);
+            // 
+            // menuItemHelp
+            // 
+            this.menuItemHelp.Index = 3;
+            this.menuItemHelp.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuHelp_About});
+            this.menuItemHelp.Text = "Help";
             // 
             // toolStrip1
             // 
@@ -503,6 +506,12 @@
             this.labelPendingChanges.Text = "*Pending Changes - Click Save Icon to apply to clipboard";
             this.labelPendingChanges.Visible = false;
             // 
+            // menuHelp_About
+            // 
+            this.menuHelp_About.Index = 0;
+            this.menuHelp_About.Text = "About";
+            this.menuHelp_About.Click += new System.EventHandler(this.menuHelp_About_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -544,7 +553,6 @@
         private System.Windows.Forms.MenuItem menuMainEdit;
         private System.Windows.Forms.MenuItem menuEdit_CopyHexAsText;
         private System.Windows.Forms.MenuItem menuFile_ExportSelectedAsFile;
-        private System.Windows.Forms.MenuItem menuMainView;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton toolStripButtonRefresh;
         private System.Windows.Forms.ToolStripButton toolStripButtonDelete;
@@ -581,5 +589,7 @@
         private System.Windows.Forms.ComboBox dropdownHexToTextEncoding;
         private System.Windows.Forms.Label labelHexToPlaintextEncoding;
         private System.Windows.Forms.CheckBox checkBoxPlainTextEditing;
+        private System.Windows.Forms.MenuItem menuItemHelp;
+        private System.Windows.Forms.MenuItem menuHelp_About;
     }
 }

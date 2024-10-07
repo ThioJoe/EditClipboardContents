@@ -10,24 +10,20 @@ using System.Linq;
 using System.Windows.Forms.VisualStyles;
 using System.Drawing.Imaging;
 using System.Reflection;
+using System.Globalization;
 
 #pragma warning disable IDE1006 // Disable messages about Naming Styles
 
 // My classes
 using static EditClipboardItems.ClipboardFormats;
-using System.Globalization;
-using System.Net.NetworkInformation;
 
-// Need to do this to be able to set init only variable
-//namespace System.Runtime.CompilerServices
-//{
-//    internal static class IsExternalInit { }
-//}
 
 namespace ClipboardManager
 {
     public partial class MainForm : Form
     {
+        public const string VERSION = "0.1.0";
+
         private readonly List<ClipboardItem> clipboardItems = new List<ClipboardItem>();
         private List<ClipboardItem> editedClipboardItems = new List<ClipboardItem>(); // Add this line
 
@@ -35,8 +31,6 @@ namespace ClipboardManager
 
         public static bool hasPendingChanges = false;
         public static bool enableSplitHexView = false;
-
-        private bool isUpdating = false;
 
         // Variables to store info about initial GUI state
         public int hexTextBoxTopBuffer { get; init; }
@@ -2476,6 +2470,16 @@ namespace ClipboardManager
             // All lengths are multiplied by two so that we can divide by two now and account for UTF-16
             // Otherwise we would have had to use 0.5 for the UTF-16 case
             return plaintextLength / 2; 
+        }
+
+        private void menuHelp_About_Click(object sender, EventArgs e)
+        {
+            // Show message box
+            MessageBox.Show("Edit Clipboard Items\n\n" +
+                "Version: " + VERSION + "\n\n" +
+                "Author: ThioJoe" +
+                "   (https://github.com/ThioJoe)", 
+                "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         // -----------------------------------------------------------------------------
