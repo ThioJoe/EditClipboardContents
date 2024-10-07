@@ -2249,23 +2249,47 @@ namespace ClipboardManager
 
         private void richTextBoxContents_SelectionChanged(object sender, EventArgs e)
         {
-            SyncHexToPlaintext();
+            if (dropdownContentsViewMode.SelectedIndex == 2 || dropdownContentsViewMode.SelectedIndex == 1)
+            {
+                // Get the selection, and round it to the nearest byte boundary, considering the spaces between the hex codes
+                richTextBoxContents.SelectionChanged -= richTextBoxContents_SelectionChanged;
+
+                if (richTextBoxContents.SelectionLength % 3 == 1)
+                {
+                    richTextBoxContents.Select(richTextBoxContents.SelectionStart, richTextBoxContents.SelectionLength + 1);
+                }
+                else if (richTextBoxContents.SelectionLength % 3 == 0)
+                {
+                    richTextBoxContents.Select(richTextBoxContents.SelectionStart, richTextBoxContents.SelectionLength + 2);
+                }
+                //else if (richTextBoxContents.SelectionLength % 3 == 2)
+                //{
+                //    richTextBoxContents.Select(richTextBoxContents.SelectionStart, richTextBoxContents.SelectionLength + 0);
+                //}
+
+                richTextBoxContents.SelectionChanged += richTextBoxContents_SelectionChanged;
+
+                SyncHexToPlaintext();
+            }
+            
         }
 
         private void richTextBox_HexPlaintext_SelectionChanged(object sender, EventArgs e)
         {
-            SyncPlaintextToHex();
+            if (dropdownContentsViewMode.SelectedIndex == 2 || dropdownContentsViewMode.SelectedIndex == 1)
+            {
+                SyncPlaintextToHex();
+            }
         }
 
         private void SyncHexToPlaintext()
         {
+            bool editMode = checkBoxPlainTextEditing.Checked;
+
             int hexStart = richTextBoxContents.SelectionStart;
             int hexLength = richTextBoxContents.SelectionLength;
-
             int plaintextStart = hexStart / 3;
-            int plaintextLength = (hexLength + 2) / 3;
-
-            plaintextLength = Math.Min(plaintextLength, richTextBox_HexPlaintext.Text.Length - plaintextStart);
+            int plaintextLength = CalculatePlaintextLengthFromHex(hexStart, hexLength, editMode);
 
             richTextBox_HexPlaintext.SelectionChanged -= richTextBox_HexPlaintext_SelectionChanged;
             richTextBox_HexPlaintext.Select(plaintextStart, plaintextLength);
@@ -2274,19 +2298,102 @@ namespace ClipboardManager
 
         private void SyncPlaintextToHex()
         {
+            bool editMode = checkBoxPlainTextEditing.Checked;
+
             int plaintextStart = richTextBox_HexPlaintext.SelectionStart;
             int plaintextLength = richTextBox_HexPlaintext.SelectionLength;
-
             int hexStart = plaintextStart * 3;
-            int hexLength = plaintextLength * 3;
-
-            hexLength = Math.Min(hexLength, richTextBoxContents.Text.Length - hexStart);
+            int hexLength = CalculateHexLengthFromPlaintext(plaintextStart, plaintextLength, editMode);
 
             richTextBoxContents.SelectionChanged -= richTextBoxContents_SelectionChanged;
             richTextBoxContents.Select(hexStart, hexLength);
             richTextBoxContents.SelectionChanged += richTextBoxContents_SelectionChanged;
         }
 
+        private int CalculateHexLengthFromPlaintext(int start, int length, bool editMode)
+        {
+            int hexLength = 0;
+            string text = richTextBox_HexPlaintext.Text;
+
+            for (int i = start; i < start + length && i < text.Length; i++)
+            {
+                if (editMode)
+                {
+                    if (i < text.Length - 1 && text[i] == '\\')
+                    {
+                        switch (text[i + 1])
+                        {
+                            case '0':
+                            case 'a':
+                            case 'b':
+                            case 'f':
+                            case 'n':
+                            case 'r':
+                            case 't':
+                            case 'v':
+                                hexLength += 3; // One byte in hex
+                                i++; // Skip the next character
+                                break;
+                            default:
+                                hexLength += 3; // Treat as normal character
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        hexLength += 3; // Normal character
+                    }
+                }
+                else
+                {
+                    hexLength += 3; // In non-edit mode, each character (including '.') represents one byte
+                }
+            }
+
+            return hexLength;
+        }
+
+        private int CalculatePlaintextLengthFromHex(int start, int length, bool editMode)
+        {
+            int plaintextLength = 0;
+            string text = richTextBoxContents.Text;
+
+            for (int i = start; i < start + length && i < text.Length; i += 3)
+            {
+                if (i + 1 < text.Length) // Ensure we have at least two characters for a byte
+                {
+                    string byteStr = text.Substring(i, 2);
+                    if (byte.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out byte b))
+                    {
+                        if (editMode)
+                        {
+                            switch (b)
+                            {
+                                case 0x00: // \0
+                                case 0x07: // \a
+                                case 0x08: // \b
+                                case 0x0C: // \f
+                                case 0x0A: // \n
+                                case 0x0D: // \r
+                                case 0x09: // \t
+                                case 0x0B: // \v
+                                    plaintextLength += 2; // These are represented as two characters in edit mode
+                                    break;
+                                default:
+                                    plaintextLength += 1;
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            plaintextLength += 1; // In non-edit mode, each byte is one character (including '.')
+                        }
+                    }
+                }
+            }
+
+            return plaintextLength;
+        }
 
         // -----------------------------------------------------------------------------
     }
