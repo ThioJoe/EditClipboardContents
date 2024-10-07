@@ -2,10 +2,6 @@
 
 #### Windows application for inspection and editing of raw clipboard contents
 
-<p align="center">
-<img alt="Main application Window Screenshot" width=750 src=https://github.com/user-attachments/assets/910b392b-4e92-4933-8d19-757166860757>
-</p>
-
 ## ✔️ Key Features
 
 - **View Details of Every Clipboard Object**: View all clipboard format objects currently in use and their contents.
@@ -13,6 +9,10 @@
 - **Individual Object Removal**: Ability to delete individual objects from the clipboard altogether
 - **Object Analysis (For Certain Formats)**: Examine the object structure of certain standard formats like BMP.
 
+## Screenshot:
+<p align="center">
+<img alt="Main application Window Screenshot" width=750 src=https://github.com/user-attachments/assets/bf710929-a18d-4f60-9a8c-e26d1f739fb4>
+</p>
 
 ## 🔍 Main Features
 
