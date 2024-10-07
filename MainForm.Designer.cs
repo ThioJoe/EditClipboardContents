@@ -326,12 +326,14 @@
             // 
             this.richTextBoxContents.DetectUrls = false;
             this.richTextBoxContents.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.richTextBoxContents.HideSelection = false;
             this.richTextBoxContents.Location = new System.Drawing.Point(0, 0);
             this.richTextBoxContents.Name = "richTextBoxContents";
             this.richTextBoxContents.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
             this.richTextBoxContents.Size = new System.Drawing.Size(629, 280);
             this.richTextBoxContents.TabIndex = 4;
             this.richTextBoxContents.Text = "";
+            this.richTextBoxContents.SelectionChanged += new System.EventHandler(this.richTextBoxContents_SelectionChanged);
             this.richTextBoxContents.TextChanged += new System.EventHandler(this.richTextBoxContents_TextChanged);
             // 
             // splitContainerMain
@@ -419,12 +421,14 @@
             // 
             this.richTextBox_HexPlaintext.DetectUrls = false;
             this.richTextBox_HexPlaintext.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.richTextBox_HexPlaintext.HideSelection = false;
             this.richTextBox_HexPlaintext.Location = new System.Drawing.Point(0, 0);
             this.richTextBox_HexPlaintext.Name = "richTextBox_HexPlaintext";
             this.richTextBox_HexPlaintext.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
             this.richTextBox_HexPlaintext.Size = new System.Drawing.Size(342, 246);
             this.richTextBox_HexPlaintext.TabIndex = 0;
             this.richTextBox_HexPlaintext.Text = "";
+            this.richTextBox_HexPlaintext.SelectionChanged += new System.EventHandler(this.richTextBox_HexPlaintext_SelectionChanged);
             this.richTextBox_HexPlaintext.TextChanged += new System.EventHandler(this.richTextBox_HexPlaintext_TextChanged);
             // 
             // labelSynthesizedTypeWarn

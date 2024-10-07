@@ -36,6 +36,8 @@ namespace ClipboardManager
         public static bool hasPendingChanges = false;
         public static bool enableSplitHexView = false;
 
+        private bool isUpdating = false;
+
         // Variables to store info about initial GUI state
         public int hexTextBoxTopBuffer { get; init; }
 
@@ -1159,11 +1161,11 @@ namespace ClipboardManager
             if (checkBoxPlainTextEditing.Checked)
             {
                 // If the checkbox is checked, show null characters as dots
-                plaintext = plaintextRaw.Replace("\0", "\\0");
+                plaintext = EscapeString(plaintextRaw);
             }
             else
             {
-                plaintext = plaintextRaw.Replace("\0", "."); // Remove null characters
+                plaintext = ReplaceEscapeWithChar(plaintextRaw); // Remove null characters
             }
 
             // Convert the bytes to text and update the text box. First disable textchanged event to prevent infinite loop
@@ -1217,6 +1219,34 @@ namespace ClipboardManager
             inputString = inputString.Replace("\\t", "\t");
             inputString = inputString.Replace("\\v", "\v");
 
+            return inputString;
+        }
+
+        private string EscapeString(string inputString)
+        {
+            inputString = inputString.Replace("\0", "\\0");
+            inputString = inputString.Replace("\a", "\\a");
+            inputString = inputString.Replace("\b", "\\b");
+            inputString = inputString.Replace("\f", "\\f");
+            inputString = inputString.Replace("\n", "\\n");
+            inputString = inputString.Replace("\r", "\\r");
+            inputString = inputString.Replace("\t", "\\t");
+            inputString = inputString.Replace("\v", "\\v");
+
+            return inputString;
+        }
+
+        private string ReplaceEscapeWithChar(string inputString)
+        {
+            string replacement = ".";
+            inputString = inputString.Replace("\0", replacement);
+            inputString = inputString.Replace("\a", replacement);
+            inputString = inputString.Replace("\b", replacement);
+            inputString = inputString.Replace("\f", replacement);
+            inputString = inputString.Replace("\n", replacement);
+            inputString = inputString.Replace("\r", replacement);
+            inputString = inputString.Replace("\t", replacement);
+            inputString = inputString.Replace("\v", replacement);
             return inputString;
         }
 
@@ -2216,6 +2246,47 @@ namespace ClipboardManager
         {
             UpdatePlaintextFromHexView();
         }
+
+        private void richTextBoxContents_SelectionChanged(object sender, EventArgs e)
+        {
+            SyncHexToPlaintext();
+        }
+
+        private void richTextBox_HexPlaintext_SelectionChanged(object sender, EventArgs e)
+        {
+            SyncPlaintextToHex();
+        }
+
+        private void SyncHexToPlaintext()
+        {
+            int hexStart = richTextBoxContents.SelectionStart;
+            int hexLength = richTextBoxContents.SelectionLength;
+
+            int plaintextStart = hexStart / 3;
+            int plaintextLength = (hexLength + 2) / 3;
+
+            plaintextLength = Math.Min(plaintextLength, richTextBox_HexPlaintext.Text.Length - plaintextStart);
+
+            richTextBox_HexPlaintext.SelectionChanged -= richTextBox_HexPlaintext_SelectionChanged;
+            richTextBox_HexPlaintext.Select(plaintextStart, plaintextLength);
+            richTextBox_HexPlaintext.SelectionChanged += richTextBox_HexPlaintext_SelectionChanged;
+        }
+
+        private void SyncPlaintextToHex()
+        {
+            int plaintextStart = richTextBox_HexPlaintext.SelectionStart;
+            int plaintextLength = richTextBox_HexPlaintext.SelectionLength;
+
+            int hexStart = plaintextStart * 3;
+            int hexLength = plaintextLength * 3;
+
+            hexLength = Math.Min(hexLength, richTextBoxContents.Text.Length - hexStart);
+
+            richTextBoxContents.SelectionChanged -= richTextBoxContents_SelectionChanged;
+            richTextBoxContents.Select(hexStart, hexLength);
+            richTextBoxContents.SelectionChanged += richTextBoxContents_SelectionChanged;
+        }
+
 
         // -----------------------------------------------------------------------------
     }
