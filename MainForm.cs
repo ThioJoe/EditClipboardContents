@@ -33,8 +33,12 @@ namespace ClipboardManager
         private readonly List<ClipboardItem> clipboardItems = new List<ClipboardItem>();
         private List<ClipboardItem> editedClipboardItems = new List<ClipboardItem>(); // Add this line
 
+        // Other globals
         public static bool hasPendingChanges = false;
         public static bool enableSplitHexView = false;
+
+        // Global constants
+        public const int maxRawSizeDefault = 50000;
 
         // Variables to store info about initial GUI state
         public int hexTextBoxTopBuffer { get; init; }
@@ -311,31 +315,34 @@ namespace ClipboardManager
                 return "";
             }
 
-            // Create encodings that throw on invalid bytes
-            var utf8Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
-            var utf16Encoding = new UnicodeEncoding(bigEndian: false, byteOrderMark: true, throwOnInvalidBytes: true);
+            // Create encodings without throwing on invalid bytes
+            var utf8Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false);
+            var utf16Encoding = new UnicodeEncoding(bigEndian: false, byteOrderMark: true, throwOnInvalidBytes: false);
 
             string utf8Result = "";
             string utf16Result = "";
 
             // Try UTF-8
-            try
+            var utf8Decoder = utf8Encoding.GetDecoder();
+            char[] utf8Chars = new char[rawData.Length];
+            int utf8CharCount = utf8Decoder.GetCharCount(rawData, 0, rawData.Length);
+            if (utf8CharCount > 0)
             {
-                utf8Result = utf8Encoding.GetString(rawData);
-            }
-            catch (DecoderFallbackException)
-            {
-                // Invalid UTF-8, utf8Result remains empty
+                utf8Decoder.GetChars(rawData, 0, rawData.Length, utf8Chars, 0);
+                utf8Result = new string(utf8Chars, 0, utf8CharCount);
             }
 
             // Try UTF-16
-            try
+            if (rawData.Length % 2 == 0) // UTF-16 requires an even number of bytes
             {
-                utf16Result = utf16Encoding.GetString(rawData);
-            }
-            catch (DecoderFallbackException)
-            {
-                // Invalid UTF-16, utf16Result remains empty
+                var utf16Decoder = utf16Encoding.GetDecoder();
+                char[] utf16Chars = new char[rawData.Length / 2];
+                int utf16CharCount = utf16Decoder.GetCharCount(rawData, 0, rawData.Length);
+                if (utf16CharCount > 0)
+                {
+                    utf16Decoder.GetChars(rawData, 0, rawData.Length, utf16Chars, 0);
+                    utf16Result = new string(utf16Chars, 0, utf16CharCount);
+                }
             }
 
             string result;
@@ -448,14 +455,14 @@ namespace ClipboardManager
 
         private void RefreshClipboardItems()
         {
-            Console.WriteLine("Starting RefreshClipboardItems");
+            //Console.WriteLine("Starting RefreshClipboardItems");
 
             // Count the number of different data formats currently on the clipboard
             int formatCount = NativeMethods.CountClipboardFormats();
-            Console.WriteLine($"Number of clipboard formats: {formatCount}");
+            //Console.WriteLine($"Number of clipboard formats: {formatCount}");
 
             // Attempt to open the clipboard, retrying up to 10 times with a 10ms delay
-            Console.WriteLine("Attempting to open clipboard");
+            //Console.WriteLine("Attempting to open clipboard");
             int retryCount = 10;  // Number of retries
             int retryDelay = 10;  // Delay in milliseconds
             bool clipboardOpened = false;
@@ -472,7 +479,7 @@ namespace ClipboardManager
 
             if (!clipboardOpened)
             {
-                Console.WriteLine("Failed to open clipboard");
+                //Console.WriteLine("Failed to open clipboard");
                 MessageBox.Show("Failed to open clipboard.");
                 return;
             }
@@ -483,7 +490,7 @@ namespace ClipboardManager
             }
             finally
             {
-                Console.WriteLine("Closing clipboard");
+                //Console.WriteLine("Closing clipboard");
                 NativeMethods.CloseClipboard();
             }
 
@@ -491,7 +498,7 @@ namespace ClipboardManager
             ProcessClipboardData();
             CloneClipboardItemsToEditedVariable(); // Clone clipboardItems to editedClipboardItems
 
-            Console.WriteLine("RefreshClipboardItems completed");
+            //Console.WriteLine("RefreshClipboardItems completed");
         }
 
         private void CloneClipboardItemsToEditedVariable()
@@ -508,12 +515,12 @@ namespace ClipboardManager
             while ((format = NativeMethods.EnumClipboardFormats(format)) != 0)
             {
                 string formatName = GetClipboardFormatName(format);
-                Console.WriteLine($"Processing format: {format} ({formatName})");
+                //Console.WriteLine($"Processing format: {format} ({formatName})");
 
                 IntPtr hData = NativeMethods.GetClipboardData(format);
                 if (hData == IntPtr.Zero)
                 {
-                    Console.WriteLine($"GetClipboardData returned null for format {format}");
+                    //Console.WriteLine($"GetClipboardData returned null for format {format}");
                     continue;
                 }
 
@@ -783,7 +790,7 @@ namespace ClipboardManager
 
         private bool RemoveClipboardFormat(uint formatToRemove)
         {
-            Console.WriteLine($"Attempting to remove format: {formatToRemove}");
+            //Console.WriteLine($"Attempting to remove format: {formatToRemove}");
 
             if (!NativeMethods.OpenClipboard(this.Handle))
             {
@@ -798,7 +805,7 @@ namespace ClipboardManager
                 uint format = 0;
                 while ((format = NativeMethods.EnumClipboardFormats(format)) != 0)
                 {
-                    Console.WriteLine($"Processing format: {format}");
+                    //Console.WriteLine($"Processing format: {format}");
                     if (format != formatToRemove)
                     {
                         IntPtr hData = NativeMethods.GetClipboardData(format);
@@ -810,14 +817,14 @@ namespace ClipboardManager
                             // Special handling for CF_BITMAP and other problematic formats
                             if (format == 2 || format == 3 || format == 8 || format == 14 || format == 17)
                             {
-                                Console.WriteLine($"Special handling for format: {format}");
+                                //Console.WriteLine($"Special handling for format: {format}");
                                 size = UIntPtr.Zero;
                                 hGlobal = CopySpecialFormat(format, hData);
                             }
                             else
                             {
                                 size = NativeMethods.GlobalSize(hData);
-                                Console.WriteLine($"Format {format} size: {size}");
+                                //Console.WriteLine($"Format {format} size: {size}");
                                 hGlobal = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, size);
                                 if (hGlobal != IntPtr.Zero)
                                 {
@@ -825,7 +832,7 @@ namespace ClipboardManager
                                     IntPtr pData = NativeMethods.GlobalLock(hData);
                                     if (pGlobal != IntPtr.Zero && pData != IntPtr.Zero)
                                     {
-                                        Console.WriteLine($"Copying data for format: {format}");
+                                        //Console.WriteLine($"Copying data for format: {format}");
                                         NativeMethods.CopyMemory(pGlobal, pData, size);
                                         NativeMethods.GlobalUnlock(hData);
                                         NativeMethods.GlobalUnlock(hGlobal);
@@ -846,7 +853,7 @@ namespace ClipboardManager
                             if (hGlobal != IntPtr.Zero)
                             {
                                 formatsToKeep.Add(new ClipboardFormatData { Format = format, Data = hGlobal });
-                                Console.WriteLine($"Added format {format} to keep list");
+                                //Console.WriteLine($"Added format {format} to keep list");
                             }
                         }
                         else
@@ -856,33 +863,33 @@ namespace ClipboardManager
                     }
                     else
                     {
-                        Console.WriteLine($"Skipping format to remove: {format}");
+                        //Console.WriteLine($"Skipping format to remove: {format}");
                     }
                 }
 
-                Console.WriteLine("Emptying clipboard");
+                //Console.WriteLine("Emptying clipboard");
                 NativeMethods.EmptyClipboard();
 
-                Console.WriteLine("Setting new clipboard data");
+                //Console.WriteLine("Setting new clipboard data");
                 foreach (var item in formatsToKeep)
                 {
-                    Console.WriteLine($"Setting data for format: {item.Format}");
+                    //Console.WriteLine($"Setting data for format: {item.Format}");
                     NativeMethods.SetClipboardData(item.Format, item.Data);
                 }
 
-                Console.WriteLine("Clipboard format removal completed successfully");
+                //Console.WriteLine("Clipboard format removal completed successfully");
                 return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error removing clipboard format: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                //Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 MessageBox.Show($"Error removing clipboard format: {ex.Message}");
                 return false;
             }
             finally
             {
-                Console.WriteLine("Closing clipboard");
+                //Console.WriteLine("Closing clipboard");
                 NativeMethods.CloseClipboard();
             }
         }
@@ -1071,22 +1078,40 @@ namespace ClipboardManager
             {
                 richTextBoxContents.Text = "Data not available";
                 richTextBoxContents.ForeColor = Color.Red;
+
+                // Disable plaintext box and related controls
+                richTextBox_HexPlaintext.Enabled = false;
+                checkBoxPlainTextEditing.Enabled = false;
+                dropdownHexToTextEncoding.Enabled = false; 
+
                 return;
             }
 
             int modeIndex = dropdownContentsViewMode.SelectedIndex;
 
             // For data larger than 50K, display a warning and don't display the data unless the checkbox is checked
-            if (modeIndex != 3 && item.RawData.Length > 50000)
+            if (modeIndex != 3 && item.RawData.Length > maxRawSizeDefault)
             {
                 if (!menuOptions_ShowLargeHex.Checked)
                 {
+                    richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged; // Don't trigger update event handler so it doesn't try to parse it as hex
                     richTextBoxContents.Text = "Data is too large to display preview.\nThis can be changed in the options menu, but the program may freeze for large amounts of data.";
-                    // Set color to red
                     richTextBoxContents.ForeColor = Color.Red;
+                    richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
+
+                    // Disable plaintext box and related controls
+                    richTextBox_HexPlaintext.Enabled = false;
+                    checkBoxPlainTextEditing.Enabled = false;
+                    dropdownHexToTextEncoding.Enabled = false;
+
                     return;
                 }
             }
+
+            // Enable plaintext box and related controls if not already
+            richTextBox_HexPlaintext.Enabled = true;
+            checkBoxPlainTextEditing.Enabled = true;
+            dropdownHexToTextEncoding.Enabled = true;
 
             // Set color to black for default
             richTextBoxContents.ForeColor = Color.Black;
