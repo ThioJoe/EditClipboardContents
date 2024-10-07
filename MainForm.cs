@@ -12,7 +12,13 @@ using System.Drawing.Imaging;
 using System.Reflection;
 using System.Globalization;
 
-#pragma warning disable IDE1006 // Disable messages about Naming Styles
+// Disable IDE warnings that showed up after going from C# 7 to C# 9
+#pragma warning disable IDE1006 // Disable messages about capitalization of control names
+#pragma warning disable IDE0063 // Disable messages about Using expression simplification
+#pragma warning disable IDE0090 // Disable messages about New expression simplification
+#pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
+#pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
+#pragma warning disable IDE0066 // Disable message about switch case expression
 
 // My classes
 using static EditClipboardItems.ClipboardFormats;
@@ -34,7 +40,7 @@ namespace ClipboardManager
         public int hexTextBoxTopBuffer { get; init; }
 
         // Get version number from assembly
-        static System.Version versionFull = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        static readonly System.Version versionFull = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
         public readonly string versionString = $"{versionFull.Major}.{versionFull.Minor}.{versionFull.Build}";
 
         // Dictionary of formats that can be synthesized from other formats, and which they can be synthesized to
@@ -2278,62 +2284,8 @@ namespace ClipboardManager
             UpdatePlaintextFromHexView();
         }
 
-        private int prevSelectionStart = -1;
-        private int prevSelectionLength = 0;
         private void richTextBoxContents_SelectionChanged(object sender, EventArgs e)
         {
-            void RoundSelection()
-            {
-                int selStart = richTextBoxContents.SelectionStart;
-                int selLength = richTextBoxContents.SelectionLength;
-
-                // Determine selection direction
-                bool isSelectingForward = selStart >= prevSelectionStart;
-
-                // Adjust selection to byte boundaries
-                int newSelStart = selStart;
-                int newSelLength = selLength;
-
-                if (isSelectingForward)
-                {
-                    // Adjust start to previous byte boundary
-                    newSelStart = selStart - (selStart % 3);
-                    // Adjust end to next byte boundary
-                    int selEnd = selStart + selLength;
-                    int remainder = selEnd % 3;
-                    int newSelEnd = remainder == 0 ? selEnd : selEnd + (3 - remainder);
-                    newSelLength = newSelEnd - newSelStart;
-                }
-                else
-                {
-                    // Adjust end to previous byte boundary
-                    int selEnd = selStart + selLength;
-                    int remainder = selEnd % 3;
-                    int newSelEnd = selEnd - remainder;
-                    // Adjust start to previous byte boundary
-                    newSelStart = selStart - (selStart % 3);
-                    newSelLength = newSelEnd - newSelStart;
-                }
-
-                // Ensure the new selection is within the text bounds
-                if (newSelStart < 0)
-                    newSelStart = 0;
-                if (newSelStart + newSelLength > richTextBoxContents.TextLength)
-                    newSelLength = richTextBoxContents.TextLength - newSelStart;
-
-                // Update the selection only if it has changed
-                if (newSelStart != selStart || newSelLength != selLength)
-                {
-                    richTextBoxContents.SelectionChanged -= richTextBoxContents_SelectionChanged;
-                    richTextBoxContents.Select(newSelStart, newSelLength);
-                    richTextBoxContents.SelectionChanged += richTextBoxContents_SelectionChanged;
-                }
-
-                // Update previous selection values
-                prevSelectionStart = selStart;
-                prevSelectionLength = selLength;
-            }
-
             // Get the length of the selection
             int selectionLength = richTextBoxContents.SelectionLength;
             if (selectionLength == 0) // Probably just a click, not even a selection
