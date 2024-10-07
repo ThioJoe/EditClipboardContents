@@ -16,6 +16,7 @@ using System.Globalization;
 
 // My classes
 using static EditClipboardItems.ClipboardFormats;
+using System.Drawing.Text;
 
 
 namespace ClipboardManager
@@ -2245,7 +2246,7 @@ namespace ClipboardManager
         private int prevSelectionLength = 0;
         private void richTextBoxContents_SelectionChanged(object sender, EventArgs e)
         {
-            if (dropdownContentsViewMode.SelectedIndex == 2 || dropdownContentsViewMode.SelectedIndex == 1)
+            void RoundSelection()
             {
                 int selStart = richTextBoxContents.SelectionStart;
                 int selLength = richTextBoxContents.SelectionLength;
@@ -2295,7 +2296,11 @@ namespace ClipboardManager
                 // Update previous selection values
                 prevSelectionStart = selStart;
                 prevSelectionLength = selLength;
+            }
 
+            if (dropdownContentsViewMode.SelectedIndex == 2 || dropdownContentsViewMode.SelectedIndex == 1)
+            {
+                //RoundSelection();
                 SyncHexToPlaintext();
             }
         }
