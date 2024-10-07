@@ -18,6 +18,8 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.dataGridViewClipboard = new System.Windows.Forms.DataGridView();
             this.contextMenuStrip_dataGridView = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -82,8 +84,24 @@
             this.dataGridViewClipboard.AllowUserToAddRows = false;
             this.dataGridViewClipboard.AllowUserToDeleteRows = false;
             this.dataGridViewClipboard.AllowUserToResizeRows = false;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewClipboard.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.dataGridViewClipboard.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewClipboard.ContextMenuStrip = this.contextMenuStrip_dataGridView;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridViewClipboard.DefaultCellStyle = dataGridViewCellStyle4;
             this.dataGridViewClipboard.Location = new System.Drawing.Point(4, 5);
             this.dataGridViewClipboard.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dataGridViewClipboard.Name = "dataGridViewClipboard";
@@ -439,7 +457,7 @@
             // richTextBox_HexPlaintext
             // 
             this.richTextBox_HexPlaintext.DetectUrls = false;
-            this.richTextBox_HexPlaintext.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.richTextBox_HexPlaintext.Font = new System.Drawing.Font("Consolas", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.richTextBox_HexPlaintext.HideSelection = false;
             this.richTextBox_HexPlaintext.Location = new System.Drawing.Point(0, 0);
             this.richTextBox_HexPlaintext.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -454,13 +472,14 @@
             // labelSynthesizedTypeWarn
             // 
             this.labelSynthesizedTypeWarn.AutoSize = true;
-            this.labelSynthesizedTypeWarn.Location = new System.Drawing.Point(364, 9);
+            this.labelSynthesizedTypeWarn.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelSynthesizedTypeWarn.Location = new System.Drawing.Point(374, 11);
             this.labelSynthesizedTypeWarn.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelSynthesizedTypeWarn.Name = "labelSynthesizedTypeWarn";
-            this.labelSynthesizedTypeWarn.Size = new System.Drawing.Size(594, 20);
+            this.labelSynthesizedTypeWarn.Size = new System.Drawing.Size(756, 40);
             this.labelSynthesizedTypeWarn.TabIndex = 9;
             this.labelSynthesizedTypeWarn.Text = "⚠️ Note: Selected format type will be automatically re-created by Windows if dele" +
-    "ted\r\n";
+    "ted (edits should still work)\r\n\r\n";
             this.labelSynthesizedTypeWarn.Visible = false;
             // 
             // buttonResetEdit
@@ -493,16 +512,18 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(14, 12);
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(4, 9);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(91, 20);
+            this.label1.Size = new System.Drawing.Size(116, 25);
             this.label1.TabIndex = 8;
             this.label1.Text = "View Mode:";
             // 
             // dropdownContentsViewMode
             // 
             this.dropdownContentsViewMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.dropdownContentsViewMode.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.dropdownContentsViewMode.FormattingEnabled = true;
             this.dropdownContentsViewMode.ImeMode = System.Windows.Forms.ImeMode.Katakana;
             this.dropdownContentsViewMode.Items.AddRange(new object[] {
@@ -510,10 +531,10 @@
             "Hex",
             "Hex (Editable)",
             "Object / Struct Details"});
-            this.dropdownContentsViewMode.Location = new System.Drawing.Point(112, 5);
+            this.dropdownContentsViewMode.Location = new System.Drawing.Point(122, 6);
             this.dropdownContentsViewMode.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dropdownContentsViewMode.Name = "dropdownContentsViewMode";
-            this.dropdownContentsViewMode.Size = new System.Drawing.Size(241, 28);
+            this.dropdownContentsViewMode.Size = new System.Drawing.Size(241, 30);
             this.dropdownContentsViewMode.TabIndex = 7;
             this.dropdownContentsViewMode.SelectedIndexChanged += new System.EventHandler(this.dropdownContentsViewMode_SelectedIndexChanged);
             // 
