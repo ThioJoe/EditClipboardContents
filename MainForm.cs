@@ -396,7 +396,6 @@ namespace ClipboardManager
         private void UpdateToolLocations()
         {
             int titlebarAccomodate = CompensateDPI(40);
-            int splitterBorderAccomodate = CompensateDPI(5);
             int bottomBuffer = CompensateDPI(30); // Adjust this value to set the desired buffer size
 
             int splitterPanelsBottomPosition = this.Height - toolStrip1.Height - titlebarAccomodate;
@@ -407,7 +406,7 @@ namespace ClipboardManager
 
             // Resize splitterContainer_InnerTextBoxes to fit the form
             splitterContainer_InnerTextBoxes.Width = splitContainerMain.Width;
-            splitterContainer_InnerTextBoxes.Height = splitContainerMain.Panel2.Height - splitterBorderAccomodate - bottomBuffer;
+            splitterContainer_InnerTextBoxes.Height = splitContainerMain.Panel2.Height - bottomBuffer;
 
             // If the hex view is disabled, force the hex panel to zero width
             if (!enableSplitHexView)
@@ -422,8 +421,8 @@ namespace ClipboardManager
             richTextBox_HexPlaintext.Width = splitterContainer_InnerTextBoxes.Panel2.Width;
 
             // Resize processedData grid within panel to match panel size
-            dataGridViewClipboard.Width = splitContainerMain.Panel1.Width - splitterBorderAccomodate;
-            dataGridViewClipboard.Height = splitContainerMain.Panel1.Height - splitterBorderAccomodate;
+            dataGridViewClipboard.Width = splitContainerMain.Panel1.Width;
+            dataGridViewClipboard.Height = splitContainerMain.Panel1.Height;
 
         }
 
