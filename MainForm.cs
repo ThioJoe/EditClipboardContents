@@ -2247,32 +2247,65 @@ namespace ClipboardManager
             UpdatePlaintextFromHexView();
         }
 
+        private int prevSelectionStart = -1;
+        private int prevSelectionLength = 0;
         private void richTextBoxContents_SelectionChanged(object sender, EventArgs e)
         {
             if (dropdownContentsViewMode.SelectedIndex == 2 || dropdownContentsViewMode.SelectedIndex == 1)
             {
-                // Get the selection, and round it to the nearest byte boundary, considering the spaces between the hex codes
-                richTextBoxContents.SelectionChanged -= richTextBoxContents_SelectionChanged;
+                int selStart = richTextBoxContents.SelectionStart;
+                int selLength = richTextBoxContents.SelectionLength;
 
-                if (richTextBoxContents.SelectionLength % 3 == 1)
-                {
-                    richTextBoxContents.Select(richTextBoxContents.SelectionStart, richTextBoxContents.SelectionLength + 1);
-                }
-                else if (richTextBoxContents.SelectionLength % 3 == 0)
-                {
-                    richTextBoxContents.Select(richTextBoxContents.SelectionStart, richTextBoxContents.SelectionLength + 2);
-                }
-                //else if (richTextBoxContents.SelectionLength % 3 == 2)
-                //{
-                //    richTextBoxContents.Select(richTextBoxContents.SelectionStart, richTextBoxContents.SelectionLength + 0);
-                //}
+                // Determine selection direction
+                bool isSelectingForward = selStart >= prevSelectionStart;
 
-                richTextBoxContents.SelectionChanged += richTextBoxContents_SelectionChanged;
+                // Adjust selection to byte boundaries
+                int newSelStart = selStart;
+                int newSelLength = selLength;
+
+                if (isSelectingForward)
+                {
+                    // Adjust start to previous byte boundary
+                    newSelStart = selStart - (selStart % 3);
+                    // Adjust end to next byte boundary
+                    int selEnd = selStart + selLength;
+                    int remainder = selEnd % 3;
+                    int newSelEnd = remainder == 0 ? selEnd : selEnd + (3 - remainder);
+                    newSelLength = newSelEnd - newSelStart;
+                }
+                else
+                {
+                    // Adjust end to previous byte boundary
+                    int selEnd = selStart + selLength;
+                    int remainder = selEnd % 3;
+                    int newSelEnd = selEnd - remainder;
+                    // Adjust start to previous byte boundary
+                    newSelStart = selStart - (selStart % 3);
+                    newSelLength = newSelEnd - newSelStart;
+                }
+
+                // Ensure the new selection is within the text bounds
+                if (newSelStart < 0)
+                    newSelStart = 0;
+                if (newSelStart + newSelLength > richTextBoxContents.TextLength)
+                    newSelLength = richTextBoxContents.TextLength - newSelStart;
+
+                // Update the selection only if it has changed
+                if (newSelStart != selStart || newSelLength != selLength)
+                {
+                    richTextBoxContents.SelectionChanged -= richTextBoxContents_SelectionChanged;
+                    richTextBoxContents.Select(newSelStart, newSelLength);
+                    richTextBoxContents.SelectionChanged += richTextBoxContents_SelectionChanged;
+                }
+
+                // Update previous selection values
+                prevSelectionStart = selStart;
+                prevSelectionLength = selLength;
 
                 SyncHexToPlaintext();
             }
-            
         }
+
 
         private void richTextBox_HexPlaintext_SelectionChanged(object sender, EventArgs e)
         {
