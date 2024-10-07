@@ -102,6 +102,12 @@ namespace ClipboardManager
 
         }
 
+        private int CompensateDPI(int originalValue)
+        {
+            float scaleFactor = this.DeviceDpi / 96f; // 96 is the default DPI
+            return (int)(originalValue * scaleFactor);
+        }
+
         private void InitializeLogging()
         {
             string logPath = Path.Combine(Application.StartupPath, "clipboard_log.txt");
@@ -269,9 +275,9 @@ namespace ClipboardManager
             dataGridViewClipboard.Columns["TextPreview"].Resizable = DataGridViewTriState.True;
 
             // If DataInfo is too long, manually set a max width
-            if (dataGridViewClipboard.Columns["DataInfo"].Width > 200)
+            if (dataGridViewClipboard.Columns["DataInfo"].Width > CompensateDPI(200))
             {
-                dataGridViewClipboard.Columns["DataInfo"].Width = 200;
+                dataGridViewClipboard.Columns["DataInfo"].Width = CompensateDPI(200);
             }
 
             // Reset selection to none
@@ -382,14 +388,14 @@ namespace ClipboardManager
         //Function to fit processedData grid view to the form window
         private void UpdateToolLocations()
         {
-            int titlebarAccomodate = 40;
-            int splitterBorderAccomodate = 5;
-            int bottomBuffer = 30; // Adjust this value to set the desired buffer size
+            int titlebarAccomodate = CompensateDPI(40);
+            int splitterBorderAccomodate = CompensateDPI(5);
+            int bottomBuffer = CompensateDPI(30); // Adjust this value to set the desired buffer size
 
             int splitterPanelsBottomPosition = this.Height - toolStrip1.Height - titlebarAccomodate;
 
             // Resize splitContainerMain to fit the form
-            splitContainerMain.Width = this.Width - 32;
+            splitContainerMain.Width = this.Width - CompensateDPI(32);
             splitContainerMain.Height = splitterPanelsBottomPosition - bottomBuffer;
 
             // Resize splitterContainer_InnerTextBoxes to fit the form
