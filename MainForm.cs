@@ -18,6 +18,12 @@ using static EditClipboardItems.ClipboardFormats;
 using System.Globalization;
 using System.Net.NetworkInformation;
 
+// Need to do this to be able to set init only variable
+//namespace System.Runtime.CompilerServices
+//{
+//    internal static class IsExternalInit { }
+//}
+
 namespace ClipboardManager
 {
     public partial class MainForm : Form
@@ -28,6 +34,10 @@ namespace ClipboardManager
         private StreamWriter logFile;
 
         public static bool hasPendingChanges = false;
+        public static bool enableSplitHexView = false;
+
+        // Variables to store info about initial GUI state
+        public int hexTextBoxTopBuffer { get; init; }
 
         // Dictionary of formats that can be synthesized from other formats, and which they can be synthesized to
         private static readonly Dictionary<uint, List<uint>> SynthesizedFormatsMap = new Dictionary<uint, List<uint>>()
@@ -82,16 +92,16 @@ namespace ClipboardManager
         public MainForm()
         {
             InitializeComponent();
+            hexTextBoxTopBuffer = richTextBoxContents.Height - richTextBox_HexPlaintext.Height;
+
             InitializeLogging();
             InitializeDataGridView();
             UpdateToolLocations();
 
-            //Padding currentMainPadding = splitContainerMain.Panel1.Padding;
-            //currentMainPadding.Bottom = 40;
-
             // Initial tool settings
             dropdownContentsViewMode.SelectedIndex = 0; // Default index 0 is "Text" view mode
 
+            
         }
 
         private void InitializeLogging()
@@ -388,12 +398,17 @@ namespace ClipboardManager
             splitterContainer_InnerTextBoxes.Width = splitContainerMain.Width;
             splitterContainer_InnerTextBoxes.Height = splitContainerMain.Panel2.Height - splitterBorderAccomodate - bottomBuffer;
 
+            // If the hex view is disabled, force the hex panel to zero width
+            if (!enableSplitHexView)
+            {
+                splitterContainer_InnerTextBoxes.Panel2Collapsed = true;
+            }
+
             // Auto-resize the text boxes to match the panels
+            richTextBoxContents.Height = splitterContainer_InnerTextBoxes.Height;
+            richTextBox_HexPlaintext.Height = splitterContainer_InnerTextBoxes.Height - hexTextBoxTopBuffer; // Adds some space for encoding selection dropdown. Based on initial GUI settings.
             richTextBoxContents.Width = splitterContainer_InnerTextBoxes.Panel1.Width;
             richTextBox_HexPlaintext.Width = splitterContainer_InnerTextBoxes.Panel2.Width;
-            richTextBoxContents.Height = splitterContainer_InnerTextBoxes.Height;
-            richTextBox_HexPlaintext.Height = splitterContainer_InnerTextBoxes.Height;
-
 
             // Resize processedData grid within panel to match panel size
             dataGridViewClipboard.Width = splitContainerMain.Panel1.Width - splitterBorderAccomodate;
@@ -1057,6 +1072,8 @@ namespace ClipboardManager
             // Set color to black for default
             richTextBoxContents.ForeColor = Color.Black;
 
+            Encoding utf8 = Encoding.UTF8;
+            Encoding utf16 = Encoding.Unicode;
 
             switch (modeIndex)
             {
@@ -1066,13 +1083,20 @@ namespace ClipboardManager
                     break;
 
                 case 1: // Hex view mode
+                    // Show hex data in the left panel text box
                     richTextBoxContents.Text = BitConverter.ToString(item.RawData).Replace("-", " ");
                     richTextBoxContents.ReadOnly = true;
+                    // Convert raw data to plaintext as UTF-8 and show in the right panel text box
+                    richTextBox_HexPlaintext.Text = TryParseText(rawData: item.RawData);
                     break;
 
                 case 2: // Hex (Editable) view mode
                     richTextBoxContents.Text = BitConverter.ToString(item.RawData).Replace("-", " ");
                     richTextBoxContents.ReadOnly = false;
+
+                    // Convert raw data to plaintext as UTF-8 and show in the right panel text box
+                    richTextBox_HexPlaintext.Text = utf8.GetString(item.RawData);
+
                     break;
                 case 3: // Object / Struct View
                     richTextBoxContents.Text = FormatInspector.InspectFormat(formatName: GetStandardFormatName(item.FormatId), data: item.RawData, fullItem: item);
@@ -1245,6 +1269,9 @@ namespace ClipboardManager
             // 2: Hex (Editable)
             // 3: Object / Struct View
 
+            // Show buttons and labels for edited mode
+            UpdateEditControlsVisibility();
+
             ClipboardItem item = GetSelectedClipboardItemObject();
             if (item == null)
             {
@@ -1252,9 +1279,6 @@ namespace ClipboardManager
             }
 
             DisplayClipboardData(item);
-
-            // Show buttons and labels for edited mode
-            UpdateEditControlsVisibility();
         }
 
         private void UpdateEditControlsVisibility(ClipboardItem selectedItem = null, ClipboardItem selectedEditedItem = null)
@@ -1283,6 +1307,19 @@ namespace ClipboardManager
                     row.DefaultCellStyle.SelectionForeColor = SystemColors.HighlightText;
                 }
             }
+
+            // If it's hex edit mode or hex view mode, enable enableSplitHexView, regardless of selection
+            if (dropdownContentsViewMode.SelectedIndex == 2 || dropdownContentsViewMode.SelectedIndex == 1)
+            {
+                enableSplitHexView = true;
+                splitterContainer_InnerTextBoxes.Panel2Collapsed = false;
+            }
+            else
+            {
+                enableSplitHexView = false;
+                splitterContainer_InnerTextBoxes.Panel2Collapsed = true;
+            }
+            UpdateToolLocations(); // Ensure the text boxes in the hex view are properly sized after collapsing the hex view panel
 
             // Beyond here, we need a selected item. If there isn't one, set some buttons that require a selectedItem to be disabled
             if (selectedItem == null || selectedEditedItem == null)
@@ -2022,6 +2059,11 @@ namespace ClipboardManager
         private void contextMenuStrip_dataGridView_Opening(object sender, System.ComponentModel.CancelEventArgs e)
         {
 
+        }
+
+        private void splitterContainer_InnerTextBoxes_SplitterMoved(object sender, SplitterEventArgs e)
+        {
+            UpdateToolLocations();
         }
 
         // -----------------------------------------------------------------------------

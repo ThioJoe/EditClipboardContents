@@ -368,13 +368,15 @@
             this.splitterContainer_InnerTextBoxes.Size = new System.Drawing.Size(977, 280);
             this.splitterContainer_InnerTextBoxes.SplitterDistance = 631;
             this.splitterContainer_InnerTextBoxes.TabIndex = 13;
+            this.splitterContainer_InnerTextBoxes.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitterContainer_InnerTextBoxes_SplitterMoved);
             // 
             // richTextBox_HexPlaintext
             // 
-            this.richTextBox_HexPlaintext.Location = new System.Drawing.Point(4, 4);
+            this.richTextBox_HexPlaintext.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.richTextBox_HexPlaintext.Location = new System.Drawing.Point(4, 31);
             this.richTextBox_HexPlaintext.Name = "richTextBox_HexPlaintext";
             this.richTextBox_HexPlaintext.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
-            this.richTextBox_HexPlaintext.Size = new System.Drawing.Size(335, 276);
+            this.richTextBox_HexPlaintext.Size = new System.Drawing.Size(335, 249);
             this.richTextBox_HexPlaintext.TabIndex = 0;
             this.richTextBox_HexPlaintext.Text = "";
             // 
