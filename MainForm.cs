@@ -1007,8 +1007,9 @@ namespace ClipboardManager
                 case 2: // CF_BITMAP
                     return CopyBitmap(hData);
                 case 3: // CF_METAFILEPICT
+                    return CopyMetafilePict(hData);
                 case 14: // CF_ENHMETAFILE
-                    return CopyMetafile(format, hData);
+                    return NativeMethods.CopyEnhMetaFile(hData, null);
                 case 8: // CF_DIB
                 case 17: // CF_DIBV5
                     return CopyDIB(hData);
@@ -1041,19 +1042,6 @@ namespace ClipboardManager
             NativeMethods.ReleaseDC(IntPtr.Zero, hdcScreen);
 
             return hBitmapCopy;
-        }
-
-        // Update CopyMetafile to use these new functions
-        private IntPtr CopyMetafile(uint format, IntPtr hMetafile)
-        {
-            if (format == 3) // CF_METAFILEPICT
-            {
-                return CopyMetafilePict(hMetafile);
-            }
-            else // CF_ENHMETAFILE
-            {
-                return NativeMethods.CopyEnhMetaFile(hMetafile, null);
-            }
         }
 
         private IntPtr CopyDIB(IntPtr hDib)
@@ -1474,13 +1462,18 @@ namespace ClipboardManager
             switch (item.FormatId)
             {
                 case 2: // CF_BITMAP
-                    return CreateHBitmapFromRawData(item.RawData);
+                    using (MemoryStream ms = new MemoryStream(item.RawData))
+                    using (Bitmap bmp = new Bitmap(ms))
+                    {
+                        return CopyBitmap(bmp.GetHbitmap());
+                    }
                 case 3: // CF_METAFILEPICT
+                    return CreateMetafilePictFromRawData(item.RawData);
                 case 14: // CF_ENHMETAFILE
-                    return CreateMetafileFromRawData(item.FormatId, item.RawData);
+                    return CreateEnhMetafileFromRawData(item.RawData);
                 case 8: // CF_DIB
                 case 17: // CF_DIBV5
-                    return CreateDIBFromRawData(item.RawData);
+                    return CopyDIB(AllocateAndCopyData(item.RawData));
                 default:
                     Console.WriteLine($"Unexpected special format: {item.FormatId}");
                     return IntPtr.Zero;
@@ -1522,27 +1515,6 @@ namespace ClipboardManager
                 Console.WriteLine("Failed to allocate memory");
             }
             return hGlobal;
-        }
-
-        private IntPtr CreateHBitmapFromRawData(byte[] rawData)
-        {
-            using (MemoryStream ms = new MemoryStream(rawData))
-            using (Bitmap bmp = new Bitmap(ms))
-            {
-                return CopyBitmap(bmp.GetHbitmap());
-            }
-        }
-
-        private IntPtr CreateMetafileFromRawData(uint format, byte[] rawData)
-        {
-            if (format == 3) // CF_METAFILEPICT
-            {
-                return CreateMetafilePictFromRawData(rawData);
-            }
-            else // CF_ENHMETAFILE
-            {
-                return CreateEnhMetafileFromRawData(rawData);
-            }
         }
 
         private IntPtr CreateMetafilePictFromRawData(byte[] rawData)
@@ -1624,11 +1596,6 @@ namespace ClipboardManager
                 }
             }
             return IntPtr.Zero;
-        }
-
-        private IntPtr CreateDIBFromRawData(byte[] rawData)
-        {
-            return CopyDIB(AllocateAndCopyData(rawData));
         }
 
 
