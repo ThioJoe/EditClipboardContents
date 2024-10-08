@@ -1014,8 +1014,14 @@ namespace ClipboardManager
         {
             if (item == null || item.RawData == null)
             {
+                richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
                 richTextBoxContents.Text = "Data not available";
                 richTextBoxContents.ForeColor = Color.Red;
+                richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
+
+                richTextBox_HexPlaintext.TextChanged -= richTextBox_HexPlaintext_TextChanged;
+                richTextBox_HexPlaintext.Text = "";
+                richTextBox_HexPlaintext.TextChanged += richTextBox_HexPlaintext_TextChanged;
 
                 // Disable plaintext box and related controls
                 richTextBox_HexPlaintext.Enabled = false;
@@ -1036,6 +1042,10 @@ namespace ClipboardManager
                     richTextBoxContents.Text = "Data is too large to display preview.\nThis can be changed in the options menu, but the program may freeze for large amounts of data.";
                     richTextBoxContents.ForeColor = Color.Red;
                     richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
+
+                    richTextBox_HexPlaintext.TextChanged -= richTextBox_HexPlaintext_TextChanged;
+                    richTextBox_HexPlaintext.Text = "";
+                    richTextBox_HexPlaintext.TextChanged += richTextBox_HexPlaintext_TextChanged;
 
                     // Disable plaintext box and related controls
                     richTextBox_HexPlaintext.Enabled = false;
