@@ -1022,7 +1022,7 @@ namespace ClipboardManager
                     break;
                 case 3: // Object / Struct View
                     richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
-                    richTextBoxContents.Text = FormatInspector.InspectFormat(formatName: GetStandardFormatName(item.FormatId), data: item.RawData, fullItem: item);
+                    richTextBoxContents.Text = FormatInspector.CreateFormatDataStringForTextbox(formatName: GetStandardFormatName(item.FormatId), data: item.RawData, fullItem: item);
                     richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
 
                     richTextBoxContents.ReadOnly = true;
@@ -1623,7 +1623,7 @@ namespace ClipboardManager
             if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
             {
                 // Get the hex information
-                string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToExport.FormatId), data: itemToExport.RawData, fullItem: itemToExport);
+                string data = FormatInspector.CreateFormatDataStringForTextbox(formatName: GetStandardFormatName(itemToExport.FormatId), data: itemToExport.RawData, fullItem: itemToExport);
                 // TO DO - Export details of each object in the struct
 
                 // Save the data to a file
@@ -1781,7 +1781,7 @@ namespace ClipboardManager
                 return;
             }
             // Get the struct / object info that would be displayed in object view of rich text box and copy it to clipboard
-            string data = FormatInspector.InspectFormat(formatName: GetStandardFormatName(itemToCopy.FormatId), data: itemToCopy.RawData, fullItem: itemToCopy);
+            string data = FormatInspector.CreateFormatDataStringForTextbox(formatName: GetStandardFormatName(itemToCopy.FormatId), data: itemToCopy.RawData, fullItem: itemToCopy);
             Clipboard.SetText(data);
         }
 

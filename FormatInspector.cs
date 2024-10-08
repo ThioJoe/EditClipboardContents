@@ -40,7 +40,7 @@ namespace EditClipboardItems
         {"CF_ENHMETAFILE", new FormatInfo {Value = 14, Kind = "typedef", HandleOutput = "HENHMETAFILE"}},
         {"CF_GDIOBJFIRST", new FormatInfo {Value = 0x0300, Kind = "data", HandleOutput = "Start of range of integers for application-defined GDI object formats"}},
         {"CF_GDIOBJLAST", new FormatInfo {Value = 0x03FF, Kind = "data", HandleOutput = "End of range of integers for application-defined GDI object formats"}},
-        {"CF_HDROP", new FormatInfo {Value = 15, Kind = "typedef", HandleOutput = "HDROP (list of files)"}},
+        {"CF_HDROP", new FormatInfo {Value = 15, Kind = "struct", HandleOutput = "HDROP (list of files)", StructType = typeof(DROPFILES)}},
         {"CF_LOCALE", new FormatInfo {Value = 16, Kind = "data", HandleOutput = "LCID (locale identifier)"}},
         {"CF_METAFILEPICT", new FormatInfo {Value = 3, Kind = "struct", HandleOutput = "METAFILEPICT", StructType = typeof(METAFILEPICT)}},
         {"CF_OEMTEXT", new FormatInfo {Value = 7, Kind = "data", HandleOutput = "Text in OEM character set"}},
@@ -57,7 +57,7 @@ namespace EditClipboardItems
         {"CF_WAVE", new FormatInfo {Value = 12, Kind = "data", HandleOutput = "Standard wave format audio data"}}
         };
 
-        public static string InspectFormat(string formatName, byte[] data, ClipboardItem fullItem, string indent = "")
+        public static string CreateFormatDataStringForTextbox(string formatName, byte[] data, ClipboardItem fullItem, string indent = "")
         {
             if (!FormatDictionary.TryGetValue(formatName, out FormatInfo formatInfo))
             {
@@ -91,7 +91,7 @@ namespace EditClipboardItems
             return result.ToString();
         }
 
-        private static string GetValueString(object value)
+        private static string GetValueString(object value, bool asHex = false)
         {
             if (value == null)
                 return "null";
@@ -106,6 +106,16 @@ namespace EditClipboardItems
             {
                 // For nested structs, we'll return a placeholder
                 return $"[{valueType.Name}]";
+            }
+
+            if (asHex)
+            {
+                if (valueType.IsPrimitive)
+                    return string.Format("0x{0:X}", value); // Hexadecimal (0x1234ABCD
+                else
+                {
+                    return "";
+                }
             }
 
             return value.ToString();
@@ -138,6 +148,13 @@ namespace EditClipboardItems
                         object fieldValue = ReadValueFromBytes(data, ref offset, field.FieldType);
                         string valueStr = GetValueString(fieldValue);
                         result.AppendLine($"{indent}  Value: {valueStr}");
+
+                        // Try getting hex value as well. But not if the returned string is empty
+                        string valueStrHex = GetValueString(fieldValue, asHex: true);
+                        if (!string.IsNullOrEmpty(valueStrHex))
+                        {
+                            result.AppendLine($"{indent}  Value (hex): {valueStrHex}");
+                        }
                     }
                 }
                 else
