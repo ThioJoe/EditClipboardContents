@@ -120,4 +120,13 @@
     </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>if $(ConfigurationName) == Release (
+    powershell.exe -ExecutionPolicy Bypass -File "$(ProjectDir)CheckVersionUpdated.ps1" -AssemblyInfoPath "$(ProjectDir)Properties\AssemblyInfo.cs" -GitHubRepo "ThioJoe/EditClipboardContents"
+)</PostBuildEvent>
+  </PropertyGroup>
 </Project>
