@@ -425,6 +425,81 @@ namespace EditClipboardItems
             }
         }
 
+        public static byte[] CF_PALETTE_RawData_FromHandle(IntPtr hPalette)
+        {
+            if (hPalette == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            IntPtr pLogPalette = NativeMethods.GlobalLock(hPalette);
+            if (pLogPalette == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            try
+            {
+                LOGPALETTE logPalette = Marshal.PtrToStructure<LOGPALETTE>(pLogPalette);
+                int totalSize = Marshal.SizeOf<LOGPALETTE>() + (logPalette.palNumEntries - 1) * Marshal.SizeOf<PALETTEENTRY>();
+
+                byte[] rawData = new byte[totalSize];
+                Marshal.Copy(pLogPalette, rawData, 0, totalSize);
+
+                return rawData;
+            }
+            finally
+            {
+                NativeMethods.GlobalUnlock(hPalette);
+            }
+        }
+
+        public static IntPtr CF_PALETTE_Handle_FromRawData(byte[] rawData)
+        {
+            if (rawData == null || rawData.Length < Marshal.SizeOf<LOGPALETTE>())
+            {
+                return IntPtr.Zero;
+            }
+
+            IntPtr hGlobal = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, (UIntPtr)rawData.Length);
+            if (hGlobal == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
+            if (pGlobal == IntPtr.Zero)
+            {
+                NativeMethods.GlobalFree(hGlobal);
+                return IntPtr.Zero;
+            }
+
+            try
+            {
+                Marshal.Copy(rawData, 0, pGlobal, rawData.Length);
+
+                // Create a palette from the raw data
+                LOGPALETTE logPalette = Marshal.PtrToStructure<LOGPALETTE>(pGlobal);
+                IntPtr hPalette = NativeMethods.CreatePalette(ref logPalette);
+
+                if (hPalette != IntPtr.Zero)
+                {
+                    // If palette creation was successful, we can free the global memory
+                    NativeMethods.GlobalUnlock(hGlobal);
+                    NativeMethods.GlobalFree(hGlobal);
+                    return hPalette;
+                }
+            }
+            finally
+            {
+                NativeMethods.GlobalUnlock(hGlobal);
+            }
+
+            // If we reach here, something went wrong
+            NativeMethods.GlobalFree(hGlobal);
+            return IntPtr.Zero;
+        }
+
         //------------------------------------------------------------------------------------------------------------------------------------------------------
     }
 }

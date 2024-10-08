@@ -438,9 +438,14 @@ namespace ClipboardManager
         {
             clipboardItems.Clear();
             editedClipboardItems.Clear();
+            int formatCount = NativeMethods.CountClipboardFormats();
+
             uint format = 0;
+            int currentCount = 0;
             while ((format = NativeMethods.EnumClipboardFormats(format)) != 0)
             {
+                currentCount++;
+                
                 string formatName = GetClipboardFormatName(format);
                 IntPtr hData = NativeMethods.GetClipboardData(format);
                 if (hData == IntPtr.Zero)
@@ -471,6 +476,10 @@ namespace ClipboardManager
                             rawData = FormatHandleTranslators.MetafilePict_RawData_FromHandle(hData);
                             dataSize = (ulong)(rawData?.Length ?? 0);
                             break;
+                        case 9: // CF_PALETTE -- NOT YET HANDLED
+                            rawData = FormatHandleTranslators.CF_PALETTE_RawData_FromHandle(hData);
+                            dataSize = 0;
+                            break;
                         case 14: // CF_ENHMETAFILE
                             rawData = FormatHandleTranslators.EnhMetafile_RawData_FromHandle(hData);
                             dataSize = (ulong)(rawData?.Length ?? 0);
@@ -479,11 +488,7 @@ namespace ClipboardManager
                             rawData = FormatHandleTranslators.CF_HDROP_RawData_FromHandle(hData);
                             dataSize = (ulong)(rawData?.Length ?? 0);
                             break;
-                        case 9: // CF_PALETTE -- NOT YET HANDLED
-                            rawData = null;
-                            dataSize = 0;
-                            break;
-
+                        
                         // All other formats that use Hglobal
                         default:
                             IntPtr pData = NativeMethods.GlobalLock(hData);
@@ -495,10 +500,17 @@ namespace ClipboardManager
                                     rawData = new byte[dataSize];
                                     Marshal.Copy(pData, rawData, 0, (int)dataSize);
                                 }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"Error processing format {format}: {ex.Message}");
+                                }
                                 finally
                                 {
                                     NativeMethods.GlobalUnlock(hData);
                                 }
+                            }
+                            else { 
+                                Console.WriteLine($"GlobalLock returned null for format {format}");
                             }
                             break;
                         }
@@ -519,6 +531,7 @@ namespace ClipboardManager
                 };
                 clipboardItems.Add(item);
             }
+            Console.WriteLine($"Checked {currentCount} formats.");
         }
 
 
@@ -1105,6 +1118,9 @@ namespace ClipboardManager
                         case 3: // CF_METAFILEPICT
                             hGlobal = FormatHandleTranslators.MetafilePict_Handle_FromRawData(item.RawData);
                             break;
+                        case 9: // CF_PALETTE
+                            hGlobal = FormatHandleTranslators.CF_PALETTE_Handle_FromRawData(item.RawData);
+                            break;
                         case 14: // CF_ENHMETAFILE
                             hGlobal = FormatHandleTranslators.EnhMetafile_Handle_FromRawData(item.RawData);
                             break;
@@ -1115,6 +1131,7 @@ namespace ClipboardManager
                         case 17: // CF_DIBV5
                             hGlobal = FormatHandleTranslators.BitmapDIB_hGlobalHandle_FromHandle(FormatHandleTranslators.AllocateGeneralHandle_FromRawData(item.RawData));
                             break;
+
                         // Default handling for all other formats
                         default:
                             hGlobal = FormatHandleTranslators.AllocateGeneralHandle_FromRawData(item.RawData);
@@ -1786,6 +1803,9 @@ namespace ClipboardManager
 
         [DllImport("shell32.dll", CharSet = CharSet.Ansi)]
         public static extern uint DragQueryFileA(IntPtr hDrop, uint iFile, [Out] StringBuilder lpszFile, uint cch);
+
+        [DllImport("gdi32.dll")]
+        public static extern IntPtr CreatePalette([In] ref LOGPALETTE lplgpl);
 
         public const uint GMEM_MOVEABLE = 0x0002;
 
