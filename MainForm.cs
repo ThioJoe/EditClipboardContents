@@ -233,7 +233,7 @@ namespace ClipboardManager
         private void UpdateClipboardItemsGridView(string formatName, string formatID, string handleType, string dataSize, string dataInfo, byte[] rawData)
         {
             // Preprocess certain info
-            string textPreview = TryParseText(rawData, maxLength: 200, prefixEncodingType: false);
+            string textPreview = TryParseText(rawData, maxLength: 200, prefixEncodingType: false, debugging_formatName: formatName, debugging_callFrom: "Text Preview / UpdateClipboardItemsGridView");
             string dataInfoString = dataInfo;
 
             if (string.IsNullOrEmpty(dataInfo))
@@ -308,42 +308,63 @@ namespace ClipboardManager
         }
 
         // Function to try and parse the raw data for text if it is text
-        private string TryParseText(byte[] rawData, int maxLength = 150, bool prefixEncodingType = false)
+        private string TryParseText(byte[] rawData, int maxLength = 150, bool prefixEncodingType = false, string debugging_formatName = "", string debugging_callFrom = "")
         {
             if (rawData == null || rawData.Length == 0)
             {
                 return "";
             }
 
-            // Create encodings without throwing on invalid bytes
-            var utf8Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false);
-            var utf16Encoding = new UnicodeEncoding(bigEndian: false, byteOrderMark: true, throwOnInvalidBytes: false);
+            // Create encodings that throw on invalid bytes
+            var utf8Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+            var utf16Encoding = new UnicodeEncoding(bigEndian: false, byteOrderMark: true, throwOnInvalidBytes: true);
 
             string utf8Result = "";
             string utf16Result = "";
 
+            bool invalidUTF8 = false;
+            bool invalidUTF16 = false;
+
             // Try UTF-8
-            var utf8Decoder = utf8Encoding.GetDecoder();
-            char[] utf8Chars = new char[rawData.Length];
-            int utf8CharCount = utf8Decoder.GetCharCount(rawData, 0, rawData.Length);
-            if (utf8CharCount > 0)
+            try
             {
-                utf8Decoder.GetChars(rawData, 0, rawData.Length, utf8Chars, 0);
-                utf8Result = new string(utf8Chars, 0, utf8CharCount);
+                utf8Result = utf8Encoding.GetString(rawData);
+            }
+            catch (DecoderFallbackException)
+            {
+                // Invalid UTF-8, utf8Result remains empty
+                invalidUTF8 = true;
+
             }
 
             // Try UTF-16
-            if (rawData.Length % 2 == 0) // UTF-16 requires an even number of bytes
+            try
             {
-                var utf16Decoder = utf16Encoding.GetDecoder();
-                char[] utf16Chars = new char[rawData.Length / 2];
-                int utf16CharCount = utf16Decoder.GetCharCount(rawData, 0, rawData.Length);
-                if (utf16CharCount > 0)
-                {
-                    utf16Decoder.GetChars(rawData, 0, rawData.Length, utf16Chars, 0);
-                    utf16Result = new string(utf16Chars, 0, utf16CharCount);
-                }
+                utf16Result = utf16Encoding.GetString(rawData);
             }
+            catch (DecoderFallbackException)
+
+            {
+                // Invalid UTF-16, utf16Result remains empty
+                invalidUTF16 = true;
+
+            }
+
+            //if (invalidUTF8 && invalidUTF16)
+            //{
+            //    // Both Invalid
+            //    Console.WriteLine("Both UTF-8 and UTF-16 are invalid");
+            //}
+            //if (invalidUTF8 && !invalidUTF16)
+            //{
+            //    // Valid UTF-16 but Invalid UTF-8
+            //    Console.WriteLine("Only UTF-16 is valid");
+            //}
+            //if (!invalidUTF8 && invalidUTF16)
+            //{
+            //    // Valid UTF-8, but invalid UTF-16
+            //    Console.WriteLine("Only UTF-8 is valid");
+            //}
 
             string result;
             bool likelyUTF16 = false;
@@ -365,8 +386,14 @@ namespace ClipboardManager
             }
 
             // Strip out null characters from both results. By now UTF-16 should not have any null characters since it's been decoded
-            utf8Result = utf8Result.Replace("\0", "");
-            utf16Result = utf16Result.Replace("\0", "");
+            if (!string.IsNullOrEmpty(utf8Result))
+            {
+                utf8Result = utf8Result.Replace("\0", "");
+            }
+            if (!string.IsNullOrEmpty(utf16Result))
+            {
+                utf16Result = utf16Result.Replace("\0", "");
+            }
 
             if (likelyUTF16 && !string.IsNullOrEmpty(utf16Result))
             {
@@ -404,6 +431,34 @@ namespace ClipboardManager
             return result;
         }
 
+        static bool IsLegalUnicode(string str)
+        {
+            for (int i = 0; i < str.Length; i++)
+            {
+                var uc = char.GetUnicodeCategory(str, i);
+
+                if (uc == UnicodeCategory.Surrogate)
+                {
+                    // Unpaired surrogate, like  "😵"[0] + "A" or  "😵"[1] + "A"
+                    return false;
+                }
+                else if (uc == UnicodeCategory.OtherNotAssigned)
+                {
+                    // \uF000 or \U00030000
+                    return false;
+                }
+
+                // Correct high-low surrogate, we must skip the low surrogate
+                // (it is correct because otherwise it would have been a 
+                // UnicodeCategory.Surrogate)
+                if (char.IsHighSurrogate(str, i))
+                {
+                    i++;
+                }
+            }
+
+            return true;
+        }
 
 
         private void MainForm_Resize(object sender, EventArgs e)
@@ -446,6 +501,8 @@ namespace ClipboardManager
             dataGridViewClipboard.Height = splitContainerMain.Panel1.Height - CompensateDPI(3);
 
         }
+
+
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -515,7 +572,7 @@ namespace ClipboardManager
             while ((format = NativeMethods.EnumClipboardFormats(format)) != 0)
             {
                 string formatName = GetClipboardFormatName(format);
-                //Console.WriteLine($"Processing format: {format} ({formatName})");
+                //Console.WriteLine($"Processing format: {format} ({debugging_formatName})");
 
                 IntPtr hData = NativeMethods.GetClipboardData(format);
                 if (hData == IntPtr.Zero)
@@ -1119,7 +1176,7 @@ namespace ClipboardManager
             switch (modeIndex)
             {
                 case 0: // Text view mode
-                    richTextBoxContents.Text = TryParseText(item.RawData, maxLength: 0, prefixEncodingType: false);
+                    richTextBoxContents.Text = TryParseText(item.RawData, maxLength: 0, prefixEncodingType: false, debugging_formatName: item.FormatName, debugging_callFrom: "Contents Text Box / DisplayClipboardData");
                     richTextBoxContents.ReadOnly = true;
                     break;
 
