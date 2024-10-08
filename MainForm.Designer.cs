@@ -366,6 +366,7 @@
             this.richTextBoxContents.Size = new System.Drawing.Size(911, 429);
             this.richTextBoxContents.TabIndex = 4;
             this.richTextBoxContents.Text = "";
+            this.richTextBoxContents.LinkClicked += new System.Windows.Forms.LinkClickedEventHandler(this.richTextBoxContents_LinkClicked);
             this.richTextBoxContents.SelectionChanged += new System.EventHandler(this.richTextBoxContents_SelectionChanged);
             this.richTextBoxContents.TextChanged += new System.EventHandler(this.richTextBoxContents_TextChanged);
             // 
@@ -421,7 +422,7 @@
             // 
             this.checkBoxPlainTextEditing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxPlainTextEditing.AutoSize = true;
-            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(28, 397);
+            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(16, 397);
             this.checkBoxPlainTextEditing.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.checkBoxPlainTextEditing.Name = "checkBoxPlainTextEditing";
             this.checkBoxPlainTextEditing.Size = new System.Drawing.Size(148, 24);
@@ -439,7 +440,7 @@
             this.dropdownHexToTextEncoding.Items.AddRange(new object[] {
             "UTF-8",
             "UTF-16 (Unicode)"});
-            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(288, 392);
+            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(276, 392);
             this.dropdownHexToTextEncoding.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dropdownHexToTextEncoding.Name = "dropdownHexToTextEncoding";
             this.dropdownHexToTextEncoding.Size = new System.Drawing.Size(217, 28);
@@ -450,7 +451,7 @@
             // 
             this.labelHexToPlaintextEncoding.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelHexToPlaintextEncoding.AutoSize = true;
-            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(196, 398);
+            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(184, 398);
             this.labelHexToPlaintextEncoding.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelHexToPlaintextEncoding.Name = "labelHexToPlaintextEncoding";
             this.labelHexToPlaintextEncoding.Size = new System.Drawing.Size(80, 20);

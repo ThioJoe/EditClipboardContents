@@ -72,18 +72,23 @@ namespace EditClipboardItems
 
             if (!string.IsNullOrEmpty(fullItem.DataInfoString))
             {
-                result.AppendLine($"{indent}Data Info:");
+                result.AppendLine($"\n{indent}Data Info:");
                 // Add each selectedItem in DataInfoList to the result indented
                 foreach (string dataInfoItem in fullItem.DataInfoList)
                 {
                     result.AppendLine($"{indent}  {dataInfoItem}");
                 }
-                result.AppendLine("");
+            }
+
+            // Show the link to the struct documentation from the dictionary if it exists
+            if (formatInfo.Kind == "struct" && StructLinks.TryGetValue(FormatDictionary[formatName].StructType.Name, out string link))
+            {
+                result.AppendLine($"\n{indent}Struct Documentation: {link}");
             }
 
             if (formatInfo.Kind == "struct" && formatInfo.StructType != null && data != null)
             {
-                result.AppendLine($"{indent}Struct Definition and Values:");
+                result.AppendLine($"\n{indent}Struct Definition and Values:");
                 int offset = 0;
                 InspectStruct(formatInfo.StructType, data, ref result, indent + "  ", ref offset);
             }

@@ -232,13 +232,15 @@ namespace ClipboardManager
         }
 
         // Update processedData grid view with clipboard contents during refresh
-        private void UpdateClipboardItemsGridView(string formatName, string formatID, string handleType, string dataSize, string dataInfo, byte[] rawData)
+        private void UpdateClipboardItemsGridView(string formatName, string formatID, string handleType, string dataSize, List<string> dataInfo, byte[] rawData)
         {
             // Preprocess certain info
             string textPreview = TryParseText(rawData, maxLength: 200, prefixEncodingType: false, debugging_formatName: formatName, debugging_callFrom: "Text Preview / UpdateClipboardItemsGridView");
-            string dataInfoString = dataInfo;
+            
+            // The first item will have selected important info, to ensure it's not too long. The rest will show in data box in object/struct view mode
+            string dataInfoString = dataInfo[0];
 
-            if (string.IsNullOrEmpty(dataInfo))
+            if (string.IsNullOrEmpty(dataInfoString))
             {
                 dataInfoString = "N/A";
             }
@@ -264,7 +266,7 @@ namespace ClipboardManager
                     column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
                 }
 
-                if (column.Name == "DataInfo" && string.IsNullOrEmpty(dataInfo))
+                if (column.Name == "DataInfo" && (string.IsNullOrEmpty(dataInfo[0]) || dataInfoString == "N/A")) // Check for both N/A or null in case we add more reasons to set N/A later
                 {
                     // Make this cell in this column gray text
                     dataGridViewClipboard.Rows[dataGridViewClipboard.Rows.Count - 1].Cells[column.Name].Style.ForeColor = Color.Gray;
@@ -627,8 +629,10 @@ namespace ClipboardManager
 
             foreach (var item in clipboardItems)
             {
-                List<string> dataInfoList = new List<string>();
                 byte[] processedData = item.RawData;
+
+                // Data info list contains metadata about the data. First item will show in the data info column, all will show in the text box in object/struct view mode
+                List<string> dataInfoList = new List<string>();
 
                 switch (item.FormatId)
                 {
@@ -646,6 +650,7 @@ namespace ClipboardManager
                         processedData = ansiEncoding.GetBytes(text);
                         //-----------------------------------------
                         string ansiText = Encoding.Default.GetString(processedData);
+                        dataInfoList.Add($"{ansiText.Length} Chars (ANSI)");
                         dataInfoList.Add($"Encoding: ANSI");
                         dataInfoList.Add($"Chars: {ansiText.Length}");
                         break;
@@ -654,8 +659,11 @@ namespace ClipboardManager
                         //Console.WriteLine("Processing CF_UNICODETEXT");
                         string unicodeText = Encoding.Unicode.GetString(item.RawData);
                         int unicodeTextLength = unicodeText.Length;
-                        dataInfoList.Add($"Encoding: Unicode");
-                        dataInfoList.Add($"Chars: {unicodeTextLength}");
+                        dataInfoList.Add($"{unicodeTextLength} Chars (Unicode)");
+                        dataInfoList.Add($"Encoding: Unicode (UTF-16)");
+                        dataInfoList.Add($"Character Count: {unicodeTextLength}");
+                        dataInfoList.Add($"Byte Count: {item.DataSize}");
+
                         processedData = Encoding.Unicode.GetBytes(unicodeText);
                         break;
 
@@ -667,11 +675,13 @@ namespace ClipboardManager
                             {
                                 using (Bitmap bmp = new Bitmap(ms))
                                 {
+                                    // Setting the contents of the data info list explicitly instead of using Add. It could be done the other way too.
                                     dataInfoList = new List<string>
-                            {
-                                $"Size: {bmp.Width}x{bmp.Height}",
-                                $"Format: {bmp.PixelFormat}"
-                            };
+                                    {
+                                        $"{bmp.Width}x{bmp.Height}, {bmp.PixelFormat}",
+                                        $"Size: {bmp.Width}x{bmp.Height}",
+                                        $"Format: {bmp.PixelFormat}"
+                                    };
                                 }
                             }
                         }
@@ -684,6 +694,7 @@ namespace ClipboardManager
                     case 8: // CF_DIB
                     case 17: // CF_DIBV5
                         //Console.WriteLine($"Processing bitmap format: {(selectedItem.FormatId == 8 ? "CF_DIB" : "CF_DIBV5")}");
+                        dataInfoList.Add($"{item.FormatName}, {item.RawData.Length} bytes");
                         dataInfoList.Add($"Format: {item.FormatName}");
                         dataInfoList.Add($"Size: {item.DataSize} bytes");
                         break;
@@ -773,7 +784,7 @@ namespace ClipboardManager
                 item.DataInfoList = dataInfoList; // Update the data info in the selectedItem
                 string handleType = item.AssumedSynthesized ? "Synthesized" : "Standard"; // Determine handle type
 
-                UpdateClipboardItemsGridView(formatName: item.FormatName, formatID: item.FormatId.ToString(), handleType: handleType, dataSize: item.DataSize.ToString(), dataInfo: item.DataInfoString, rawData: item.RawData);
+                UpdateClipboardItemsGridView(formatName: item.FormatName, formatID: item.FormatId.ToString(), handleType: handleType, dataSize: item.DataSize.ToString(), dataInfo: item.DataInfoList, rawData: item.RawData);
             }
         }
       
@@ -1362,6 +1373,16 @@ namespace ClipboardManager
 
             // Show buttons and labels for edited mode
             UpdateEditControlsVisibility();
+
+            // For object view mode and text view mode, enable auto highlighting URLs in the text box
+            if (dropdownContentsViewMode.SelectedIndex == 0 || dropdownContentsViewMode.SelectedIndex == 3)
+            {
+                richTextBoxContents.DetectUrls = true;
+            }
+            else
+            {
+                richTextBoxContents.DetectUrls = false;
+            }
 
             ClipboardItem item = GetSelectedClipboardItemObject();
             if (item == null)
@@ -2324,6 +2345,28 @@ namespace ClipboardManager
                 "Author: ThioJoe" +
                 "   (https://github.com/ThioJoe)", 
                 "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        // Open the link in the default browser
+        private void richTextBoxContents_LinkClicked(object sender, LinkClickedEventArgs e)
+        {
+            if (ModifierKeys.HasFlag(Keys.Control))
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(e.LinkText);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error opening link: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            else
+            {
+                // Show tooltip near the cursor when clicked without Ctrl
+                Point cursorPos = richTextBoxContents.PointToClient(Cursor.Position);
+                toolTip1.Show("Ctrl + Click To Open Link", richTextBoxContents, cursorPos.X + 10, cursorPos.Y + 10, 2000);
+            }
         }
 
         // -----------------------------------------------------------------------------
