@@ -14,7 +14,7 @@ namespace EditClipboardItems
 {
     public static partial class FormatHandlerTranslators
     {
-        public static IntPtr AllocateAndCopyData(byte[] data)
+        public static IntPtr AllocateGeneralHandle_FromRawData(byte[] data)
         {
             if (data == null || data.Length == 0)
             {
@@ -51,7 +51,7 @@ namespace EditClipboardItems
             return hGlobal;
         }
 
-        public static IntPtr CopyBitmap(IntPtr hBitmap)
+        public static IntPtr Bitmap_hBitmapHandle_FromHandle(IntPtr hBitmap)
         {
             BITMAP bmp = new BITMAP();
             NativeMethods.GetObject(hBitmap, Marshal.SizeOf(typeof(BITMAP)), ref bmp);
@@ -76,7 +76,7 @@ namespace EditClipboardItems
             return hBitmapCopy;
         }
 
-        public static IntPtr CopyDIB(IntPtr hDib)
+        public static IntPtr BitmapDIB_hGlobalHandle_FromHandle(IntPtr hDib)
         {
             UIntPtr size = NativeMethods.GlobalSize(hDib);
             IntPtr hGlobal = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, size);
@@ -99,7 +99,7 @@ namespace EditClipboardItems
             return hGlobal;
         }
 
-        public static byte[] CopyEnhMetafileToByteArray(IntPtr hEnhMetaFile)
+        public static byte[] EnhMetafile_RawData_FromHandle(IntPtr hEnhMetaFile)
         {
             uint size = NativeMethods.GetEnhMetaFileBits(hEnhMetaFile, 0, null);
             if (size > 0)
@@ -113,7 +113,7 @@ namespace EditClipboardItems
             return null;
         }
 
-        public static byte[] CopyMetafilePictToByteArray(IntPtr hMetafilePict)
+        public static byte[] MetafilePict_RawData_FromHandle(IntPtr hMetafilePict)
         {
             IntPtr pMetafilePict = NativeMethods.GlobalLock(hMetafilePict);
             if (pMetafilePict != IntPtr.Zero)
@@ -142,9 +142,9 @@ namespace EditClipboardItems
             return null;
         }
 
-        public static IntPtr CreateMetafilePictFromRawData(byte[] rawData)
+        public static IntPtr MetafilePict_Handle_FromRawData(byte[] rawData)
         {
-            IntPtr hGlobal = AllocateAndCopyData(rawData);
+            IntPtr hGlobal = AllocateGeneralHandle_FromRawData(rawData);
             if (hGlobal != IntPtr.Zero)
             {
                 IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
@@ -171,7 +171,7 @@ namespace EditClipboardItems
             return IntPtr.Zero;
         }
 
-        public static IntPtr CreateEnhMetafileFromRawData(byte[] rawData)
+        public static IntPtr EnhMetafile_Handle_FromRawData(byte[] rawData)
         {
             using (MemoryStream ms = new MemoryStream(rawData))
             {
