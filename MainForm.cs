@@ -591,6 +591,11 @@ namespace ClipboardManager
                         rawData = FormatHandleTranslators.EnhMetafile_RawData_FromHandle(hData);
                         dataSize = (ulong)(rawData?.Length ?? 0);
                     }
+                    else if (format == 15) // CF_HDROP
+                    {
+                        rawData = FormatHandleTranslators.CF_HDROP_RawData_FromHandle(hData);
+                        dataSize = (ulong)(rawData?.Length ?? 0);
+                    }
                     else
                     {
                         Console.WriteLine($"Unhandled format: {format}");
@@ -1140,6 +1145,7 @@ namespace ClipboardManager
                     case 3: // CF_METAFILEPICT
                     case 8: // CF_DIB
                     case 14: // CF_ENHMETAFILE
+                    case 15:
                     case 17: // CF_DIBV5
                         return true;
                     default:
@@ -1223,6 +1229,8 @@ namespace ClipboardManager
                     return FormatHandleTranslators.MetafilePict_Handle_FromRawData(item.RawData);
                 case 14: // CF_ENHMETAFILE
                     return FormatHandleTranslators.EnhMetafile_Handle_FromRawData(item.RawData);
+                case 15: // CF_HDROP
+                    return FormatHandleTranslators.CF_HDROP_Handle_FromRawData(item.RawData);
                 case 8: // CF_DIB
                 case 17: // CF_DIBV5
                     return FormatHandleTranslators.BitmapDIB_hGlobalHandle_FromHandle(FormatHandleTranslators.AllocateGeneralHandle_FromRawData(item.RawData));
@@ -2401,7 +2409,12 @@ namespace ClipboardManager
         [DllImport("gdi32.dll")]
         public static extern uint GetEnhMetaFileBits(IntPtr hemf, uint cbBuffer, [In, Out] byte[] lpbBuffer);
 
+        [DllImport("shell32.dll", CharSet = CharSet.Ansi)]
+        public static extern uint DragQueryFileA(IntPtr hDrop, uint iFile, [Out] StringBuilder lpszFile, uint cch);
+
         public const uint GMEM_MOVEABLE = 0x0002;
+
+        public const uint GMEM_ZEROINIT = 0x0040;
     }
 
 }

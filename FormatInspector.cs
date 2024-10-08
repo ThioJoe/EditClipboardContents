@@ -7,6 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 using static EditClipboardItems.ClipboardFormats;
 
+// Disable IDE warnings that showed up after going from C# 7 to C# 9
+#pragma warning disable IDE0090 // Disable messages about New expression simplification
+
 namespace EditClipboardItems
 {
     public static class FormatInspector

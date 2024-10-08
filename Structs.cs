@@ -110,22 +110,15 @@ namespace EditClipboardItems
 
         // The pointer structure for CF_HDROP. Documentation says CF_HDROP is a pointer to HDROP, but it's actually a pointer to DROPFILES
         // https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-dropfiles
-        [StructLayout(LayoutKind.Sequential)]
+        // Specifying fnc and fwide as ints instead of bools because in Win32 they are 4 bytes, not 1
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct DROPFILES
         {
             public uint pFiles;
-            public POINT pt;
-            public bool fNC;
-            public bool fWide;
-        }
-
-        // Defines X and Y coordinates of a point dropping a file
-        // https://learn.microsoft.com/en-us/windows/win32/api/windef/ns-windef-point
-        [StructLayout(LayoutKind.Sequential)]
-        public struct POINT
-        {
             public int x;
             public int y;
+            public int fNC;
+            public int fWide;
         }
     }
 }

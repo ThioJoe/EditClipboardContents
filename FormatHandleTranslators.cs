@@ -12,6 +12,12 @@ using System.Threading.Tasks;
 // My classes
 using static EditClipboardItems.ClipboardFormats;
 
+// Disable IDE warnings that showed up after going from C# 7 to C# 9
+#pragma warning disable IDE0063 // Disable messages about Using expression simplification
+#pragma warning disable IDE0090 // Disable messages about New expression simplification
+#pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
+#pragma warning disable IDE0066 // Disable message about switch case expression
+
 namespace EditClipboardItems
 {
     public static partial class FormatHandleTranslators
@@ -143,6 +149,143 @@ namespace EditClipboardItems
             }
             return null;
         }
+
+        public static byte[] CF_HDROP_RawData_FromHandle(IntPtr hDrop)
+        {
+            // Lock the global memory object to access the data
+            IntPtr pDropFiles = NativeMethods.GlobalLock(hDrop);
+            if (pDropFiles == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Marshal the DROPFILES structure from the memory
+                DROPFILES dropFiles = Marshal.PtrToStructure<DROPFILES>(pDropFiles);
+
+                // Determine if the file names are Unicode
+                bool isUnicode = dropFiles.fWide != 0;
+
+                // Get the number of files
+                uint fileCount = NativeMethods.DragQueryFile(hDrop, 0xFFFFFFFF, null, 0);
+
+                // Prepare to calculate the total size
+                List<byte> rawDataList = new List<byte>();
+
+                // Get the size of the DROPFILES structure
+                int dropFilesSize = Marshal.SizeOf(typeof(DROPFILES));
+
+                // Copy the DROPFILES structure to rawDataList
+                byte[] dropFilesBytes = new byte[dropFilesSize];
+                Marshal.Copy(pDropFiles, dropFilesBytes, 0, dropFilesSize);
+                rawDataList.AddRange(dropFilesBytes);
+
+                // For each file, get its path and add to rawDataList
+                for (uint i = 0; i < fileCount; i++)
+                {
+                    uint pathLength = NativeMethods.DragQueryFile(hDrop, i, null, 0) + 1; // +1 for null terminator
+
+                    if (isUnicode)
+                    {
+                        // Unicode
+                        StringBuilder path = new StringBuilder((int)pathLength);
+                        NativeMethods.DragQueryFile(hDrop, i, path, pathLength);
+
+                        byte[] pathBytes = Encoding.Unicode.GetBytes(path.ToString());
+                        rawDataList.AddRange(pathBytes);
+                        // Add null terminator (2 bytes for Unicode)
+                        rawDataList.AddRange(new byte[] { 0, 0 });
+                    }
+                    else
+                    {
+                        // ANSI
+                        StringBuilder path = new StringBuilder((int)pathLength);
+                        NativeMethods.DragQueryFileA(hDrop, i, path, pathLength);
+
+                        byte[] pathBytes = Encoding.Default.GetBytes(path.ToString());
+                        rawDataList.AddRange(pathBytes);
+                        // Add null terminator
+                        rawDataList.Add(0);
+                    }
+                }
+
+                // Add final null terminator
+                if (isUnicode)
+                {
+                    rawDataList.AddRange(new byte[] { 0, 0 });
+                }
+                else
+                {
+                    rawDataList.Add(0);
+                }
+
+                // Convert the rawDataList to a byte array
+                return rawDataList.ToArray();
+            }
+            finally
+            {
+                // Always unlock the global memory object
+                NativeMethods.GlobalUnlock(hDrop);
+            }
+        }
+
+
+
+        public static IntPtr CF_HDROP_Handle_FromRawData(byte[] rawData)
+        {
+            int dropFilesSize = Marshal.SizeOf(typeof(DROPFILES));
+
+            // Lock rawData for pinning in memory
+            GCHandle handle = GCHandle.Alloc(rawData, GCHandleType.Pinned);
+            try
+            {
+                // Get pointer to the DROPFILES structure in rawData
+                IntPtr pRawData = handle.AddrOfPinnedObject();
+
+                // Marshal the DROPFILES structure from rawData
+                DROPFILES dropFiles = Marshal.PtrToStructure<DROPFILES>(pRawData);
+
+                // The file names start after the DROPFILES structure
+                int fileListOffset = (int)dropFiles.pFiles;
+
+                // Calculate the length of the file names (rest of the rawData)
+                int fileNamesLength = rawData.Length - fileListOffset;
+
+                // Allocate global memory for the new clipboard data
+                IntPtr hGlobal = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE | NativeMethods.GMEM_ZEROINIT, (UIntPtr)rawData.Length);
+                if (hGlobal == IntPtr.Zero)
+                    return IntPtr.Zero;
+
+                IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
+                if (pGlobal == IntPtr.Zero)
+                {
+                    NativeMethods.GlobalFree(hGlobal);
+                    return IntPtr.Zero;
+                }
+
+                try
+                {
+                    // Copy the DROPFILES structure to the global memory
+                    Marshal.StructureToPtr(dropFiles, pGlobal, false);
+
+                    // Copy the file names to the global memory
+                    Marshal.Copy(rawData, fileListOffset, IntPtr.Add(pGlobal, fileListOffset), fileNamesLength);
+                }
+                finally
+                {
+                    NativeMethods.GlobalUnlock(hGlobal);
+                }
+
+                return hGlobal;
+            }
+            finally
+            {
+                handle.Free();
+            }
+        }
+
+
 
         public static IntPtr MetafilePict_Handle_FromRawData(byte[] rawData)
         {
