@@ -571,23 +571,18 @@ namespace ClipboardManager
         {
             clipboardItems.Clear();
             editedClipboardItems.Clear();
-
             uint format = 0;
             while ((format = NativeMethods.EnumClipboardFormats(format)) != 0)
             {
                 string formatName = GetClipboardFormatName(format);
-                //Console.WriteLine($"Processing format: {format} ({debugging_formatName})");
-
                 IntPtr hData = NativeMethods.GetClipboardData(format);
                 if (hData == IntPtr.Zero)
                 {
-                    //Console.WriteLine($"GetClipboardData returned null for format {format}");
+                    Console.WriteLine($"GetClipboardData returned null for format {format}");
                     continue;
                 }
-
                 ulong dataSize = 0;
                 byte[] rawData = null;
-
                 try
                 {
                     if (IsFormatUsingHGlobal(format))
@@ -609,10 +604,7 @@ namespace ClipboardManager
                     }
                     else if (format == 2) // CF_BITMAP
                     {
-                        // Handle CF_BITMAP
-                        IntPtr hBitmap = hData; // hData is the HBITMAP handle
-
-                        using (Bitmap bitmap = Image.FromHbitmap(hBitmap))
+                        using (Bitmap bitmap = Image.FromHbitmap(hData))
                         {
                             using (MemoryStream ms = new MemoryStream())
                             {
@@ -622,18 +614,27 @@ namespace ClipboardManager
                             }
                         }
                     }
+                    else if (format == 3) // CF_METAFILEPICT
+                    {
+                        rawData = CopyMetafilePictToByteArray(hData);
+                        dataSize = (ulong)(rawData?.Length ?? 0);
+                    }
+                    else if (format == 14) // CF_ENHMETAFILE
+                    {
+                        rawData = CopyEnhMetafileToByteArray(hData);
+                        dataSize = (ulong)(rawData?.Length ?? 0);
+                    }
                     else
                     {
-                        // Handle other formats appropriately
-                        dataSize = 0; // Size may not be applicable
-                        rawData = null; // Data extraction not performed here
+                        Console.WriteLine($"Unhandled format: {format}");
+                        dataSize = 0;
+                        rawData = null;
                     }
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error processing format {format}: {ex.Message}");
                 }
-
                 var item = new ClipboardItem
                 {
                     FormatName = formatName,
@@ -643,7 +644,6 @@ namespace ClipboardManager
                     RawData = rawData,
                     Data = rawData
                 };
-
                 clipboardItems.Add(item);
             }
         }
@@ -742,6 +742,49 @@ namespace ClipboardManager
 
                 UpdateClipboardItemsGridView(formatName: item.FormatName, formatID: item.FormatId.ToString(), handleType: handleType, dataSize: item.DataSize.ToString(), dataInfo: item.DataInfoString, rawData: item.RawData);
             }
+        }
+
+        private byte[] CopyMetafilePictToByteArray(IntPtr hMetafilePict)
+        {
+            IntPtr pMetafilePict = NativeMethods.GlobalLock(hMetafilePict);
+            if (pMetafilePict != IntPtr.Zero)
+            {
+                try
+                {
+                    METAFILEPICT mfp = (METAFILEPICT)Marshal.PtrToStructure(pMetafilePict, typeof(METAFILEPICT));
+                    int metafileSize = NativeMethods.GetMetaFileBitsEx(mfp.hMF, 0, null);
+                    if (metafileSize > 0)
+                    {
+                        byte[] metafileData = new byte[metafileSize];
+                        if (NativeMethods.GetMetaFileBitsEx(mfp.hMF, metafileSize, metafileData) == metafileSize)
+                        {
+                            byte[] fullData = new byte[Marshal.SizeOf(typeof(METAFILEPICT)) + metafileSize];
+                            Marshal.Copy(pMetafilePict, fullData, 0, Marshal.SizeOf(typeof(METAFILEPICT)));
+                            Buffer.BlockCopy(metafileData, 0, fullData, Marshal.SizeOf(typeof(METAFILEPICT)), metafileSize);
+                            return fullData;
+                        }
+                    }
+                }
+                finally
+                {
+                    NativeMethods.GlobalUnlock(hMetafilePict);
+                }
+            }
+            return null;
+        }
+
+        private byte[] CopyEnhMetafileToByteArray(IntPtr hEnhMetaFile)
+        {
+            uint size = NativeMethods.GetEnhMetaFileBits(hEnhMetaFile, 0, null);
+            if (size > 0)
+            {
+                byte[] data = new byte[size];
+                if (NativeMethods.GetEnhMetaFileBits(hEnhMetaFile, size, data) == size)
+                {
+                    return data;
+                }
+            }
+            return null;
         }
 
         private void DetermineSynthesizedFormats()
@@ -1000,14 +1043,12 @@ namespace ClipboardManager
             return hBitmapCopy;
         }
 
+        // Update CopyMetafile to use these new functions
         private IntPtr CopyMetafile(uint format, IntPtr hMetafile)
         {
             if (format == 3) // CF_METAFILEPICT
             {
-                // Implementation for CF_METAFILEPICT
-                // This is more complex and requires additional Windows API calls
-                Console.WriteLine("CF_METAFILEPICT copying not implemented");
-                return IntPtr.Zero;
+                return CopyMetafilePict(hMetafile);
             }
             else // CF_ENHMETAFILE
             {
@@ -1358,69 +1399,226 @@ namespace ClipboardManager
             return inputString;
         }
 
-        private void SaveClipboardData()
+        private bool SaveClipboardData()
         {
+            if (!NativeMethods.OpenClipboard(this.Handle))
+            {
+                Console.WriteLine("Failed to open clipboard.");
+                MessageBox.Show("Failed to open clipboard.");
+                return false;
+            }
+
             try
             {
-                // Saved edited clipboard data to the clipboard
-                if (NativeMethods.OpenClipboard(this.Handle))
+                NativeMethods.EmptyClipboard();
+
+                foreach (var item in editedClipboardItems)
                 {
-                    NativeMethods.EmptyClipboard();
+                    IntPtr hGlobal;
 
-                    foreach (var item in editedClipboardItems)
+                    if (IsSpecialFormat(item.FormatId))
                     {
-                        if (item.RawData != null && item.RawData.Length > 0)
-                        {
-                            IntPtr hGlobal = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, (UIntPtr)item.RawData.Length);
-                            if (hGlobal != IntPtr.Zero)
-                            {
-                                IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
-                                if (pGlobal != IntPtr.Zero)
-                                {
-                                    try
-                                    {
-                                        Marshal.Copy(item.RawData, 0, pGlobal, item.RawData.Length);
-                                    }
-                                    finally
-                                    {
-                                        NativeMethods.GlobalUnlock(hGlobal);
-                                    }
-
-                                    if (NativeMethods.SetClipboardData(item.FormatId, hGlobal) == IntPtr.Zero)
-                                    {
-                                        NativeMethods.GlobalFree(hGlobal);
-                                        Console.WriteLine($"Failed to set clipboard data for format: {item.FormatId}");
-                                    }
-                                }
-                                else
-                                {
-                                    NativeMethods.GlobalFree(hGlobal);
-                                    Console.WriteLine($"Failed to lock memory for format: {item.FormatId}");
-                                }
-                            }
-                            else
-                            {
-                                Console.WriteLine($"Failed to allocate memory for format: {item.FormatId}");
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine($"No data to set for format: {item.FormatId}");
-                        }
+                        hGlobal = HandleSpecialFormat(item);
+                    }
+                    else
+                    {
+                        hGlobal = AllocateAndCopyData(item.RawData);
                     }
 
-                    NativeMethods.CloseClipboard();
-                    MessageBox.Show("Clipboard data saved successfully.");
+                    if (hGlobal != IntPtr.Zero)
+                    {
+                        if (NativeMethods.SetClipboardData(item.FormatId, hGlobal) == IntPtr.Zero)
+                        {
+                            NativeMethods.GlobalFree(hGlobal);
+                            Console.WriteLine($"Failed to set clipboard data for format: {item.FormatId}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Failed to allocate memory for format: {item.FormatId}");
+                    }
                 }
-                else
-                {
-                    MessageBox.Show("Failed to open clipboard.");
-                }
+
+                MessageBox.Show("Clipboard data saved successfully.");
+                return true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to save clipboard data: {ex.Message}");
+                Console.WriteLine($"Error saving clipboard data: {ex.Message}");
+                MessageBox.Show($"Error saving clipboard data: {ex.Message}");
+                return false;
             }
+            finally
+            {
+                NativeMethods.CloseClipboard();
+            }
+        }
+
+        private bool IsSpecialFormat(uint format)
+        {
+            return format == 2 || format == 3 || format == 8 || format == 14 || format == 17;
+        }
+
+        private IntPtr HandleSpecialFormat(ClipboardItem item)
+        {
+            switch (item.FormatId)
+            {
+                case 2: // CF_BITMAP
+                    return CreateHBitmapFromRawData(item.RawData);
+                case 3: // CF_METAFILEPICT
+                case 14: // CF_ENHMETAFILE
+                    return CreateMetafileFromRawData(item.FormatId, item.RawData);
+                case 8: // CF_DIB
+                case 17: // CF_DIBV5
+                    return CreateDIBFromRawData(item.RawData);
+                default:
+                    Console.WriteLine($"Unexpected special format: {item.FormatId}");
+                    return IntPtr.Zero;
+            }
+        }
+
+        private IntPtr AllocateAndCopyData(byte[] data)
+        {
+            if (data == null || data.Length == 0)
+            {
+                Console.WriteLine("No data to allocate and copy");
+                return IntPtr.Zero;
+            }
+
+            IntPtr hGlobal = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, (UIntPtr)data.Length);
+            if (hGlobal != IntPtr.Zero)
+            {
+                IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
+                if (pGlobal != IntPtr.Zero)
+                {
+                    try
+                    {
+                        Marshal.Copy(data, 0, pGlobal, data.Length);
+                    }
+                    finally
+                    {
+                        NativeMethods.GlobalUnlock(hGlobal);
+                    }
+                }
+                else
+                {
+                    NativeMethods.GlobalFree(hGlobal);
+                    hGlobal = IntPtr.Zero;
+                    Console.WriteLine("Failed to lock memory");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Failed to allocate memory");
+            }
+            return hGlobal;
+        }
+
+        private IntPtr CreateHBitmapFromRawData(byte[] rawData)
+        {
+            using (MemoryStream ms = new MemoryStream(rawData))
+            using (Bitmap bmp = new Bitmap(ms))
+            {
+                return CopyBitmap(bmp.GetHbitmap());
+            }
+        }
+
+        private IntPtr CreateMetafileFromRawData(uint format, byte[] rawData)
+        {
+            if (format == 3) // CF_METAFILEPICT
+            {
+                return CreateMetafilePictFromRawData(rawData);
+            }
+            else // CF_ENHMETAFILE
+            {
+                return CreateEnhMetafileFromRawData(rawData);
+            }
+        }
+
+        private IntPtr CreateMetafilePictFromRawData(byte[] rawData)
+        {
+            IntPtr hGlobal = AllocateAndCopyData(rawData);
+            if (hGlobal != IntPtr.Zero)
+            {
+                IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
+                if (pGlobal != IntPtr.Zero)
+                {
+                    try
+                    {
+                        METAFILEPICT mfp = (METAFILEPICT)Marshal.PtrToStructure(pGlobal, typeof(METAFILEPICT));
+                        IntPtr hMetafileCopy = NativeMethods.CopyMetaFile(mfp.hMF, null);
+                        if (hMetafileCopy != IntPtr.Zero)
+                        {
+                            mfp.hMF = hMetafileCopy;
+                            Marshal.StructureToPtr(mfp, pGlobal, false);
+                            return hGlobal;
+                        }
+                    }
+                    finally
+                    {
+                        NativeMethods.GlobalUnlock(hGlobal);
+                    }
+                }
+                NativeMethods.GlobalFree(hGlobal);
+            }
+            return IntPtr.Zero;
+        }
+
+
+
+        private IntPtr CopyMetafilePict(IntPtr hMetafilePict)
+        {
+            IntPtr pMetafilePict = NativeMethods.GlobalLock(hMetafilePict);
+            if (pMetafilePict != IntPtr.Zero)
+            {
+                try
+                {
+                    METAFILEPICT mfp = (METAFILEPICT)Marshal.PtrToStructure(pMetafilePict, typeof(METAFILEPICT));
+                    IntPtr hMetafileCopy = NativeMethods.CopyMetaFile(mfp.hMF, null);
+                    if (hMetafileCopy != IntPtr.Zero)
+                    {
+                        IntPtr hGlobalCopy = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, (UIntPtr)Marshal.SizeOf(typeof(METAFILEPICT)));
+                        if (hGlobalCopy != IntPtr.Zero)
+                        {
+                            IntPtr pGlobalCopy = NativeMethods.GlobalLock(hGlobalCopy);
+                            if (pGlobalCopy != IntPtr.Zero)
+                            {
+                                mfp.hMF = hMetafileCopy;
+                                Marshal.StructureToPtr(mfp, pGlobalCopy, false);
+                                NativeMethods.GlobalUnlock(hGlobalCopy);
+                                return hGlobalCopy;
+                            }
+                            NativeMethods.GlobalFree(hGlobalCopy);
+                        }
+                        NativeMethods.DeleteMetaFile(hMetafileCopy);
+                    }
+                }
+                finally
+                {
+                    NativeMethods.GlobalUnlock(hMetafilePict);
+                }
+            }
+            return IntPtr.Zero;
+        }
+
+        private IntPtr CreateEnhMetafileFromRawData(byte[] rawData)
+        {
+            using (MemoryStream ms = new MemoryStream(rawData))
+            {
+                IntPtr hemf = NativeMethods.SetEnhMetaFileBits((uint)rawData.Length, rawData);
+                if (hemf != IntPtr.Zero)
+                {
+                    IntPtr hemfCopy = NativeMethods.CopyEnhMetaFile(hemf, null);
+                    NativeMethods.DeleteEnhMetaFile(hemf);
+                    return hemfCopy;
+                }
+            }
+            return IntPtr.Zero;
+        }
+
+        private IntPtr CreateDIBFromRawData(byte[] rawData)
+        {
+            return CopyDIB(AllocateAndCopyData(rawData));
         }
 
 
@@ -2671,6 +2869,23 @@ namespace ClipboardManager
         [DllImport("user32.dll", SetLastError = true)]
         public static extern int CountClipboardFormats();
 
+        [DllImport("gdi32.dll")]
+        public static extern IntPtr CopyMetaFile(IntPtr hMF, string lpFileName);
+
+        [DllImport("gdi32.dll")]
+        public static extern bool DeleteMetaFile(IntPtr hMF);
+
+        [DllImport("gdi32.dll")]
+        public static extern IntPtr SetEnhMetaFileBits(uint cbBuffer, byte[] lpData);
+
+        [DllImport("gdi32.dll")]
+        public static extern bool DeleteEnhMetaFile(IntPtr hemf);
+
+        [DllImport("gdi32.dll")]
+        public static extern int GetMetaFileBitsEx(IntPtr hmf, int nSize, [In, Out] byte[] lpvData);
+
+        [DllImport("gdi32.dll")]
+        public static extern uint GetEnhMetaFileBits(IntPtr hemf, uint cbBuffer, [In, Out] byte[] lpbBuffer);
 
         public const uint GMEM_MOVEABLE = 0x0002;
     }
