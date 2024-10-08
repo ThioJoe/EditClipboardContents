@@ -169,11 +169,6 @@ namespace ClipboardManager
             {
                 return;
             }
-            //// Ensure the DataGridView has focus
-            //if (!dataGridViewClipboard.Focused)
-            //{
-            //    dataGridViewClipboard.Focus();
-            //}
 
             // Determine direction: -1 for up, 1 for down
             int direction = e.Delta > 0 ? -1 : 1;
@@ -1097,6 +1092,18 @@ namespace ClipboardManager
 
             }
 
+            // --------------------------------------------------------------------------------
+            static string EscapeString(string inputString)
+            {
+                return inputString.Replace("\0", "\\0").Replace("\a", "\\a").Replace("\b", "\\b").Replace("\f", "\\f").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t").Replace("\v", "\\v");
+            }
+            static string ReplaceEscapeWithChar(string inputString)
+            {
+                const string rep = "."; // Replacement character
+                return inputString.Replace("\0", rep).Replace("\a", rep).Replace("\b", rep).Replace("\f", rep).Replace("\n", rep).Replace("\r", rep).Replace("\t", rep).Replace("\v", rep);
+            }
+            // --------------------------------------------------------------------------------
+
             string plaintextRaw = encodingToUse.GetString(byteData); // This could contain null characters
             string plaintext;
 
@@ -1136,6 +1143,10 @@ namespace ClipboardManager
             }
 
             // Get the text from the plaintext box
+            static string UnescapeString(string inputString)
+            {
+                return inputString.Replace("\\0", "\0").Replace("\\a", "\a").Replace("\\b", "\b").Replace("\\f", "\f").Replace("\\n", "\n").Replace("\\r", "\r").Replace("\\t", "\t").Replace("\\v", "\v");
+            }
             string text = UnescapeString(richTextBox_HexPlaintext.Text);
 
 
@@ -1154,47 +1165,6 @@ namespace ClipboardManager
 
         }
 
-        private string UnescapeString (string inputString)
-        {
-            inputString = inputString.Replace("\\0", "\0");
-            inputString = inputString.Replace("\\a", "\a");
-            inputString = inputString.Replace("\\b", "\b");
-            inputString = inputString.Replace("\\f", "\f");
-            inputString = inputString.Replace("\\n", "\n");
-            inputString = inputString.Replace("\\r", "\r");
-            inputString = inputString.Replace("\\t", "\t");
-            inputString = inputString.Replace("\\v", "\v");
-
-            return inputString;
-        }
-
-        private string EscapeString(string inputString)
-        {
-            inputString = inputString.Replace("\0", "\\0");
-            inputString = inputString.Replace("\a", "\\a");
-            inputString = inputString.Replace("\b", "\\b");
-            inputString = inputString.Replace("\f", "\\f");
-            inputString = inputString.Replace("\n", "\\n");
-            inputString = inputString.Replace("\r", "\\r");
-            inputString = inputString.Replace("\t", "\\t");
-            inputString = inputString.Replace("\v", "\\v");
-
-            return inputString;
-        }
-
-        private string ReplaceEscapeWithChar(string inputString)
-        {
-            string replacement = ".";
-            inputString = inputString.Replace("\0", replacement);
-            inputString = inputString.Replace("\a", replacement);
-            inputString = inputString.Replace("\b", replacement);
-            inputString = inputString.Replace("\f", replacement);
-            inputString = inputString.Replace("\n", replacement);
-            inputString = inputString.Replace("\r", replacement);
-            inputString = inputString.Replace("\t", replacement);
-            inputString = inputString.Replace("\v", replacement);
-            return inputString;
-        }
 
         private bool SaveClipboardData(List<uint> formatsToExclude = null)
         {
