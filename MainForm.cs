@@ -921,7 +921,7 @@ namespace ClipboardManager
                             IntPtr hGlobal;
 
                             // Special handling for CF_BITMAP and other problematic formats
-                            if (format == 2 || format == 3 || format == 8 || format == 14 || format == 17)
+                            if (FormatRequiresSpecialCopyHandling(format))
                             {
                                 //Console.WriteLine($"Special handling for format: {format}");
                                 size = UIntPtr.Zero;
@@ -1416,7 +1416,7 @@ namespace ClipboardManager
                 {
                     IntPtr hGlobal;
 
-                    if (IsSpecialFormat(item.FormatId))
+                    if (FormatRequiresSpecialCopyHandling(item.FormatId))
                     {
                         hGlobal = HandleSpecialFormat(item);
                     }
@@ -1454,9 +1454,19 @@ namespace ClipboardManager
             }
         }
 
-        private bool IsSpecialFormat(uint format)
+        private bool FormatRequiresSpecialCopyHandling(uint format)
         {
-            return format == 2 || format == 3 || format == 8 || format == 14 || format == 17;
+            switch(format)
+            {
+                case 2: // CF_BITMAP
+                case 3: // CF_METAFILEPICT
+                case 8: // CF_DIB
+                case 14: // CF_ENHMETAFILE
+                case 17: // CF_DIBV5
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         private IntPtr HandleSpecialFormat(ClipboardItem item)
