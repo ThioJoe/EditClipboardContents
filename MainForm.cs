@@ -77,21 +77,6 @@ namespace ClipboardManager
             "CF_UNICODETEXT",
         };
 
-        private bool IsFormatUsingHGlobal(uint format)
-        {
-            switch (format)
-            {
-                case 2:  // CF_BITMAP
-                case 3:  // CF_METAFILEPICT
-                case 14: // CF_ENHMETAFILE
-                case 15: // CF_HDROP (Handle to an HDROP structure)
-                case 9:  // Palette
-                    return false;
-                default:
-                    return true;
-            }
-        }
-
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
@@ -550,60 +535,61 @@ namespace ClipboardManager
                     Console.WriteLine($"GetClipboardData returned null for format {format}");
                     continue;
                 }
+
                 ulong dataSize = 0;
                 byte[] rawData = null;
                 try
                 {
-                    if (IsFormatUsingHGlobal(format))
+                    // First need to speciall handle certain formats that don't use HGlobal
+                    switch (format)
                     {
-                        IntPtr pData = NativeMethods.GlobalLock(hData);
-                        if (pData != IntPtr.Zero)
-                        {
-                            try
+                        case 2: // CF_BITMAP
+                            using (Bitmap bitmap = Image.FromHbitmap(hData))
                             {
-                                dataSize = (ulong)NativeMethods.GlobalSize(hData).ToUInt64();
-                                rawData = new byte[dataSize];
-                                Marshal.Copy(pData, rawData, 0, (int)dataSize);
+                                using (MemoryStream ms = new MemoryStream())
+                                {
+                                    bitmap.Save(ms, ImageFormat.Bmp);
+                                    rawData = ms.ToArray();
+                                    dataSize = (ulong)rawData.Length;
+                                }
                             }
-                            finally
+                            break;
+                        case 3: // CF_METAFILEPICT
+                            rawData = FormatHandleTranslators.MetafilePict_RawData_FromHandle(hData);
+                            dataSize = (ulong)(rawData?.Length ?? 0);
+                            break;
+                        case 14: // CF_ENHMETAFILE
+                            rawData = FormatHandleTranslators.EnhMetafile_RawData_FromHandle(hData);
+                            dataSize = (ulong)(rawData?.Length ?? 0);
+                            break;
+                        case 15: // CF_HDROP
+                            rawData = FormatHandleTranslators.CF_HDROP_RawData_FromHandle(hData);
+                            dataSize = (ulong)(rawData?.Length ?? 0);
+                            break;
+                        case 9: // CF_PALETTE -- NOT YET HANDLED
+                            rawData = null;
+                            dataSize = 0;
+                            break;
+
+                        // All other formats that use Hglobal
+                        default:
+                            IntPtr pData = NativeMethods.GlobalLock(hData);
+                            if (pData != IntPtr.Zero)
                             {
-                                NativeMethods.GlobalUnlock(hData);
+                                try
+                                {
+                                    dataSize = (ulong)NativeMethods.GlobalSize(hData).ToUInt64();
+                                    rawData = new byte[dataSize];
+                                    Marshal.Copy(pData, rawData, 0, (int)dataSize);
+                                }
+                                finally
+                                {
+                                    NativeMethods.GlobalUnlock(hData);
+                                }
                             }
+                            break;
                         }
-                    }
-                    else if (format == 2) // CF_BITMAP
-                    {
-                        using (Bitmap bitmap = Image.FromHbitmap(hData))
-                        {
-                            using (MemoryStream ms = new MemoryStream())
-                            {
-                                bitmap.Save(ms, ImageFormat.Bmp);
-                                rawData = ms.ToArray();
-                                dataSize = (ulong)rawData.Length;
-                            }
-                        }
-                    }
-                    else if (format == 3) // CF_METAFILEPICT
-                    {
-                        rawData = FormatHandleTranslators.MetafilePict_RawData_FromHandle(hData);
-                        dataSize = (ulong)(rawData?.Length ?? 0);
-                    }
-                    else if (format == 14) // CF_ENHMETAFILE
-                    {
-                        rawData = FormatHandleTranslators.EnhMetafile_RawData_FromHandle(hData);
-                        dataSize = (ulong)(rawData?.Length ?? 0);
-                    }
-                    else if (format == 15) // CF_HDROP
-                    {
-                        rawData = FormatHandleTranslators.CF_HDROP_RawData_FromHandle(hData);
-                        dataSize = (ulong)(rawData?.Length ?? 0);
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Unhandled format: {format}");
-                        dataSize = 0;
-                        rawData = null;
-                    }
+
                 }
                 catch (Exception ex)
                 {
