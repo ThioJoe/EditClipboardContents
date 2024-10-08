@@ -782,9 +782,31 @@ namespace ClipboardManager
 
                 item.Data = processedData; // Update the processed data in the selectedItem
                 item.DataInfoList = dataInfoList; // Update the data info in the selectedItem
-                string handleType = item.AssumedSynthesized ? "Synthesized" : "Standard"; // Determine handle type
 
-                UpdateClipboardItemsGridView(formatName: item.FormatName, formatID: item.FormatId.ToString(), handleType: handleType, dataSize: item.DataSize.ToString(), dataInfo: item.DataInfoList, rawData: item.RawData);
+                // Determine handle type
+                string formatType = "";
+                // If it's below 0xC0000 it's a standard format type. If it's between 0xC0000 and 0xFFFF it's a registered type.
+                if (item.FormatId < 0xC000)
+                {
+                    formatType = "Standard";
+                }
+                else if (item.FormatId >= 0xC000 && item.FormatId <= 0xFFFF)
+                {
+                    formatType = "Registered";
+                }
+                else
+                {
+                    formatType = "Unknown";
+                }
+
+                if (item.AssumedSynthesized)
+                {
+                    formatType = "Synthesized";
+                }
+
+                item.FormatType = formatType; // Update the format type in the selectedItem
+
+                UpdateClipboardItemsGridView(formatName: item.FormatName, formatID: item.FormatId.ToString(), handleType: formatType, dataSize: item.DataSize.ToString(), dataInfo: item.DataInfoList, rawData: item.RawData);
             }
         }
       
@@ -2384,6 +2406,7 @@ namespace ClipboardManager
         public List<string> DataInfoList { get; set; }
         public string DataInfoString => string.Join(", ", DataInfoList ?? new List<string>());
         public bool HasPendingEdit { get; set; } = false;
+        public string FormatType { get; set; } = "Unknown";
 
         public object Clone()
         {
@@ -2397,7 +2420,8 @@ namespace ClipboardManager
                 RawData = (byte[])this.RawData?.Clone(),
                 AssumedSynthesized = this.AssumedSynthesized,
                 DataInfoList = new List<string>(this.DataInfoList ?? new List<string>()),
-                HasPendingEdit = false
+                HasPendingEdit = false,
+                FormatType = this.FormatType
             };
         }
     }
