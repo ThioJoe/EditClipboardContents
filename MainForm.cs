@@ -439,23 +439,42 @@ namespace ClipboardManager
             clipboardItems.Clear();
             editedClipboardItems.Clear();
             int formatCount = NativeMethods.CountClipboardFormats();
-
             uint format = 0;
             int currentCount = 0;
-            while ((format = NativeMethods.EnumClipboardFormats(format)) != 0)
+
+            while (true)
             {
+                format = NativeMethods.EnumClipboardFormats(format);
+                if (format == 0)
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    if (error == 0) // ERROR_SUCCESS
+                    {
+                        // End of enumeration
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"EnumClipboardFormats failed. Error code: {error}");
+                        break;
+                    }
+                }
+
                 currentCount++;
-                
+
+                // -------- Start / Continue Enumeration ------------
+
                 string formatName = GetClipboardFormatName(format);
+                ulong dataSize = 0;
+                byte[] rawData = null;
+                //Console.WriteLine($"Checking Format {currentCount}: {formatName} ({format})"); // Debugging
+
                 IntPtr hData = NativeMethods.GetClipboardData(format);
                 if (hData == IntPtr.Zero)
                 {
                     Console.WriteLine($"GetClipboardData returned null for format {format}");
-                    continue;
                 }
 
-                ulong dataSize = 0;
-                byte[] rawData = null;
                 try
                 {
                     // First need to speciall handle certain formats that don't use HGlobal
@@ -531,9 +550,12 @@ namespace ClipboardManager
                 };
                 clipboardItems.Add(item);
             }
-            Console.WriteLine($"Checked {currentCount} formats.");
+            //Console.WriteLine($"Checked {currentCount} formats out of {formatCount} reported formats.");
+            if (currentCount < formatCount)
+            {
+                Console.WriteLine("Warning: Not all reported formats were enumerated.");
+            }
         }
-
 
         private void ProcessClipboardData()
         {
