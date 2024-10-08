@@ -68,7 +68,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FormatCopiers.cs" />
+    <Compile Include="FormatHandlerTranslators.cs" />
+    <Compile Include="FormatInspector.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

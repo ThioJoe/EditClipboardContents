@@ -12,7 +12,7 @@ using static EditClipboardItems.ClipboardFormats;
 
 namespace EditClipboardItems
 {
-    public partial class FormatHandlerTranslators
+    public static partial class FormatHandlerTranslators
     {
         public static IntPtr AllocateAndCopyData(byte[] data)
         {
