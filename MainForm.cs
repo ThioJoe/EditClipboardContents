@@ -497,7 +497,7 @@ namespace ClipboardManager
                             break;
                         case 9: // CF_PALETTE -- NOT YET HANDLED
                             rawData = FormatHandleTranslators.CF_PALETTE_RawData_FromHandle(hData);
-                            dataSize = 0;
+                            dataSize = (ulong)(rawData?.Length ?? 0);
                             break;
                         case 14: // CF_ENHMETAFILE
                             rawData = FormatHandleTranslators.EnhMetafile_RawData_FromHandle(hData);
@@ -813,14 +813,28 @@ namespace ClipboardManager
 
         private string GetClipboardFormatName(uint format)
         {
+            // Ensure the format ID is not above the maximum of 0xFFFF, or below 1 (it shouldn't be but just in case)
+            if (format > 0xFFFF || format < 1)
+            {
+                return GetStandardFormatName(format);
+            }
+
+            // Define a sufficient buffer size
             StringBuilder formatName = new StringBuilder(256);
-            return NativeMethods.GetClipboardFormatName(format, formatName, formatName.Capacity) > 0
-                ? formatName.ToString()
-                : GetStandardFormatName(format);
+            int result = NativeMethods.GetClipboardFormatNameA(format, formatName, formatName.Capacity);
+
+            if (result > 0)
+            {
+                return formatName.ToString();
+            }
+            else
+            {
+                return GetStandardFormatName(format);
+            }
         }
 
 
-        
+
         internal class ClipboardFormatData
         {
             public uint Format { get; set; }
@@ -1759,8 +1773,8 @@ namespace ClipboardManager
         [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
 
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        public static extern int GetClipboardFormatName(uint format, [Out] StringBuilder lpszFormatName, int cchMaxCount);
+        [DllImport("user32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
+        public static extern int GetClipboardFormatNameA(uint format, [Out] StringBuilder lpszFormatName, int cchMaxCount);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern UIntPtr GlobalSize(IntPtr hMem);
