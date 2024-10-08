@@ -322,8 +322,8 @@ namespace ClipboardManager
             string utf8Result = "";
             string utf16Result = "";
 
-            bool invalidUTF8 = false;
-            bool invalidUTF16 = false;
+            //bool invalidUTF8 = false;
+            //bool invalidUTF16 = false;
 
             // Try UTF-8
             try
@@ -333,7 +333,7 @@ namespace ClipboardManager
             catch (DecoderFallbackException)
             {
                 // Invalid UTF-8, utf8Result remains empty
-                invalidUTF8 = true;
+                //invalidUTF8 = true;
 
             }
 
@@ -346,7 +346,7 @@ namespace ClipboardManager
 
             {
                 // Invalid UTF-16, utf16Result remains empty
-                invalidUTF16 = true;
+                //invalidUTF16 = true;
             }
 
             //if (invalidUTF8 && invalidUTF16)
@@ -430,35 +430,6 @@ namespace ClipboardManager
             return result;
         }
 
-        static bool IsLegalUnicode(string str)
-        {
-            for (int i = 0; i < str.Length; i++)
-            {
-                var uc = char.GetUnicodeCategory(str, i);
-
-                if (uc == UnicodeCategory.Surrogate)
-                {
-                    // Unpaired surrogate, like  "😵"[0] + "A" or  "😵"[1] + "A"
-                    return false;
-                }
-                else if (uc == UnicodeCategory.OtherNotAssigned)
-                {
-                    // \uF000 or \U00030000
-                    return false;
-                }
-
-                // Correct high-low surrogate, we must skip the low surrogate
-                // (it is correct because otherwise it would have been a 
-                // UnicodeCategory.Surrogate)
-                if (char.IsHighSurrogate(str, i))
-                {
-                    i++;
-                }
-            }
-
-            return true;
-        }
-
 
         private void MainForm_Resize(object sender, EventArgs e)
         {
@@ -514,7 +485,7 @@ namespace ClipboardManager
             //Console.WriteLine("Starting RefreshClipboardItems");
 
             // Count the number of different data formats currently on the clipboard
-            int formatCount = NativeMethods.CountClipboardFormats();
+            //int formatCount = NativeMethods.CountClipboardFormats();
             //Console.WriteLine($"Number of clipboard formats: {formatCount}");
 
             // Attempt to open the clipboard, retrying up to 10 times with a 10ms delay
@@ -894,131 +865,6 @@ namespace ClipboardManager
         }
 
 
-        private bool RemoveClipboardFormat(List<uint> formatsToExclude = null)
-        {
-            //Console.WriteLine($"Attempting to remove format: {formatsToExclude}");
-
-            if (!NativeMethods.OpenClipboard(this.Handle))
-            {
-                Console.WriteLine("Failed to open clipboard.");
-                MessageBox.Show("Failed to open clipboard.");
-                return false;
-            }
-
-            try
-            {
-                List<ClipboardFormatData> formatsToKeep = new List<ClipboardFormatData>();
-                uint format = 0;
-                while ((format = NativeMethods.EnumClipboardFormats(format)) != 0)
-                {
-                    //Console.WriteLine($"Processing format: {format}");
-                    if (formatsToExclude == null || !formatsToExclude.Contains(format))
-                    {
-                        IntPtr hData = NativeMethods.GetClipboardData(format);
-                        if (hData != IntPtr.Zero)
-                        {
-                            UIntPtr size;
-                            IntPtr hGlobal;
-
-                            // Special handling for CF_BITMAP and other problematic formats
-                            if (FormatRequiresSpecialCopyHandling(format))
-                            {
-                                //Console.WriteLine($"Special handling for format: {format}");
-                                size = UIntPtr.Zero;
-                                hGlobal = CopySpecialFormat(format, hData);
-                            }
-                            else
-                            {
-                                size = NativeMethods.GlobalSize(hData);
-                                //Console.WriteLine($"Format {format} size: {size}");
-                                hGlobal = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, size);
-                                if (hGlobal != IntPtr.Zero)
-                                {
-                                    IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
-                                    IntPtr pData = NativeMethods.GlobalLock(hData);
-                                    if (pGlobal != IntPtr.Zero && pData != IntPtr.Zero)
-                                    {
-                                        //Console.WriteLine($"Copying data for format: {format}");
-                                        NativeMethods.CopyMemory(pGlobal, pData, size);
-                                        NativeMethods.GlobalUnlock(hData);
-                                        NativeMethods.GlobalUnlock(hGlobal);
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine($"Failed to lock memory for format: {format}");
-                                        NativeMethods.GlobalFree(hGlobal);
-                                        hGlobal = IntPtr.Zero;
-                                    }
-                                }
-                                else
-                                {
-                                    Console.WriteLine($"Failed to allocate memory for format: {format}");
-                                }
-                            }
-
-                            if (hGlobal != IntPtr.Zero)
-                            {
-                                formatsToKeep.Add(new ClipboardFormatData { Format = format, Data = hGlobal });
-                                //Console.WriteLine($"Added format {format} to keep list");
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine($"GetClipboardData returned null for format: {format}");
-                        }
-                    }
-                    else
-                    {
-                        //Console.WriteLine($"Skipping format to remove: {format}");
-                    }
-                }
-
-                //Console.WriteLine("Emptying clipboard");
-                NativeMethods.EmptyClipboard();
-
-                //Console.WriteLine("Setting new clipboard data");
-                foreach (var item in formatsToKeep)
-                {
-                    //Console.WriteLine($"Setting data for format: {item.Format}");
-                    NativeMethods.SetClipboardData(item.Format, item.Data);
-                }
-
-                //Console.WriteLine("Clipboard format removal completed successfully");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error removing clipboard format: {ex.Message}");
-                //Console.WriteLine($"Stack trace: {ex.StackTrace}");
-                MessageBox.Show($"Error removing clipboard format: {ex.Message}");
-                return false;
-            }
-            finally
-            {
-                //Console.WriteLine("Closing clipboard");
-                NativeMethods.CloseClipboard();
-            }
-        }
-
-        private IntPtr CopySpecialFormat(uint format, IntPtr hData)
-        {
-            switch (format)
-            {
-                case 2: // CF_BITMAP
-                    return CopyBitmap(hData);
-                case 3: // CF_METAFILEPICT
-                    return CopyMetafilePict(hData);
-                case 14: // CF_ENHMETAFILE
-                    return NativeMethods.CopyEnhMetaFile(hData, null);
-                case 8: // CF_DIB
-                case 17: // CF_DIBV5
-                    return CopyDIB(hData);
-                default:
-                    Console.WriteLine($"Unexpected special format: {format}");
-                    return IntPtr.Zero;
-            }
-        }
-
         private IntPtr CopyBitmap(IntPtr hBitmap)
         {
             BITMAP bmp = new BITMAP();
@@ -1387,7 +1233,7 @@ namespace ClipboardManager
             return inputString;
         }
 
-        private bool SaveClipboardData()
+        private bool SaveClipboardData(List<uint> formatsToExclude = null)
         {
             if (!NativeMethods.OpenClipboard(this.Handle))
             {
@@ -1395,15 +1241,17 @@ namespace ClipboardManager
                 MessageBox.Show("Failed to open clipboard.");
                 return false;
             }
-
             try
             {
                 NativeMethods.EmptyClipboard();
-
                 foreach (var item in editedClipboardItems)
                 {
-                    IntPtr hGlobal;
+                    if (formatsToExclude != null && formatsToExclude.Count !=0 && formatsToExclude.Contains(item.FormatId))
+                    {
+                        continue; // Skip this format if it's in the exclusion list
+                    }
 
+                    IntPtr hGlobal;
                     if (FormatRequiresSpecialCopyHandling(item.FormatId))
                     {
                         hGlobal = HandleSpecialFormat(item);
@@ -1412,7 +1260,6 @@ namespace ClipboardManager
                     {
                         hGlobal = AllocateAndCopyData(item.RawData);
                     }
-
                     if (hGlobal != IntPtr.Zero)
                     {
                         if (NativeMethods.SetClipboardData(item.FormatId, hGlobal) == IntPtr.Zero)
@@ -1426,8 +1273,12 @@ namespace ClipboardManager
                         Console.WriteLine($"Failed to allocate memory for format: {item.FormatId}");
                     }
                 }
-
-                MessageBox.Show("Clipboard data saved successfully.");
+                // Only show the message if saving edits. If just removing it will be visually apparent the change has been made
+                if (formatsToExclude == null)
+                {
+                    MessageBox.Show("Clipboard data saved successfully.");
+                }
+                
                 return true;
             }
             catch (Exception ex)
@@ -1547,42 +1398,6 @@ namespace ClipboardManager
         }
 
 
-
-        private IntPtr CopyMetafilePict(IntPtr hMetafilePict)
-        {
-            IntPtr pMetafilePict = NativeMethods.GlobalLock(hMetafilePict);
-            if (pMetafilePict != IntPtr.Zero)
-            {
-                try
-                {
-                    METAFILEPICT mfp = (METAFILEPICT)Marshal.PtrToStructure(pMetafilePict, typeof(METAFILEPICT));
-                    IntPtr hMetafileCopy = NativeMethods.CopyMetaFile(mfp.hMF, null);
-                    if (hMetafileCopy != IntPtr.Zero)
-                    {
-                        IntPtr hGlobalCopy = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, (UIntPtr)Marshal.SizeOf(typeof(METAFILEPICT)));
-                        if (hGlobalCopy != IntPtr.Zero)
-                        {
-                            IntPtr pGlobalCopy = NativeMethods.GlobalLock(hGlobalCopy);
-                            if (pGlobalCopy != IntPtr.Zero)
-                            {
-                                mfp.hMF = hMetafileCopy;
-                                Marshal.StructureToPtr(mfp, pGlobalCopy, false);
-                                NativeMethods.GlobalUnlock(hGlobalCopy);
-                                return hGlobalCopy;
-                            }
-                            NativeMethods.GlobalFree(hGlobalCopy);
-                        }
-                        NativeMethods.DeleteMetaFile(hMetafileCopy);
-                    }
-                }
-                finally
-                {
-                    NativeMethods.GlobalUnlock(hMetafilePict);
-                }
-            }
-            return IntPtr.Zero;
-        }
-
         private IntPtr CreateEnhMetafileFromRawData(byte[] rawData)
         {
             using (MemoryStream ms = new MemoryStream(rawData))
@@ -1648,10 +1463,9 @@ namespace ClipboardManager
                     return;
                 }
 
-                //LogClipboardContents("Clipboard contents before removal:");
-                if (RemoveClipboardFormat(formatsToExclude: selectedFormatIds))
+                //if (RemoveClipboardFormat(formatsToExclude: selectedFormatIds))
+                if (SaveClipboardData(formatsToExclude: selectedFormatIds))
                 {
-                    //LogClipboardContents("Clipboard contents after removal:");
                     //MessageBox.Show($"Format {formatIdToRemove} removed successfully.");
                 }
                 else
@@ -1903,7 +1717,7 @@ namespace ClipboardManager
 
         private void toolStripButtonSaveEdited_Click(object sender, EventArgs e)
         {
-            SaveClipboardData();
+            SaveClipboardData(formatsToExclude: null);
             RefreshClipboardItems();
             hasPendingChanges = false;
             UpdateEditControlsVisibility();
