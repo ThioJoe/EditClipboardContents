@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using static EditClipboardItems.ClipboardFormats;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
+#pragma warning disable IDE0079 // Disable message about unnecessary suppression
 #pragma warning disable IDE0063 // Disable messages about Using expression simplification
 #pragma warning disable IDE0090 // Disable messages about New expression simplification
 #pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization

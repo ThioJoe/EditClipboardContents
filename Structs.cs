@@ -5,6 +5,15 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
+// Disable IDE warnings that showed up after going from C# 7 to C# 9
+#pragma warning disable IDE0079 // Disable message about unnecessary suppression
+#pragma warning disable IDE1006 // Disable messages about capitalization of control names
+#pragma warning disable IDE0063 // Disable messages about Using expression simplification
+#pragma warning disable IDE0090 // Disable messages about New expression simplification
+#pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
+#pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
+#pragma warning disable IDE0066 // Disable message about switch case expression
+
 namespace EditClipboardItems
 {
     public static class ClipboardFormats
