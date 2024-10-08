@@ -1212,30 +1212,13 @@ namespace ClipboardManager
 
         private bool SaveClipboardData(List<uint> formatsToExclude = null)
         {
-            // -----------------------------------------------------------
-            bool FormatRequiresSpecialCopyHandling(uint format)
-            {
-                switch (format)
-                {
-                    case 2: // CF_BITMAP
-                    case 3: // CF_METAFILEPICT
-                    case 8: // CF_DIB
-                    case 14: // CF_ENHMETAFILE
-                    case 15:
-                    case 17: // CF_DIBV5
-                        return true;
-                    default:
-                        return false;
-                }
-            }
-            // -----------------------------------------------------------
-
             if (!NativeMethods.OpenClipboard(this.Handle))
             {
                 Console.WriteLine("Failed to open clipboard.");
                 MessageBox.Show("Failed to open clipboard.");
                 return false;
             }
+
             try
             {
                 NativeMethods.EmptyClipboard();
@@ -1247,13 +1230,34 @@ namespace ClipboardManager
                     }
 
                     IntPtr hGlobal;
-                    if (FormatRequiresSpecialCopyHandling(item.FormatId))
+
+                    // Special handling for certain filetypes if necessary
+                    switch (item.FormatId)
                     {
-                        hGlobal = HandleSpecialFormat(item);
-                    }
-                    else
-                    {
-                        hGlobal = FormatHandleTranslators.AllocateGeneralHandle_FromRawData(item.RawData);
+                        case 2: // CF_BITMAP
+                            using (MemoryStream ms = new MemoryStream(item.RawData))
+                            using (Bitmap bmp = new Bitmap(ms))
+                            {
+                                hGlobal = FormatHandleTranslators.Bitmap_hBitmapHandle_FromHandle(bmp.GetHbitmap());
+                            }
+                            break;
+                        case 3: // CF_METAFILEPICT
+                            hGlobal = FormatHandleTranslators.MetafilePict_Handle_FromRawData(item.RawData);
+                            break;
+                        case 14: // CF_ENHMETAFILE
+                            hGlobal = FormatHandleTranslators.EnhMetafile_Handle_FromRawData(item.RawData);
+                            break;
+                        case 15: // CF_HDROP
+                            hGlobal = FormatHandleTranslators.CF_HDROP_Handle_FromRawData(item.RawData);
+                            break;
+                        case 8: // CF_DIB
+                        case 17: // CF_DIBV5
+                            hGlobal = FormatHandleTranslators.BitmapDIB_hGlobalHandle_FromHandle(FormatHandleTranslators.AllocateGeneralHandle_FromRawData(item.RawData));
+                            break;
+                        // Default handling for all other formats
+                        default:
+                            hGlobal = FormatHandleTranslators.AllocateGeneralHandle_FromRawData(item.RawData);
+                            break;
                     }
 
                     if (hGlobal != IntPtr.Zero)
@@ -1288,34 +1292,6 @@ namespace ClipboardManager
                 NativeMethods.CloseClipboard();
             }
         }
-
-
-        private IntPtr HandleSpecialFormat(ClipboardItem item)
-        {
-            switch (item.FormatId)
-            {
-                case 2: // CF_BITMAP
-                    using (MemoryStream ms = new MemoryStream(item.RawData))
-                    using (Bitmap bmp = new Bitmap(ms))
-                    {
-                        // 
-                        return FormatHandleTranslators.Bitmap_hBitmapHandle_FromHandle(bmp.GetHbitmap());
-                    }
-                case 3: // CF_METAFILEPICT
-                    return FormatHandleTranslators.MetafilePict_Handle_FromRawData(item.RawData);
-                case 14: // CF_ENHMETAFILE
-                    return FormatHandleTranslators.EnhMetafile_Handle_FromRawData(item.RawData);
-                case 15: // CF_HDROP
-                    return FormatHandleTranslators.CF_HDROP_Handle_FromRawData(item.RawData);
-                case 8: // CF_DIB
-                case 17: // CF_DIBV5
-                    return FormatHandleTranslators.BitmapDIB_hGlobalHandle_FromHandle(FormatHandleTranslators.AllocateGeneralHandle_FromRawData(item.RawData));
-                default:
-                    Console.WriteLine($"Unexpected special format: {item.FormatId}");
-                    return IntPtr.Zero;
-            }
-        }
-
 
         private void toolStripButtonRefresh_Click(object sender, EventArgs e)
         {
