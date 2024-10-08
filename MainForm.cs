@@ -24,7 +24,7 @@ using System.Text.RegularExpressions;
 
 // My classes
 using static EditClipboardItems.ClipboardFormats;
-using static EditClipboardItems.FormatHandlerTranslators;
+using static EditClipboardItems.FormatHandleTranslators;
 using EditClipboardItems;
 
 
@@ -583,12 +583,12 @@ namespace ClipboardManager
                     }
                     else if (format == 3) // CF_METAFILEPICT
                     {
-                        rawData = FormatHandlerTranslators.MetafilePict_RawData_FromHandle(hData);
+                        rawData = FormatHandleTranslators.MetafilePict_RawData_FromHandle(hData);
                         dataSize = (ulong)(rawData?.Length ?? 0);
                     }
                     else if (format == 14) // CF_ENHMETAFILE
                     {
-                        rawData = FormatHandlerTranslators.EnhMetafile_RawData_FromHandle(hData);
+                        rawData = FormatHandleTranslators.EnhMetafile_RawData_FromHandle(hData);
                         dataSize = (ulong)(rawData?.Length ?? 0);
                     }
                     else
@@ -1171,7 +1171,7 @@ namespace ClipboardManager
                     }
                     else
                     {
-                        hGlobal = FormatHandlerTranslators.AllocateGeneralHandle_FromRawData(item.RawData);
+                        hGlobal = FormatHandleTranslators.AllocateGeneralHandle_FromRawData(item.RawData);
                     }
 
                     if (hGlobal != IntPtr.Zero)
@@ -1217,15 +1217,15 @@ namespace ClipboardManager
                     using (Bitmap bmp = new Bitmap(ms))
                     {
                         // 
-                        return FormatHandlerTranslators.Bitmap_hBitmapHandle_FromHandle(bmp.GetHbitmap());
+                        return FormatHandleTranslators.Bitmap_hBitmapHandle_FromHandle(bmp.GetHbitmap());
                     }
                 case 3: // CF_METAFILEPICT
-                    return FormatHandlerTranslators.MetafilePict_Handle_FromRawData(item.RawData);
+                    return FormatHandleTranslators.MetafilePict_Handle_FromRawData(item.RawData);
                 case 14: // CF_ENHMETAFILE
-                    return FormatHandlerTranslators.EnhMetafile_Handle_FromRawData(item.RawData);
+                    return FormatHandleTranslators.EnhMetafile_Handle_FromRawData(item.RawData);
                 case 8: // CF_DIB
                 case 17: // CF_DIBV5
-                    return FormatHandlerTranslators.BitmapDIB_hGlobalHandle_FromHandle(FormatHandlerTranslators.AllocateGeneralHandle_FromRawData(item.RawData));
+                    return FormatHandleTranslators.BitmapDIB_hGlobalHandle_FromHandle(FormatHandleTranslators.AllocateGeneralHandle_FromRawData(item.RawData));
                 default:
                     Console.WriteLine($"Unexpected special format: {item.FormatId}");
                     return IntPtr.Zero;
@@ -1436,7 +1436,7 @@ namespace ClipboardManager
             // If it's a DIBV5 format, convert it to a bitmap
             if (itemToExport.FormatId == 17)
             {
-                Bitmap bitmap = CF_DIBV5ToBitmap(itemToExport.Data);
+                Bitmap bitmap = FormatHandleTranslators.BitmapFile_From_CF_DIBV5_RawData(itemToExport.Data);
 
                 SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
@@ -1447,7 +1447,7 @@ namespace ClipboardManager
             }
             else if (itemToExport.FormatId == 8) // CF_DIB
             {
-                Bitmap bitmap = CF_DIBToBitmap(itemToExport.Data);
+                Bitmap bitmap = FormatHandleTranslators.BitmapFile_From_CF_DIB_RawData(itemToExport.Data);
                 SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
@@ -1594,100 +1594,6 @@ namespace ClipboardManager
         private void menuFile_ExportSelectedAsFile_Click(object sender, EventArgs e)
         {
             toolStripButtonExportSelected_Click(null, null);
-        }
-
-
-        public static Bitmap CF_DIBV5ToBitmap(byte[] data)
-        {
-            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-            try
-            {
-                var bmi = (BITMAPV5HEADER)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(BITMAPV5HEADER));
-
-                int width = Math.Abs(bmi.bV5Width);  // Ensure positive width
-                int height = Math.Abs(bmi.bV5Height); // Ensure positive height
-                PixelFormat pixelFormat;
-
-                switch (bmi.bV5BitCount)
-                {
-                    case 24:
-                        pixelFormat = PixelFormat.Format24bppRgb;
-                        break;
-                    case 32:
-                        pixelFormat = PixelFormat.Format32bppArgb;
-                        break;
-                    default:
-                        throw new NotSupportedException($"Bit depth {bmi.bV5BitCount} is not supported.");
-                }
-
-                int stride = ((width * bmi.bV5BitCount + 31) / 32) * 4;
-                bool isTopDown = bmi.bV5Height < 0;
-
-                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + bmi.bV5Size);
-                if (!isTopDown)
-                {
-                    scan0 = new IntPtr(scan0.ToInt64() + (height - 1) * stride);
-                    stride = -stride;
-                }
-
-                Bitmap bitmap = new Bitmap(width, height, stride, pixelFormat, scan0);
-
-                // Create a new bitmap to return, because the original one is tied to the pinned memory
-                Bitmap result = new Bitmap(bitmap);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in CF_DIBV5ToBitmap: {ex.Message}");
-                throw;
-            }
-            finally
-            {
-                handle.Free();
-            }
-        }
-
-        private static Bitmap CF_DIBToBitmap(byte[] data)
-        {
-            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-            try
-            {
-                var bmi = (BITMAPINFO)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(BITMAPINFO));
-                int width = bmi.bmiHeader.biWidth;
-                int height = Math.Abs(bmi.bmiHeader.biHeight); // Handle both top-down and bottom-up DIBs
-                PixelFormat pixelFormat;
-
-                switch (bmi.bmiHeader.biBitCount)
-                {
-                    case 24:
-                        pixelFormat = PixelFormat.Format24bppRgb;
-                        break;
-                    case 32:
-                        pixelFormat = PixelFormat.Format32bppArgb;
-                        break;
-                    default:
-                        throw new NotSupportedException($"Bit depth {bmi.bmiHeader.biBitCount} is not supported.");
-                }
-
-                int stride = ((width * bmi.bmiHeader.biBitCount + 31) / 32) * 4;
-
-                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPINFOHEADER)));
-                if (bmi.bmiHeader.biHeight > 0) // Bottom-up DIB
-                {
-                    scan0 = new IntPtr(scan0.ToInt64() + (height - 1) * stride);
-                    stride = -stride;
-                }
-
-                Bitmap bitmap = new Bitmap(width, height, stride, pixelFormat, scan0);
-
-                // Create a new bitmap to return, because the original one is tied to the pinned memory
-                Bitmap result = new Bitmap(bitmap);
-                return result;
-            }
-            finally
-            {
-                handle.Free();
-            }
         }
 
         // Updates selected clipboard selectedItem in editedClipboardItems list. Does not update the actual clipboard.
