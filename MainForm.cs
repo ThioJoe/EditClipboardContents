@@ -689,17 +689,60 @@ namespace ClipboardManager
                         break;
 
                     case 15: // CF_HDROP
-                        //Console.WriteLine("Processing CF_HDROP");
-                        uint fileCount = NativeMethods.DragQueryFile(item.Handle, 0xFFFFFFFF, null, 0);
-                        StringBuilder fileNames = new StringBuilder();
-                        for (uint i = 0; i < fileCount; i++)
                         {
-                            StringBuilder fileName = new StringBuilder(260);
-                            NativeMethods.DragQueryFile(item.Handle, i, fileName, (uint)fileName.Capacity);
-                            fileNames.AppendLine(fileName.ToString());
+                            // Process CF_HDROP using item.RawData
+                            // Pin the raw data
+                            GCHandle handle = GCHandle.Alloc(item.RawData, GCHandleType.Pinned);
+                            try
+                            {
+                                IntPtr pData = handle.AddrOfPinnedObject();
+
+                                // Read the DROPFILES structure
+                                DROPFILES dropFiles = Marshal.PtrToStructure<DROPFILES>(pData);
+
+                                // Determine if file names are Unicode
+                                bool isUnicode = dropFiles.fWide != 0;
+                                Encoding encodingType;
+                                if (isUnicode)
+                                {
+                                    encodingType = Encoding.Unicode;
+                                }
+                                else
+                                {
+                                    encodingType = Encoding.Default;
+                                }
+
+                                // Get the offset to the file list
+                                int fileListOffset = (int)dropFiles.pFiles;
+
+                                // Read the file names from item.RawData starting at fileListOffset
+                                List<string> fileNames = new List<string>();
+                                if (fileListOffset < item.RawData.Length)
+                                {
+                                    int bytesCount = item.RawData.Length - fileListOffset;
+                                    byte[] fileListBytes = new byte[bytesCount];
+                                    Array.Copy(item.RawData, fileListOffset, fileListBytes, 0, bytesCount);
+
+
+                                // Convert to string
+                                string fileListString = encodingType.GetString(fileListBytes);
+
+                                // Split on null character
+                                string[] files = fileListString.Split(new char[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
+                                fileNames.AddRange(files);
+
+                                }
+
+                                // Add the file count and file paths to dataInfoList
+                                dataInfoList.Add($"File Drop: {fileNames.Count} file(s)");
+                                dataInfoList.AddRange(fileNames);
+                            }
+                            finally
+                            {
+                                handle.Free();
+                            }
+                            break;
                         }
-                        dataInfoList.Add($"File Drop: {fileCount} file(s)");
-                        break;
 
                     case 16: // CF_LOCALE
                         string dataInfo = "Invalid CF_LOCALE data"; // Default to invalid data
