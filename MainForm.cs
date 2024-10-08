@@ -178,7 +178,7 @@ namespace ClipboardManager
                     column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
                 }
 
-                if (column.Name == "DataInfo" && (string.IsNullOrEmpty(dataInfo[0]) || dataInfoString == "N/A")) // Check for both N/A or null in case we add more reasons to set N/A later
+                if (column.Name == "DataInfo" && (string.IsNullOrEmpty(dataInfo[0]) || dataInfoString == "N/A" || dataInfoString.ToLower() == "[null]")) // Check for both N/A or null in case we add more reasons to set N/A later
                 {
                     // Make this cell in this column gray text
                     dataGridViewClipboard.Rows[dataGridViewClipboard.Rows.Count - 1].Cells[column.Name].Style.ForeColor = Color.Gray;
@@ -710,7 +710,15 @@ namespace ClipboardManager
 
                     default:
                         //Console.WriteLine($"Processing unknown format: {selectedItem.FormatId}");
-                        dataInfoList.Add("");
+                        if (item.RawData == null)
+                        {
+                            dataInfoList.Add("[null]");
+                        }
+                        else
+                        {
+                            dataInfoList.Add("");
+                        }
+                        
                         break;
                 }
 
