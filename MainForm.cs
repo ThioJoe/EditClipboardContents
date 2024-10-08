@@ -628,14 +628,21 @@ namespace ClipboardManager
                 switch (item.FormatId)
                 {
                     case 1: // CF_TEXT
-                        //Console.WriteLine("Processing CF_TEXT");
-                        processedData = ProcessCFText(item.RawData);
+                        // Use Windows-1252 encoding (commonly referred to as ANSI in Windows)
+                        Encoding ansiEncoding = Encoding.GetEncoding(1252);
+
+                        // Convert bytes to string, stopping at the first null character
+                        string text = "";
+                        for (int i = 0; i < item.RawData.Length; i++)
+                        {
+                            if (item.RawData[i] == 0) break; // Stop at null terminator
+                            text += (char)item.RawData[i];
+                        }
+                        processedData = ansiEncoding.GetBytes(text);
+                        //-----------------------------------------
                         string ansiText = Encoding.Default.GetString(processedData);
-                        int asciiTextLength = ansiText.Length;
                         dataInfoList.Add($"Encoding: ANSI");
-                        dataInfoList.Add($"Chars: {asciiTextLength}");
-                        //dataInfo = $"Encoding: ASCII, Chars: {asciiTextLength}";
-                        
+                        dataInfoList.Add($"Chars: {ansiText.Length}");
                         break;
 
                     case 13: // CF_UNICODETEXT
@@ -669,7 +676,6 @@ namespace ClipboardManager
                         }
                         break;
 
-
                     case 8: // CF_DIB
                     case 17: // CF_DIBV5
                         //Console.WriteLine($"Processing bitmap format: {(selectedItem.FormatId == 8 ? "CF_DIB" : "CF_DIBV5")}");
@@ -691,11 +697,23 @@ namespace ClipboardManager
                         break;
 
                     case 16: // CF_LOCALE
-                        //Console.WriteLine("Processing CF_LOCALE");
-                        dataInfoList.Add(ProcessCFLocale(item.RawData));
-                        break;
+                        string dataInfo = "Invalid CF_LOCALE data"; // Default to invalid data
+                        if (item.RawData.Length >= 4)
+                        {
+                            int lcid = BitConverter.ToInt32(item.RawData, 0);
+                            try
+                            {
+                                CultureInfo culture = new CultureInfo(lcid);
+                                dataInfo = $"Locale: {culture.Name} (LCID: {lcid})";
+                            }
+                            catch (CultureNotFoundException)
+                            {
+                                dataInfo = $"Unknown Locale (LCID: {lcid})";
+                            }
+                        }
+                        dataInfoList.Add(dataInfo);
 
-                    // Add more cases for other formats as needed...
+                        break;
 
                     default:
                         //Console.WriteLine($"Processing unknown format: {selectedItem.FormatId}");
@@ -768,46 +786,6 @@ namespace ClipboardManager
                     }
                 }
             }
-        }
-        
-        // Convert to ASCII Bytes
-        private byte[] ProcessCFText(byte[] data)
-        {
-            // Use Windows-1252 encoding (commonly referred to as ANSI in Windows)
-            Encoding ansiEncoding = Encoding.GetEncoding(1252);
-
-            // Convert bytes to string, stopping at the first null character
-            string text = "";
-            for (int i = 0; i < data.Length; i++)
-            {
-                if (data[i] == 0) break; // Stop at null terminator
-                text += (char)data[i];
-            }
-
-            return ansiEncoding.GetBytes(text);
-        }
-
-        private string ProcessCFLocale(byte[] rawBytes)
-        {
-            string dataInfo;
-            if (rawBytes.Length >= 4)
-            {
-                int lcid = BitConverter.ToInt32(rawBytes, 0);
-                try
-                {
-                    CultureInfo culture = new CultureInfo(lcid);
-                    dataInfo = $"Locale: {culture.Name} (LCID: {lcid})";
-                }
-                catch (CultureNotFoundException)
-                {
-                    dataInfo = $"Unknown Locale (LCID: {lcid})";
-                }
-            }
-            else
-            {
-                dataInfo = "Invalid CF_LOCALE data";
-            }
-            return dataInfo;
         }
 
         private string GetClipboardFormatName(uint format)
