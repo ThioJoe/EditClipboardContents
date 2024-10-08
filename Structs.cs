@@ -130,6 +130,25 @@ namespace EditClipboardItems
             public int fWide;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        public struct PALETTEENTRY
+        {
+            public byte peRed;
+            public byte peGreen;
+            public byte peBlue;
+            public byte peFlags;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct LOGPALETTE
+        {
+            public ushort palVersion;
+            public ushort palNumEntries;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
+            public PALETTEENTRY[] palPalEntry;
+        }
+
+
         // Dictionary containing names of structs as keys and links to microsoft articles about them
         public static Dictionary<string, string> StructLinks = new Dictionary<string, string>
         {
@@ -141,7 +160,9 @@ namespace EditClipboardItems
             { "METAFILEPICT", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-metafilepict" },
             { "CIEXYZ", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-ciexyz" },
             { "CIEXYZTRIPLE", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-ciexyztriple" },
-            { "DROPFILES", "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-dropfiles" }
+            { "DROPFILES", "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-dropfiles" },
+            { "PALETTEENTRY", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-paletteentry" },
+            { "LOGPALETTE", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-logpalette" }
         };
     }
 }
