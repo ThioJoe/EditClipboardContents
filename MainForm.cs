@@ -851,9 +851,9 @@ namespace ClipboardManager
         }
 
 
-        private bool RemoveClipboardFormat(uint formatToRemove)
+        private bool RemoveClipboardFormat(List<uint> formatsToExclude = null)
         {
-            //Console.WriteLine($"Attempting to remove format: {formatToRemove}");
+            //Console.WriteLine($"Attempting to remove format: {formatsToExclude}");
 
             if (!NativeMethods.OpenClipboard(this.Handle))
             {
@@ -869,7 +869,7 @@ namespace ClipboardManager
                 while ((format = NativeMethods.EnumClipboardFormats(format)) != 0)
                 {
                     //Console.WriteLine($"Processing format: {format}");
-                    if (format != formatToRemove)
+                    if (formatsToExclude == null || !formatsToExclude.Contains(format))
                     {
                         IntPtr hData = NativeMethods.GetClipboardData(format);
                         if (hData != IntPtr.Zero)
@@ -1457,25 +1457,35 @@ namespace ClipboardManager
         {
             if (dataGridViewClipboard.SelectedRows.Count > 0)
             {
-                DataGridViewRow selectedRow = dataGridViewClipboard.SelectedRows[0];
-                if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatIdToRemove))
+                // Make a list of selected row format IDs
+                List<uint> selectedFormatIds = new List<uint>();
+                foreach (DataGridViewRow selectedRow in dataGridViewClipboard.SelectedRows)
                 {
-                    //LogClipboardContents("Clipboard contents before removal:");
-                    if (RemoveClipboardFormat(formatIdToRemove))
+                    if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatIdToRemove))
                     {
-                        //LogClipboardContents("Clipboard contents after removal:");
-                        //MessageBox.Show($"Format {formatIdToRemove} removed successfully.");
+                        selectedFormatIds.Add(formatIdToRemove);
                     }
-                    else
-                    {
-                        MessageBox.Show($"Failed to remove format {formatIdToRemove}.");
-                    }
-                    RefreshClipboardItems();
+                }
+
+                if (selectedFormatIds.Count == 0)
+                {
+                    MessageBox.Show("No valid format IDs selected.");
+                    return;
+                }
+
+                //LogClipboardContents("Clipboard contents before removal:");
+                if (RemoveClipboardFormat(formatsToExclude: selectedFormatIds))
+                {
+                    //LogClipboardContents("Clipboard contents after removal:");
+                    //MessageBox.Show($"Format {formatIdToRemove} removed successfully.");
                 }
                 else
                 {
-                    MessageBox.Show("Unable to determine the format ID of the selected item.");
+                    MessageBox.Show($"Failed to remove format {selectedFormatIds}.");
                 }
+                RefreshClipboardItems();
+
+
             }
         }
 
