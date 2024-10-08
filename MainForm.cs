@@ -347,7 +347,6 @@ namespace ClipboardManager
             {
                 // Invalid UTF-16, utf16Result remains empty
                 invalidUTF16 = true;
-
             }
 
             //if (invalidUTF8 && invalidUTF16)
@@ -545,6 +544,10 @@ namespace ClipboardManager
             {
                 CopyClipboardData();
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error while copying clipboard: " + ex);
+            }
             finally
             {
                 //Console.WriteLine("Closing clipboard");
@@ -567,6 +570,7 @@ namespace ClipboardManager
         private void CopyClipboardData()
         {
             clipboardItems.Clear();
+            editedClipboardItems.Clear();
 
             uint format = 0;
             while ((format = NativeMethods.EnumClipboardFormats(format)) != 0)
@@ -678,21 +682,23 @@ namespace ClipboardManager
 
                     case 2: // CF_BITMAP
                         //Console.WriteLine("Processing CF_BITMAP");
-                        using (Bitmap bmp = Bitmap.FromHbitmap(item.Handle))
+                        if (item.RawData != null && item.RawData.Length > 0)
                         {
-                            using (MemoryStream ms = new MemoryStream())
+                            using (MemoryStream ms = new MemoryStream(item.RawData))
                             {
-                                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-                                processedData = ms.ToArray();
-                                item.RawData = processedData;
-                                item.DataSize = (ulong)processedData.Length;
-
-                                dataInfoList = new List<string>
+                                using (Bitmap bmp = new Bitmap(ms))
                                 {
-                                    $"Size: {bmp.Width}x{bmp.Height}",
-                                    $"Format: {bmp.PixelFormat}"
-                                };
+                                    dataInfoList = new List<string>
+                            {
+                                $"Size: {bmp.Width}x{bmp.Height}",
+                                $"Format: {bmp.PixelFormat}"
+                            };
+                                }
                             }
+                        }
+                        else
+                        {
+                            dataInfoList.Add("Error: Bitmap data not available");
                         }
                         break;
 
@@ -1356,31 +1362,7 @@ namespace ClipboardManager
         {
             try
             {
-                // First, process the edited hex string of the actively selected clipboard selectedItem
-                foreach (var item in editedClipboardItems)
-                {
-                    // Check if selectedItem matches currently selected clipboard selectedItem
-                    if (item.FormatId != GetSelectedClipboardItemObject().FormatId)
-                    {
-                        continue;
-                    }
-                    // Check if the selectedItem is in hex mode
-                    if (dropdownContentsViewMode.SelectedIndex != 2)
-                    {
-                        MessageBox.Show("To update the clipboard, you must be in hex edit mode for the selected item.");
-                        return;
-                    }
-
-                    string hexString = richTextBoxContents.Text.Replace(" ", "");
-                    byte[] rawData = Enumerable.Range(0, hexString.Length)
-                        .Where(x => x % 2 == 0)
-                        .Select(x => Convert.ToByte(hexString.Substring(x, 2), 16))
-                        .ToArray();
-                    item.RawData = rawData;
-                    item.DataSize = (ulong)rawData.Length;
-                }
-
-                // Now, save the processed data to the clipboard
+                // Saved edited clipboard data to the clipboard
                 if (NativeMethods.OpenClipboard(this.Handle))
                 {
                     NativeMethods.EmptyClipboard();
