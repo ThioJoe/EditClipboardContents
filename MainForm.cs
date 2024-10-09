@@ -27,6 +27,7 @@ using System.Text.RegularExpressions;
 using static EditClipboardItems.ClipboardFormats;
 using static EditClipboardItems.FormatHandleTranslators;
 using EditClipboardItems;
+using System.Security.Cryptography;
 
 
 namespace ClipboardManager
@@ -148,7 +149,7 @@ namespace ClipboardManager
         {
             // Preprocess certain info
             string textPreview = TryParseText(rawData, maxLength: 200, prefixEncodingType: false, debugging_formatName: formatName, debugging_callFrom: "Text Preview / UpdateClipboardItemsGridView");
-            
+
             // The first item will have selected important info, to ensure it's not too long. The rest will show in data box in object/struct view mode
             string dataInfoString = dataInfo[0];
 
@@ -158,7 +159,7 @@ namespace ClipboardManager
             }
 
             // Manually handle certain known formats
-            if (formatName == "CF_LOCALE") 
+            if (formatName == "CF_LOCALE")
             {
                 textPreview = "";
             }
@@ -403,6 +404,8 @@ namespace ClipboardManager
             int retryDelay = 10;  // Delay in milliseconds
             bool clipboardOpened = false;
 
+            //TestingWinFormsClipboard(); // Debugging
+
             for (int i = 0; i < retryCount; i++)
             {
                 if (NativeMethods.OpenClipboard(this.Handle))
@@ -440,6 +443,37 @@ namespace ClipboardManager
 
             //Console.WriteLine("RefreshClipboardItems completed");
         }
+
+        //private void TestingWinFormsClipboard()
+        //{
+        //    IDataObject testData = null;
+        //    try
+        //    {
+        //        testData = Clipboard.GetDataObject();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine($"Error getting data object: {ex.Message}");
+        //    }
+        //    Console.WriteLine("Here");
+
+        //    string[] formatTypes = testData.GetFormats();
+        //    List<byte[]> testBytes = new List<byte[]>();
+
+        //    var testFormat1 =testData.GetData("CF_PALETTE", autoConvert:true);
+
+        //    // Creates a new data object using a string and the Text format.
+        //    string myString = "Hello World!";
+        //    DataObject myDataObject = new DataObject(DataFormats.Text, myString);
+
+        //    // Checks whether the data is present in the Text format and displays the result.
+        //    //if (myDataObject.GetDataPresent(DataFormats.Text))
+        //        //MessageBox.Show("The stored data is in the Text format.", "Test Result");
+        //    //else
+        //        //MessageBox.Show("The stored data is not in the Text format.", "Test Result");
+
+        //    Console.WriteLine("Hello");
+        //}
 
         private void CopyClipboardData()
         {
@@ -520,6 +554,7 @@ namespace ClipboardManager
                     {
                         errorString = $"[Error {error}]";
                     }
+                    
                 }
 
                 try
@@ -824,14 +859,22 @@ namespace ClipboardManager
 
                 // Determine handle type
                 string formatType = "";
-                // If it's below 0xC0000 it's a standard format type. If it's between 0xC0000 and 0xFFFF it's a registered type.
-                if (item.FormatId < 0xC000)
+                // If it's below 0xC0000 it's a standard format type. See here for other specific ranges: https://learn.microsoft.com/en-us/windows/win32/dataxchg/standard-clipboard-formats
+                if (item.FormatId >= 0x0200 && item.FormatId <= 0x02FF) // 512 - 767
                 {
-                    formatType = "Standard";
+                    formatType = "Private";
                 }
-                else if (item.FormatId >= 0xC000 && item.FormatId <= 0xFFFF)
+                else if (item.FormatId >= 0x0300 && item.FormatId <= 0x03FF) // 768 - 1023
+                {
+                    formatType = "Global GDI Object";
+                }
+                else if (item.FormatId >= 0xC000 && item.FormatId <= 0xFFFF) // 49152 - 65535
                 {
                     formatType = "Registered";
+                }
+                else if (item.FormatId < 0xC000) // Otherwise under 49152
+                {
+                    formatType = "Standard";
                 }
                 else
                 {
