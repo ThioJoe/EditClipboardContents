@@ -178,10 +178,17 @@ namespace ClipboardManager
                     column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
                 }
 
+                // Set text color to gray for empty data info
                 if (column.Name == "DataInfo" && (string.IsNullOrEmpty(dataInfo[0]) || dataInfoString == "N/A" || dataInfoString.ToLower() == "[null]")) // Check for both N/A or null in case we add more reasons to set N/A later
                 {
                     // Make this cell in this column gray text
                     dataGridViewClipboard.Rows[dataGridViewClipboard.Rows.Count - 1].Cells[column.Name].Style.ForeColor = Color.Gray;
+                }
+                // Set text color to dark red for errors
+                if (column.Name == "DataInfo" && dataInfoString.Contains("Error"))
+                {
+                    // Make this cell in this column dark red text
+                    dataGridViewClipboard.Rows[dataGridViewClipboard.Rows.Count - 1].Cells[column.Name].Style.ForeColor = Color.DarkRed;
                 }
             }
 
@@ -447,15 +454,16 @@ namespace ClipboardManager
                 format = NativeMethods.EnumClipboardFormats(format);
                 if (format == 0)
                 {
-                    int error = Marshal.GetLastWin32Error();
-                    if (error == 0) // ERROR_SUCCESS
+                    int enumError = Marshal.GetLastWin32Error();
+                    if (enumError == 0) // ERROR_SUCCESS -- No more formats to enumerate
                     {
                         // End of enumeration
                         break;
                     }
                     else
                     {
-                        Console.WriteLine($"EnumClipboardFormats failed. Error code: {error}");
+                        Console.WriteLine($"EnumClipboardFormats failed. Error code: {enumError}");
+                        MessageBox.Show($"An error occurred trying to retrieve the list of clipboard items:\n Error Code: {enumError}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         break;
                     }
                 }
@@ -467,12 +475,51 @@ namespace ClipboardManager
                 string formatName = GetClipboardFormatName(format);
                 ulong dataSize = 0;
                 byte[] rawData = null;
+                int? error = null;
+                string errorString = null;
+                string diagnosisReport = null;
+
                 //Console.WriteLine($"Checking Format {currentCount}: {formatName} ({format})"); // Debugging
 
                 IntPtr hData = NativeMethods.GetClipboardData(format);
                 if (hData == IntPtr.Zero)
                 {
-                    Console.WriteLine($"GetClipboardData returned null for format {format}");
+                    error = Marshal.GetLastWin32Error();
+                    string errorMessage = GetWin32ErrorMessage(error);
+
+                    Console.WriteLine($"GetClipboardData returned null for format {format}. Error: {error} | Message: {errorMessage}");
+
+                    if (!string.IsNullOrEmpty(formatName))
+                    {
+                        diagnosisReport = (DiagnoseClipboardState(format, formatName));
+                    }
+                    else
+                    {
+                        diagnosisReport = DiagnoseClipboardState(format);
+                    }
+
+                    if (!string.IsNullOrEmpty(diagnosisReport))
+                    {
+                        //Console.WriteLine(diagnosisReport);
+                    }
+
+
+                    if (error == null)
+                    {
+                        errorString = "[Unknown Error]";
+                    }
+                    else if (error == 5)
+                    {
+                        errorString = "[Error : Access Denied]";
+                    }
+                    else if (error == 0)
+                    {
+                        errorString = null;
+                    }
+                    else
+                    {
+                        errorString = $"[Error {error}]";
+                    }
                 }
 
                 try
@@ -546,7 +593,9 @@ namespace ClipboardManager
                     Handle = hData,
                     DataSize = dataSize,
                     RawData = rawData,
-                    Data = rawData
+                    Data = rawData,
+                    ErrorReason = errorString,
+                    ErrorDiagnosisReport = diagnosisReport
                 };
                 clipboardItems.Add(item);
             }
@@ -555,6 +604,41 @@ namespace ClipboardManager
             {
                 Console.WriteLine("Warning: Not all reported formats were enumerated.");
             }
+        }
+
+        public static string GetWin32ErrorMessage(int? inputError)
+        {
+
+            int errorCode;
+            if (inputError == null)
+            {
+                return "[Unknown Error]";
+            }
+            else
+            {
+                errorCode = (int)inputError;
+            }
+
+            const int FORMAT_MESSAGE_FROM_SYSTEM = 0x1000;
+            const int FORMAT_MESSAGE_IGNORE_INSERTS = 0x200;
+
+            StringBuilder sb = new StringBuilder(256);
+            int length = NativeMethods.FormatMessage(
+                FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                IntPtr.Zero,
+                errorCode,
+                0, // Use system's current language
+                sb,
+                sb.Capacity,
+                IntPtr.Zero
+            );
+
+            if (length == 0)
+            {
+                return $"Unknown error (0x{errorCode:X})";
+            }
+
+            return sb.ToString().Trim();
         }
 
         private void ProcessClipboardData()
@@ -567,159 +651,172 @@ namespace ClipboardManager
 
                 // Data info list contains metadata about the data. First item will show in the data info column, all will show in the text box in object/struct view mode
                 List<string> dataInfoList = new List<string>();
-
-                switch (item.FormatId)
+                if (item.RawData != null && item.RawData.Length > 0)
                 {
-                    case 1: // CF_TEXT
-                        // Use Windows-1252 encoding (commonly referred to as ANSI in Windows)
-                        Encoding ansiEncoding = Encoding.GetEncoding(1252);
+                    switch (item.FormatId)
+                    {
+                        case 1: // CF_TEXT
+                            // Use Windows-1252 encoding (commonly referred to as ANSI in Windows)
+                            Encoding ansiEncoding = Encoding.GetEncoding(1252);
 
-                        // Convert bytes to string, stopping at the first null character
-                        string text = "";
-                        for (int i = 0; i < item.RawData.Length; i++)
-                        {
-                            if (item.RawData[i] == 0) break; // Stop at null terminator
-                            text += (char)item.RawData[i];
-                        }
-                        processedData = ansiEncoding.GetBytes(text);
-                        //-----------------------------------------
-                        string ansiText = Encoding.Default.GetString(processedData);
-                        dataInfoList.Add($"{ansiText.Length} Chars (ANSI)");
-                        dataInfoList.Add($"Encoding: ANSI");
-                        dataInfoList.Add($"Chars: {ansiText.Length}");
-                        break;
-
-                    case 13: // CF_UNICODETEXT
-                        //Console.WriteLine("Processing CF_UNICODETEXT");
-                        string unicodeText = Encoding.Unicode.GetString(item.RawData);
-                        int unicodeTextLength = unicodeText.Length;
-                        dataInfoList.Add($"{unicodeTextLength} Chars (Unicode)");
-                        dataInfoList.Add($"Encoding: Unicode (UTF-16)");
-                        dataInfoList.Add($"Character Count: {unicodeTextLength}");
-                        dataInfoList.Add($"Byte Count: {item.DataSize}");
-
-                        processedData = Encoding.Unicode.GetBytes(unicodeText);
-                        break;
-
-                    case 2: // CF_BITMAP
-                        //Console.WriteLine("Processing CF_BITMAP");
-                        if (item.RawData != null && item.RawData.Length > 0)
-                        {
-                            using (MemoryStream ms = new MemoryStream(item.RawData))
+                            // Convert bytes to string, stopping at the first null character
+                            string text = "";
+                            for (int i = 0; i < item.RawData.Length; i++)
                             {
-                                using (Bitmap bmp = new Bitmap(ms))
+                                if (item.RawData[i] == 0) break; // Stop at null terminator
+                                text += (char)item.RawData[i];
+                            }
+                            processedData = ansiEncoding.GetBytes(text);
+                            //-----------------------------------------
+                            string ansiText = Encoding.Default.GetString(processedData);
+                            dataInfoList.Add($"{ansiText.Length} Chars (ANSI)");
+                            dataInfoList.Add($"Encoding: ANSI");
+                            dataInfoList.Add($"Chars: {ansiText.Length}");
+                            break;
+
+                        case 13: // CF_UNICODETEXT
+                            //Console.WriteLine("Processing CF_UNICODETEXT");
+                            string unicodeText = Encoding.Unicode.GetString(item.RawData);
+                            int unicodeTextLength = unicodeText.Length;
+                            dataInfoList.Add($"{unicodeTextLength} Chars (Unicode)");
+                            dataInfoList.Add($"Encoding: Unicode (UTF-16)");
+                            dataInfoList.Add($"Character Count: {unicodeTextLength}");
+                            dataInfoList.Add($"Byte Count: {item.DataSize}");
+
+                            processedData = Encoding.Unicode.GetBytes(unicodeText);
+                            break;
+
+                        case 2: // CF_BITMAP
+                            //Console.WriteLine("Processing CF_BITMAP");
+                            if (item.RawData != null && item.RawData.Length > 0)
+                            {
+                                using (MemoryStream ms = new MemoryStream(item.RawData))
                                 {
-                                    // Setting the contents of the data info list explicitly instead of using Add. It could be done the other way too.
-                                    dataInfoList = new List<string>
+                                    using (Bitmap bmp = new Bitmap(ms))
                                     {
-                                        $"{bmp.Width}x{bmp.Height}, {bmp.PixelFormat}",
-                                        $"Size: {bmp.Width}x{bmp.Height}",
-                                        $"Format: {bmp.PixelFormat}"
-                                    };
+                                        // Setting the contents of the data info list explicitly instead of using Add. It could be done the other way too.
+                                        dataInfoList = new List<string>
+                                        {
+                                            $"{bmp.Width}x{bmp.Height}, {bmp.PixelFormat}",
+                                            $"Size: {bmp.Width}x{bmp.Height}",
+                                            $"Format: {bmp.PixelFormat}"
+                                        };
+                                    }
                                 }
                             }
-                        }
-                        else
-                        {
-                            dataInfoList.Add("Error: Bitmap data not available");
-                        }
-                        break;
-
-                    case 8: // CF_DIB
-                    case 17: // CF_DIBV5
-                        //Console.WriteLine($"Processing bitmap format: {(selectedItem.FormatId == 8 ? "CF_DIB" : "CF_DIBV5")}");
-                        dataInfoList.Add($"{item.FormatName}, {item.RawData.Length} bytes");
-                        dataInfoList.Add($"Format: {item.FormatName}");
-                        dataInfoList.Add($"Size: {item.DataSize} bytes");
-                        break;
-
-                    case 15: // CF_HDROP
-                        {
-                            // Process CF_HDROP using item.RawData
-                            // Pin the raw data
-                            GCHandle handle = GCHandle.Alloc(item.RawData, GCHandleType.Pinned);
-                            try
+                            else
                             {
-                                IntPtr pData = handle.AddrOfPinnedObject();
-
-                                // Read the DROPFILES structure
-                                DROPFILES dropFiles = Marshal.PtrToStructure<DROPFILES>(pData);
-
-                                // Determine if file names are Unicode
-                                bool isUnicode = dropFiles.fWide != 0;
-                                Encoding encodingType;
-                                if (isUnicode)
-                                {
-                                    encodingType = Encoding.Unicode;
-                                }
-                                else
-                                {
-                                    encodingType = Encoding.Default;
-                                }
-
-                                // Get the offset to the file list
-                                int fileListOffset = (int)dropFiles.pFiles;
-
-                                // Read the file names from item.RawData starting at fileListOffset
-                                List<string> fileNames = new List<string>();
-                                if (fileListOffset < item.RawData.Length)
-                                {
-                                    int bytesCount = item.RawData.Length - fileListOffset;
-                                    byte[] fileListBytes = new byte[bytesCount];
-                                    Array.Copy(item.RawData, fileListOffset, fileListBytes, 0, bytesCount);
-
-
-                                // Convert to string
-                                string fileListString = encodingType.GetString(fileListBytes);
-
-                                // Split on null character
-                                string[] files = fileListString.Split(new char[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
-                                fileNames.AddRange(files);
-
-                                }
-
-                                // Add the file count and file paths to dataInfoList
-                                dataInfoList.Add($"File Drop: {fileNames.Count} file(s)");
-                                dataInfoList.AddRange(fileNames);
-                            }
-                            finally
-                            {
-                                handle.Free();
+                                dataInfoList.Add("Error: Bitmap data not available");
                             }
                             break;
-                        }
 
-                    case 16: // CF_LOCALE
-                        string dataInfo = "Invalid CF_LOCALE data"; // Default to invalid data
-                        if (item.RawData.Length >= 4)
-                        {
-                            int lcid = BitConverter.ToInt32(item.RawData, 0);
-                            try
+                        case 8: // CF_DIB
+                        case 17: // CF_DIBV5
+                            //Console.WriteLine($"Processing bitmap format: {(selectedItem.FormatId == 8 ? "CF_DIB" : "CF_DIBV5")}");
+                            dataInfoList.Add($"{item.FormatName}, {item.RawData.Length} bytes");
+                            dataInfoList.Add($"Format: {item.FormatName}");
+                            dataInfoList.Add($"Size: {item.DataSize} bytes");
+                            break;
+
+                        case 15: // CF_HDROP
                             {
-                                CultureInfo culture = new CultureInfo(lcid);
-                                dataInfo = $"Locale: {culture.Name} (LCID: {lcid})";
+                                // Process CF_HDROP using item.RawData
+                                // Pin the raw data
+                                GCHandle handle = GCHandle.Alloc(item.RawData, GCHandleType.Pinned);
+                                try
+                                {
+                                    IntPtr pData = handle.AddrOfPinnedObject();
+
+                                    // Read the DROPFILES structure
+                                    DROPFILES dropFiles = Marshal.PtrToStructure<DROPFILES>(pData);
+
+                                    // Determine if file names are Unicode
+                                    bool isUnicode = dropFiles.fWide != 0;
+                                    Encoding encodingType;
+                                    if (isUnicode)
+                                    {
+                                        encodingType = Encoding.Unicode;
+                                    }
+                                    else
+                                    {
+                                        encodingType = Encoding.Default;
+                                    }
+
+                                    // Get the offset to the file list
+                                    int fileListOffset = (int)dropFiles.pFiles;
+
+                                    // Read the file names from item.RawData starting at fileListOffset
+                                    List<string> fileNames = new List<string>();
+                                    if (fileListOffset < item.RawData.Length)
+                                    {
+                                        int bytesCount = item.RawData.Length - fileListOffset;
+                                        byte[] fileListBytes = new byte[bytesCount];
+                                        Array.Copy(item.RawData, fileListOffset, fileListBytes, 0, bytesCount);
+
+
+                                        // Convert to string
+                                        string fileListString = encodingType.GetString(fileListBytes);
+
+                                        // Split on null character
+                                        string[] files = fileListString.Split(new char[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
+                                        fileNames.AddRange(files);
+
+                                    }
+
+                                    // Add the file count and file paths to dataInfoList
+                                    dataInfoList.Add($"File Drop: {fileNames.Count} file(s)");
+                                    dataInfoList.AddRange(fileNames);
+                                }
+                                finally
+                                {
+                                    handle.Free();
+                                }
+                                break;
                             }
-                            catch (CultureNotFoundException)
+
+                        case 16: // CF_LOCALE
+                            string dataInfo = "Invalid CF_LOCALE data"; // Default to invalid data
+                            if (item.RawData.Length >= 4)
                             {
-                                dataInfo = $"Unknown Locale (LCID: {lcid})";
+                                int lcid = BitConverter.ToInt32(item.RawData, 0);
+                                try
+                                {
+                                    CultureInfo culture = new CultureInfo(lcid);
+                                    dataInfo = $"Locale: {culture.Name} (LCID: {lcid})";
+                                }
+                                catch (CultureNotFoundException)
+                                {
+                                    dataInfo = $"Unknown Locale (LCID: {lcid})";
+                                }
                             }
-                        }
-                        dataInfoList.Add(dataInfo);
+                            dataInfoList.Add(dataInfo);
 
-                        break;
+                            break;
 
-                    default:
-                        //Console.WriteLine($"Processing unknown format: {selectedItem.FormatId}");
-                        if (item.RawData == null)
-                        {
-                            dataInfoList.Add("[null]");
-                        }
-                        else
-                        {
-                            dataInfoList.Add("");
-                        }
-                        
-                        break;
+                        default:
+                            if (item.RawData == null)
+                            {
+                                dataInfoList.Add("[null]");
+                            }
+                            else
+                            {
+                                dataInfoList.Add("");
+                            }
+                            break;
+                    } // End switch (item.FormatId)
+                }
+                // If the data is null or empty
+                else if (item.RawData == null && item.ErrorReason == null)
+                {
+                    dataInfoList.Add("[null]");
+                }
+                else if (item.RawData != null && item.RawData.Length == 0 && item.ErrorReason == null)
+                {
+                    dataInfoList.Add("[Empty]");
+                }
+                else if (item.RawData == null || item.ErrorReason != null) // Or error message
+                {
+                    dataInfoList.Add(item.ErrorReason);
                 }
 
                 item.Data = processedData; // Update the processed data in the selectedItem
@@ -751,7 +848,153 @@ namespace ClipboardManager
                 UpdateClipboardItemsGridView(formatName: item.FormatName, formatID: item.FormatId.ToString(), handleType: formatType, dataSize: item.DataSize.ToString(), dataInfo: item.DataInfoList, rawData: item.RawData);
             }
         }
-      
+
+        public static string DiagnoseClipboardState(uint format, string formatName = "")
+        {
+            StringBuilder diagnosis = new StringBuilder();
+            int currentError = 0;
+            NativeMethods.SetLastErrorEx(0, 0); // Clear last error
+
+            diagnosis.AppendLine("------------------------------------------------------");
+
+            if (!string.IsNullOrEmpty(formatName))
+            {
+                diagnosis.AppendLine($"Diagnosing clipboard state for format: {formatName} ({format})");
+            }
+            else
+            {
+                diagnosis.AppendLine($"Diagnosing clipboard state for format: {format}");
+            }
+
+            // Check if the format is available
+            bool isFormatAvailable = NativeMethods.IsClipboardFormatAvailable(format);
+            diagnosis.AppendLine($"Is format available: {isFormatAvailable}");
+
+            // Clipboard should already be opened by the caller
+
+            // Set alias for NativeMethods.FormatMessage
+            string ErrMsg(int errorCode)
+            {
+                return GetWin32ErrorMessage(errorCode);
+            }
+
+            try
+            {
+                // Get clipboard owner
+                IntPtr hOwner = NativeMethods.GetClipboardOwner();
+                diagnosis.AppendLine($"Clipboard owner handle: 0x{hOwner.ToInt64():X}");
+
+                if (hOwner != IntPtr.Zero)
+                {
+                    StringBuilder className = new StringBuilder(256);
+                    NativeMethods.GetClassName(hOwner, className, className.Capacity);
+                    diagnosis.AppendLine($"Clipboard owner class: {className}");
+                    currentError = Marshal.GetLastWin32Error();
+                    if (currentError != 0)
+                    {
+                        diagnosis.AppendLine($"GetClassName failed. Error: {currentError} | {ErrMsg(currentError)}");
+                    }
+                    NativeMethods.SetLastErrorEx(0, 0); // Clear last error
+
+                    StringBuilder windowText = new StringBuilder(256);
+                    NativeMethods.GetWindowText(hOwner, windowText, windowText.Capacity);
+                    diagnosis.AppendLine($"Clipboard owner window text: {windowText}");
+                    currentError = Marshal.GetLastWin32Error();
+                    if (currentError != 0)
+                    {
+                        diagnosis.AppendLine($"GetWindowText failed. Error: {currentError} | {{ErrMsg(currentError)");
+                    }
+                    NativeMethods.SetLastErrorEx(0, 0); // Clear last error
+
+                    // Get process ID
+                    uint processId;
+                    NativeMethods.GetWindowThreadProcessId(hOwner, out processId);
+                    diagnosis.AppendLine($"Clipboard owner process ID: {processId}");
+                    currentError = Marshal.GetLastWin32Error();
+                    if (currentError != 0)
+                    {
+                        diagnosis.AppendLine($"GetWindowThreadProcessId failed. Error: {currentError} | {{ErrMsg(currentError)");
+                    }
+                    NativeMethods.SetLastErrorEx(0, 0); // Clear last error
+
+                    // Get process name
+                    try
+                    {
+                        using (Process process = Process.GetProcessById((int)processId))
+                        {
+                            diagnosis.AppendLine($"Clipboard owner process name: {process.ProcessName}");
+                        }
+                    }
+                    catch (ArgumentException)
+                    {
+                        diagnosis.AppendLine("Failed to get process name. The process may have ended.");
+                    }
+                }
+                else
+                {
+                    diagnosis.AppendLine("Clipboard owner handle is null. No owner.");
+                }
+
+                // Get clipboard sequence number
+                uint sequenceNumber = NativeMethods.GetClipboardSequenceNumber();
+                diagnosis.AppendLine($"Clipboard sequence number: {sequenceNumber}");
+                currentError = Marshal.GetLastWin32Error();
+                if (currentError != 0)
+                {
+                    diagnosis.AppendLine($"GetClipboardSequenceNumber failed. Error: {currentError} | {{ErrMsg(currentError)");
+                }
+                NativeMethods.SetLastErrorEx(0, 0); // Clear last error
+
+                // Get open clipboard window
+                IntPtr hOpenWindow = NativeMethods.GetOpenClipboardWindow();
+                diagnosis.AppendLine($"Open clipboard window handle: 0x{hOpenWindow.ToInt64():X}");
+                currentError = Marshal.GetLastWin32Error();
+                if (currentError != 0)
+                {
+                    diagnosis.AppendLine($"GetOpenClipboardWindow failed. Error: {currentError} | {{ErrMsg(currentError)");
+                }
+                NativeMethods.SetLastErrorEx(0, 0); // Clear last error
+
+                // Attempt to get clipboard data
+                IntPtr hData = NativeMethods.GetClipboardData(format);
+                diagnosis.AppendLine($"GetClipboardData result: 0x{hData.ToInt64():X}");
+                currentError = Marshal.GetLastWin32Error();
+                if (currentError != 0)
+                {
+                    diagnosis.AppendLine($"GetClipboardData failed. Error: {currentError} | {{ErrMsg(currentError)");
+                }
+
+                // Count clipboard formats
+                //int formatCount = NativeMethods.CountClipboardFormats();
+                //diagnosis.AppendLine($"Total number of clipboard formats: {formatCount}");
+
+                // Enumerate all available formats
+                //diagnosis.AppendLine("Available clipboard formats:");
+                //uint enumFormat = 0;
+                //while ((enumFormat = NativeMethods.EnumClipboardFormats(enumFormat)) != 0)
+                //{
+                //    StringBuilder formatName = new StringBuilder(256);
+                //    int nameLength = NativeMethods.GetClipboardFormatName(enumFormat, formatName, formatName.Capacity);
+                //    string formatString = nameLength > 0 ? formatName.ToString() : $"Format {enumFormat}";
+                //    diagnosis.AppendLine($"  {enumFormat}: {formatString}");
+                //}
+            }
+            catch (Exception ex)
+            {
+                diagnosis.AppendLine($"An exception occurred while diagnosing: {ex.Message}");
+            }
+            finally
+            {
+                //NativeMethods.CloseClipboard(); // CLipboard will be closed elsewhere
+            }
+
+            diagnosis.AppendLine("------------------------------------------------------");
+
+            string finalResult = diagnosis.ToString();
+
+            return finalResult;
+        }
+
 
         private void DetermineSynthesizedFormats()
         {
@@ -927,6 +1170,11 @@ namespace ClipboardManager
                 richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
                 richTextBoxContents.Text = "Data not available";
                 richTextBoxContents.ForeColor = Color.Red;
+                if (item.ErrorDiagnosisReport != null)
+                {
+                    richTextBoxContents.Text += "\n\n" + "   Info about error retrieving clipboard item:" + "\n" + item.ErrorDiagnosisReport;
+                    richTextBoxContents.ForeColor = Color.DarkRed;
+                }
                 richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
 
                 richTextBox_HexPlaintext.TextChanged -= richTextBox_HexPlaintext_TextChanged;
@@ -1733,6 +1981,8 @@ namespace ClipboardManager
         public string DataInfoString => string.Join(", ", DataInfoList ?? new List<string>());
         public bool HasPendingEdit { get; set; } = false;
         public string FormatType { get; set; } = "Unknown";
+        public string ErrorReason { get; set; } = null;
+        public string ErrorDiagnosisReport { get; set; } = null;
 
         public object Clone()
         {
@@ -1747,7 +1997,9 @@ namespace ClipboardManager
                 AssumedSynthesized = this.AssumedSynthesized,
                 DataInfoList = new List<string>(this.DataInfoList ?? new List<string>()),
                 HasPendingEdit = false,
-                FormatType = this.FormatType
+                FormatType = this.FormatType,
+                ErrorReason = this.ErrorReason,
+                ErrorDiagnosisReport = this.ErrorDiagnosisReport
             };
         }
     }
@@ -1850,6 +2102,48 @@ namespace ClipboardManager
 
         [DllImport("gdi32.dll")]
         public static extern IntPtr CreatePalette([In] ref LOGPALETTE lplgpl);
+
+        // ------------------------- Related to Diagnostics ---------------------------
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool IsClipboardFormatAvailable(uint format);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr GetClipboardOwner();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern uint GetClipboardSequenceNumber();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr GetOpenClipboardWindow();
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern int GetClipboardFormatName(uint format, [Out] StringBuilder lpszFormatName, int cchMaxCount);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern void SetLastErrorEx(uint dwErrCode, uint dwType);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        // Format message of error
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern int FormatMessage(
+            int dwFlags,
+            IntPtr lpSource,
+            int dwMessageId,
+            int dwLanguageId,
+            StringBuilder lpBuffer,
+            int nSize,
+            IntPtr Arguments
+        );
+
+        // -----------------------------------------------------------------------------
 
         public const uint GMEM_MOVEABLE = 0x0002;
 
