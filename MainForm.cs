@@ -24,10 +24,7 @@ using System.Text.RegularExpressions;
 #pragma warning disable IDE0066 // Disable message about switch case expression
 
 // My classes
-using static EditClipboardItems.ClipboardFormats;
-using static EditClipboardItems.FormatHandleTranslators;
 using EditClipboardItems;
-using System.Security.Cryptography;
 
 
 namespace ClipboardManager
@@ -693,249 +690,34 @@ namespace ClipboardManager
 
                 // Data info list contains metadata about the data. First item will show in the data info column, all will show in the text box in object/struct view mode
                 List<string> dataInfoList = new List<string>();
+
+                // If there is data, process it and get the data info
                 if (item.RawData != null && item.RawData.Length > 0)
                 {
-                    switch (item.FormatName) // Process based on format name because format ID can be different for non-standard (registered) formats
-                    {
-                        case "CF_TEXT": // 1 - CF_TEXT
-                            // Use Windows-1252 encoding (commonly referred to as ANSI in Windows)
-                            Encoding ansiEncoding = Encoding.GetEncoding(1252);
-
-                            // Convert bytes to string, stopping at the first null character
-                            string text = "";
-                            for (int i = 0; i < item.RawData.Length; i++)
-                            {
-                                if (item.RawData[i] == 0) break; // Stop at null terminator
-                                text += (char)item.RawData[i];
-                            }
-                            processedData = ansiEncoding.GetBytes(text);
-                            //-----------------------------------------
-                            string ansiText = Encoding.Default.GetString(processedData);
-                            dataInfoList.Add($"{ansiText.Length} Chars (ANSI)");
-                            dataInfoList.Add($"Encoding: ANSI");
-                            dataInfoList.Add($"Chars: {ansiText.Length}");
-                            break;
-
-                        case "CF_UNICODETEXT": // 13 - CF_UNICODETEXT
-                            //Console.WriteLine("Processing CF_UNICODETEXT");
-                            string unicodeText = Encoding.Unicode.GetString(item.RawData);
-                            int unicodeTextLength = unicodeText.Length;
-                            dataInfoList.Add($"{unicodeTextLength} Chars (Unicode)");
-                            dataInfoList.Add($"Encoding: Unicode (UTF-16)");
-                            dataInfoList.Add($"Character Count: {unicodeTextLength}");
-                            dataInfoList.Add($"Byte Count: {item.DataSize}");
-
-                            processedData = Encoding.Unicode.GetBytes(unicodeText);
-                            break;
-
-                        case "CF_BITMAP": // 2 - CF_BITMAP
-                            //Console.WriteLine("Processing CF_BITMAP");
-                            if (item.RawData != null && item.RawData.Length > 0)
-                            {
-                                using (MemoryStream ms = new MemoryStream(item.RawData))
-                                {
-                                    using (Bitmap bmp = new Bitmap(ms))
-                                    {
-                                        // Setting the contents of the data info list explicitly instead of using Add. It could be done the other way too.
-                                        dataInfoList = new List<string>
-                                        {
-                                            $"{bmp.Width}x{bmp.Height}, {bmp.PixelFormat}",
-                                            $"Size: {bmp.Width}x{bmp.Height}",
-                                            $"Format: {bmp.PixelFormat}"
-                                        };
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                dataInfoList.Add("Error: Bitmap data not available");
-                            }
-                            break;
-
-                        case "CF_DIB":   // 8  - CF_DIB
-                        case "CF_DIBV5": // 17 - CF_DIBV5
-                            //Console.WriteLine($"Processing bitmap format: {(selectedItem.FormatId == 8 ? "CF_DIB" : "CF_DIBV5")}");
-                            dataInfoList.Add($"{item.FormatName}, {item.RawData.Length} bytes");
-                            dataInfoList.Add($"Format: {item.FormatName}");
-                            dataInfoList.Add($"Size: {item.DataSize} bytes");
-                            break;
-
-                        case "CF_HDROP": // 15 - CF_HDROP
-                            {
-                                // Process CF_HDROP using item.RawData
-                                // Pin the raw data
-                                GCHandle handle = GCHandle.Alloc(item.RawData, GCHandleType.Pinned);
-                                try
-                                {
-                                    IntPtr pData = handle.AddrOfPinnedObject();
-
-                                    // Read the DROPFILES structure
-                                    DROPFILES dropFiles = Marshal.PtrToStructure<DROPFILES>(pData);
-
-                                    // Determine if file names are Unicode
-                                    bool isUnicode = dropFiles.fWide != 0;
-                                    Encoding encodingType;
-                                    if (isUnicode)
-                                    {
-                                        encodingType = Encoding.Unicode;
-                                    }
-                                    else
-                                    {
-                                        encodingType = Encoding.Default;
-                                    }
-
-                                    // Get the offset to the file list
-                                    int fileListOffset = (int)dropFiles.pFiles;
-
-                                    // Read the file names from item.RawData starting at fileListOffset
-                                    List<string> fileNames = new List<string>();
-                                    if (fileListOffset < item.RawData.Length)
-                                    {
-                                        int bytesCount = item.RawData.Length - fileListOffset;
-                                        byte[] fileListBytes = new byte[bytesCount];
-                                        Array.Copy(item.RawData, fileListOffset, fileListBytes, 0, bytesCount);
-
-
-                                        // Convert to string
-                                        string fileListString = encodingType.GetString(fileListBytes);
-
-                                        // Split on null character
-                                        string[] files = fileListString.Split(new char[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
-                                        fileNames.AddRange(files);
-
-                                    }
-
-                                    // Add the file count and file paths to dataInfoList
-                                    dataInfoList.Add($"File Drop: {fileNames.Count} file(s)");
-                                    dataInfoList.AddRange(fileNames);
-                                }
-                                finally
-                                {
-                                    handle.Free();
-                                }
-                                break;
-                            }
-
-                        case "CF_LOCALE": // 16 - CF_LOCALE
-                            string dataInfo = "Invalid CF_LOCALE data"; // Default to invalid data
-                            if (item.RawData.Length >= 4)
-                            {
-                                int lcid = BitConverter.ToInt32(item.RawData, 0);
-                                try
-                                {
-                                    CultureInfo culture = new CultureInfo(lcid);
-                                    dataInfo = $"Locale: {culture.Name} (LCID: {lcid})";
-                                }
-                                catch (CultureNotFoundException)
-                                {
-                                    dataInfo = $"Unknown Locale (LCID: {lcid})";
-                                }
-                            }
-                            dataInfoList.Add(dataInfo);
-
-                            break;
-
-                        // ------------------- Cloud Clipboard Formats -------------------
-                        // See: See: https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats
-                        case "ExcludeClipboardContentFromMonitorProcessing": // It says "place any data on the clipboard in this format..." -- Assuming that means it applies as long as it exists even if value is null
-                            dataInfoList.Add("Disables Clipboard History & Sync");
-                            dataInfoList.Add("The existance of this format in the current clipboard prevents all other formats from both being synced to the cloud or included in the clipboard history."); // (Not sure if this is accurate, but it seems likely
-                            break;
-
-                        case "CanIncludeInClipboardHistory": // DWORD - Value of zero prevents all formats from being added to history, value of 1 explicitly requests all formats to be added to history
-                            if (item.RawData != null && item.RawData.Length == 4)
-                            {
-                                if (BitConverter.ToInt32(item.RawData, 0) == 0)
-                                {
-                                    dataInfoList.Add("Disables Clipboard History");
-                                    dataInfoList.Add("Applications add this format to the clipboard with a value of 0 to prevent the data from being added to the clipboard history.");
-                                }
-                                else if (BitConverter.ToInt32(item.RawData, 0) == 1)
-                                {
-                                    dataInfoList.Add("Explicitly Allows Clipboard History");
-                                    dataInfoList.Add("Applications add this format to the clipboard with a value of 1 to explicitly request that the data be added to the clipboard history.");
-                                }
-                                else
-                                {
-                                    dataInfoList.Add("Unknown value");
-                                    dataInfoList.Add("The value of this format should either be 1 or zero, but it is neither. There could be a new feature or a problem.");
-                                }
-                            }
-                            else
-                            {
-                                dataInfoList.Add("Unknown value");
-                                dataInfoList.Add("The value of this format should be a DWORD (4 bytes), but it is not. There could be a new feature or a problem.");
-                            }
-
-                            dataInfoList.Add("Details: https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats");
-                            break;
-
-                        case "CanUploadToCloudClipboard": // DWORD - Value of zero prevents all formats from being synced to other devices, value of 1 explicitly requests all formats to be synced to other devices
-                            if (item.RawData != null && item.RawData.Length == 4)
-                            {
-                                if (BitConverter.ToInt32(item.RawData, 0) == 0)
-                                {
-                                    dataInfoList.Add("Disables Cloud Sync");
-                                    dataInfoList.Add("Applications add this format to the clipboard with a value of 0 to prevent the data from being synced to other devices.");
-                                }
-                                else if (BitConverter.ToInt32(item.RawData, 0) == 1)
-                                {
-                                    dataInfoList.Add("Explicitly Allows Cloud Sync");
-                                    dataInfoList.Add("Applications add this format to the clipboard with a value of 1 to explicitly request that the data be synced to other devices.");
-                                }
-                                else
-                                {
-                                    dataInfoList.Add("Unknown value");
-                                    dataInfoList.Add("The value of this format should either be 1 or zero, but it is neither. There could be a new feature or a problem.");
-                                }
-                            }
-                            else
-                            {
-                                dataInfoList.Add("Unknown value");
-                                dataInfoList.Add("The value of this format should be a DWORD (4 bytes), but it is not. There could be a new feature or a problem.");
-                            }
-
-                            dataInfoList.Add("Details: https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats");
-                            break;
-
-                        // --------------- End Cloud Formats -----------------
-
-
-                        default:
-
-                            if (item.RawData == null)
-                            {
-                                dataInfoList.Add("[null]");
-                            }
-                            else
-                            {
-                                dataInfoList.Add("");
-                            }
-                            break;
-
-                    } // End switch (item.FormatName)
-
+                    (dataInfoList, processedData) = SetDataInfo(formatName: item.FormatName, rawData: item.RawData);
                 }
-                // If the data is null or empty
-                else if (item.RawData == null && item.ErrorReason == null)
+                // If there is no data, and there is an error message
+                else if (!string.IsNullOrEmpty(item.ErrorReason))
+                {
+                    dataInfoList.Add(item.ErrorReason);
+                }
+                // If the data is null
+                else if (item.RawData == null)
                 {
                     dataInfoList.Add("[null]");
                 }
-                else if (item.RawData != null && item.RawData.Length == 0 && item.ErrorReason == null)
+                // If the data isn't null but still empty
+                else if (item.RawData.Length == 0)
                 {
                     dataInfoList.Add("[Empty]");
-                }
-                else if (item.RawData == null || item.ErrorReason != null) // Or error message
-                {
-                    dataInfoList.Add(item.ErrorReason);
                 }
 
                 item.Data = processedData; // Update the processed data in the selectedItem
                 item.DataInfoList = dataInfoList; // Update the data info in the selectedItem
 
-                // Determine handle type
-                string formatType = "";
-                // If it's below 0xC0000 it's a standard format type. See here for other specific ranges: https://learn.microsoft.com/en-us/windows/win32/dataxchg/standard-clipboard-formats
+                // Determine handle type. If it's below 0xC0000 it's a standard format type.
+                // See here for details about the specific ranges: https://learn.microsoft.com/en-us/windows/win32/dataxchg/standard-clipboard-formats
+                string formatType;
                 if (item.FormatId >= 0x0200 && item.FormatId <= 0x02FF) // 512 - 767
                 {
                     formatType = "Private";
@@ -957,6 +739,7 @@ namespace ClipboardManager
                     formatType = "Unknown";
                 }
 
+                // All synthesized formats are standard so just override the type if so
                 if (item.AssumedSynthesized)
                 {
                     formatType = "Synthesized";
@@ -2170,7 +1953,7 @@ namespace ClipboardManager
         public static extern uint DragQueryFile(IntPtr hDrop, uint iFile, StringBuilder lpszFile, uint cch);
 
         [DllImport("gdi32.dll")]
-        public static extern int GetObject(IntPtr hObject, int nCount, ref BITMAP lpObject);
+        public static extern int GetObject(IntPtr hObject, int nCount, ref ClipboardFormats.BITMAP lpObject);
 
         [DllImport("gdi32.dll")]
         public static extern IntPtr CreateBitmap(int nWidth, int nHeight, uint cPlanes, uint cBitsPerPel, IntPtr lpvBits);
@@ -2220,7 +2003,7 @@ namespace ClipboardManager
         public static extern uint DragQueryFileA(IntPtr hDrop, uint iFile, [Out] StringBuilder lpszFile, uint cch);
 
         [DllImport("gdi32.dll")]
-        public static extern IntPtr CreatePalette([In] ref LOGPALETTE lplgpl);
+        public static extern IntPtr CreatePalette([In] ref ClipboardFormats.LOGPALETTE lplgpl);
 
         // ------------------------- Related to Diagnostics ---------------------------
         [DllImport("user32.dll", SetLastError = true)]
