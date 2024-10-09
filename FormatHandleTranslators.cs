@@ -338,13 +338,17 @@ namespace EditClipboardItems
             try
             {
                 var bmi = (BITMAPV5HEADER)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(BITMAPV5HEADER));
-
                 int width = Math.Abs(bmi.bV5Width);  // Ensure positive width
                 int height = Math.Abs(bmi.bV5Height); // Ensure positive height
                 PixelFormat pixelFormat;
+                int paletteSize = 0;
 
                 switch (bmi.bV5BitCount)
                 {
+                    case 8:
+                        pixelFormat = PixelFormat.Format8bppIndexed;
+                        paletteSize = 256 * Marshal.SizeOf(typeof(RGBQUAD));
+                        break;
                     case 24:
                         pixelFormat = PixelFormat.Format24bppRgb;
                         break;
@@ -357,8 +361,8 @@ namespace EditClipboardItems
 
                 int stride = ((width * bmi.bV5BitCount + 31) / 32) * 4;
                 bool isTopDown = bmi.bV5Height < 0;
+                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + bmi.bV5Size + paletteSize);
 
-                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + bmi.bV5Size);
                 if (!isTopDown)
                 {
                     scan0 = new IntPtr(scan0.ToInt64() + (height - 1) * stride);
@@ -366,6 +370,20 @@ namespace EditClipboardItems
                 }
 
                 Bitmap bitmap = new Bitmap(width, height, stride, pixelFormat, scan0);
+
+                if (pixelFormat == PixelFormat.Format8bppIndexed)
+                {
+                    ColorPalette palette = bitmap.Palette;
+                    IntPtr palettePtr = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + bmi.bV5Size);
+
+                    for (int i = 0; i < 256; i++)
+                    {
+                        RGBQUAD colorQuad = (RGBQUAD)Marshal.PtrToStructure(new IntPtr(palettePtr.ToInt64() + i * Marshal.SizeOf(typeof(RGBQUAD))), typeof(RGBQUAD));
+                        palette.Entries[i] = Color.FromArgb(colorQuad.rgbRed, colorQuad.rgbGreen, colorQuad.rgbBlue);
+                    }
+
+                    bitmap.Palette = palette;
+                }
 
                 // Create a new bitmap to return, because the original one is tied to the pinned memory
                 Bitmap result = new Bitmap(bitmap);
@@ -391,9 +409,14 @@ namespace EditClipboardItems
                 int width = bmi.bmiHeader.biWidth;
                 int height = Math.Abs(bmi.bmiHeader.biHeight); // Handle both top-down and bottom-up DIBs
                 PixelFormat pixelFormat;
+                int paletteSize = 0;
 
                 switch (bmi.bmiHeader.biBitCount)
                 {
+                    case 8:
+                        pixelFormat = PixelFormat.Format8bppIndexed;
+                        paletteSize = 256 * Marshal.SizeOf(typeof(RGBQUAD));
+                        break;
                     case 24:
                         pixelFormat = PixelFormat.Format24bppRgb;
                         break;
@@ -405,8 +428,8 @@ namespace EditClipboardItems
                 }
 
                 int stride = ((width * bmi.bmiHeader.biBitCount + 31) / 32) * 4;
+                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPINFOHEADER)) + paletteSize);
 
-                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPINFOHEADER)));
                 if (bmi.bmiHeader.biHeight > 0) // Bottom-up DIB
                 {
                     scan0 = new IntPtr(scan0.ToInt64() + (height - 1) * stride);
@@ -414,6 +437,20 @@ namespace EditClipboardItems
                 }
 
                 Bitmap bitmap = new Bitmap(width, height, stride, pixelFormat, scan0);
+
+                if (pixelFormat == PixelFormat.Format8bppIndexed)
+                {
+                    ColorPalette palette = bitmap.Palette;
+                    IntPtr palettePtr = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPINFOHEADER)));
+
+                    for (int i = 0; i < 256; i++)
+                    {
+                        RGBQUAD colorQuad = (RGBQUAD)Marshal.PtrToStructure(new IntPtr(palettePtr.ToInt64() + i * Marshal.SizeOf(typeof(RGBQUAD))), typeof(RGBQUAD));
+                        palette.Entries[i] = Color.FromArgb(colorQuad.rgbRed, colorQuad.rgbGreen, colorQuad.rgbBlue);
+                    }
+
+                    bitmap.Palette = palette;
+                }
 
                 // Create a new bitmap to return, because the original one is tied to the pinned memory
                 Bitmap result = new Bitmap(bitmap);
