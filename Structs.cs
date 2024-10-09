@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -16,72 +12,84 @@ using System.Threading.Tasks;
 
 namespace EditClipboardItems
 {
+    // Win32 API Types defined explicitly to avoid confusion and ensure compatibility with Win32 API, and it matches with documentation
+    // See: https://learn.microsoft.com/en-us/windows/win32/winprog/windows-data-types
+    using BOOL = System.Int32;
+    using LONG = System.Int32;
+    using DWORD = System.UInt32;
+    using WORD = System.UInt16;
+    using BYTE = System.Byte;
+    using FXPT2DOT30 = System.Int32;
+    using LPVOID = System.IntPtr;
+    using HMETAFILE = System.IntPtr; // Handle to metafile
+
+
     public static class ClipboardFormats
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct BITMAP
         {
-            public int bmType;
-            public int bmWidth;
-            public int bmHeight;
-            public int bmWidthBytes;
-            public ushort bmPlanes;
-            public ushort bmBitsPixel;
-            public IntPtr bmBits;
+            public LONG bmType;
+            public LONG bmWidth;
+            public LONG bmHeight;
+            public LONG bmWidthBytes;
+            public WORD bmPlanes;
+            public WORD bmBitsPixel;
+            public LPVOID bmBits;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct BITMAPV5HEADER
         {
-            public uint bV5Size;
-            public int bV5Width;
-            public int bV5Height;
-            public ushort bV5Planes;
-            public ushort bV5BitCount;
-            public uint bV5Compression;
-            public uint bV5SizeImage;
-            public int bV5XPelsPerMeter;
-            public int bV5YPelsPerMeter;
-            public uint bV5ClrUsed;
-            public uint bV5ClrImportant;
-            public uint bV5RedMask;
-            public uint bV5GreenMask;
-            public uint bV5BlueMask;
-            public uint bV5AlphaMask;
-            public uint bV5CSType;
+            public DWORD bV5Size;
+            public LONG bV5Width;
+            public LONG bV5Height;
+            public WORD bV5Planes;
+            public WORD bV5BitCount;
+            public DWORD bV5Compression;
+            public DWORD bV5SizeImage;
+            public LONG bV5XPelsPerMeter;
+            public LONG bV5YPelsPerMeter;
+            public DWORD bV5ClrUsed;
+            public DWORD bV5ClrImportant;
+            public DWORD bV5RedMask;
+            public DWORD bV5GreenMask;
+            public DWORD bV5BlueMask;
+            public DWORD bV5AlphaMask;
+            public DWORD bV5CSType;
             public CIEXYZTRIPLE bV5Endpoints;
-            public uint bV5GammaRed;
-            public uint bV5GammaGreen;
-            public uint bV5GammaBlue;
-            public uint bV5Intent;
-            public uint bV5ProfileData;
-            public uint bV5ProfileSize;
-            public uint bV5Reserved;
+            public DWORD bV5GammaRed;
+            public DWORD bV5GammaGreen;
+            public DWORD bV5GammaBlue;
+            public DWORD bV5Intent;
+            public DWORD bV5ProfileData;
+            public DWORD bV5ProfileSize;
+            public DWORD bV5Reserved;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct BITMAPINFOHEADER
         {
-            public uint biSize;
-            public int biWidth;
-            public int biHeight;
-            public ushort biPlanes;
-            public ushort biBitCount;
-            public uint biCompression;
-            public uint biSizeImage;
-            public int biXPelsPerMeter;
-            public int biYPelsPerMeter;
-            public uint biClrUsed;
-            public uint biClrImportant;
+            public DWORD biSize;
+            public LONG biWidth;
+            public LONG biHeight;
+            public WORD biPlanes;
+            public WORD biBitCount;
+            public DWORD biCompression;
+            public DWORD biSizeImage;
+            public LONG biXPelsPerMeter;
+            public LONG biYPelsPerMeter;
+            public DWORD biClrUsed;
+            public DWORD biClrImportant;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct RGBQUAD
         {
-            public byte rgbBlue;
-            public byte rgbGreen;
-            public byte rgbRed;
-            public byte rgbReserved;
+            public BYTE rgbBlue;
+            public BYTE rgbGreen;
+            public BYTE rgbRed;
+            public BYTE rgbReserved;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -95,18 +103,18 @@ namespace EditClipboardItems
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct METAFILEPICT
         {
-            public int mm;
-            public int xExt;
-            public int yExt;
-            public IntPtr hMF;
+            public LONG mm;
+            public LONG xExt;
+            public LONG yExt;
+            public HMETAFILE hMF;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct CIEXYZ
         {
-            public int ciexyzX; // FXPT2DOT30
-            public int ciexyzY; // FXPT2DOT30
-            public int ciexyzZ; // FXPT2DOT30
+            public FXPT2DOT30 ciexyzX; // FXPT2DOT30
+            public FXPT2DOT30 ciexyzY; // FXPT2DOT30
+            public FXPT2DOT30 ciexyzZ; // FXPT2DOT30
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -123,27 +131,33 @@ namespace EditClipboardItems
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct DROPFILES
         {
-            public uint pFiles;
-            public int x;
-            public int y;
-            public int fNC;
-            public int fWide;
+            public DWORD pFiles;
+            public POINT pt;
+            public BOOL fNC;
+            public BOOL fWide;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct POINT
+        {
+            LONG x;
+            LONG y;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct PALETTEENTRY
         {
-            public byte peRed;
-            public byte peGreen;
-            public byte peBlue;
-            public byte peFlags;
+            public BYTE peRed;
+            public BYTE peGreen;
+            public BYTE peBlue;
+            public BYTE peFlags;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct LOGPALETTE
         {
-            public ushort palVersion;
-            public ushort palNumEntries;
+            public WORD palVersion;
+            public WORD palNumEntries;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
             public PALETTEENTRY[] palPalEntry;
         }
@@ -164,5 +178,7 @@ namespace EditClipboardItems
             { "PALETTEENTRY", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-paletteentry" },
             { "LOGPALETTE", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-logpalette" }
         };
+
     }
+
 }
