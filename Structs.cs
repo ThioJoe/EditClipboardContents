@@ -18,7 +18,7 @@ namespace EditClipboardItems
 {
     public static class ClipboardFormats
     {
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct BITMAP
         {
             public int bmType;
@@ -30,7 +30,7 @@ namespace EditClipboardItems
             public IntPtr bmBits;
         }
 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct BITMAPV5HEADER
         {
             public uint bV5Size;
@@ -59,7 +59,7 @@ namespace EditClipboardItems
             public uint bV5Reserved;
         }
 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct BITMAPINFOHEADER
         {
             public uint biSize;
@@ -75,7 +75,7 @@ namespace EditClipboardItems
             public uint biClrImportant;
         }
 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct RGBQUAD
         {
             public byte rgbBlue;
@@ -84,7 +84,7 @@ namespace EditClipboardItems
             public byte rgbReserved;
         }
 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct BITMAPINFO
         {
             public BITMAPINFOHEADER bmiHeader;
@@ -92,7 +92,7 @@ namespace EditClipboardItems
             public RGBQUAD[] bmiColors;
         }
 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct METAFILEPICT
         {
             public int mm;
@@ -101,7 +101,7 @@ namespace EditClipboardItems
             public IntPtr hMF;
         }
 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct CIEXYZ
         {
             public int ciexyzX; // FXPT2DOT30
@@ -109,7 +109,7 @@ namespace EditClipboardItems
             public int ciexyzZ; // FXPT2DOT30
         }
 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct CIEXYZTRIPLE
         {
             public CIEXYZ ciexyzRed;
@@ -130,7 +130,7 @@ namespace EditClipboardItems
             public int fWide;
         }
 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct PALETTEENTRY
         {
             public byte peRed;
@@ -139,7 +139,7 @@ namespace EditClipboardItems
             public byte peFlags;
         }
 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct LOGPALETTE
         {
             public ushort palVersion;
