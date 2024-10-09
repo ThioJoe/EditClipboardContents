@@ -303,7 +303,7 @@ namespace ClipboardManager
         private void buttonResetEdit_Click(object sender, EventArgs e)
         {
             // Get the original item's data and apply it to the edited item
-            UpdateEditedClipboardItem((int)GetSelectedClipboardItemObject().FormatId, GetSelectedClipboardItemObject().Data, setPending: false);
+            UpdateEditedClipboardItem((int)GetSelectedClipboardItemObject().FormatId, GetSelectedClipboardItemObject().RawData, setPending: false);
 
             // Check if any edited items have pending changes, and update the pending changes label if necessary
             hasPendingChanges = editedClipboardItems.Any(i => i.HasPendingEdit);
@@ -337,6 +337,16 @@ namespace ClipboardManager
                 menuFile_ExportSelectedStruct.Enabled = false;
                 menuFile_ExportSelectedAsFile.Enabled = false;
             }
+
+            // If the auto selection checkbox is checked, decide which view mode to use based on item data
+            if (checkBoxAutoViewMode.Checked)
+            {
+                // Get the selectedItem object
+                ClipboardItem item = GetSelectedClipboardItemObject();
+
+                // If there 
+            }
+
         }
 
         private void menuEdit_CopyHexAsText_Click(object sender, EventArgs e)
@@ -418,7 +428,7 @@ namespace ClipboardManager
                 return;
             }
 
-            byte[] rawData = Enumerable.Range(0, hexString.Length)
+            byte[] rawDataFromTextbox = Enumerable.Range(0, hexString.Length)
                 .Where(x => x % 2 == 0)
                 .Select(x => Convert.ToByte(hexString.Substring(x, 2), 16))
                 .ToArray();
@@ -426,9 +436,9 @@ namespace ClipboardManager
             int formatId = (int)GetSelectedClipboardItemObject().FormatId;
 
             // Check if the edited data is actually different from the original data, apply the change and set hasPendingChanges accordingly
-            if (!GetSelectedClipboardItemObject().Data.SequenceEqual(rawData))
+            if (!GetSelectedClipboardItemObject().RawData.SequenceEqual(rawDataFromTextbox))
             {
-                UpdateEditedClipboardItem(formatId, rawData);
+                UpdateEditedClipboardItem(formatId, rawDataFromTextbox);
                 hasPendingChanges = true;
             }
             else
@@ -485,17 +495,6 @@ namespace ClipboardManager
                 // Save the data to a file
                 File.WriteAllText(saveFileDialogResult.FileName, data);
             }
-
-            //// If it's DIBV5 format use special hex conversion
-            //if (itemToCopy.FormatId == 17)
-            //{
-            //    string hexString = CF_DIBV5ToHex(itemToCopy.Data);
-            //    SaveFileDialog saveFileDialogResult = SaveFileDialog();
-            //    if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
-            //    {
-            //        File.WriteAllText(saveFileDialogResult.FileName, hexString);
-            //    }
-            //}
         }
 
         private void menuFile_ExportSelectedAsFile_Click(object sender, EventArgs e)
@@ -517,7 +516,7 @@ namespace ClipboardManager
             // If it's a DIBV5 format, convert it to a bitmap
             if (itemToExport.FormatId == 17)
             {
-                Bitmap bitmap = FormatHandleTranslators.BitmapFile_From_CF_DIBV5_RawData(itemToExport.Data);
+                Bitmap bitmap = FormatHandleTranslators.BitmapFile_From_CF_DIBV5_RawData(itemToExport.RawData);
 
                 SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
@@ -528,7 +527,7 @@ namespace ClipboardManager
             }
             else if (itemToExport.FormatId == 8) // CF_DIB
             {
-                Bitmap bitmap = FormatHandleTranslators.BitmapFile_From_CF_DIB_RawData(itemToExport.Data);
+                Bitmap bitmap = FormatHandleTranslators.BitmapFile_From_CF_DIB_RawData(itemToExport.RawData);
                 SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
@@ -541,8 +540,7 @@ namespace ClipboardManager
                 SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
-                    // Assuming itemToCopy.Data contains the raw bitmap data
-                    using (MemoryStream ms = new MemoryStream(itemToExport.Data))
+                    using (MemoryStream ms = new MemoryStream(itemToExport.RawData))
                     {
                         using (Bitmap bitmap = new Bitmap(ms))
                         {
@@ -566,7 +564,7 @@ namespace ClipboardManager
             SaveFileDialog saveRawFileDialogResult = SaveFileDialog(extension: fileExt, defaultFileNameStem: nameStem);
             if (saveRawFileDialogResult.ShowDialog() == DialogResult.OK)
             {
-                File.WriteAllBytes(saveRawFileDialogResult.FileName, itemToExport.Data);
+                File.WriteAllBytes(saveRawFileDialogResult.FileName, itemToExport.RawData);
             }
         }
 

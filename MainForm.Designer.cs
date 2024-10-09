@@ -67,6 +67,7 @@
             this.labelPendingChanges = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.labelVersion = new System.Windows.Forms.Label();
+            this.checkBoxAutoViewMode = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.contextMenuStrip_dataGridView.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -383,6 +384,7 @@
             // 
             // splitContainerMain.Panel2
             // 
+            this.splitContainerMain.Panel2.Controls.Add(this.checkBoxAutoViewMode);
             this.splitContainerMain.Panel2.Controls.Add(this.splitterContainer_InnerTextBoxes);
             this.splitContainerMain.Panel2.Controls.Add(this.labelSynthesizedTypeWarn);
             this.splitContainerMain.Panel2.Controls.Add(this.buttonResetEdit);
@@ -477,7 +479,7 @@
             // 
             this.labelSynthesizedTypeWarn.AutoSize = true;
             this.labelSynthesizedTypeWarn.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelSynthesizedTypeWarn.Location = new System.Drawing.Point(588, 13);
+            this.labelSynthesizedTypeWarn.Location = new System.Drawing.Point(458, 10);
             this.labelSynthesizedTypeWarn.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelSynthesizedTypeWarn.Name = "labelSynthesizedTypeWarn";
             this.labelSynthesizedTypeWarn.Size = new System.Drawing.Size(171, 20);
@@ -568,6 +570,18 @@
             this.labelVersion.TabIndex = 13;
             this.labelVersion.Text = "Version:";
             // 
+            // checkBoxAutoViewMode
+            // 
+            this.checkBoxAutoViewMode.AutoSize = true;
+            this.checkBoxAutoViewMode.Checked = true;
+            this.checkBoxAutoViewMode.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxAutoViewMode.Location = new System.Drawing.Point(375, 9);
+            this.checkBoxAutoViewMode.Name = "checkBoxAutoViewMode";
+            this.checkBoxAutoViewMode.Size = new System.Drawing.Size(69, 24);
+            this.checkBoxAutoViewMode.TabIndex = 14;
+            this.checkBoxAutoViewMode.Text = "Auto";
+            this.checkBoxAutoViewMode.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -651,5 +665,6 @@
         private System.Windows.Forms.MenuItem menuItemHelp;
         private System.Windows.Forms.MenuItem menuHelp_About;
         private System.Windows.Forms.Label labelVersion;
+        private System.Windows.Forms.CheckBox checkBoxAutoViewMode;
     }
 }

@@ -632,7 +632,7 @@ namespace ClipboardManager
                     Handle = hData,
                     DataSize = dataSize,
                     RawData = rawData,
-                    Data = rawData,
+                    ProcessedData = null,
                     ErrorReason = errorString,
                     ErrorDiagnosisReport = diagnosisReport
                 };
@@ -686,7 +686,7 @@ namespace ClipboardManager
 
             foreach (var item in clipboardItems)
             {
-                byte[] processedData = item.RawData;
+                byte[] processedData = null;
 
                 // Data info list contains metadata about the data. First item will show in the data info column, all will show in the text box in object/struct view mode
                 List<string> dataInfoList = new List<string>();
@@ -712,7 +712,7 @@ namespace ClipboardManager
                     dataInfoList.Add("[Empty]");
                 }
 
-                item.Data = processedData; // Update the processed data in the selectedItem
+                item.ProcessedData = processedData; // Update the processed data in the selectedItem
                 item.DataInfoList = dataInfoList; // Update the data info in the selectedItem
 
                 // Determine handle type. If it's below 0xC0000 it's a standard format type.
@@ -1876,7 +1876,7 @@ namespace ClipboardManager
         public uint FormatId { get; set; }
         public IntPtr Handle { get; set; }
         public ulong DataSize { get; set; }
-        public byte[] Data { get; set; }
+        public byte[] ProcessedData { get; set; }
         public byte[] RawData { get; set; }
         public bool AssumedSynthesized { get; set; }
         public List<string> DataInfoList { get; set; }
@@ -1894,7 +1894,7 @@ namespace ClipboardManager
                 FormatId = this.FormatId,
                 Handle = this.Handle,
                 DataSize = this.DataSize,
-                Data = (byte[])this.Data?.Clone(),
+                ProcessedData = (byte[])this.ProcessedData?.Clone(),
                 RawData = (byte[])this.RawData?.Clone(),
                 AssumedSynthesized = this.AssumedSynthesized,
                 DataInfoList = new List<string>(this.DataInfoList ?? new List<string>()),
