@@ -337,9 +337,10 @@ namespace EditClipboardItems
             GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
             try
             {
-                var bmi = (BITMAPV5HEADER)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(BITMAPV5HEADER));
+                BITMAPV5HEADER bmi = (BITMAPV5HEADER)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(BITMAPV5HEADER));
                 int width = Math.Abs(bmi.bV5Width);  // Ensure positive width
                 int height = Math.Abs(bmi.bV5Height); // Ensure positive height
+                int headerSize = (int)Math.Min(bmi.bV5Size, (uint)Marshal.SizeOf(typeof(BITMAPV5HEADER)));
                 PixelFormat pixelFormat;
                 int paletteSize = 0;
 
@@ -361,7 +362,7 @@ namespace EditClipboardItems
 
                 int stride = ((width * bmi.bV5BitCount + 31) / 32) * 4;
                 bool isTopDown = bmi.bV5Height < 0;
-                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + bmi.bV5Size + paletteSize);
+                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPV5HEADER)) + paletteSize);
 
                 if (!isTopDown)
                 {
@@ -374,7 +375,7 @@ namespace EditClipboardItems
                 if (pixelFormat == PixelFormat.Format8bppIndexed)
                 {
                     ColorPalette palette = bitmap.Palette;
-                    IntPtr palettePtr = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + bmi.bV5Size);
+                    IntPtr palettePtr = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + headerSize);
 
                     for (int i = 0; i < 256; i++)
                     {

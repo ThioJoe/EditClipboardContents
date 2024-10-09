@@ -36,27 +36,27 @@ namespace EditClipboardItems
             public uint bV5Size;
             public int bV5Width;
             public int bV5Height;
-            public UInt16 bV5Planes;
-            public UInt16 bV5BitCount;
+            public ushort bV5Planes;
+            public ushort bV5BitCount;
             public uint bV5Compression;
             public uint bV5SizeImage;
             public int bV5XPelsPerMeter;
             public int bV5YPelsPerMeter;
-            public UInt16 bV5ClrUsed;
-            public UInt16 bV5ClrImportant;
-            public UInt16 bV5RedMask;
-            public UInt16 bV5GreenMask;
-            public UInt16 bV5BlueMask;
-            public UInt16 bV5AlphaMask;
-            public UInt16 bV5CSType;
-            public IntPtr bV5Endpoints;
-            public UInt16 bV5GammaRed;
-            public UInt16 bV5GammaGreen;
-            public UInt16 bV5GammaBlue;
-            public UInt16 bV5Intent;
-            public UInt16 bV5ProfileData;
-            public UInt16 bV5ProfileSize;
-            public UInt16 bV5Reserved;
+            public uint bV5ClrUsed;
+            public uint bV5ClrImportant;
+            public uint bV5RedMask;
+            public uint bV5GreenMask;
+            public uint bV5BlueMask;
+            public uint bV5AlphaMask;
+            public uint bV5CSType;
+            public CIEXYZTRIPLE bV5Endpoints;
+            public uint bV5GammaRed;
+            public uint bV5GammaGreen;
+            public uint bV5GammaBlue;
+            public uint bV5Intent;
+            public uint bV5ProfileData;
+            public uint bV5ProfileSize;
+            public uint bV5Reserved;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -104,9 +104,9 @@ namespace EditClipboardItems
         [StructLayout(LayoutKind.Sequential)]
         public struct CIEXYZ
         {
-            public int ciexyzX;
-            public int ciexyzY;
-            public int ciexyzZ;
+            public int ciexyzX; // FXPT2DOT30
+            public int ciexyzY; // FXPT2DOT30
+            public int ciexyzZ; // FXPT2DOT30
         }
 
         [StructLayout(LayoutKind.Sequential)]
