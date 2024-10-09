@@ -902,7 +902,7 @@ namespace ClipboardManager
                     currentError = Marshal.GetLastWin32Error();
                     if (currentError != 0)
                     {
-                        diagnosis.AppendLine($"GetWindowText failed. Error: {currentError} | {{ErrMsg(currentError)");
+                        diagnosis.AppendLine($"GetWindowText failed. Error: {currentError} | {ErrMsg(currentError)}");
                     }
                     NativeMethods.SetLastErrorEx(0, 0); // Clear last error
 
@@ -913,7 +913,7 @@ namespace ClipboardManager
                     currentError = Marshal.GetLastWin32Error();
                     if (currentError != 0)
                     {
-                        diagnosis.AppendLine($"GetWindowThreadProcessId failed. Error: {currentError} | {{ErrMsg(currentError)");
+                        diagnosis.AppendLine($"GetWindowThreadProcessId failed. Error: {currentError} | {ErrMsg(currentError)}");
                     }
                     NativeMethods.SetLastErrorEx(0, 0); // Clear last error
 
@@ -941,7 +941,7 @@ namespace ClipboardManager
                 currentError = Marshal.GetLastWin32Error();
                 if (currentError != 0)
                 {
-                    diagnosis.AppendLine($"GetClipboardSequenceNumber failed. Error: {currentError} | {{ErrMsg(currentError)");
+                    diagnosis.AppendLine($"GetClipboardSequenceNumber failed. Error: {currentError} | {ErrMsg(currentError)}");
                 }
                 NativeMethods.SetLastErrorEx(0, 0); // Clear last error
 
@@ -951,7 +951,7 @@ namespace ClipboardManager
                 currentError = Marshal.GetLastWin32Error();
                 if (currentError != 0)
                 {
-                    diagnosis.AppendLine($"GetOpenClipboardWindow failed. Error: {currentError} | {{ErrMsg(currentError)");
+                    diagnosis.AppendLine($"GetOpenClipboardWindow failed. Error: {currentError} | {ErrMsg(currentError)}");
                 }
                 NativeMethods.SetLastErrorEx(0, 0); // Clear last error
 
@@ -961,7 +961,7 @@ namespace ClipboardManager
                 currentError = Marshal.GetLastWin32Error();
                 if (currentError != 0)
                 {
-                    diagnosis.AppendLine($"GetClipboardData failed. Error: {currentError} | {{ErrMsg(currentError)");
+                    diagnosis.AppendLine($"GetClipboardData failed. Error: {currentError} | {ErrMsg(currentError)}");
                 }
 
                 // Count clipboard formats
