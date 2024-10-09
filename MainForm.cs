@@ -145,8 +145,15 @@ namespace ClipboardManager
         }
 
         // Update processedData grid view with clipboard contents during refresh
-        private void UpdateClipboardItemsGridView(string formatName, string formatID, string handleType, string dataSize, List<string> dataInfo, byte[] rawData)
+        private void UpdateClipboardItemsGridView(ClipboardItem formatItem, string handleType)
         {
+            // Get needed data from the item
+            byte[] rawData = formatItem.RawData;
+            string formatName = formatItem.FormatName;
+            string formatID = formatItem.FormatId.ToString();
+            List<string> dataInfo = formatItem.DataInfoList;
+            string dataSize = formatItem.DataSize.ToString();
+
             // Preprocess certain info
             string textPreview = TryParseText(rawData, maxLength: 200, prefixEncodingType: false, debugging_formatName: formatName, debugging_callFrom: "Text Preview / UpdateClipboardItemsGridView");
 
@@ -957,7 +964,7 @@ namespace ClipboardManager
 
                 item.FormatType = formatType; // Update the format type in the selectedItem
 
-                UpdateClipboardItemsGridView(formatName: item.FormatName, formatID: item.FormatId.ToString(), handleType: formatType, dataSize: item.DataSize.ToString(), dataInfo: item.DataInfoList, rawData: item.RawData);
+                UpdateClipboardItemsGridView(formatItem: item, handleType: formatType);
             }
         }
 
