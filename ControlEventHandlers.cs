@@ -42,7 +42,11 @@ namespace ClipboardManager
 
         private void MainForm_Resize(object sender, EventArgs e)
         {
-            UpdateToolLocations();
+            // Don't change tool locations if the window is minimized
+            if (this.WindowState != FormWindowState.Minimized)
+            {
+                UpdateToolLocations();
+            }
         }
 
         private void dataGridViewClipboard_MouseWheel(object sender, MouseEventArgs e)
