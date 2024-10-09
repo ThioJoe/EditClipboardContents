@@ -688,9 +688,9 @@ namespace ClipboardManager
                 List<string> dataInfoList = new List<string>();
                 if (item.RawData != null && item.RawData.Length > 0)
                 {
-                    switch (item.FormatId)
+                    switch (item.FormatName) // Process based on format name because format ID can be different for non-standard (registered) formats
                     {
-                        case 1: // CF_TEXT
+                        case "CF_TEXT": // 1 - CF_TEXT
                             // Use Windows-1252 encoding (commonly referred to as ANSI in Windows)
                             Encoding ansiEncoding = Encoding.GetEncoding(1252);
 
@@ -709,7 +709,7 @@ namespace ClipboardManager
                             dataInfoList.Add($"Chars: {ansiText.Length}");
                             break;
 
-                        case 13: // CF_UNICODETEXT
+                        case "CF_UNICODETEXT": // 13 - CF_UNICODETEXT
                             //Console.WriteLine("Processing CF_UNICODETEXT");
                             string unicodeText = Encoding.Unicode.GetString(item.RawData);
                             int unicodeTextLength = unicodeText.Length;
@@ -721,7 +721,7 @@ namespace ClipboardManager
                             processedData = Encoding.Unicode.GetBytes(unicodeText);
                             break;
 
-                        case 2: // CF_BITMAP
+                        case "CF_BITMAP": // 2 - CF_BITMAP
                             //Console.WriteLine("Processing CF_BITMAP");
                             if (item.RawData != null && item.RawData.Length > 0)
                             {
@@ -745,15 +745,15 @@ namespace ClipboardManager
                             }
                             break;
 
-                        case 8: // CF_DIB
-                        case 17: // CF_DIBV5
+                        case "CF_DIB":   // 8  - CF_DIB
+                        case "CF_DIBV5": // 17 - CF_DIBV5
                             //Console.WriteLine($"Processing bitmap format: {(selectedItem.FormatId == 8 ? "CF_DIB" : "CF_DIBV5")}");
                             dataInfoList.Add($"{item.FormatName}, {item.RawData.Length} bytes");
                             dataInfoList.Add($"Format: {item.FormatName}");
                             dataInfoList.Add($"Size: {item.DataSize} bytes");
                             break;
 
-                        case 15: // CF_HDROP
+                        case "CF_HDROP": // 15 - CF_HDROP
                             {
                                 // Process CF_HDROP using item.RawData
                                 // Pin the raw data
@@ -809,7 +809,7 @@ namespace ClipboardManager
                                 break;
                             }
 
-                        case 16: // CF_LOCALE
+                        case "CF_LOCALE": // 16 - CF_LOCALE
                             string dataInfo = "Invalid CF_LOCALE data"; // Default to invalid data
                             if (item.RawData.Length >= 4)
                             {
@@ -828,7 +828,74 @@ namespace ClipboardManager
 
                             break;
 
+                        // ------------------- Cloud Clipboard Formats -------------------
+                        // See: See: https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats
+                        case "ExcludeClipboardContentFromMonitorProcessing": // It says "place any data on the clipboard in this format..." -- Assuming that means it applies as long as it exists even if value is null
+                            dataInfoList.Add("Disables Clipboard History & Sync");
+                            dataInfoList.Add("The existance of this format in the current clipboard prevents all other formats from both being synced to the cloud or included in the clipboard history."); // (Not sure if this is accurate, but it seems likely
+                            break;
+
+                        case "CanIncludeInClipboardHistory": // DWORD - Value of zero prevents all formats from being added to history, value of 1 explicitly requests all formats to be added to history
+                            if (item.RawData != null && item.RawData.Length == 4)
+                            {
+                                if (BitConverter.ToInt32(item.RawData, 0) == 0)
+                                {
+                                    dataInfoList.Add("Disables Clipboard History");
+                                    dataInfoList.Add("Applications add this format to the clipboard with a value of 0 to prevent the data from being added to the clipboard history.");
+                                }
+                                else if (BitConverter.ToInt32(item.RawData, 0) == 1)
+                                {
+                                    dataInfoList.Add("Explicitly Allows Clipboard History");
+                                    dataInfoList.Add("Applications add this format to the clipboard with a value of 1 to explicitly request that the data be added to the clipboard history.");
+                                }
+                                else
+                                {
+                                    dataInfoList.Add("Unknown value");
+                                    dataInfoList.Add("The value of this format should either be 1 or zero, but it is neither. There could be a new feature or a problem.");
+                                }
+                            }
+                            else
+                            {
+                                dataInfoList.Add("Unknown value");
+                                dataInfoList.Add("The value of this format should be a DWORD (4 bytes), but it is not. There could be a new feature or a problem.");
+                            }
+
+                            dataInfoList.Add("Details: https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats");
+                            break;
+
+                        case "CanUploadToCloudClipboard": // DWORD - Value of zero prevents all formats from being synced to other devices, value of 1 explicitly requests all formats to be synced to other devices
+                            if (item.RawData != null && item.RawData.Length == 4)
+                            {
+                                if (BitConverter.ToInt32(item.RawData, 0) == 0)
+                                {
+                                    dataInfoList.Add("Disables Cloud Sync");
+                                    dataInfoList.Add("Applications add this format to the clipboard with a value of 0 to prevent the data from being synced to other devices.");
+                                }
+                                else if (BitConverter.ToInt32(item.RawData, 0) == 1)
+                                {
+                                    dataInfoList.Add("Explicitly Allows Cloud Sync");
+                                    dataInfoList.Add("Applications add this format to the clipboard with a value of 1 to explicitly request that the data be synced to other devices.");
+                                }
+                                else
+                                {
+                                    dataInfoList.Add("Unknown value");
+                                    dataInfoList.Add("The value of this format should either be 1 or zero, but it is neither. There could be a new feature or a problem.");
+                                }
+                            }
+                            else
+                            {
+                                dataInfoList.Add("Unknown value");
+                                dataInfoList.Add("The value of this format should be a DWORD (4 bytes), but it is not. There could be a new feature or a problem.");
+                            }
+
+                            dataInfoList.Add("Details: https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats");
+                            break;
+
+                        // --------------- End Cloud Formats -----------------
+
+
                         default:
+
                             if (item.RawData == null)
                             {
                                 dataInfoList.Add("[null]");
@@ -838,7 +905,9 @@ namespace ClipboardManager
                                 dataInfoList.Add("");
                             }
                             break;
-                    } // End switch (item.FormatId)
+
+                    } // End switch (item.FormatName)
+
                 }
                 // If the data is null or empty
                 else if (item.RawData == null && item.ErrorReason == null)
@@ -1102,7 +1171,7 @@ namespace ClipboardManager
             // Ensure the format ID is not above the maximum of 0xFFFF, or below 1 (it shouldn't be but just in case)
             if (format > 0xFFFF || format < 1)
             {
-                return GetStandardFormatName(format);
+                return GetKnownStandardFormatName(format);
             }
 
             // Define a sufficient buffer size
@@ -1115,7 +1184,7 @@ namespace ClipboardManager
             }
             else
             {
-                return GetStandardFormatName(format);
+                return GetKnownStandardFormatName(format);
             }
         }
 
@@ -1127,7 +1196,7 @@ namespace ClipboardManager
             public IntPtr Data { get; set; }
         }
 
-        private string GetStandardFormatName(uint format)
+        private string GetKnownStandardFormatName(uint format)
         {
             switch (format)
             {
@@ -1289,7 +1358,7 @@ namespace ClipboardManager
                     break;
                 case 3: // Object / Struct View
                     richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
-                    richTextBoxContents.Text = FormatInspector.CreateFormatDataStringForTextbox(formatName: GetStandardFormatName(item.FormatId), data: item.RawData, fullItem: item);
+                    richTextBoxContents.Text = FormatInspector.CreateFormatDataStringForTextbox(formatName: GetClipboardFormatName(item.FormatId), data: item.RawData, fullItem: item);
                     richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
 
                     richTextBoxContents.ReadOnly = true;
@@ -2021,7 +2090,7 @@ namespace ClipboardManager
         public byte[] RawData { get; set; }
         public bool AssumedSynthesized { get; set; }
         public List<string> DataInfoList { get; set; }
-        public string DataInfoString => string.Join(", ", DataInfoList ?? new List<string>());
+        public string DataInfoLinesString => string.Join("\n", DataInfoList ?? new List<string>());
         public bool HasPendingEdit { get; set; } = false;
         public string FormatType { get; set; } = "Unknown";
         public string ErrorReason { get; set; } = null;

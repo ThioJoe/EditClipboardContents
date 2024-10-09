@@ -61,7 +61,21 @@ namespace EditClipboardItems
         {
             if (!FormatDictionary.TryGetValue(formatName, out FormatInfo formatInfo))
             {
-                return $"{indent}Unknown format: {formatName}";
+                // If there is data info, we'll show that
+                if (fullItem.DataInfoList.Count > 0 && !string.IsNullOrEmpty(fullItem.DataInfoList[0]))
+                {
+                    indent = "    ";
+                    string stringToPrint = "Data Info: ";
+                    foreach (string dataInfoItem in fullItem.DataInfoList)
+                    {
+                        stringToPrint += $"\n{indent}• " + dataInfoItem;
+                    }
+                    return stringToPrint;
+                }
+                else
+                {
+                    return $"{indent}Unknown format: {formatName}";
+                }
             }
 
             StringBuilder result = new StringBuilder();
@@ -70,7 +84,7 @@ namespace EditClipboardItems
             //result.AppendLine($"{indent}Kind: {formatInfo.Kind}");
             result.AppendLine($"{indent}Handle Output: {formatInfo.HandleOutput}");
 
-            if (!string.IsNullOrEmpty(fullItem.DataInfoString))
+            if (fullItem.DataInfoList.Count > 0 && !string.IsNullOrEmpty(fullItem.DataInfoList[0]))
             {
                 result.AppendLine($"\n{indent}Data Info:");
                 // Add each selectedItem in DataInfoList to the result indented
