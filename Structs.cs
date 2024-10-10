@@ -17,14 +17,15 @@ namespace EditClipboardItems
 {
     // Win32 API Types defined explicitly to avoid confusion and ensure compatibility with Win32 API, and it matches with documentation
     // See: https://learn.microsoft.com/en-us/windows/win32/winprog/windows-data-types
-    using BOOL = System.Int32;
-    using LONG = System.Int32;
-    using DWORD = System.UInt32;
-    using WORD = System.UInt16;
-    using BYTE = System.Byte;
-    using FXPT2DOT30 = System.Int32;
-    using LPVOID = System.IntPtr;
-    using HMETAFILE = System.IntPtr; // Handle to metafile
+    using BOOL = System.Int32;          // 4 Bytes
+    using LONG = System.Int32;          // 4 Bytes
+    using DWORD = System.UInt32;        // 4 Bytes
+    using WORD = System.UInt16;         // 2 Bytes
+    using BYTE = System.Byte;           // 1 Byte
+    using FXPT2DOT30 = System.Int32;    // 4 Bytes
+    using LPVOID = System.IntPtr;       // Handle to any type
+    using HMETAFILE = System.IntPtr;    // Handle to metafile
+    using CHAR = System.Byte;           // 1 Byte
 
 
     public static class ClipboardFormats
@@ -57,7 +58,7 @@ namespace EditClipboardItems
             public DWORD bV5GreenMask { get; set; }
             public DWORD bV5BlueMask { get; set; }
             public DWORD bV5AlphaMask { get; set; }
-            public DWORD bV5CSType { get; set; }
+            public LOGCOLORSPACEA bV5CSType { get; set; }
             public CIEXYZTRIPLE bV5Endpoints { get; set; }
             public DWORD bV5GammaRed { get; set; }
             public DWORD bV5GammaGreen { get; set; }
@@ -146,6 +147,37 @@ namespace EditClipboardItems
             public WORD palVersion { get; set; }
             public WORD palNumEntries { get; set; }
             public List<PALETTEENTRY> palPalEntry { get; set; }
+        }
+        // public enum?
+        public class LOGCOLORSPACEA
+        {
+            public DWORD lcsSignature;
+            public DWORD lcsVersion;
+            public DWORD lcsSize;
+            public LCSCSTYPE lcsCSType;
+            public LCSGAMUTMATCH lcsIntent;
+            public CIEXYZTRIPLE lcsEndpoints;
+            public DWORD lcsGammaRed;
+            public DWORD lcsGammaGreen;
+            public DWORD lcsGammaBlue;
+            public List<CHAR> lcsFilename; // Max path is 260 usually. Originally defined as lcsFilename[MAX_PATH], null terminated string
+        }
+        
+        public enum LCSCSTYPE : uint
+        {
+            // Can be one of the following values
+            LCS_CALIBRATED_RGB      = 0x00000000,
+            LCS_sRGB                = 0x73524742,
+            LCS_WINDOWS_COLOR_SPACE = 0x57696E20
+        }
+
+        public enum LCSGAMUTMATCH : uint
+        {
+            // Can be one of the following values
+            LCS_GM_ABS_COLORIMETRIC =   0x00000008,
+            LCS_GM_BUSINESS         =   0x00000001,
+            LCS_GM_GRAPHICS         =   0x00000002,
+            LCS_GM_IMAGES           =   0x00000004
         }
 
         public static T BytesToObject<T>(byte[] data) where T : new()
@@ -252,7 +284,10 @@ namespace EditClipboardItems
             { "CIEXYZTRIPLE", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-ciexyztriple" },
             { "DROPFILES", "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-dropfiles" },
             { "PALETTEENTRY", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-paletteentry" },
-            { "LOGPALETTE", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-logpalette" }
+            { "LOGPALETTE", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-logpalette" },
+            { "LOGCOLORSPACEA", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-logcolorspacea" },
+            { "LCSCSTYPE", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/eb4bbd50-b3ce-4917-895c-be31f214797f" },
+            { "LCSGAMUTMATCH", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/9fec0834-607d-427d-abd5-ab240fb0db38" }
         };
 
         // Dictionary containing the names of the types of structs as keys and any variable sized item properties or handles as values
