@@ -1875,11 +1875,23 @@ namespace ClipboardManager
     public class ClipDataObject
     {
         public string StructName { get; set; } = null;
-        public object ObjectData { get; set; } = null;
+        private object _objectData = null;
+        public object ObjectData
+        {
+            get => _objectData;
+            set
+            {
+                _objectData = value;
+                InitializeNestedObjects();
+            }
+        }
+
+        private Dictionary<string, ClipDataObject> _nestedObjects = new Dictionary<string, ClipDataObject>();
+
         public string[] VariableSizedDataNames =>
             StructName != null && ClipboardFormats.VariableSizedItems.TryGetValue(StructName, out var items)
-                ? items // If the struct name is in the dictionary, get the list of variable-sized data names, even if it's null
-                : null; // If it wasn't found, set to null
+                ? items  // If the struct name is in the dictionary, get the list of variable-sized data names, even if it's null
+                : null;  // If it wasn't found, set to null
 
         public IEnumerable<string> PropertyNames
         {
@@ -1887,18 +1899,8 @@ namespace ClipboardManager
             {
                 if (ObjectData == null)
                     return Enumerable.Empty<string>();
-
                 return ObjectData.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => p.Name);
             }
-        }
-
-        public object GetPropertyValue(string propertyName)
-        {
-            if (ObjectData == null)
-                return null;
-
-            PropertyInfo propInfo = ObjectData.GetType().GetProperty(propertyName);
-            return propInfo?.GetValue(ObjectData);
         }
 
         public IEnumerable<string> FixedSizePropertyNames
@@ -1909,6 +1911,62 @@ namespace ClipboardManager
                 var variableSized = VariableSizedDataNames ?? Array.Empty<string>();
                 return allProperties.Except(variableSized);
             }
+        }
+
+        public object GetPropertyValue(string propertyName)
+        {
+            if (ObjectData == null)
+                return null;
+
+            if (_nestedObjects.TryGetValue(propertyName, out var nestedObject))
+                return nestedObject;
+
+            PropertyInfo propInfo = ObjectData.GetType().GetProperty(propertyName);
+            try
+            {
+                return propInfo?.GetValue(ObjectData);
+            }
+            catch (TargetParameterCountException)
+            {
+                // Handle properties that require parameters
+                return null;
+            }
+        }
+
+        private void InitializeNestedObjects()
+        {
+            if (ObjectData == null)
+                return;
+
+            var variableSized = VariableSizedDataNames ?? Array.Empty<string>();
+
+            foreach (var prop in ObjectData.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (variableSized.Contains(prop.Name))
+                    continue;
+
+                try
+                {
+                    var value = prop.GetValue(ObjectData);
+                    if (value != null && !prop.PropertyType.IsPrimitive && prop.PropertyType != typeof(string))
+                    {
+                        _nestedObjects[prop.Name] = new ClipDataObject
+                        {
+                            StructName = prop.PropertyType.Name,
+                            ObjectData = value
+                        };
+                    }
+                }
+                catch (TargetParameterCountException)
+                {
+                    // Skip properties that require parameters
+                }
+            }
+        }
+
+        public ClipDataObject GetNestedObject(string propertyName)
+        {
+            return _nestedObjects.TryGetValue(propertyName, out var nestedObject) ? nestedObject : null;
         }
     }
 

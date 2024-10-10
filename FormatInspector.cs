@@ -112,22 +112,29 @@ namespace EditClipboardItems
 
             // Check if ClipDataObject is available for the item
 
+            void recursiveAddProperties(ClipDataObject obj, string indent)
+            {
+                foreach (var propertyName in obj.PropertyNames)
+                {
+                    object propertyValue = obj.GetPropertyValue(propertyName);
+                    // If the property value is an object, print the name and sub properties below it
+                    if (propertyValue is ClipDataObject nestedObject)
+                    {
+                        result.AppendLine($"{indent}{propertyName}:");
+                        recursiveAddProperties(nestedObject, indent + "    ");
+                    }
+                    else
+                    {
+                        result.AppendLine($"{indent}{propertyName}: {propertyValue}");
+                    }
+                }
+            }
+
             if (fullItem.ClipDataObject != null)
             {
                 indent = "    ";
                 result.AppendLine($"\nStruct Info:");
-                // Print the details of all the properties of ObjectData except those that are in VariableSizedDataNames
-                foreach (string propertyName in fullItem.ClipDataObject.FixedSizePropertyNames)
-                {
-                    object propertyValue = fullItem.ClipDataObject.GetPropertyValue(propertyName);
-                    // If the property value is an object, print the name and sub properties below it
-                    if (propertyValue is object)
-                    {
-
-                    }
-
-                    result.AppendLine($"{indent}{propertyName}: {valueStr}");
-                }
+                recursiveAddProperties(fullItem.ClipDataObject, indent);
             }
             else
             {
