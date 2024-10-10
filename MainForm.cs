@@ -687,7 +687,7 @@ namespace ClipboardManager
             foreach (var item in clipboardItems)
             {
                 byte[] processedData = null;
-                object processedObject = null;
+                ClipDataObject processedObject = null;
 
                 // Data info list contains metadata about the data. First item will show in the data info column, all will show in the text box in object/struct view mode
                 List<string> dataInfoList = new List<string>();
@@ -747,6 +747,7 @@ namespace ClipboardManager
                 }
 
                 item.FormatType = formatType; // Update the format type in the selectedItem
+                item.ClipDataObject = processedObject; // Update the clipDataObject in the selectedItem, even if it's null
 
                 UpdateClipboardItemsGridView(formatItem: item, handleType: formatType);
             }
@@ -1871,6 +1872,46 @@ namespace ClipboardManager
         // -----------------------------------------------------------------------------
     }
 
+    public class ClipDataObject
+    {
+        public string StructName { get; set; } = null;
+        public object ObjectData { get; set; } = null;
+        public string[] VariableSizedDataNames =>
+            StructName != null && ClipboardFormats.VariableSizedItems.TryGetValue(StructName, out var items)
+                ? items // If the struct name is in the dictionary, get the list of variable-sized data names, even if it's null
+                : null; // If it wasn't found, set to null
+
+        public IEnumerable<string> PropertyNames
+        {
+            get
+            {
+                if (ObjectData == null)
+                    return Enumerable.Empty<string>();
+
+                return ObjectData.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => p.Name);
+            }
+        }
+
+        public object GetPropertyValue(string propertyName)
+        {
+            if (ObjectData == null)
+                return null;
+
+            PropertyInfo propInfo = ObjectData.GetType().GetProperty(propertyName);
+            return propInfo?.GetValue(ObjectData);
+        }
+
+        public IEnumerable<string> FixedSizePropertyNames
+        {
+            get
+            {
+                var allProperties = PropertyNames;
+                var variableSized = VariableSizedDataNames ?? Array.Empty<string>();
+                return allProperties.Except(variableSized);
+            }
+        }
+    }
+
     public class ClipboardItem : ICloneable
     {
         public string FormatName { get; set; }
@@ -1886,7 +1927,8 @@ namespace ClipboardManager
         public string FormatType { get; set; } = "Unknown";
         public string ErrorReason { get; set; } = null;
         public string ErrorDiagnosisReport { get; set; } = null;
-        public object AsDataObject { get; set; } = null; // Used to hold object from converted raw data
+        public ClipDataObject ClipDataObject { get; set; } = null ;
+
 
         public object Clone()
         {
@@ -1904,7 +1946,13 @@ namespace ClipboardManager
                 FormatType = this.FormatType,
                 ErrorReason = this.ErrorReason,
                 ErrorDiagnosisReport = this.ErrorDiagnosisReport,
-                AsDataObject = this.AsDataObject
+                ClipDataObject = this.ClipDataObject != null
+                ? new ClipDataObject // If it 's not null, clone it
+                {
+                    StructName = this.ClipDataObject.StructName,
+                    ObjectData = this.ClipDataObject.ObjectData
+                }
+                : null // If it's null, set to null
             };
         }
     }

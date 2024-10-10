@@ -86,7 +86,8 @@ namespace EditClipboardItems
 
             if (fullItem.DataInfoList.Count > 0 && !string.IsNullOrEmpty(fullItem.DataInfoList[0]))
             {
-                result.AppendLine($"\n{indent}Data Info:");
+                indent = "    ";
+                result.AppendLine($"\nData Info:");
                 // Add each selectedItem in DataInfoList to the result indented
                 foreach (string dataInfoItem in fullItem.DataInfoList)
                 {
@@ -95,16 +96,42 @@ namespace EditClipboardItems
             }
 
             // Show the link to the struct documentation from the dictionary if it exists
-            if (formatInfo.Kind == "struct" && StructLinks.TryGetValue(FormatDictionary[formatName].StructType.Name, out string link))
-            {
-                result.AppendLine($"\n{indent}Struct Documentation: {link}");
-            }
+            //if (formatInfo.Kind == "struct" && StructDocsLinks.TryGetValue(FormatDictionary[formatName].StructType.Name, out string link))
+            //{
+            //    result.AppendLine($"\n{indent}Struct Documentation: {link}");
+            //}
 
-            if (formatInfo.Kind == "struct" && formatInfo.StructType != null && data != null)
+            //if (formatInfo.Kind == "struct" && formatInfo.StructType != null && data != null)
+            //{
+            //    result.AppendLine($"\n{indent}Struct Definition and Values:");
+            //    int offset = 0;
+            //    InspectStruct(formatInfo.StructType, data, ref result, indent + "  ", ref offset);
+            //}
+
+            // See if we have documentation link in the dictionary
+
+            // Check if ClipDataObject is available for the item
+
+            if (fullItem.ClipDataObject != null)
             {
-                result.AppendLine($"\n{indent}Struct Definition and Values:");
-                int offset = 0;
-                InspectStruct(formatInfo.StructType, data, ref result, indent + "  ", ref offset);
+                indent = "    ";
+                result.AppendLine($"\nStruct Info:");
+                // Print the details of all the properties of ObjectData except those that are in VariableSizedDataNames
+                foreach (string propertyName in fullItem.ClipDataObject.FixedSizePropertyNames)
+                {
+                    object propertyValue = fullItem.ClipDataObject.GetPropertyValue(propertyName);
+                    // If the property value is an object, print the name and sub properties below it
+                    if (propertyValue is object)
+                    {
+
+                    }
+
+                    result.AppendLine($"{indent}{propertyName}: {valueStr}");
+                }
+            }
+            else
+            {
+                result.AppendLine($"\nAsDataObject is not available for this item.");
             }
 
             return result.ToString();

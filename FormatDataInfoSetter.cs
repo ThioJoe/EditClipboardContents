@@ -27,12 +27,12 @@ namespace ClipboardManager
 {
     public partial class MainForm : Form
     {
-//------// -------------------------------------- Set Data Info ---------------------------------------------------
-        private static (List<string>, byte[], object) SetDataInfo(string formatName, byte[] rawData)
+        // -------------------------------------- Set Data Info ---------------------------------------------------
+        private static (List<string>, byte[], ClipDataObject) SetDataInfo(string formatName, byte[] rawData)
         {
             List<string> dataInfoList = new List<string>();
             byte[] processedData = rawData;
-            object processedObject = null;
+            ClipDataObject processedObject = null;
 
             switch (formatName) // Process based on format name because format ID can be different for non-standard (registered) formats
             {
@@ -83,18 +83,31 @@ namespace ClipboardManager
                     break;
 
                 case "CF_DIB":   // 8  - CF_DIB
-                    var bitmapInfo = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPINFO>(rawData);
-                    int width = bitmapInfo.bmiHeader.biWidth;
-                    int height = bitmapInfo.bmiHeader.biHeight;
-                    int bitCount = bitmapInfo.bmiHeader.biBitCount;
+                    var bitmapProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPINFO>(rawData);
+                    int width = bitmapProcessed.bmiHeader.biWidth;
+                    int height = bitmapProcessed.bmiHeader.biHeight;
+                    int bitCount = bitmapProcessed.bmiHeader.biBitCount;
                     dataInfoList.Add($"{width}x{height}, {bitCount} bpp");
-                    processedObject = bitmapInfo;
+
+                    processedObject = new ClipDataObject
+                    {
+                        ObjectData = bitmapProcessed,
+                        StructName = "BITMAPINFO"
+                    };
+
                     break;
 
                 case "CF_DIBV5": // 17 - CF_DIBV5
-                    var bitmapInfoV5 = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPV5HEADER>(rawData);
-                    dataInfoList.Add($"{bitmapInfoV5.bV5Width}x{bitmapInfoV5.bV5Height}, {bitmapInfoV5.bV5BitCount} bpp");
-                    processedObject = bitmapInfoV5;
+                    var bitmapInfoV5Processed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPV5HEADER>(rawData);
+                    dataInfoList.Add($"{bitmapInfoV5Processed.bV5Width}x{bitmapInfoV5Processed.bV5Height}, {bitmapInfoV5Processed.bV5BitCount} bpp");
+
+
+                    processedObject = new ClipDataObject
+                    {
+                        ObjectData = bitmapInfoV5Processed,
+                        StructName = "BITMAPV5HEADER"
+                    };
+
                     break;
 
                 case "CF_HDROP": // 15 - CF_HDROP
@@ -146,6 +159,14 @@ namespace ClipboardManager
                         {
                             handle.Free();
                         }
+
+                        var dropFilesProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.DROPFILES>(rawData);
+                        processedObject = new ClipDataObject
+                        {
+                            ObjectData = dropFilesProcessed,
+                            StructName = "DROPFILES"
+                        };
+
                         break;
                     }
 
@@ -232,7 +253,6 @@ namespace ClipboardManager
                     break;
 
                 // --------------- End Cloud Formats -----------------
-
 
                 default:
 

@@ -240,7 +240,7 @@ namespace EditClipboardItems
         }
 
         // Dictionary containing names of structs as keys and links to microsoft articles about them
-        public static Dictionary<string, string> StructLinks = new Dictionary<string, string>
+        public static Dictionary<string, string> StructDocsLinks = new Dictionary<string, string>
         {
             { "BITMAP", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmap" },
             { "BITMAPV5HEADER", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapv5header" },
@@ -253,6 +253,19 @@ namespace EditClipboardItems
             { "DROPFILES", "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-dropfiles" },
             { "PALETTEENTRY", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-paletteentry" },
             { "LOGPALETTE", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-logpalette" }
+        };
+
+        // Dictionary containing the names of the types of structs as keys and any variable sized item properties or handles as values
+        public static Dictionary<string, string[]> VariableSizedItems = new Dictionary<string, string[]>
+        {
+            { "BITMAP", new string[] { "bmBits" } },                // Pointer
+            { "BITMAPV5HEADER", new string[] { null } },            // Contains sub-items but they are all fixed
+            { "BITMAPINFOHEADER", new string[] { null } },          // All fixed data
+            { "BITMAPINFO", new string[] { "bmiColors" } },         // Dynamically sized array of RGBQUAD with image data
+            { "METAFILEPICT", new string[] { "hMF" } },             // Pointer to HMETAFILE
+            { "CIEXYZTRIPLE", new string[] { null } },              // Contains sub-items but they are all fixed
+            { "DROPFILES", new string[] { "pt" } },                 // Pointer
+            { "LOGPALETTE", new string[] { "palPalEntry" } }        // Dynamically sized array of PALETTEENTRY
         };
 
     }
