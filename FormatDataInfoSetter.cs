@@ -12,6 +12,7 @@ using System.Drawing;
 
 // My Classes
 using EditClipboardItems;
+using System.ComponentModel;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -31,6 +32,12 @@ namespace ClipboardManager
         {
             List<string> dataInfoList = new List<string>();
             byte[] processedData = rawData;
+
+            //Testing
+            if (formatName == "CF_DIB") {
+                var bitmapInfo = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPINFO>(rawData);
+            }
+            
 
             switch (formatName) // Process based on format name because format ID can be different for non-standard (registered) formats
             {

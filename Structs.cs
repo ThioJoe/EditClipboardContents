@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -26,142 +29,208 @@ namespace EditClipboardItems
 
     public static class ClipboardFormats
     {
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct BITMAP
+        public class BITMAP
         {
-            public LONG bmType;
-            public LONG bmWidth;
-            public LONG bmHeight;
-            public LONG bmWidthBytes;
-            public WORD bmPlanes;
-            public WORD bmBitsPixel;
-            public LPVOID bmBits;
+            public LONG bmType { get; set; }
+            public LONG bmWidth { get; set; }
+            public LONG bmHeight { get; set; }
+            public LONG bmWidthBytes { get; set; }
+            public WORD bmPlanes { get; set; }
+            public WORD bmBitsPixel { get; set; }
+            public LPVOID bmBits { get; set; }
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct BITMAPV5HEADER
+        public class BITMAPV5HEADER
         {
-            public DWORD bV5Size;
-            public LONG bV5Width;
-            public LONG bV5Height;
-            public WORD bV5Planes;
-            public WORD bV5BitCount;
-            public DWORD bV5Compression;
-            public DWORD bV5SizeImage;
-            public LONG bV5XPelsPerMeter;
-            public LONG bV5YPelsPerMeter;
-            public DWORD bV5ClrUsed;
-            public DWORD bV5ClrImportant;
-            public DWORD bV5RedMask;
-            public DWORD bV5GreenMask;
-            public DWORD bV5BlueMask;
-            public DWORD bV5AlphaMask;
-            public DWORD bV5CSType;
-            public CIEXYZTRIPLE bV5Endpoints;
-            public DWORD bV5GammaRed;
-            public DWORD bV5GammaGreen;
-            public DWORD bV5GammaBlue;
-            public DWORD bV5Intent;
-            public DWORD bV5ProfileData;
-            public DWORD bV5ProfileSize;
-            public DWORD bV5Reserved;
+            public DWORD bV5Size { get; set; }
+            public LONG bV5Width { get; set; }
+            public LONG bV5Height { get; set; }
+            public WORD bV5Planes { get; set; }
+            public WORD bV5BitCount { get; set; }
+            public DWORD bV5Compression { get; set; }
+            public DWORD bV5SizeImage { get; set; }
+            public LONG bV5XPelsPerMeter { get; set; }
+            public LONG bV5YPelsPerMeter { get; set; }
+            public DWORD bV5ClrUsed { get; set; }
+            public DWORD bV5ClrImportant { get; set; }
+            public DWORD bV5RedMask { get; set; }
+            public DWORD bV5GreenMask { get; set; }
+            public DWORD bV5BlueMask { get; set; }
+            public DWORD bV5AlphaMask { get; set; }
+            public DWORD bV5CSType { get; set; }
+            public CIEXYZTRIPLE bV5Endpoints { get; set; }
+            public DWORD bV5GammaRed { get; set; }
+            public DWORD bV5GammaGreen { get; set; }
+            public DWORD bV5GammaBlue { get; set; }
+            public DWORD bV5Intent { get; set; }
+            public DWORD bV5ProfileData { get; set; }
+            public DWORD bV5ProfileSize { get; set; }
+            public DWORD bV5Reserved { get; set; }
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct BITMAPINFOHEADER
+        public class BITMAPINFOHEADER
         {
-            public DWORD biSize;
-            public LONG biWidth;
-            public LONG biHeight;
-            public WORD biPlanes;
-            public WORD biBitCount;
-            public DWORD biCompression;
-            public DWORD biSizeImage;
-            public LONG biXPelsPerMeter;
-            public LONG biYPelsPerMeter;
-            public DWORD biClrUsed;
-            public DWORD biClrImportant;
+            public DWORD biSize { get; set; }
+            public LONG biWidth { get; set; }
+            public LONG biHeight { get; set; }
+            public WORD biPlanes { get; set; }
+            public WORD biBitCount { get; set; }
+            public DWORD biCompression { get; set; }
+            public DWORD biSizeImage { get; set; }
+            public LONG biXPelsPerMeter { get; set; }
+            public LONG biYPelsPerMeter { get; set; }
+            public DWORD biClrUsed { get; set; }
+            public DWORD biClrImportant { get; set; }
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct RGBQUAD
+        public class RGBQUAD
         {
-            public BYTE rgbBlue;
-            public BYTE rgbGreen;
-            public BYTE rgbRed;
-            public BYTE rgbReserved;
+            public BYTE rgbBlue { get; set; }
+            public BYTE rgbGreen { get; set; }
+            public BYTE rgbRed { get; set; }
+            public BYTE rgbReserved { get; set; }
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct BITMAPINFO
+        public class BITMAPINFO
         {
-            public BITMAPINFOHEADER bmiHeader;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
-            public RGBQUAD[] bmiColors;
+            public BITMAPINFOHEADER bmiHeader { get; set; }
+            public List<RGBQUAD> bmiColors { get; set; }
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct METAFILEPICT
+        public class METAFILEPICT
         {
-            public LONG mm;
-            public LONG xExt;
-            public LONG yExt;
-            public HMETAFILE hMF;
+            public LONG mm { get; set; }
+            public LONG xExt { get; set; }
+            public LONG yExt { get; set; }
+            public HMETAFILE hMF { get; set; }
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct CIEXYZ
+        public class CIEXYZ
         {
-            public FXPT2DOT30 ciexyzX; // FXPT2DOT30
-            public FXPT2DOT30 ciexyzY; // FXPT2DOT30
-            public FXPT2DOT30 ciexyzZ; // FXPT2DOT30
+            public FXPT2DOT30 ciexyzX { get; set; }
+            public FXPT2DOT30 ciexyzY { get; set; }
+            public FXPT2DOT30 ciexyzZ { get; set; }
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct CIEXYZTRIPLE
+        public class CIEXYZTRIPLE
         {
-            public CIEXYZ ciexyzRed;
-            public CIEXYZ ciexyzGreen;
-            public CIEXYZ ciexyzBlue;
+            public CIEXYZ ciexyzRed { get; set; }
+            public CIEXYZ ciexyzGreen { get; set; }
+            public CIEXYZ ciexyzBlue { get; set; }
         }
 
-        // The pointer structure for CF_HDROP. Documentation says CF_HDROP is a pointer to HDROP, but it's actually a pointer to DROPFILES
-        // https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-dropfiles
-        // Specifying fnc and fwide as ints instead of bools because in Win32 they are 4 bytes, not 1
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct DROPFILES
+        public class DROPFILES
         {
-            public DWORD pFiles;
-            public POINT pt;
-            public BOOL fNC;
-            public BOOL fWide;
+            public DWORD pFiles { get; set; }
+            public POINT pt { get; set; }
+            public BOOL fNC { get; set; }
+            public BOOL fWide { get; set; }
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct POINT
+        public class POINT
         {
-            LONG x;
-            LONG y;
+            public LONG x { get; set; }
+            public LONG y { get; set; }
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct PALETTEENTRY
+        public class PALETTEENTRY
         {
-            public BYTE peRed;
-            public BYTE peGreen;
-            public BYTE peBlue;
-            public BYTE peFlags;
+            public BYTE peRed { get; set; }
+            public BYTE peGreen { get; set; }
+            public BYTE peBlue { get; set; }
+            public BYTE peFlags { get; set; }
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct LOGPALETTE
+        public class LOGPALETTE
         {
-            public WORD palVersion;
-            public WORD palNumEntries;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
-            public PALETTEENTRY[] palPalEntry;
+            public WORD palVersion { get; set; }
+            public WORD palNumEntries { get; set; }
+            public List<PALETTEENTRY> palPalEntry { get; set; }
         }
 
+        public static T BytesToObject<T>(byte[] data) where T : new()
+        {
+            int offset = 0;
+            return (T)ReadValue(typeof(T), data, ref offset);
+        }
+
+        private static object ReadValue(Type type, byte[] data, ref int offset)
+        {
+            if (type == typeof(BYTE) || type == typeof(byte))
+            {
+                offset += sizeof(BYTE);
+                return data[offset];
+            }
+            else if (type == typeof(WORD) || type == typeof(ushort))
+            {
+                WORD value = BitConverter.ToUInt16(data, offset);
+                offset += sizeof(WORD);
+                return value;
+            }
+            else if (type == typeof(DWORD))// || type == typeof(uint))
+            {
+                DWORD value = BitConverter.ToUInt32(data, offset);
+                offset += sizeof(DWORD);
+                return value;
+            }
+            else if (type == typeof(LONG) || type == typeof(int))
+            {
+                LONG value = BitConverter.ToInt32(data, offset);
+                offset += sizeof(LONG);
+                return value;
+            }
+            else if (type == typeof(BOOL))
+            {
+                BOOL value = BitConverter.ToInt32(data, offset);
+                offset += sizeof(BOOL);
+                return value;
+            }
+            else if (type == typeof(LPVOID))
+            {
+                LPVOID value = (IntPtr)BitConverter.ToInt64(data, offset);
+                offset += IntPtr.Size;
+                return value;
+            }
+            else if (type == typeof(FXPT2DOT30))
+            {
+                FXPT2DOT30 value = BitConverter.ToInt32(data, offset);
+                offset += sizeof(FXPT2DOT30);
+                return value;
+            }
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+            {
+                Type elementType = type.GetGenericArguments()[0];
+                int count = BitConverter.ToInt32(data, offset);
+                offset += sizeof(int);
+
+                var listType = typeof(List<>).MakeGenericType(elementType);
+                var list = (System.Collections.IList)Activator.CreateInstance(listType);
+
+                for (int i = 0; i < count; i++)
+                {
+                    list.Add(ReadValue(elementType, data, ref offset));
+                }
+
+                return list;
+            }
+            else if (type.IsClass)
+            {
+                object obj = Activator.CreateInstance(type);
+                foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    if (property.CanWrite)
+                    {
+                        object value = ReadValue(property.PropertyType, data, ref offset);
+                        property.SetValue(obj, value);
+                    }
+                }
+                return obj;
+            }
+            else
+            {
+                throw new NotSupportedException($"Type {type} is not supported.");
+            }
+        }
 
         // Dictionary containing names of structs as keys and links to microsoft articles about them
         public static Dictionary<string, string> StructLinks = new Dictionary<string, string>
