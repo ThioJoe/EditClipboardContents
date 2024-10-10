@@ -1965,16 +1965,45 @@ namespace ClipboardManager
                     var value = prop.GetValue(ObjectData);
                     if (value != null && !prop.PropertyType.IsPrimitive && prop.PropertyType != typeof(string))
                     {
-                        _nestedObjects[prop.Name] = new ClipDataObject
+                        var nestedClipDataObject = new ClipDataObject
                         {
                             StructName = prop.PropertyType.Name,
                             ObjectData = value
                         };
+                        _nestedObjects[prop.Name] = nestedClipDataObject;
+
+                        // Debugging statement
+                        Debug.WriteLine($"Initialized nested object for property '{prop.Name}' with StructName '{nestedClipDataObject.StructName}' and ObjectData '{nestedClipDataObject.ObjectData}'");
                     }
                 }
-                catch (TargetParameterCountException)
+                catch (Exception ex)
                 {
-                    // Skip properties that require parameters
+                    // Log the exception for debugging
+                    Debug.WriteLine($"Exception while initializing property '{prop.Name}': {ex.Message}");
+                }
+            }
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            BuildString(sb, "");
+            return sb.ToString();
+        }
+
+        private void BuildString(StringBuilder sb, string indent)
+        {
+            foreach (var propertyName in PropertyNames)
+            {
+                var propertyValue = GetPropertyValue(propertyName);
+                if (propertyValue is ClipDataObject nestedObject)
+                {
+                    sb.AppendLine($"{indent}{propertyName}:");
+                    nestedObject.BuildString(sb, indent + "    ");
+                }
+                else
+                {
+                    sb.AppendLine($"{indent}{propertyName}: {propertyValue}");
                 }
             }
         }

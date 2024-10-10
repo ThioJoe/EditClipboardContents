@@ -114,10 +114,16 @@ namespace EditClipboardItems
 
             void recursiveAddProperties(ClipDataObject obj, string indent)
             {
+                if (obj.ObjectData == null)
+                {
+                    result.AppendLine($"{indent}ObjectData is null");
+                    return;
+                }
+
                 foreach (var propertyName in obj.PropertyNames)
                 {
                     object propertyValue = obj.GetPropertyValue(propertyName);
-                    // If the property value is an object, print the name and sub properties below it
+
                     if (propertyValue is ClipDataObject nestedObject)
                     {
                         result.AppendLine($"{indent}{propertyName}:");

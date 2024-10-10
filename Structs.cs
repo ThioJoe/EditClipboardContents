@@ -69,6 +69,19 @@ namespace EditClipboardItems
             public DWORD bV5Reserved { get; set; }
         }
 
+        public enum bV5Compression : UInt16 // Two bytes not sure if int or uint
+        {
+            BI_RGB       = 0x0000,
+            BI_RLE8      = 0x0001,
+            BI_RLE4      = 0x0002,
+            BI_BITFIELDS = 0x0003,
+            BI_JPEG      = 0x0004,
+            BI_PNG       = 0x0005,
+            BI_CMYK      = 0x000B,
+            BI_CMYKRLE8  = 0x000C,
+            BI_CMYKRLE4  = 0x000D
+        }
+
         public class BITMAPINFOHEADER
         {
             public DWORD biSize { get; set; }
@@ -151,16 +164,16 @@ namespace EditClipboardItems
         // public enum?
         public class LOGCOLORSPACEA
         {
-            public DWORD lcsSignature;
-            public DWORD lcsVersion;
-            public DWORD lcsSize;
-            public LCSCSTYPE lcsCSType;
-            public LCSGAMUTMATCH lcsIntent;
-            public CIEXYZTRIPLE lcsEndpoints;
-            public DWORD lcsGammaRed;
-            public DWORD lcsGammaGreen;
-            public DWORD lcsGammaBlue;
-            public List<CHAR> lcsFilename; // Max path is 260 usually. Originally defined as lcsFilename[MAX_PATH], null terminated string
+            public DWORD lcsSignature { get; set; }
+            public DWORD lcsVersion { get; set; }
+            public DWORD lcsSize { get; set; }
+            public LCSCSTYPE lcsCSType { get; set; }
+            public LCSGAMUTMATCH lcsIntent { get; set; }
+            public CIEXYZTRIPLE lcsEndpoints { get; set; }
+            public DWORD lcsGammaRed { get; set; }
+            public DWORD lcsGammaGreen { get; set; }
+            public DWORD lcsGammaBlue { get; set; }
+            public List<CHAR> lcsFilename { get; set; } // Max path is 260 usually. Originally defined as lcsFilename[MAX_PATH], null terminated string
         }
         
         public enum LCSCSTYPE : uint
@@ -180,6 +193,11 @@ namespace EditClipboardItems
             LCS_GM_IMAGES           =   0x00000004
         }
 
+        public static string EnumLookup(Type enumType, uint value)
+        {
+            return Enum.GetName(enumType, value);
+        }
+
         public static T BytesToObject<T>(byte[] data) where T : new()
         {
             int offset = 0;
@@ -188,24 +206,29 @@ namespace EditClipboardItems
 
         private static object ReadValue(Type type, byte[] data, ref int offset)
         {
-            if (type == typeof(BYTE) || type == typeof(byte))
+            if (type == typeof(BYTE))
             {
                 offset += sizeof(BYTE);
                 return data[offset];
             }
-            else if (type == typeof(WORD) || type == typeof(ushort))
+            else if (type == typeof(CHAR))
+            {
+                offset += sizeof(CHAR);
+                return (CHAR)data[offset];
+            }
+            else if (type == typeof(WORD))
             {
                 WORD value = BitConverter.ToUInt16(data, offset);
                 offset += sizeof(WORD);
                 return value;
             }
-            else if (type == typeof(DWORD))// || type == typeof(uint))
+            else if (type == typeof(DWORD))
             {
                 DWORD value = BitConverter.ToUInt32(data, offset);
                 offset += sizeof(DWORD);
                 return value;
             }
-            else if (type == typeof(LONG) || type == typeof(int))
+            else if (type == typeof(LONG))
             {
                 LONG value = BitConverter.ToInt32(data, offset);
                 offset += sizeof(LONG);
@@ -245,6 +268,12 @@ namespace EditClipboardItems
                     }
                 }
 
+                // If it's an empty list return it or else it will throw an exception for some reason
+                if (listSize == 0)
+                {
+                    return list;
+                }
+
                 // Instead of reading a count, we'll read elements until we reach the end of the data
                 while (offset + listSize < data.Length)
                 {
@@ -264,6 +293,13 @@ namespace EditClipboardItems
                     }
                 }
                 return obj;
+            }
+            // if it's uint based enum
+            else if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(uint))
+            {
+                uint value = BitConverter.ToUInt32(data, offset);
+                offset += sizeof(uint);
+                return Enum.ToObject(type, value);
             }
             else
             {
@@ -287,7 +323,8 @@ namespace EditClipboardItems
             { "LOGPALETTE", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-logpalette" },
             { "LOGCOLORSPACEA", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-logcolorspacea" },
             { "LCSCSTYPE", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/eb4bbd50-b3ce-4917-895c-be31f214797f" },
-            { "LCSGAMUTMATCH", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/9fec0834-607d-427d-abd5-ab240fb0db38" }
+            { "LCSGAMUTMATCH", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/9fec0834-607d-427d-abd5-ab240fb0db38" },
+            { "bV5Compression", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/4e588f70-bd92-4a6f-b77f-35d0feaf7a57" }
         };
 
         // Dictionary containing the names of the types of structs as keys and any variable sized item properties or handles as values
