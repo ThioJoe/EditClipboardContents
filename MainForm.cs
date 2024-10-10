@@ -687,6 +687,7 @@ namespace ClipboardManager
             foreach (var item in clipboardItems)
             {
                 byte[] processedData = null;
+                object processedObject = null;
 
                 // Data info list contains metadata about the data. First item will show in the data info column, all will show in the text box in object/struct view mode
                 List<string> dataInfoList = new List<string>();
@@ -694,7 +695,7 @@ namespace ClipboardManager
                 // If there is data, process it and get the data info
                 if (item.RawData != null && item.RawData.Length > 0)
                 {
-                    (dataInfoList, processedData) = SetDataInfo(formatName: item.FormatName, rawData: item.RawData);
+                    (dataInfoList, processedData, processedObject) = SetDataInfo(formatName: item.FormatName, rawData: item.RawData);
                 }
                 // If there is no data, and there is an error message
                 else if (!string.IsNullOrEmpty(item.ErrorReason))
@@ -1885,6 +1886,7 @@ namespace ClipboardManager
         public string FormatType { get; set; } = "Unknown";
         public string ErrorReason { get; set; } = null;
         public string ErrorDiagnosisReport { get; set; } = null;
+        public object AsDataObject { get; set; } = null; // Used to hold object from converted raw data
 
         public object Clone()
         {
@@ -1901,7 +1903,8 @@ namespace ClipboardManager
                 HasPendingEdit = false,
                 FormatType = this.FormatType,
                 ErrorReason = this.ErrorReason,
-                ErrorDiagnosisReport = this.ErrorDiagnosisReport
+                ErrorDiagnosisReport = this.ErrorDiagnosisReport,
+                AsDataObject = this.AsDataObject
             };
         }
     }

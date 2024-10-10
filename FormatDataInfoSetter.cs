@@ -28,16 +28,11 @@ namespace ClipboardManager
     public partial class MainForm : Form
     {
 //------// -------------------------------------- Set Data Info ---------------------------------------------------
-        private static (List<string>, byte[]) SetDataInfo(string formatName, byte[] rawData)
+        private static (List<string>, byte[], object) SetDataInfo(string formatName, byte[] rawData)
         {
             List<string> dataInfoList = new List<string>();
             byte[] processedData = rawData;
-
-            //Testing
-            if (formatName == "CF_DIB") {
-                var bitmapInfo = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPINFO>(rawData);
-            }
-            
+            object processedObject = null;
 
             switch (formatName) // Process based on format name because format ID can be different for non-standard (registered) formats
             {
@@ -88,10 +83,18 @@ namespace ClipboardManager
                     break;
 
                 case "CF_DIB":   // 8  - CF_DIB
+                    var bitmapInfo = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPINFO>(rawData);
+                    int width = bitmapInfo.bmiHeader.biWidth;
+                    int height = bitmapInfo.bmiHeader.biHeight;
+                    int bitCount = bitmapInfo.bmiHeader.biBitCount;
+                    dataInfoList.Add($"{width}x{height}, {bitCount} bpp");
+                    processedObject = bitmapInfo;
+                    break;
+
                 case "CF_DIBV5": // 17 - CF_DIBV5
-                    dataInfoList.Add($"{formatName}, {rawData.Length} bytes");
-                    dataInfoList.Add($"Format: {formatName}");
-                    dataInfoList.Add($"Size: {rawData.Length} bytes");
+                    var bitmapInfoV5 = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPV5HEADER>(rawData);
+                    dataInfoList.Add($"{bitmapInfoV5.bV5Width}x{bitmapInfoV5.bV5Height}, {bitmapInfoV5.bV5BitCount} bpp");
+                    processedObject = bitmapInfoV5;
                     break;
 
                 case "CF_HDROP": // 15 - CF_HDROP
@@ -245,7 +248,7 @@ namespace ClipboardManager
 
             } // End switch (formatName)
 
-            return (dataInfoList, processedData);
+            return (dataInfoList, processedData, processedObject);
 
         }
     }
