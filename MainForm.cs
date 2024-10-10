@@ -1930,11 +1930,18 @@ namespace ClipboardManager
             if (ObjectData == null)
                 return null;
 
+            // Check if it's an enum first, because it will otherwise get treated as a nested object
+            if (ObjectData.GetType().GetProperty(propertyName)?.PropertyType.IsEnum == true)
+            {
+                return ObjectData.GetType().GetProperty(propertyName).GetValue(ObjectData).ToString();
+            }
+
             if (_nestedObjects.TryGetValue(propertyName, out var nestedObject))
                 return nestedObject;
 
             if (VariableSizedDataNames?.Contains(propertyName) == true)
                 return "[Binary data or handle]";
+
 
             PropertyInfo propInfo = ObjectData.GetType().GetProperty(propertyName);
             try
