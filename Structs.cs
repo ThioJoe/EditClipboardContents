@@ -242,8 +242,17 @@ namespace EditClipboardItems
             }
             else if (type == typeof(LPVOID))
             {
-                LPVOID value = (IntPtr)BitConverter.ToInt64(data, offset);
-                offset += IntPtr.Size;
+                IntPtr value;
+                if (IntPtr.Size == 4) // 32-bit system
+                {
+                    value = (IntPtr)BitConverter.ToInt32(data, offset);
+                    offset += 4;
+                }
+                else // 64-bit system
+                {
+                    value = (IntPtr)BitConverter.ToInt64(data, offset);
+                    offset += 8;
+                }
                 return value;
             }
             else if (type == typeof(FXPT2DOT30))
