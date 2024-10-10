@@ -19,7 +19,7 @@ namespace EditClipboardItems
     // See: https://learn.microsoft.com/en-us/windows/win32/winprog/windows-data-types
     using BOOL = System.Int32;          // 4 Bytes
     using LONG = System.Int32;          // 4 Bytes
-    using DWORD = System.UInt32;        // 4 Bytes
+    using DWORD = System.UInt32;        // 4 Bytes, aka uint, uint32
     using WORD = System.UInt16;         // 2 Bytes
     using BYTE = System.Byte;           // 1 Byte
     using FXPT2DOT30 = System.Int32;    // 4 Bytes
@@ -48,7 +48,7 @@ namespace EditClipboardItems
             public LONG bV5Height { get; set; }
             public WORD bV5Planes { get; set; }
             public WORD bV5BitCount { get; set; }
-            public DWORD bV5Compression { get; set; }
+            public bV5Compression bV5Compression { get; set; }
             public DWORD bV5SizeImage { get; set; }
             public LONG bV5XPelsPerMeter { get; set; }
             public LONG bV5YPelsPerMeter { get; set; }
@@ -69,7 +69,7 @@ namespace EditClipboardItems
             public DWORD bV5Reserved { get; set; }
         }
 
-        public enum bV5Compression : UInt16 // Two bytes not sure if int or uint
+        public enum bV5Compression : uint // DWORD
         {
             BI_RGB       = 0x0000,
             BI_RLE8      = 0x0001,

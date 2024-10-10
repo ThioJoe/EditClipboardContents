@@ -131,6 +131,16 @@ namespace EditClipboardItems
                     }
                     else
                     {
+                        // Try to also get hex version of the value
+                        if (propertyValue != null && propertyValue.GetType().IsPrimitive)
+                        {
+                            string hexValue = GetValueString(propertyValue, asHex: true);
+                            if (!string.IsNullOrEmpty(hexValue))
+                            {
+                                // Updates the property value to include hex value, otherwise it will just include the decimal value
+                                propertyValue = $"{propertyValue} ({hexValue})";
+                            }
+                        }
                         result.AppendLine($"{indent}{propertyName}: {propertyValue}");
                     }
                 }
