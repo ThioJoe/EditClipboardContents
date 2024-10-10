@@ -200,17 +200,24 @@ namespace EditClipboardItems
             else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
             {
                 Type elementType = type.GetGenericArguments()[0];
-                int count = BitConverter.ToInt32(data, offset);
-                offset += sizeof(int);
-
                 var listType = typeof(List<>).MakeGenericType(elementType);
                 var list = (System.Collections.IList)Activator.CreateInstance(listType);
 
-                for (int i = 0; i < count; i++)
+                int listSize = 0;
+                // Get the total size of the types in the list
+                foreach (var property in elementType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    if (property.CanWrite)
+                    {
+                        listSize += Marshal.SizeOf(property.PropertyType);
+                    }
+                }
+
+                // Instead of reading a count, we'll read elements until we reach the end of the data
+                while (offset + listSize < data.Length)
                 {
                     list.Add(ReadValue(elementType, data, ref offset));
                 }
-
                 return list;
             }
             else if (type.IsClass)
