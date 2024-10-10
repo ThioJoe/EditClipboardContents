@@ -1162,6 +1162,18 @@ namespace ClipboardManager
             }
         }
 
+        // Get data in the datagridview of the selected item for a particular column
+        private string GetSelectedDataFromDataGridView(string columnName)
+        {
+            if (dataGridViewClipboard.SelectedRows.Count > 0)
+            {
+                int selectedRowIndex = dataGridViewClipboard.SelectedRows[0].Index; // Just get the first selected row even if there are multiple
+                return dataGridViewClipboard.Rows[selectedRowIndex].Cells[columnName].Value.ToString();
+            }
+            return null;
+        }
+
+
         private void UpdatePlaintextFromHexView()
         {
             // Set encoding mode based on dropdown
@@ -1920,6 +1932,9 @@ namespace ClipboardManager
 
             if (_nestedObjects.TryGetValue(propertyName, out var nestedObject))
                 return nestedObject;
+
+            if (VariableSizedDataNames?.Contains(propertyName) == true)
+                return "[Binary data or handle]";
 
             PropertyInfo propInfo = ObjectData.GetType().GetProperty(propertyName);
             try

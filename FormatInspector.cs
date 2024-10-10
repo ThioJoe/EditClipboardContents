@@ -138,7 +138,7 @@ namespace EditClipboardItems
             }
             else
             {
-                result.AppendLine($"\nAsDataObject is not available for this item.");
+                //result.AppendLine($"\nAsDataObject is not available for this item.");
             }
 
             return result.ToString();

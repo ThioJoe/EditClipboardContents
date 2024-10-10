@@ -316,18 +316,7 @@ namespace ClipboardManager
 
         private void dataGridViewClipboard_SelectionChanged(object sender, EventArgs e)
         {
-            if (dataGridViewClipboard.SelectedRows.Count > 0)
-            {
-                // Assume focus of the first selected row if multiple are selected
-                ChangeCellFocus(dataGridViewClipboard.SelectedRows[0].Index);
-
-                // Enable menu buttons that require a selectedItem
-                menuEdit_CopySelectedRows.Enabled = true;
-                menuFile_ExportSelectedAsRawHex.Enabled = true;
-                menuFile_ExportSelectedStruct.Enabled = true;
-                menuFile_ExportSelectedAsFile.Enabled = true;
-            }
-            else
+            if (dataGridViewClipboard.SelectedRows.Count == 0)
             {
                 richTextBoxContents.Clear();
 
@@ -336,7 +325,18 @@ namespace ClipboardManager
                 menuFile_ExportSelectedAsRawHex.Enabled = false;
                 menuFile_ExportSelectedStruct.Enabled = false;
                 menuFile_ExportSelectedAsFile.Enabled = false;
+                return;
             }
+
+            // Assume focus of the first selected row if multiple are selected
+            ChangeCellFocus(dataGridViewClipboard.SelectedRows[0].Index);
+
+            // Enable menu buttons that require a selectedItem
+            menuEdit_CopySelectedRows.Enabled = true;
+            menuFile_ExportSelectedAsRawHex.Enabled = true;
+            menuFile_ExportSelectedStruct.Enabled = true;
+            menuFile_ExportSelectedAsFile.Enabled = true;
+
 
             // If the auto selection checkbox is checked, decide which view mode to use based on item data
             if (checkBoxAutoViewMode.Checked)
@@ -344,7 +344,20 @@ namespace ClipboardManager
                 // Get the selectedItem object
                 ClipboardItem item = GetSelectedClipboardItemObject();
 
-                // If there 
+                // If there is a text preview, show text mode
+                if (!string.IsNullOrEmpty(GetSelectedDataFromDataGridView("TextPreview")))
+                {
+                    dropdownContentsViewMode.SelectedIndex = 0; // Text
+                }
+                // If there is data object info, show object view mode
+                else if (item.ClipDataObject != null || item.DataInfoList.Count > 1)
+                {
+                    dropdownContentsViewMode.SelectedIndex = 3; // Object View
+                }
+                else
+                {
+                    dropdownContentsViewMode.SelectedIndex = 1; // Hex View (Non Editable)
+                }
             }
 
         }
