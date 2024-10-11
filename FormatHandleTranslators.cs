@@ -162,8 +162,11 @@ namespace EditClipboardItems
 
             try
             {
-                // Marshal the DROPFILES structure from the memory
+                // Marshal the DROPFILES_OBJ structure from the memory
                 DROPFILES dropFiles = Marshal.PtrToStructure<DROPFILES>(pDropFiles);
+
+                byte[] managedArray  = new byte[dropFiles.pFiles];
+                Marshal.Copy(pDropFiles, managedArray, 0, (Int32)dropFiles.pFiles); // Need to cast Dword to int32 because DWORD is uint32 and Marshal.Copy only takes int32 as the length parameter
 
                 // Determine if the file names are Unicode
                 bool isUnicode = dropFiles.fWide != 0;
@@ -174,10 +177,10 @@ namespace EditClipboardItems
                 // Prepare to calculate the total size
                 List<byte> rawDataList = new List<byte>();
 
-                // Get the size of the DROPFILES structure
+                // Get the size of the DROPFILES_OBJ structure
                 int dropFilesSize = Marshal.SizeOf(typeof(DROPFILES));
 
-                // Copy the DROPFILES structure to rawDataList
+                // Copy the DROPFILES_OBJ structure to rawDataList
                 byte[] dropFilesBytes = new byte[dropFilesSize];
                 Marshal.Copy(pDropFiles, dropFilesBytes, 0, dropFilesSize);
                 rawDataList.AddRange(dropFilesBytes);
@@ -224,6 +227,11 @@ namespace EditClipboardItems
                 // Convert the rawDataList to a byte array
                 return rawDataList.ToArray();
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in CF_HDROP_RawData_FromHandle: {ex.Message}");
+                return null;
+            }
             finally
             {
                 // Always unlock the global memory object
@@ -241,13 +249,13 @@ namespace EditClipboardItems
             GCHandle handle = GCHandle.Alloc(rawData, GCHandleType.Pinned);
             try
             {
-                // Get pointer to the DROPFILES structure in rawData
+                // Get pointer to the DROPFILES_OBJ structure in rawData
                 IntPtr pRawData = handle.AddrOfPinnedObject();
 
-                // Marshal the DROPFILES structure from rawData
+                // Marshal the DROPFILES_OBJ structure from rawData
                 DROPFILES dropFiles = Marshal.PtrToStructure<DROPFILES>(pRawData);
 
-                // The file names start after the DROPFILES structure
+                // The file names start after the DROPFILES_OBJ structure
                 int fileListOffset = (int)dropFiles.pFiles;
 
                 // Calculate the length of the file names (rest of the rawData)
@@ -267,7 +275,7 @@ namespace EditClipboardItems
 
                 try
                 {
-                    // Copy the DROPFILES structure to the global memory
+                    // Copy the DROPFILES_OBJ structure to the global memory
                     Marshal.StructureToPtr(dropFiles, pGlobal, false);
 
                     // Copy the file names to the global memory
@@ -348,7 +356,7 @@ namespace EditClipboardItems
                 {
                     case 8:
                         pixelFormat = PixelFormat.Format8bppIndexed;
-                        paletteSize = 256 * Marshal.SizeOf(typeof(RGBQUAD));
+                        paletteSize = 256 * Marshal.SizeOf(typeof(RGBQUAD_OBJ));
                         break;
                     case 24:
                         pixelFormat = PixelFormat.Format24bppRgb;
@@ -379,7 +387,7 @@ namespace EditClipboardItems
 
                     for (int i = 0; i < 256; i++)
                     {
-                        RGBQUAD colorQuad = (RGBQUAD)Marshal.PtrToStructure(new IntPtr(palettePtr.ToInt64() + i * Marshal.SizeOf(typeof(RGBQUAD))), typeof(RGBQUAD));
+                        RGBQUAD_OBJ colorQuad = (RGBQUAD_OBJ)Marshal.PtrToStructure(new IntPtr(palettePtr.ToInt64() + i * Marshal.SizeOf(typeof(RGBQUAD_OBJ))), typeof(RGBQUAD_OBJ));
                         palette.Entries[i] = Color.FromArgb(colorQuad.rgbRed, colorQuad.rgbGreen, colorQuad.rgbBlue);
                     }
 
@@ -416,7 +424,7 @@ namespace EditClipboardItems
                 {
                     case 8:
                         pixelFormat = PixelFormat.Format8bppIndexed;
-                        paletteSize = 256 * Marshal.SizeOf(typeof(RGBQUAD));
+                        paletteSize = 256 * Marshal.SizeOf(typeof(RGBQUAD_OBJ));
                         break;
                     case 24:
                         pixelFormat = PixelFormat.Format24bppRgb;
@@ -429,7 +437,7 @@ namespace EditClipboardItems
                 }
 
                 int stride = ((width * bmi.bmiHeader.biBitCount + 31) / 32) * 4;
-                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPINFOHEADER)) + paletteSize);
+                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPINFOHEADER_OBJ)) + paletteSize);
 
                 if (bmi.bmiHeader.biHeight > 0) // Bottom-up DIB
                 {
@@ -442,11 +450,11 @@ namespace EditClipboardItems
                 if (pixelFormat == PixelFormat.Format8bppIndexed)
                 {
                     ColorPalette palette = bitmap.Palette;
-                    IntPtr palettePtr = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPINFOHEADER)));
+                    IntPtr palettePtr = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPINFOHEADER_OBJ)));
 
                     for (int i = 0; i < 256; i++)
                     {
-                        RGBQUAD colorQuad = (RGBQUAD)Marshal.PtrToStructure(new IntPtr(palettePtr.ToInt64() + i * Marshal.SizeOf(typeof(RGBQUAD))), typeof(RGBQUAD));
+                        RGBQUAD_OBJ colorQuad = (RGBQUAD_OBJ)Marshal.PtrToStructure(new IntPtr(palettePtr.ToInt64() + i * Marshal.SizeOf(typeof(RGBQUAD_OBJ))), typeof(RGBQUAD_OBJ));
                         palette.Entries[i] = Color.FromArgb(colorQuad.rgbRed, colorQuad.rgbGreen, colorQuad.rgbBlue);
                     }
 

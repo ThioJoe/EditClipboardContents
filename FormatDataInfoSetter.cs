@@ -67,10 +67,15 @@ namespace ClipboardManager
                     break;
 
                 case "CF_BITMAP": // 2 - CF_BITMAP
+                    var CF_bitmapProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAP_OBJ>(rawData);
+                    
+                    //dataInfoList.Add($"{CF_bitmapProcessed.bmWidth}x{CF_bitmapProcessed.bmHeight}, {CF_bitmapProcessed.bmBitsPixel} bpp");
                     using (MemoryStream ms = new MemoryStream(rawData))
                     {
+                        byte[] msbytes = ms.ToArray();
                         using (Bitmap bmp = new Bitmap(ms))
                         {
+                            byte[] bmpBytes = ms.ToArray();
                             // Setting the contents of the data info list explicitly instead of using Add. It could be done the other way too.
                             dataInfoList = new List<string>
                             {
@@ -79,11 +84,18 @@ namespace ClipboardManager
                                 $"Image Format: {bmp.PixelFormat}"
                             };
                         }
+
+                        processedObject = new ClipDataObject
+                        {
+                            ObjectData = CF_bitmapProcessed,
+                            StructName = "BITMAP"
+                        };
+
                     }
                     break;
 
                 case "CF_DIB":   // 8  - CF_DIB
-                    var bitmapProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPINFO>(rawData);
+                    var bitmapProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPINFO_OBJ>(rawData);
                     int width = bitmapProcessed.bmiHeader.biWidth;
                     int height = bitmapProcessed.bmiHeader.biHeight;
                     int bitCount = bitmapProcessed.bmiHeader.biBitCount;
@@ -98,7 +110,7 @@ namespace ClipboardManager
                     break;
 
                 case "CF_DIBV5": // 17 - CF_DIBV5
-                    var bitmapInfoV5Processed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPV5HEADER>(rawData);
+                    var bitmapInfoV5Processed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPV5HEADER_OBJ>(rawData);
                     dataInfoList.Add($"{bitmapInfoV5Processed.bV5Width}x{bitmapInfoV5Processed.bV5Height}, {bitmapInfoV5Processed.bV5BitCount} bpp");
 
 
@@ -117,7 +129,7 @@ namespace ClipboardManager
                         {
                             IntPtr pData = handle.AddrOfPinnedObject();
 
-                            // Read the DROPFILES structure
+                            // Read the DROPFILES_OBJ structure
                             ClipboardFormats.DROPFILES dropFiles = Marshal.PtrToStructure<ClipboardFormats.DROPFILES>(pData);
 
                             // Determine if file names are Unicode
@@ -160,7 +172,7 @@ namespace ClipboardManager
                             handle.Free();
                         }
 
-                        var dropFilesProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.DROPFILES>(rawData);
+                        var dropFilesProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.DROPFILES_OBJ>(rawData);
                         processedObject = new ClipDataObject
                         {
                             ObjectData = dropFilesProcessed,
@@ -169,6 +181,16 @@ namespace ClipboardManager
 
                         break;
                     }
+                case "CF_METAFILEPICT": // 3
+                    var metafilePictProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.METAFILEPICT_OBJ>(rawData);
+                    dataInfoList.Add($"Mode: {metafilePictProcessed.mm}");
+
+                    processedObject = new ClipDataObject
+                    {
+                        ObjectData = metafilePictProcessed,
+                        StructName = "METAFILEPICT"
+                    };
+                    break;
 
                 case "CF_LOCALE": // 16 - CF_LOCALE
                     string dataInfo = "Invalid CF_LOCALE data"; // Default to invalid data
@@ -186,7 +208,21 @@ namespace ClipboardManager
                         }
                     }
                     dataInfoList.Add(dataInfo);
+                    break;
 
+                case "CF_PALETTE": // 9 - CF_PALETTE
+                    var paletteProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.LOGPALETTE_OBJ>(rawData);
+                    int paletteEntries = paletteProcessed.palNumEntries;
+                    dataInfoList.Add($"{paletteEntries} Entries");
+                    dataInfoList.Add($"Version: {paletteProcessed.palVersion}");
+                    dataInfoList.Add($"Flags: {paletteProcessed.palPalEntry}");
+                    dataInfoList.Add($"Color Count: {paletteEntries}");
+                    
+                    processedObject = new ClipDataObject
+                    {
+                        ObjectData = paletteProcessed,
+                        StructName = "LOGPALETTE"
+                    };
                     break;
 
                 // ------------------- Cloud Clipboard Formats -------------------

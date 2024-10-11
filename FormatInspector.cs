@@ -208,7 +208,7 @@ namespace EditClipboardItems
                     }
                     else if (field.FieldType.IsArray)
                     {
-                        // Array field (like RGBQUAD[])
+                        // Array field (like RGBQUAD_OBJ[])
                         result.AppendLine($"{indent}  Value: [Array of {field.FieldType.GetElementType().Name}]");
                         // Note: We don't process array contents here as the length is unknown
                     }
