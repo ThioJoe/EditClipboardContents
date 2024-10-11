@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 // My classes
 using EditClipboardItems;
 using System.Collections;
+using static EditClipboardItems.ClipboardFormats;
 
 
 namespace ClipboardManager
@@ -1887,6 +1888,8 @@ namespace ClipboardManager
 
     public class ClipDataObject
     {
+        private Dictionary<string, object> _nestedObjects = new Dictionary<string, object>();
+
         // Struct name will be gotten automatically via class method if possible and it wasn't set
         private string _structName = null;
         public string StructName
@@ -1902,8 +1905,8 @@ namespace ClipboardManager
             }
         }
 
-        private object _objectData = null;
-        public object ObjectData
+        private IClipboardFormat _objectData = null;
+        public IClipboardFormat ObjectData
         {
             get => _objectData;
             set
@@ -1917,13 +1920,6 @@ namespace ClipboardManager
             }
         }
 
-        private Dictionary<string, object> _nestedObjects = new Dictionary<string, object>();
-
-        public string[] VariableSizedDataNames =>
-            StructName != null && ClipboardFormats.VariableSizedItems.TryGetValue(StructName, out var items)
-                ? items  // If the struct name is in the dictionary, get the list of variable-sized data names, even if it's null
-                : null;  // If it wasn't found, set to null
-
         public IEnumerable<string> PropertyNames
         {
             get
@@ -1934,7 +1930,7 @@ namespace ClipboardManager
                 }
 
                 // If it's a collection and therefore no actual property names
-                if (ObjectData is IEnumerable enumerable && !(ObjectData is string))
+                if (ObjectData is IEnumerable enumerable)
                 {
                     return Enumerable.Empty<string>();
                 }
@@ -1942,16 +1938,6 @@ namespace ClipboardManager
                 {
                     return ObjectData.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => p.Name);
                 }
-            }
-        }
-
-        public IEnumerable<string> FixedSizePropertyNames
-        {
-            get
-            {
-                var allProperties = PropertyNames;
-                var variableSized = VariableSizedDataNames ?? Array.Empty<string>();
-                return allProperties.Except(variableSized);
             }
         }
 
@@ -1970,7 +1956,7 @@ namespace ClipboardManager
             if (_nestedObjects.TryGetValue(propertyName, out var nestedObject))
                 return nestedObject;
 
-            if (VariableSizedDataNames?.Contains(propertyName) == true)
+            if (ObjectData.GetVariableSizedItems().Contains(propertyName) == true)
                 return "[Binary data or handle]";
 
             PropertyInfo propInfo = ObjectData.GetType().GetProperty(propertyName);
@@ -1989,11 +1975,7 @@ namespace ClipboardManager
             if (ObjectData == null)
                 return;
 
-            var variableSized = VariableSizedDataNames ?? Array.Empty<string>();
-            if (!variableSized.Any())
-            {
-                variableSized = GetVariableValues(ObjectData) ?? Array.Empty<string>();
-            }
+            var variableSized = ObjectData.GetVariableSizedItems() ?? Array.Empty<string>();
 
             foreach (var prop in ObjectData.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
@@ -2015,7 +1997,7 @@ namespace ClipboardManager
                                 {
                                     var nestedClipDataObject = new ClipDataObject
                                     {
-                                        ObjectData = item
+                                        ObjectData = (IClipboardFormat)item
                                         // StructName will be set automatically
                                     };
                                     nestedList.Add(nestedClipDataObject);
@@ -2027,7 +2009,7 @@ namespace ClipboardManager
                         {
                             ClipDataObject nestedClipDataObject = new ClipDataObject
                             {
-                                ObjectData = value
+                                ObjectData = (IClipboardFormat)value
                                 // StructName will be set automatically
                             };
                             _nestedObjects[prop.Name] = nestedClipDataObject;
@@ -2091,34 +2073,6 @@ namespace ClipboardManager
                     _structName = structNameMethod.Invoke(null, null) as string;
                 }
             }
-        }
-
-        private string[] GetVariableValues(object obj)
-        {
-            // First get the struct name to pass to the dictionary
-            var structNameMethod = obj.GetType().GetMethod("StructName", BindingFlags.Public | BindingFlags.Static);
-            if (structNameMethod != null)
-            {
-                string localStructName = structNameMethod.Invoke(null, null) as string;
-                if (localStructName != null)
-                {
-                    try
-                    {
-                        return ClipboardFormats.VariableSizedItems[localStructName];
-                    }
-                    catch(KeyNotFoundException)
-                    {
-                        Console.WriteLine($"Lookup of variable properties failed for {localStructName}: Key not found in dictionary.");
-                        return null;
-                    }
-                    catch(Exception ex)
-                    {
-                        Console.WriteLine($"Lookup of variable properties failed for {localStructName}: {ex}");
-                        return null;
-                    }
-                }
-            }
-            return null;
         }
     }
 

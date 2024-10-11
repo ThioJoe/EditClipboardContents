@@ -140,7 +140,7 @@ namespace EditClipboardItems
 
             public override string[] GetVariableSizedItems()
             {
-                return new string[] { null };
+                return new string[0];
             }
         }
 
@@ -184,7 +184,7 @@ namespace EditClipboardItems
 
             public override string[] GetVariableSizedItems()
             {
-                return new string[] { null };
+                return new string[0];
             }
         }
 
@@ -208,7 +208,7 @@ namespace EditClipboardItems
 
             public override string[] GetVariableSizedItems()
             {
-                return new string[] { null };
+                return new string[0];
             }
         }
 
@@ -277,7 +277,7 @@ namespace EditClipboardItems
 
             public override string[] GetVariableSizedItems()
             {
-                return new string[] { null };
+                return new string[0];
             }
         }
 
@@ -300,7 +300,7 @@ namespace EditClipboardItems
 
             public override string[] GetVariableSizedItems()
             {
-                return new string[] { null };
+                return new string[0];
             }
         }
 
@@ -351,7 +351,7 @@ namespace EditClipboardItems
 
             public override string[] GetVariableSizedItems()
             {
-                return new string[] { null };
+                return new string[0];
             }
         }
 
@@ -375,7 +375,7 @@ namespace EditClipboardItems
 
             public override string[] GetVariableSizedItems()
             {
-                return new string[] { null };
+                return new string[0];
             }
         }
 
@@ -428,7 +428,7 @@ namespace EditClipboardItems
 
             public override string[] GetVariableSizedItems()
             {
-                return new string[] { null };
+                return new string[0];
             }
             public static int MaxStringLength()
             {
@@ -471,7 +471,7 @@ namespace EditClipboardItems
 
             public override string[] GetVariableSizedItems()
             {
-                return new string[] { null };
+                return new string[0];
             }
         }
 
@@ -511,7 +511,7 @@ namespace EditClipboardItems
 
             public override string[] GetVariableSizedItems()
             {
-                return new string[] { null };
+                return new string[0];
             }
 
         }
@@ -541,7 +541,7 @@ namespace EditClipboardItems
 
             public override string[] GetVariableSizedItems()
             {
-                return new string[] { null };
+                return new string[0];
             }
         }
 
@@ -563,7 +563,7 @@ namespace EditClipboardItems
 
             public override string[] GetVariableSizedItems()
             {
-                return new string[] { null };
+                return new string[0];
             }
         }
 
@@ -585,7 +585,7 @@ namespace EditClipboardItems
 
             public override string[] GetVariableSizedItems()
             {
-                return new string[] { null };
+                return new string[0];
             }
         }
 
@@ -607,7 +607,7 @@ namespace EditClipboardItems
 
             public override string[] GetVariableSizedItems()
             {
-                return new string[] { null };
+                return new string[0];
             }
         }
 
@@ -982,19 +982,6 @@ namespace EditClipboardItems
             { "POINTL", "https://learn.microsoft.com/en-us/windows/win32/api/windef/ns-windef-pointl" },
             { "SIZEL", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/17b541c5-f8ee-4111-b1f2-012128f35871" },
             { "CLSID", "https://learn.microsoft.com/en-us/windows/win32/api/guiddef/ns-guiddef-guid" }
-        };
-
-        // Dictionary containing the names of the types of structs as keys and any variable sized item properties or handles as values
-        public static Dictionary<string, string[]> VariableSizedItems = new Dictionary<string, string[]>
-        {
-            { "BITMAP", new string[] { "bmBits" } },                // Pointer
-            { "BITMAPV5HEADER", new string[] { null } },            // Contains sub-items but they are all fixed
-            { "BITMAPINFOHEADER", new string[] { null } },          // All fixed data
-            { "BITMAPINFO", new string[] { "bmiColors" } },         // Dynamically sized array of RGBQUAD_OBJ with image data
-            { "METAFILEPICT", new string[] { "hMF" } },             // Pointer to HMETAFILE
-            { "CIEXYZTRIPLE", new string[] { null } },              // Contains sub-items but they are all fixed
-            { "DROPFILES", new string[] { "pt" } },                 // Pointer
-            { "LOGPALETTE", new string[] { "palPalEntry" } }        // Dynamically sized array of PALETTEENTRY_OBJ
         };
 
         // Helper function to get documentation URLs for a class and it's sub-classes using DocumentationUrl() method of each
