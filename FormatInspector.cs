@@ -54,7 +54,8 @@ namespace EditClipboardItems
         {"CF_TEXT", new FormatInfo {Value = 1, Kind = "data", HandleOutput = "ANSI text"}},
         {"CF_TIFF", new FormatInfo {Value = 6, Kind = "data", HandleOutput = "Tagged-image file format"}},
         {"CF_UNICODETEXT", new FormatInfo {Value = 13, Kind = "data", HandleOutput = "Unicode text"}},
-        {"CF_WAVE", new FormatInfo {Value = 12, Kind = "data", HandleOutput = "Standard wave format audio data"}}
+        {"CF_WAVE", new FormatInfo {Value = 12, Kind = "data", HandleOutput = "Standard wave format audio data"}},
+        {"FileGroupDescriptorW", new FormatInfo {Value = 49275, Kind = "struct", HandleOutput = "Describes the properties of a file that is being copied."}},
         };
 
         public static string CreateFormatDataStringForTextbox(string formatName, byte[] data, ClipboardItem fullItem, string indent = "")
@@ -149,6 +150,18 @@ namespace EditClipboardItems
             if (fullItem.ClipDataObject != null)
             {
                 indent = "    ";
+
+                // Documentation links for the struct and its members
+                Dictionary<string, string> structDocs = ClipboardFormats.GetDocumentationUrls(fullItem.ClipDataObject.ObjectData);
+                if (structDocs.Count > 0)
+                {
+                    result.AppendLine($"\nStruct Documentation:");
+                    foreach (var doc in structDocs)
+                    {
+                        result.AppendLine($"{indent}{doc.Key}: {doc.Value}");
+                    }
+                }
+
                 result.AppendLine($"\nStruct Info:");
                 recursiveAddProperties(fullItem.ClipDataObject, indent);
             }

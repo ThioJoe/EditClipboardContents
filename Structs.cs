@@ -49,6 +49,12 @@ namespace EditClipboardItems
             public WORD bmPlanes { get; set; }
             public WORD bmBitsPixel { get; set; }
             public LPVOID bmBits { get; set; }
+
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "BITMAP";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -89,6 +95,11 @@ namespace EditClipboardItems
             public DWORD bV5ProfileData { get; set; }
             public DWORD bV5ProfileSize { get; set; }
             public DWORD bV5Reserved { get; set; }
+
+            public static (string, string) GetDocumentationUrl() { 
+                string structName = "BITMAPV5HEADER";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -122,15 +133,15 @@ namespace EditClipboardItems
 
         public enum bV5Compression : uint // DWORD
         {
-            BI_RGB       = 0x0000,
-            BI_RLE8      = 0x0001,
-            BI_RLE4      = 0x0002,
+            BI_RGB = 0x0000,
+            BI_RLE8 = 0x0001,
+            BI_RLE4 = 0x0002,
             BI_BITFIELDS = 0x0003,
-            BI_JPEG      = 0x0004,
-            BI_PNG       = 0x0005,
-            BI_CMYK      = 0x000B,
-            BI_CMYKRLE8  = 0x000C,
-            BI_CMYKRLE4  = 0x000D
+            BI_JPEG = 0x0004,
+            BI_PNG = 0x0005,
+            BI_CMYK = 0x000B,
+            BI_CMYKRLE8 = 0x000C,
+            BI_CMYKRLE4 = 0x000D
         }
 
         public class BITMAPINFOHEADER_OBJ
@@ -146,6 +157,12 @@ namespace EditClipboardItems
             public LONG biYPelsPerMeter { get; set; }
             public DWORD biClrUsed { get; set; }
             public DWORD biClrImportant { get; set; }
+
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "BITMAPINFOHEADER";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -170,6 +187,12 @@ namespace EditClipboardItems
             public BYTE rgbGreen { get; set; }
             public BYTE rgbRed { get; set; }
             public BYTE rgbReserved { get; set; }
+
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "RGBQUAD";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -185,6 +208,12 @@ namespace EditClipboardItems
         {
             public BITMAPINFOHEADER_OBJ bmiHeader { get; set; }
             public List<RGBQUAD_OBJ> bmiColors { get; set; }
+
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "BITMAPINFO";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -201,6 +230,12 @@ namespace EditClipboardItems
             public LONG xExt { get; set; }
             public LONG yExt { get; set; }
             public HMETAFILE hMF { get; set; }
+
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "METAFILEPICT";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -217,6 +252,12 @@ namespace EditClipboardItems
             public FXPT2DOT30 ciexyzX { get; set; }
             public FXPT2DOT30 ciexyzY { get; set; }
             public FXPT2DOT30 ciexyzZ { get; set; }
+
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "CIEXYZ";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -232,6 +273,12 @@ namespace EditClipboardItems
             public CIEXYZ_OBJ ciexyzRed { get; set; }
             public CIEXYZ_OBJ ciexyzGreen { get; set; }
             public CIEXYZ_OBJ ciexyzBlue { get; set; }
+
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "CIEXYZTRIPLE";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -253,6 +300,12 @@ namespace EditClipboardItems
             public int GetSize()
             {
                 return Marshal.SizeOf(this);
+            }
+
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "DROPFILES";
+                return (structName, StructDocsLinks[structName]);
             }
         }
 
@@ -284,6 +337,12 @@ namespace EditClipboardItems
             public BYTE peGreen { get; set; }
             public BYTE peBlue { get; set; }
             public BYTE peFlags { get; set; }
+
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "PALETTEENTRY";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -300,6 +359,11 @@ namespace EditClipboardItems
             public WORD palVersion { get; set; }
             public WORD palNumEntries { get; set; }
             public List<PALETTEENTRY_OBJ> palPalEntry { get; set; }
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "LOGPALETTE";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -324,6 +388,11 @@ namespace EditClipboardItems
             public DWORD lcsGammaGreen { get; set; }
             public DWORD lcsGammaBlue { get; set; }
             public List<CHAR> lcsFilename { get; set; }
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "LOGCOLORSPACEA";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -345,24 +414,29 @@ namespace EditClipboardItems
         public enum LCSCSTYPE : uint // DWORD
         {
             // Can be one of the following values
-            LCS_CALIBRATED_RGB      = 0x00000000,
-            LCS_sRGB                = 0x73524742,
+            LCS_CALIBRATED_RGB = 0x00000000,
+            LCS_sRGB = 0x73524742,
             LCS_WINDOWS_COLOR_SPACE = 0x57696E20
         }
 
         public enum LCSGAMUTMATCH : uint // DWORD
         {
             // Can be one of the following values
-            LCS_GM_ABS_COLORIMETRIC =   0x00000008,
-            LCS_GM_BUSINESS         =   0x00000001,
-            LCS_GM_GRAPHICS         =   0x00000002,
-            LCS_GM_IMAGES           =   0x00000004
+            LCS_GM_ABS_COLORIMETRIC = 0x00000008,
+            LCS_GM_BUSINESS = 0x00000001,
+            LCS_GM_GRAPHICS = 0x00000002,
+            LCS_GM_IMAGES = 0x00000004
         }
 
         public class FILEGROUPDESCRIPTORW_OBJ
         {
             public DWORD cItems { get; set; }
             public List<FILEDESCRIPTOR_OBJ> fgd { get; set; }
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "FILEGROUPDESCRIPTORW";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
         public class FILEDESCRIPTOR_OBJ
@@ -383,9 +457,15 @@ namespace EditClipboardItems
             {
                 return 4 + 16 + 8 + 8 + 4 + 8 + 8 + 8 + 4 + 4;
             }
-            public static int MaxFileNameLength()
+            public static int MaxStringLength()
             {
                 return 260;
+            }
+
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "FILEDESCRIPTORW";
+                return (structName, StructDocsLinks[structName]);
             }
 
         }
@@ -402,18 +482,35 @@ namespace EditClipboardItems
             {
                 return 16;
             }
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "CLSID";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
         public class POINTL_OBJ
         {
             public LONG x { get; set; }
             public LONG y { get; set; }
+
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "POINTL";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
         public class SIZEL_OBJ
         {
             public DWORD cx { get; set; }
             public DWORD cy { get; set; }
+
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "SIZEL";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
 
@@ -421,11 +518,17 @@ namespace EditClipboardItems
         {
             public DWORD dwLowDateTime { get; set; }
             public DWORD dwHighDateTime { get; set; }
+
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = "FILETIME";
+                return (structName, StructDocsLinks[structName]);
+            }
         }
 
         // --------------------------------------------------- Helper methods ---------------------------------------------------
 
-        
+        public const int MAX_PATH = 260;
 
         public static string EnumLookup(Type enumType, uint value)
         {
@@ -438,7 +541,7 @@ namespace EditClipboardItems
             return (T)ReadValue(typeof(T), data, ref offset);
         }
 
-        private static object ReadValue(Type type, byte[] data, ref int offset)
+        private static object ReadValue(Type type, byte[] data, ref int offset, Type callingClass = null)
         {
             int remainingBytes = data.Length - offset;
 
@@ -528,16 +631,27 @@ namespace EditClipboardItems
                 if (remainingBytes <= 0)
                     throw new ArgumentException("Not enough data to read string");
 
-                // Use method to get max length of string
-                int maxStringLength = FILEDESCRIPTOR_OBJ.MaxFileNameLength();
+                int maxStringLength = MAX_PATH;
 
-                string value = Encoding.Unicode.GetString(data, offset, maxStringLength * 2);
+                // Try to get MaxStringLength from the declaring type of the calling method
+                if (callingClass != null)
+                {
+                    var declaringType = callingClass.DeclaringType;
+                    var maxStringLengthMethod = declaringType?.GetMethod("MaxStringLength", BindingFlags.Public | BindingFlags.Static);
+                    if (maxStringLengthMethod != null)
+                    {
+                        maxStringLength = (int)maxStringLengthMethod.Invoke(null, null);
+                    }
+                }
+
+                string value = Encoding.Unicode.GetString(data, offset, Math.Min(maxStringLength * 2, remainingBytes));
                 int terminatorIndex = value.IndexOf('\0');
-                value = value.Substring(0, terminatorIndex); // Only up to the null terminator
+                value = terminatorIndex >= 0 ? value.Substring(0, terminatorIndex) : value;
 
-                offset += maxStringLength * 2; // But still increment till the end of the allocated space
+                offset += maxStringLength * 2; // Still increment till the end of the allocated space
                 return value;
             }
+
             else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
             {
                 Type elementType = type.GetGenericArguments()[0];
@@ -617,10 +731,12 @@ namespace EditClipboardItems
             { "LCSCSTYPE", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/eb4bbd50-b3ce-4917-895c-be31f214797f" },
             { "LCSGAMUTMATCH", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/9fec0834-607d-427d-abd5-ab240fb0db38" },
             { "bV5Compression", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/4e588f70-bd92-4a6f-b77f-35d0feaf7a57" },
-            { "FILEDESCRIPTOR", "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-filedescriptora" },
+            { "FILEDESCRIPTORW", "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-filedescriptorw" },
+            { "FILEGROUPDESCRIPTORW", "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-filegroupdescriptorw" },
             { "FILETIME", "https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime" },
             { "POINTL", "https://learn.microsoft.com/en-us/windows/win32/api/windef/ns-windef-pointl" },
-            { "SIZEL", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/17b541c5-f8ee-4111-b1f2-012128f35871" }
+            { "SIZEL", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/17b541c5-f8ee-4111-b1f2-012128f35871" },
+            { "CLSID", "https://learn.microsoft.com/en-us/windows/win32/api/guiddef/ns-guiddef-guid" }
         };
 
         // Dictionary containing the names of the types of structs as keys and any variable sized item properties or handles as values
@@ -635,6 +751,97 @@ namespace EditClipboardItems
             { "DROPFILES", new string[] { "pt" } },                 // Pointer
             { "LOGPALETTE", new string[] { "palPalEntry" } }        // Dynamically sized array of PALETTEENTRY_OBJ
         };
+
+        // Helper function to get documentation URLs for a class and it's sub-classes using DocumentationUrl() method of each
+        // Iterates them and puts them into list. Parameter is the object itself. Recursive.
+        public static Dictionary<string, string> GetDocumentationUrls(object obj)
+        {
+            Dictionary<string, string> results = new Dictionary<string, string>();
+
+            if (obj == null)
+                return results;
+
+            Type type = obj.GetType();
+
+            // Only proceed if the object is a class or an enum
+            if (!type.IsClass && !type.IsEnum)
+                return results;
+
+            // Check if the type has a GetDocumentationUrl method
+            var docUrlMethod = type.GetMethod("GetDocumentationUrl", BindingFlags.Public | BindingFlags.Static);
+            if (docUrlMethod != null)
+            {
+                try
+                {
+                    var result = docUrlMethod.Invoke(null, null);
+                    if (result is ValueTuple<string, string> tuple)
+                    {
+                        results[tuple.Item1] = tuple.Item2;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error invoking GetDocumentationUrl method: {ex.Message}");
+                }
+            }
+
+            // If it's an enum, we're done
+            if (type.IsEnum)
+                return results;
+
+            // For classes, process their properties
+            foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (!property.CanRead)
+                    continue;
+
+                object value = null;
+                try
+                {
+                    // Check if the property is indexed
+                    if (property.GetIndexParameters().Length > 0)
+                    {
+                        // Skip indexed properties
+                        continue;
+                    }
+
+                    value = property.GetValue(obj);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error getting value for property {property.Name}: {ex.Message}");
+                    continue;
+                }
+
+                if (value == null)
+                    continue;
+
+                Type propertyType = value.GetType();
+
+                if (propertyType.IsClass || propertyType.IsEnum)
+                {
+                    if (value is IEnumerable<object> collection)
+                    {
+                        foreach (var item in collection)
+                        {
+                            foreach (var kvp in GetDocumentationUrls(item))
+                            {
+                                results[kvp.Key] = kvp.Value;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (var kvp in GetDocumentationUrls(value))
+                        {
+                            results[kvp.Key] = kvp.Value;
+                        }
+                    }
+                }
+            }
+
+            return results;
+        }
 
     }
 
