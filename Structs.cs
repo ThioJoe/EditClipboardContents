@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
+using System.Security.Claims;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -321,7 +322,7 @@ namespace EditClipboardItems
             public DWORD lcsGammaRed { get; set; }
             public DWORD lcsGammaGreen { get; set; }
             public DWORD lcsGammaBlue { get; set; }
-            public List<CHAR> lcsFilename { get; set; } // Max path is 260 usually. Originally defined as lcsFilename[MAX_PATH], null terminated string
+            public List<CHAR> lcsFilename { get; set; }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -357,6 +358,58 @@ namespace EditClipboardItems
             LCS_GM_IMAGES           =   0x00000004
         }
 
+        public class FILEGROUPDESCRIPTORW_OBJ
+        {
+            public DWORD cItems { get; set; }
+            public List<FILEDESCRIPTOR_OBJ> fgd { get; set; }
+        }
+
+        public class FILEDESCRIPTOR_OBJ
+        {
+            public DWORD dwFlags { get; set; }
+            public CLSID_OBJ clsid { get; set; }
+            public SIZEL_OBJ sizel { get; set; }
+            public POINTL_OBJ point { get; set; }
+            public DWORD dwFileAttributes { get; set; }
+            public FILETIME_OBJ ftCreationTime { get; set; }
+            public FILETIME_OBJ ftLastAccessTime { get; set; }
+            public FILETIME_OBJ ftLastWriteTime { get; set; }
+            public DWORD nFileSizeHigh { get; set; }
+            public DWORD nFileSizeLow { get; set; }
+            public List<CHAR> cFileName { get; set; }
+
+        }
+
+        public class CLSID_OBJ
+        {
+            public DWORD Data1 { get; set; }
+            public WORD Data2 { get; set; }
+            public WORD Data3 { get; set; }
+            public double Data4 { get; set; } // 8 bytes
+        }
+
+        public class POINTL_OBJ
+        {
+            public LONG x { get; set; }
+            public LONG y { get; set; }
+        }
+
+        public class SIZEL_OBJ
+        {
+            public DWORD cx { get; set; }
+            public DWORD cy { get; set; }
+        }
+
+
+        public class FILETIME_OBJ
+        {
+            public DWORD dwLowDateTime { get; set; }
+            public DWORD dwHighDateTime { get; set; }
+        }
+
+        // --------------------------------------------------- Helper methods ---------------------------------------------------
+
+        
 
         public static string EnumLookup(Type enumType, uint value)
         {
@@ -403,6 +456,12 @@ namespace EditClipboardItems
             {
                 BOOL value = BitConverter.ToInt32(data, offset);
                 offset += sizeof(BOOL);
+                return value;
+            }
+            else if (type == typeof(double))
+            {
+                double value = BitConverter.ToDouble(data, offset);
+                offset += sizeof(double);
                 return value;
             }
             else if (type == typeof(LPVOID))
@@ -498,7 +557,11 @@ namespace EditClipboardItems
             { "LOGCOLORSPACEA", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-logcolorspacea" },
             { "LCSCSTYPE", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/eb4bbd50-b3ce-4917-895c-be31f214797f" },
             { "LCSGAMUTMATCH", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/9fec0834-607d-427d-abd5-ab240fb0db38" },
-            { "bV5Compression", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/4e588f70-bd92-4a6f-b77f-35d0feaf7a57" }
+            { "bV5Compression", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/4e588f70-bd92-4a6f-b77f-35d0feaf7a57" },
+            { "FILEDESCRIPTOR", "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-filedescriptora" },
+            { "FILETIME", "https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime" },
+            { "POINTL", "https://learn.microsoft.com/en-us/windows/win32/api/windef/ns-windef-pointl" },
+            { "SIZEL", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/17b541c5-f8ee-4111-b1f2-012128f35871" }
         };
 
         // Dictionary containing the names of the types of structs as keys and any variable sized item properties or handles as values

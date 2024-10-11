@@ -225,6 +225,24 @@ namespace ClipboardManager
                     };
                     break;
 
+                // ------------------- Non-Standard Clipboard Formats -------------------
+
+                case "FileGroupDescriptorW": // 0x00000000
+                    var fileGroupDescriptorWProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.FILEGROUPDESCRIPTORW_OBJ>(rawData);
+                    int fileCount = (int)fileGroupDescriptorWProcessed.cItems;
+                    dataInfoList.Add($"File Count: {fileCount}");
+                    dataInfoList.Add($"File Names:");
+                    for (int i = 0; i < fileCount; i++)
+                    {
+                        dataInfoList.Add($"  {fileGroupDescriptorWProcessed.fgd[i].cFileName}");
+                    }
+                    processedObject = new ClipDataObject
+                    {
+                        ObjectData = fileGroupDescriptorWProcessed,
+                        StructName = "FILEGROUPDESCRIPTORW"
+                    };
+                    break;
+
                 // ------------------- Cloud Clipboard Formats -------------------
                 // See: See: https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats
                 case "ExcludeClipboardContentFromMonitorProcessing": // It says "place any data on the clipboard in this format..." -- Assuming that means it applies as long as it exists even if value is null
