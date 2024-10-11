@@ -1887,7 +1887,21 @@ namespace ClipboardManager
 
     public class ClipDataObject
     {
-        public string StructName { get; set; } = null;
+        // Struct name will be gotten automatically via class method if possible and it wasn't set
+        private string _structName = null;
+        public string StructName
+        {
+            get => _structName;
+            set
+            {
+                _structName = value;
+                if (_structName == null && ObjectData != null)
+                {
+                    TrySetStructNameFromObjectData();
+                }
+            }
+        }
+
         private object _objectData = null;
         public object ObjectData
         {
@@ -1896,6 +1910,10 @@ namespace ClipboardManager
             {
                 _objectData = value;
                 InitializeNestedObjects();
+                if (StructName == null)
+                {
+                    TrySetStructNameFromObjectData();
+                }
             }
         }
 
@@ -1972,6 +1990,10 @@ namespace ClipboardManager
                 return;
 
             var variableSized = VariableSizedDataNames ?? Array.Empty<string>();
+            if (!variableSized.Any())
+            {
+                variableSized = GetVariableValues(ObjectData) ?? Array.Empty<string>();
+            }
 
             foreach (var prop in ObjectData.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
@@ -1993,8 +2015,8 @@ namespace ClipboardManager
                                 {
                                     var nestedClipDataObject = new ClipDataObject
                                     {
-                                        StructName = elementType.Name,
                                         ObjectData = item
+                                        // StructName will be set automatically
                                     };
                                     nestedList.Add(nestedClipDataObject);
                                 }
@@ -2005,8 +2027,8 @@ namespace ClipboardManager
                         {
                             ClipDataObject nestedClipDataObject = new ClipDataObject
                             {
-                                StructName = prop.PropertyType.Name,
                                 ObjectData = value
+                                // StructName will be set automatically
                             };
                             _nestedObjects[prop.Name] = nestedClipDataObject;
                         }
@@ -2057,6 +2079,33 @@ namespace ClipboardManager
         public object GetNestedObject(string propertyName)
         {
             return _nestedObjects.TryGetValue(propertyName, out var nestedObject) ? nestedObject : null;
+        }
+
+        private void TrySetStructNameFromObjectData()
+        {
+            if (ObjectData != null)
+            {
+                var structNameMethod = ObjectData.GetType().GetMethod("StructName", BindingFlags.Public | BindingFlags.Static);
+                if (structNameMethod != null)
+                {
+                    _structName = structNameMethod.Invoke(null, null) as string;
+                }
+            }
+        }
+
+        private string[] GetVariableValues(object obj)
+        {
+            // First get the struct name to pass to the dictionary
+            var structNameMethod = obj.GetType().GetMethod("StructName", BindingFlags.Public | BindingFlags.Static);
+            if (structNameMethod != null)
+            {
+                string localStructName = structNameMethod.Invoke(null, null) as string;
+                if (localStructName != null)
+                {
+                    return ClipboardFormats.VariableSizedItems[localStructName];
+                }
+            }
+            return null;
         }
     }
 
