@@ -231,11 +231,7 @@ namespace ClipboardManager
                     var fileGroupDescriptorWProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.FILEGROUPDESCRIPTORW_OBJ>(rawData);
                     int fileCount = (int)fileGroupDescriptorWProcessed.cItems;
                     dataInfoList.Add($"File Count: {fileCount}");
-                    dataInfoList.Add($"File Names:");
-                    for (int i = 0; i < fileCount; i++)
-                    {
-                        dataInfoList.Add($"  {fileGroupDescriptorWProcessed.fgd[i].cFileName}");
-                    }
+                    // Join the array of cfilename into a string
                     processedObject = new ClipDataObject
                     {
                         ObjectData = fileGroupDescriptorWProcessed,

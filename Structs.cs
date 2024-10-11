@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Security.Claims;
+using System.Text;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -376,7 +377,16 @@ namespace EditClipboardItems
             public FILETIME_OBJ ftLastWriteTime { get; set; }
             public DWORD nFileSizeHigh { get; set; }
             public DWORD nFileSizeLow { get; set; }
-            public List<CHAR> cFileName { get; set; }
+            public string cFileName { get; set; }
+
+            public static int MetaDataOnlySize()
+            {
+                return 4 + 16 + 8 + 8 + 4 + 8 + 8 + 8 + 4 + 4;
+            }
+            public static int MaxFileNameLength()
+            {
+                return 260;
+            }
 
         }
 
@@ -386,6 +396,12 @@ namespace EditClipboardItems
             public WORD Data2 { get; set; }
             public WORD Data3 { get; set; }
             public double Data4 { get; set; } // 8 bytes
+
+            // Method for total size
+            public static int GetSize()
+            {
+                return 16;
+            }
         }
 
         public class POINTL_OBJ
@@ -424,65 +440,102 @@ namespace EditClipboardItems
 
         private static object ReadValue(Type type, byte[] data, ref int offset)
         {
+            int remainingBytes = data.Length - offset;
+
             if (type == typeof(BYTE))
             {
+                if (remainingBytes < sizeof(BYTE))
+                    throw new ArgumentException("Not enough data to read BYTE");
+                byte value = data[offset];
                 offset += sizeof(BYTE);
-                return data[offset];
+                return value;
             }
             else if (type == typeof(CHAR))
             {
+                if (remainingBytes < sizeof(CHAR))
+                    throw new ArgumentException("Not enough data to read CHAR");
+                char value = (char)data[offset];
                 offset += sizeof(CHAR);
-                return (CHAR)data[offset];
+                return value;
             }
             else if (type == typeof(WORD))
             {
+                if (remainingBytes < sizeof(WORD))
+                    throw new ArgumentException("Not enough data to read WORD");
                 WORD value = BitConverter.ToUInt16(data, offset);
                 offset += sizeof(WORD);
                 return value;
             }
             else if (type == typeof(DWORD))
             {
+                if (remainingBytes < sizeof(DWORD))
+                    throw new ArgumentException("Not enough data to read DWORD");
                 DWORD value = BitConverter.ToUInt32(data, offset);
                 offset += sizeof(DWORD);
                 return value;
             }
             else if (type == typeof(LONG))
             {
+                if (remainingBytes < sizeof(LONG))
+                    throw new ArgumentException("Not enough data to read LONG");
                 LONG value = BitConverter.ToInt32(data, offset);
                 offset += sizeof(LONG);
                 return value;
             }
             else if (type == typeof(BOOL))
             {
+                if (remainingBytes < sizeof(BOOL))
+                    throw new ArgumentException("Not enough data to read BOOL");
                 BOOL value = BitConverter.ToInt32(data, offset);
                 offset += sizeof(BOOL);
                 return value;
             }
             else if (type == typeof(double))
             {
+                if (remainingBytes < sizeof(double))
+                    throw new ArgumentException("Not enough data to read double");
                 double value = BitConverter.ToDouble(data, offset);
                 offset += sizeof(double);
                 return value;
             }
             else if (type == typeof(LPVOID))
             {
+                int size = IntPtr.Size;
+                if (remainingBytes < size)
+                    throw new ArgumentException("Not enough data to read LPVOID");
                 IntPtr value;
-                if (IntPtr.Size == 4)
+                if (size == 4)
                 {
                     value = (IntPtr)BitConverter.ToInt32(data, offset);
-                    offset += 4;
                 }
                 else
                 {
                     value = (IntPtr)BitConverter.ToInt64(data, offset);
-                    offset += 8;
                 }
+                offset += size;
                 return value;
             }
             else if (type == typeof(FXPT2DOT30))
             {
+                if (remainingBytes < sizeof(FXPT2DOT30))
+                    throw new ArgumentException("Not enough data to read FXPT2DOT30");
                 FXPT2DOT30 value = BitConverter.ToInt32(data, offset);
                 offset += sizeof(FXPT2DOT30);
+                return value;
+            }
+            else if (type == typeof(string))
+            {
+                if (remainingBytes <= 0)
+                    throw new ArgumentException("Not enough data to read string");
+
+                // Use method to get max length of string
+                int maxStringLength = FILEDESCRIPTOR_OBJ.MaxFileNameLength();
+
+                string value = Encoding.Unicode.GetString(data, offset, maxStringLength * 2);
+                int terminatorIndex = value.IndexOf('\0');
+                value = value.Substring(0, terminatorIndex); // Only up to the null terminator
+
+                offset += maxStringLength * 2; // But still increment till the end of the allocated space
                 return value;
             }
             else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
@@ -491,26 +544,20 @@ namespace EditClipboardItems
                 var listType = typeof(List<>).MakeGenericType(elementType);
                 var list = (System.Collections.IList)Activator.CreateInstance(listType);
 
-                int listSize = 0;
-                // Get the total size of the types in the list
-                foreach (var property in elementType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                // Read elements until we run out of data
+                while (remainingBytes > 0)
                 {
-                    if (property.CanWrite)
+                    try
                     {
-                        listSize += Marshal.SizeOf(property.PropertyType);
+                        object element = ReadValue(elementType, data, ref offset);
+                        list.Add(element);
+                        remainingBytes = data.Length - offset;
                     }
-                }
-
-                // If it's an empty list return it or else it will throw an exception for some reason
-                if (listSize == 0)
-                {
-                    return list;
-                }
-
-                // Instead of reading a count, we'll read elements until we reach the end of the data
-                while (offset + listSize < data.Length)
-                {
-                    list.Add(ReadValue(elementType, data, ref offset));
+                    catch (ArgumentException)
+                    {
+                        // We've reached the end of the data or can't read another element
+                        break;
+                    }
                 }
                 return list;
             }
@@ -521,15 +568,27 @@ namespace EditClipboardItems
                 {
                     if (property.CanWrite)
                     {
-                        object value = ReadValue(property.PropertyType, data, ref offset);
-                        property.SetValue(obj, value);
+                        if (remainingBytes <= 0)
+                            break;  // Stop reading if we've reached the end of the data
+                        try
+                        {
+                            object value = ReadValue(property.PropertyType, data, ref offset);
+                            property.SetValue(obj, value);
+                            remainingBytes = data.Length - offset;
+                        }
+                        catch (ArgumentException)
+                        {
+                            // We've reached the end of the data or can't read this property
+                            break;
+                        }
                     }
                 }
                 return obj;
             }
-            // if it's uint based enum
             else if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(uint))
             {
+                if (remainingBytes < sizeof(uint))
+                    throw new ArgumentException("Not enough data to read enum");
                 uint value = BitConverter.ToUInt32(data, offset);
                 offset += sizeof(uint);
                 return Enum.ToObject(type, value);
