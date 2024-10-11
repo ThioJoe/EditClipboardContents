@@ -40,7 +40,40 @@ namespace EditClipboardItems
 
     public static class ClipboardFormats
     {
-        public class BITMAP_OBJ
+        public interface IClipboardFormat
+        {
+            (string, string) GetDocumentationUrl();
+            string StructName();
+            string[] GetVariableSizedItems();
+        }
+
+        public abstract class ClipboardFormatBase : IClipboardFormat
+        {
+            // Abstract methods required to be inhereted by all classes of this type
+            public abstract (string, string) GetDocumentationUrl();
+            public abstract string StructName();
+            public abstract string[] GetVariableSizedItems();
+
+            // You can add other common methods or properties here
+        }
+
+        // Static helper methods
+        public static (string, string) GetDocumentationUrl<T>() where T : IClipboardFormat, new()
+        {
+            return new T().GetDocumentationUrl();
+        }
+
+        public static string StructName<T>() where T : IClipboardFormat, new()
+        {
+            return new T().StructName();
+        }
+
+        public static string[] GetVariableSizedItems<T>() where T : IClipboardFormat, new()
+        {
+            return new T().GetVariableSizedItems();
+        }
+
+        public class BITMAP_OBJ : ClipboardFormatBase
         {
             public LONG bmType { get; set; }
             public LONG bmWidth { get; set; }
@@ -50,20 +83,23 @@ namespace EditClipboardItems
             public WORD bmBitsPixel { get; set; }
             public LPVOID bmBits { get; set; }
 
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "BITMAP";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { "bmBits" };
             }
         }
+
         public class BITMAPV5HEADER_OBJ
         {
             public DWORD bV5Size { get; set; }
@@ -357,7 +393,7 @@ namespace EditClipboardItems
             public DWORD lcsGammaRed { get; set; }
             public DWORD lcsGammaGreen { get; set; }
             public DWORD lcsGammaBlue { get; set; }
-            public List<CHAR> lcsFilename { get; set; }
+            public string lcsFilename { get; set; }
             public static (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
@@ -807,7 +843,12 @@ namespace EditClipboardItems
 
                 string value = Encoding.Unicode.GetString(data, offset, Math.Min(maxStringLength * 2, remainingBytes));
                 int terminatorIndex = value.IndexOf('\0');
+
+                // Only return the string up to the null terminator.
                 value = terminatorIndex >= 0 ? value.Substring(0, terminatorIndex) : value;
+                // Decode to UTF-8 to remove any null characters in between the string, then remove any remaining null characters
+                value = Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(value));
+                value = value.Replace("\0", "");
 
                 offset += maxStringLength * 2; // Still increment till the end of the allocated space
                 return value;

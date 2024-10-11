@@ -89,7 +89,7 @@ namespace ClipboardManager
                         processedObject = new ClipDataObject
                         {
                             ObjectData = CF_bitmapProcessed,
-                            StructName = BITMAP_OBJ.StructName()
+                            StructName = ClipboardFormats.StructName<BITMAP_OBJ>() // The struct name is the same so don't need to use the specific instance
                         };
 
                     }
