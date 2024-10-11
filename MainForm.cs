@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 
 // My classes
 using EditClipboardItems;
+using System.Collections;
 
 
 namespace ClipboardManager
@@ -1898,7 +1899,7 @@ namespace ClipboardManager
             }
         }
 
-        private Dictionary<string, ClipDataObject> _nestedObjects = new Dictionary<string, ClipDataObject>();
+        private Dictionary<string, object> _nestedObjects = new Dictionary<string, object>();
 
         public string[] VariableSizedDataNames =>
             StructName != null && ClipboardFormats.VariableSizedItems.TryGetValue(StructName, out var items)
@@ -1910,8 +1911,19 @@ namespace ClipboardManager
             get
             {
                 if (ObjectData == null)
+                {
+                    return null;
+                }
+
+                // If it's a collection and therefore no actual property names
+                if (ObjectData is IEnumerable enumerable && !(ObjectData is string))
+                {
                     return Enumerable.Empty<string>();
-                return ObjectData.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => p.Name);
+                }
+                else
+                {
+                    return ObjectData.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => p.Name);
+                }
             }
         }
 
@@ -1931,9 +1943,10 @@ namespace ClipboardManager
                 return null;
 
             // Check if it's an enum first, because it will otherwise get treated as a nested object
+            // If enumerable, return the object itself, not a string, so we can further process it
             if (ObjectData.GetType().GetProperty(propertyName)?.PropertyType.IsEnum == true)
             {
-                return ObjectData.GetType().GetProperty(propertyName).GetValue(ObjectData).ToString();
+                return ObjectData.GetType().GetProperty(propertyName).GetValue(ObjectData);
             }
 
             if (_nestedObjects.TryGetValue(propertyName, out var nestedObject))
@@ -1942,7 +1955,6 @@ namespace ClipboardManager
             if (VariableSizedDataNames?.Contains(propertyName) == true)
                 return "[Binary data or handle]";
 
-
             PropertyInfo propInfo = ObjectData.GetType().GetProperty(propertyName);
             try
             {
@@ -1950,7 +1962,6 @@ namespace ClipboardManager
             }
             catch (TargetParameterCountException)
             {
-                // Handle properties that require parameters
                 return null;
             }
         }
@@ -1970,22 +1981,41 @@ namespace ClipboardManager
                 try
                 {
                     var value = prop.GetValue(ObjectData);
-                    if (value != null && !prop.PropertyType.IsPrimitive && prop.PropertyType != typeof(string))
+                    if (value != null)
                     {
-                        var nestedClipDataObject = new ClipDataObject
+                        if (value is IList list && prop.PropertyType.IsGenericType)
                         {
-                            StructName = prop.PropertyType.Name,
-                            ObjectData = value
-                        };
-                        _nestedObjects[prop.Name] = nestedClipDataObject;
-
-                        // Debugging statement
-                        Debug.WriteLine($"Initialized nested object for property '{prop.Name}' with StructName '{nestedClipDataObject.StructName}' and ObjectData '{nestedClipDataObject.ObjectData}'");
+                            var elementType = prop.PropertyType.GetGenericArguments()[0];
+                            if (!elementType.IsPrimitive && elementType != typeof(string))
+                            {
+                                var nestedList = new List<ClipDataObject>();
+                                foreach (var item in list)
+                                {
+                                    var nestedClipDataObject = new ClipDataObject
+                                    {
+                                        StructName = elementType.Name,
+                                        ObjectData = item
+                                    };
+                                    nestedList.Add(nestedClipDataObject);
+                                }
+                                _nestedObjects[prop.Name] = nestedList;
+                            }
+                        }
+                        else if (!prop.PropertyType.IsPrimitive && prop.PropertyType != typeof(string))
+                        {
+                            ClipDataObject nestedClipDataObject = new ClipDataObject
+                            {
+                                StructName = prop.PropertyType.Name,
+                                ObjectData = value
+                            };
+                            _nestedObjects[prop.Name] = nestedClipDataObject;
+                        }
                     }
+
+                    Debug.WriteLine($"Initialized nested object for property '{prop.Name}' with StructName '{prop.PropertyType.Name}' and ObjectData '{value}'");
                 }
                 catch (Exception ex)
                 {
-                    // Log the exception for debugging
                     Debug.WriteLine($"Exception while initializing property '{prop.Name}': {ex.Message}");
                 }
             }
@@ -2008,6 +2038,15 @@ namespace ClipboardManager
                     sb.AppendLine($"{indent}{propertyName}:");
                     nestedObject.BuildString(sb, indent + "    ");
                 }
+                else if (propertyValue is IList<ClipDataObject> nestedList)
+                {
+                    sb.AppendLine($"{indent}{propertyName}:");
+                    foreach (var item in nestedList)
+                    {
+                        sb.AppendLine($"{indent}    - ");
+                        item.BuildString(sb, indent + "        ");
+                    }
+                }
                 else
                 {
                     sb.AppendLine($"{indent}{propertyName}: {propertyValue}");
@@ -2015,7 +2054,7 @@ namespace ClipboardManager
             }
         }
 
-        public ClipDataObject GetNestedObject(string propertyName)
+        public object GetNestedObject(string propertyName)
         {
             return _nestedObjects.TryGetValue(propertyName, out var nestedObject) ? nestedObject : null;
         }

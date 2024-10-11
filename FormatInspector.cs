@@ -1,5 +1,6 @@
 ﻿using ClipboardManager;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -96,24 +97,34 @@ namespace EditClipboardItems
                 }
             }
 
-            // Show the link to the struct documentation from the dictionary if it exists
-            //if (formatInfo.Kind == "struct" && StructDocsLinks.TryGetValue(FormatDictionary[formatName].StructType.Name, out string link))
-            //{
-            //    result.AppendLine($"\n{indent}Struct Documentation: {link}");
-            //}
+            void RecursivePrintCollection(object obj, string indent)
+            {
+                if (obj is IEnumerable enumerable &&  !(obj is string)) // not a string
+                {
+                    int index = 1;
+                    foreach (var item in enumerable)
+                    {
+                        if (item is ClipDataObject clipDataObject)
+                        {
+                            result.AppendLine($"{indent}{index}:");
+                            RecursivePrintClipDataObject(clipDataObject, indent + "  ");
+                        }
+                        else if(item is IEnumerable nestedEnumerable)
+                        {
+                            RecursivePrintCollection(nestedEnumerable, indent + "  ");
+                        }
+                        else
+                        {
+                            result.AppendLine($"{indent}{item}");
+                        }
+                        result.AppendLine("");
+                        index++;
+                    }
+                }
+            }
 
-            //if (formatInfo.Kind == "struct" && formatInfo.StructType != null && data != null)
-            //{
-            //    result.AppendLine($"\n{indent}Struct Definition and Values:");
-            //    int offset = 0;
-            //    InspectStruct(formatInfo.StructType, data, ref result, indent + "  ", ref offset);
-            //}
 
-            // See if we have documentation link in the dictionary
-
-            // Check if ClipDataObject is available for the item
-
-            void recursiveAddProperties(ClipDataObject obj, string indent)
+            void RecursivePrintClipDataObject(ClipDataObject obj, string indent)
             {
                 if (obj.ObjectData == null)
                 {
@@ -121,31 +132,51 @@ namespace EditClipboardItems
                     return;
                 }
 
-                foreach (var propertyName in obj.PropertyNames)
-                {
-                    object propertyValue = obj.GetPropertyValue(propertyName);
+                // Get the property names if there areny. If ObjectData is null, it will return null. If it's a collection, it returns an empty list
+                IEnumerable<string> propertyNames = obj.PropertyNames;
 
-                    if (propertyValue is ClipDataObject nestedObject)
+                if (propertyNames.Any()) // If there are items in it
+                {
+                    foreach (var propertyName in propertyNames)
                     {
-                        result.AppendLine($"{indent}{propertyName}:");
-                        recursiveAddProperties(nestedObject, indent + "    ");
-                    }
-                    else
-                    {
-                        // Try to also get hex version of the value
-                        if (propertyValue != null && propertyValue.GetType().IsPrimitive)
+                        object propertyValue = obj.GetPropertyValue(propertyName);
+
+                        if (propertyValue is ClipDataObject nestedObject)
                         {
-                            string hexValue = GetValueString(propertyValue, asHex: true);
-                            if (!string.IsNullOrEmpty(hexValue))
-                            {
-                                // Updates the property value to include hex value, otherwise it will just include the decimal value
-                                propertyValue = $"{propertyValue} ({hexValue})";
-                            }
+                            result.AppendLine($"{indent}{propertyName}:");
+                            RecursivePrintClipDataObject(nestedObject, indent + "    ");
                         }
-                        result.AppendLine($"{indent}{propertyName}: {propertyValue}");
+                        else if (propertyValue is IEnumerable enumerable && !(propertyValue is string))
+                        {
+                            result.AppendLine($"{indent}{propertyName}:");
+                            RecursivePrintCollection(enumerable, indent + "    ");
+                        }
+                        else
+                        {
+                            // Try to also get hex version of the value
+                            if (propertyValue != null && propertyValue.GetType().IsPrimitive)
+                            {
+                                string hexValue = GetValueString(propertyValue, asHex: true);
+                                if (!string.IsNullOrEmpty(hexValue))
+                                {
+                                    // Updates the property value to include hex value, otherwise it will just include the decimal value
+                                    propertyValue = $"{propertyValue} ({hexValue})";
+                                }
+                            }
+                            result.AppendLine($"{indent}{propertyName}: {propertyValue}");
+                        }
                     }
                 }
+                // This means it's a collection if it was empty, so just go through as indexes
+                else
+                {
+                    RecursivePrintCollection(obj.ObjectData, indent); // This will print out the collection (if it's a collection
+                }
             }
+                
+
+
+
 
             if (fullItem.ClipDataObject != null)
             {
@@ -163,7 +194,7 @@ namespace EditClipboardItems
                 }
 
                 result.AppendLine($"\nStruct Info:");
-                recursiveAddProperties(fullItem.ClipDataObject, indent);
+                RecursivePrintClipDataObject(fullItem.ClipDataObject, indent);
             }
             else
             {
@@ -171,6 +202,20 @@ namespace EditClipboardItems
             }
 
             return result.ToString();
+        }
+
+        private static string GetFormattedValue(object value)
+        {
+            if (value == null)
+                return "null";
+
+            if (value.GetType().IsPrimitive)
+            {
+                string hexValue = GetValueString(value, asHex: true);
+                return !string.IsNullOrEmpty(hexValue) ? $"{value} ({hexValue})" : value.ToString();
+            }
+
+            return value.ToString();
         }
 
         private static string GetValueString(object value, bool asHex = false)
@@ -192,16 +237,21 @@ namespace EditClipboardItems
 
             if (asHex)
             {
-                if (valueType.IsPrimitive)
-                    return string.Format("0x{0:X}", value); // Hexadecimal (0x1234ABCD
+                if (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(short) || valueType == typeof(byte))
+                {
+                    return string.Format("0x{0:X}", value); // Hexadecimal (0x1234ABCD)
+                }
                 else
                 {
+                    // Return empty string or handle other types as needed
                     return "";
                 }
             }
 
             return value.ToString();
         }
+
+
 
         private static void InspectStruct(Type structType, byte[] data, ref StringBuilder result, string indent, ref int offset)
         {
