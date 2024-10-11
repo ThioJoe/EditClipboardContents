@@ -13,6 +13,7 @@ using System.Drawing;
 // My Classes
 using EditClipboardItems;
 using System.ComponentModel;
+using static EditClipboardItems.ClipboardFormats;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -67,7 +68,7 @@ namespace ClipboardManager
                     break;
 
                 case "CF_BITMAP": // 2 - CF_BITMAP
-                    var CF_bitmapProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAP_OBJ>(rawData);
+                    BITMAP_OBJ CF_bitmapProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAP_OBJ>(rawData);
                     
                     //dataInfoList.Add($"{CF_bitmapProcessed.bmWidth}x{CF_bitmapProcessed.bmHeight}, {CF_bitmapProcessed.bmBitsPixel} bpp");
                     using (MemoryStream ms = new MemoryStream(rawData))
@@ -88,14 +89,14 @@ namespace ClipboardManager
                         processedObject = new ClipDataObject
                         {
                             ObjectData = CF_bitmapProcessed,
-                            StructName = "BITMAP"
+                            StructName = BITMAP_OBJ.StructName()
                         };
 
                     }
                     break;
 
                 case "CF_DIB":   // 8  - CF_DIB
-                    var bitmapProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPINFO_OBJ>(rawData);
+                    BITMAPINFO_OBJ bitmapProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPINFO_OBJ>(rawData);
                     int width = bitmapProcessed.bmiHeader.biWidth;
                     int height = bitmapProcessed.bmiHeader.biHeight;
                     int bitCount = bitmapProcessed.bmiHeader.biBitCount;
@@ -104,20 +105,20 @@ namespace ClipboardManager
                     processedObject = new ClipDataObject
                     {
                         ObjectData = bitmapProcessed,
-                        StructName = "BITMAPINFO"
+                        StructName = BITMAPINFO_OBJ.StructName()
                     };
 
                     break;
 
                 case "CF_DIBV5": // 17 - CF_DIBV5
-                    var bitmapInfoV5Processed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPV5HEADER_OBJ>(rawData);
+                    BITMAPV5HEADER_OBJ bitmapInfoV5Processed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPV5HEADER_OBJ>(rawData);
                     dataInfoList.Add($"{bitmapInfoV5Processed.bV5Width}x{bitmapInfoV5Processed.bV5Height}, {bitmapInfoV5Processed.bV5BitCount} bpp");
 
 
                     processedObject = new ClipDataObject
                     {
                         ObjectData = bitmapInfoV5Processed,
-                        StructName = "BITMAPV5HEADER"
+                        StructName = BITMAPV5HEADER_OBJ.StructName()
                     };
 
                     break;
@@ -172,23 +173,23 @@ namespace ClipboardManager
                             handle.Free();
                         }
 
-                        var dropFilesProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.DROPFILES_OBJ>(rawData);
+                        DROPFILES_OBJ dropFilesProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.DROPFILES_OBJ>(rawData);
                         processedObject = new ClipDataObject
                         {
                             ObjectData = dropFilesProcessed,
-                            StructName = "DROPFILES"
+                            StructName = DROPFILES_OBJ.StructName()
                         };
 
                         break;
                     }
                 case "CF_METAFILEPICT": // 3
-                    var metafilePictProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.METAFILEPICT_OBJ>(rawData);
+                    METAFILEPICT_OBJ metafilePictProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.METAFILEPICT_OBJ>(rawData);
                     dataInfoList.Add($"Mode: {metafilePictProcessed.mm}");
 
                     processedObject = new ClipDataObject
                     {
                         ObjectData = metafilePictProcessed,
-                        StructName = "METAFILEPICT"
+                        StructName = METAFILEPICT_OBJ.StructName()
                     };
                     break;
 
@@ -211,7 +212,7 @@ namespace ClipboardManager
                     break;
 
                 case "CF_PALETTE": // 9 - CF_PALETTE
-                    var paletteProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.LOGPALETTE_OBJ>(rawData);
+                    LOGPALETTE_OBJ paletteProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.LOGPALETTE_OBJ>(rawData);
                     int paletteEntries = paletteProcessed.palNumEntries;
                     dataInfoList.Add($"{paletteEntries} Entries");
                     dataInfoList.Add($"Version: {paletteProcessed.palVersion}");
@@ -221,21 +222,21 @@ namespace ClipboardManager
                     processedObject = new ClipDataObject
                     {
                         ObjectData = paletteProcessed,
-                        StructName = "LOGPALETTE"
+                        StructName = LOGPALETTE_OBJ.StructName()
                     };
                     break;
 
                 // ------------------- Non-Standard Clipboard Formats -------------------
 
                 case "FileGroupDescriptorW": // 0x00000000
-                    var fileGroupDescriptorWProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.FILEGROUPDESCRIPTORW_OBJ>(rawData);
+                    FILEGROUPDESCRIPTORW_OBJ fileGroupDescriptorWProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.FILEGROUPDESCRIPTORW_OBJ>(rawData);
                     int fileCount = (int)fileGroupDescriptorWProcessed.cItems;
                     dataInfoList.Add($"File Count: {fileCount}");
 
                     processedObject = new ClipDataObject
                     {
                         ObjectData = fileGroupDescriptorWProcessed,
-                        StructName = "FILEGROUPDESCRIPTORW"
+                        StructName = FILEGROUPDESCRIPTORW_OBJ.StructName()
                     };
                     break;
 

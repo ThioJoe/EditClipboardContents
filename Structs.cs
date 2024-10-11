@@ -87,9 +87,14 @@ namespace EditClipboardItems
             public DWORD bV5ProfileSize { get; set; }
             public DWORD bV5Reserved { get; set; }
 
-            public static (string, string) GetDocumentationUrl() { 
-                string structName = "BITMAPV5HEADER";
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "BITMAPV5HEADER";
             }
         }
 
@@ -122,8 +127,12 @@ namespace EditClipboardItems
 
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "BITMAPINFOHEADER";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "BITMAPINFOHEADER";
             }
         }
 
@@ -136,8 +145,12 @@ namespace EditClipboardItems
 
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "RGBQUAD";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "RGBQUAD";
             }
         }
 
@@ -148,8 +161,12 @@ namespace EditClipboardItems
 
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "BITMAPINFO";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "BITMAPINFO";
             }
         }
 
@@ -163,8 +180,12 @@ namespace EditClipboardItems
 
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "METAFILEPICT";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "METAFILEPICT";
             }
         }
 
@@ -176,8 +197,12 @@ namespace EditClipboardItems
 
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "CIEXYZ";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "CIEXYZ";
             }
         }
 
@@ -189,8 +214,12 @@ namespace EditClipboardItems
 
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "CIEXYZTRIPLE";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "CIEXYZTRIPLE";
             }
         }
 
@@ -209,8 +238,12 @@ namespace EditClipboardItems
 
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "DROPFILES";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "DROPFILES";
             }
         }
 
@@ -218,6 +251,16 @@ namespace EditClipboardItems
         {
             public LONG x { get; set; }
             public LONG y { get; set; }
+
+            public static (string, string) GetDocumentationUrl()
+            {
+                string structName = StructName();
+                return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "POINT";
+            }
         }
 
         public class PALETTEENTRY_OBJ
@@ -229,8 +272,12 @@ namespace EditClipboardItems
 
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "PALETTEENTRY";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "PALETTEENTRY";
             }
         }
 
@@ -241,8 +288,12 @@ namespace EditClipboardItems
             public List<PALETTEENTRY_OBJ> palPalEntry { get; set; }
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "LOGPALETTE";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "LOGPALETTE";
             }
         }
 
@@ -260,8 +311,12 @@ namespace EditClipboardItems
             public List<CHAR> lcsFilename { get; set; }
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "LOGCOLORSPACEA";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "LOGCOLORSPACEA";
             }
             public static int MaxStringLength()
             {
@@ -292,8 +347,12 @@ namespace EditClipboardItems
             public List<FILEDESCRIPTOR_OBJ> fgd { get; set; }
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "FILEGROUPDESCRIPTORW";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "FILEGROUPDESCRIPTORW";
             }
         }
         public class FILEDESCRIPTOR_OBJ
@@ -321,8 +380,12 @@ namespace EditClipboardItems
 
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "FILEDESCRIPTORW";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "FILEDESCRIPTORW";
             }
 
         }
@@ -341,8 +404,12 @@ namespace EditClipboardItems
             }
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "CLSID";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "CLSID";
             }
         }
 
@@ -353,8 +420,12 @@ namespace EditClipboardItems
 
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "POINTL";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "POINTL";
             }
         }
         public class SIZEL_OBJ
@@ -364,8 +435,12 @@ namespace EditClipboardItems
 
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "SIZEL";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "SIZEL";
             }
         }
 
@@ -376,8 +451,12 @@ namespace EditClipboardItems
 
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "FILETIME";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "FILETIME";
             }
         }
 
@@ -734,6 +813,7 @@ namespace EditClipboardItems
             { "CIEXYZ", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-ciexyz" },
             { "CIEXYZTRIPLE", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-ciexyztriple" },
             { "DROPFILES", "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-dropfiles" },
+            { "POINT", "https://learn.microsoft.com/en-us/windows/win32/api/windef/ns-windef-point" },
             { "PALETTEENTRY", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-paletteentry" },
             { "LOGPALETTE", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-logpalette" },
             { "LOGCOLORSPACEA", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-logcolorspacea" },
