@@ -684,5 +684,28 @@ namespace ClipboardManager
             ChangeCellFocus(e.RowIndex);
             UpdateEditControlsVisibility();
         }
+
+        private void dataGridViewClipboard_SortCompare(object sender, DataGridViewSortCompareEventArgs e)
+        {
+            // If it's the dummy column then reset sorting
+            if (e.Column.Name == "Dummy")
+            {
+                e.SortResult = 0;
+                e.Handled = true;
+                return;
+            }
+            // If it's the format ID column, sort them numerically instead of alphabetically
+            if (e.Column.Name == "FormatId")
+            {
+                // Try to parse the values as numbers
+                if (int.TryParse(e.CellValue1?.ToString(), out int value1) &&
+                    int.TryParse(e.CellValue2?.ToString(), out int value2))
+                {
+                    // Compare the parsed numeric values
+                    e.SortResult = value1.CompareTo(value2);
+                    e.Handled = true;
+                }
+            }
+        }
     }
 }

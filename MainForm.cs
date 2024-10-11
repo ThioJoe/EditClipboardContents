@@ -108,6 +108,7 @@ namespace ClipboardManager
 
         private void InitializeDataGridView()
         {
+            dataGridViewClipboard.Columns.Add("Dummy", " "); // For default sorting, no data
             dataGridViewClipboard.Columns.Add("FormatName", "Format Name");
             dataGridViewClipboard.Columns.Add("FormatId", "Format ID");
             dataGridViewClipboard.Columns.Add("HandleType", "Handle Type");
@@ -115,11 +116,14 @@ namespace ClipboardManager
             dataGridViewClipboard.Columns.Add("DataInfo", "Data Info");
             dataGridViewClipboard.Columns.Add("TextPreview", "Text Preview");
 
-            // Set autosize for all columns
+            // Set autosize for all columns to none so we can control individually later
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
             {
                 column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
             }
+
+            // Set dummy column width to something small
+            //dataGridViewClipboard.Columns["Dummy"].Width = CompensateDPI(5);
 
             // Set default AutoSizeMode
             //dataGridViewClipboard.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
@@ -177,9 +181,9 @@ namespace ClipboardManager
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
             {
                 // Manually set width to minimal 5 to be resized auto later. Apparently autosize will only make columns larger, not smaller
-                column.Width = 5;
+                column.Width = CompensateDPI(5);
 
-                if (column.Name != "TextPreview")
+                if (column.Name != "TextPreview" && column.Name != "Dummy")
                 {
                     // Use all cells instead of displayed cells, otherwise those scrolled out of view won't count
                     column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
@@ -206,7 +210,7 @@ namespace ClipboardManager
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
             {
                 // Keep the TextPreview column as fill
-                if (column.Name == "TextPreview")
+                if (column.Name == "TextPreview" || column.Name == "Dummy")
                 {
                     continue;
                 }
@@ -1551,7 +1555,15 @@ namespace ClipboardManager
             if (menuOptions_IncludeRowHeaders.Checked && forceNoHeader != true)
             {
                 // Just get the contents of the header row only
-                List<string> headerRow = dataGridViewClipboard.Columns.Cast<DataGridViewColumn>().Select(col => col.HeaderText).ToList();
+                List<string> headerRow = new List<string>();
+                foreach (DataGridViewColumn col in dataGridViewClipboard.Columns)
+                {
+                    // Ignore the dummy column
+                    if (col.Name != "Dummy")
+                    {
+                        headerRow.Add(col.HeaderText);
+                    }
+                }
                 selectedRowsContents.Add(headerRow);
                 includeHeader = true;
             }
@@ -1597,7 +1609,16 @@ namespace ClipboardManager
             {
                 DataGridViewRow row = dataGridViewClipboard.Rows[rowIndex];
                 // Create an array of the cell values so we can manage them individually if necessary
-                List<string> rowCells = row.Cells.Cast<DataGridViewCell>().Select(cell => cell.Value.ToString()).ToList();
+                List<string> rowCells = new List<string>();
+                foreach (DataGridViewCell cell in row.Cells)
+                {
+                    // Ignore the dummy column
+                    if (cell.OwningColumn.Name != "Dummy")
+                    {
+                        rowCells.Add(cell.Value.ToString());
+                    }
+                }
+
                 // If the last cell is empty, remove it from the list
                 if (string.IsNullOrEmpty(rowCells.Last()))
                 {
