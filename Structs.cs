@@ -100,7 +100,7 @@ namespace EditClipboardItems
             }
         }
 
-        public class BITMAPV5HEADER_OBJ
+        public class BITMAPV5HEADER_OBJ : ClipboardFormatBase
         {
             public DWORD bV5Size { get; set; }
             public LONG bV5Width { get; set; }
@@ -127,16 +127,18 @@ namespace EditClipboardItems
             public DWORD bV5ProfileSize { get; set; }
             public DWORD bV5Reserved { get; set; }
 
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "BITMAPV5HEADER";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { null };
             }
@@ -155,7 +157,7 @@ namespace EditClipboardItems
             BI_CMYKRLE4 = 0x000D
         }
 
-        public class BITMAPINFOHEADER_OBJ
+        public class BITMAPINFOHEADER_OBJ : ClipboardFormatBase
         {
             public DWORD biSize { get; set; }
             public LONG biWidth { get; set; }
@@ -169,130 +171,140 @@ namespace EditClipboardItems
             public DWORD biClrUsed { get; set; }
             public DWORD biClrImportant { get; set; }
 
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "BITMAPINFOHEADER";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { null };
             }
         }
 
-        public class RGBQUAD_OBJ
+        public class RGBQUAD_OBJ : ClipboardFormatBase
         {
             public BYTE rgbBlue { get; set; }
             public BYTE rgbGreen { get; set; }
             public BYTE rgbRed { get; set; }
             public BYTE rgbReserved { get; set; }
 
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "RGBQUAD";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { null };
             }
         }
 
-        public class BITMAPINFO_OBJ
+        public class BITMAPINFO_OBJ : ClipboardFormatBase
         {
             public BITMAPINFOHEADER_OBJ bmiHeader { get; set; }
             public List<RGBQUAD_OBJ> bmiColors { get; set; }
 
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "BITMAPINFO";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { "bmiColors" };
             }
         }
 
-
-        public class METAFILEPICT_OBJ
+        public class METAFILEPICT_OBJ : ClipboardFormatBase
         {
             public LONG mm { get; set; }
             public LONG xExt { get; set; }
             public LONG yExt { get; set; }
             public HMETAFILE hMF { get; set; }
 
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "METAFILEPICT";
             }
 
-            public static string[] VariableSizedItems()
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { "hMF" };
             }
         }
 
-        public class CIEXYZ_OBJ
+        public class CIEXYZ_OBJ : ClipboardFormatBase
         {
             public FXPT2DOT30 ciexyzX { get; set; }
             public FXPT2DOT30 ciexyzY { get; set; }
             public FXPT2DOT30 ciexyzZ { get; set; }
 
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "CIEXYZ";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { null };
             }
         }
 
-        public class CIEXYZTRIPLE_OBJ
+        public class CIEXYZTRIPLE_OBJ : ClipboardFormatBase
         {
             public CIEXYZ_OBJ ciexyzRed { get; set; }
             public CIEXYZ_OBJ ciexyzGreen { get; set; }
             public CIEXYZ_OBJ ciexyzBlue { get; set; }
 
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "CIEXYZTRIPLE";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { null };
             }
         }
 
-        public class DROPFILES_OBJ
+        public class DROPFILES_OBJ : ClipboardFormatBase
         {
             public DWORD pFiles { get; set; }
             public POINT_OBJ pt { get; set; }
@@ -304,85 +316,93 @@ namespace EditClipboardItems
             {
                 return Marshal.SizeOf(this);
             }
-
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "DROPFILES";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { "pt" };
             }
         }
 
-        public class POINT_OBJ
+        public class POINT_OBJ : ClipboardFormatBase
         {
             public LONG x { get; set; }
             public LONG y { get; set; }
 
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "POINT";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { null };
             }
         }
 
-        public class PALETTEENTRY_OBJ
+        public class PALETTEENTRY_OBJ : ClipboardFormatBase
         {
             public BYTE peRed { get; set; }
             public BYTE peGreen { get; set; }
             public BYTE peBlue { get; set; }
             public BYTE peFlags { get; set; }
 
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "PALETTEENTRY";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { null };
             }
         }
 
-        public class LOGPALETTE_OBJ
+        public class LOGPALETTE_OBJ : ClipboardFormatBase
         {
             public WORD palVersion { get; set; }
             public WORD palNumEntries { get; set; }
             public List<PALETTEENTRY_OBJ> palPalEntry { get; set; }
-            public static (string, string) GetDocumentationUrl()
+
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "LOGPALETTE";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { "palPalEntry" };
             }
         }
 
-        public class LOGCOLORSPACEA_OBJ
+        public class LOGCOLORSPACEA_OBJ : ClipboardFormatBase
         {
             public DWORD lcsSignature { get; set; }
             public DWORD lcsVersion { get; set; }
@@ -394,14 +414,21 @@ namespace EditClipboardItems
             public DWORD lcsGammaGreen { get; set; }
             public DWORD lcsGammaBlue { get; set; }
             public string lcsFilename { get; set; }
-            public static (string, string) GetDocumentationUrl()
+
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "LOGCOLORSPACEA";
+            }
+
+            public override string[] GetVariableSizedItems()
+            {
+                return new string[] { null };
             }
             public static int MaxStringLength()
             {
@@ -415,7 +442,7 @@ namespace EditClipboardItems
             LCS_CALIBRATED_RGB = 0x00000000,
             LCS_sRGB = 0x73524742,
             LCS_WINDOWS_COLOR_SPACE = 0x57696E20
-        }
+            }
 
         public enum LCSGAMUTMATCH : uint // DWORD
         {
@@ -426,25 +453,29 @@ namespace EditClipboardItems
             LCS_GM_IMAGES = 0x00000004
         }
 
-        public class FILEGROUPDESCRIPTORW_OBJ
+        public class FILEGROUPDESCRIPTORW_OBJ : ClipboardFormatBase
         {
             public DWORD cItems { get; set; }
             public List<FILEDESCRIPTOR_OBJ> fgd { get; set; }
-            public static (string, string) GetDocumentationUrl()
+
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "FILEGROUPDESCRIPTORW";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { null };
             }
         }
-        public class FILEDESCRIPTOR_OBJ
+
+        public class FILEDESCRIPTOR_OBJ : ClipboardFormatBase
         {
             public DWORD dwFlags { get; set; }
             public CLSID_OBJ clsid { get; set; }
@@ -467,23 +498,25 @@ namespace EditClipboardItems
                 return 260;
             }
 
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "FILEDESCRIPTORW";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { null };
             }
 
         }
 
-        public class CLSID_OBJ
+        public class CLSID_OBJ : ClipboardFormatBase
         {
             public DWORD Data1 { get; set; }
             public WORD Data2 { get; set; }
@@ -495,75 +528,84 @@ namespace EditClipboardItems
             {
                 return 16;
             }
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "CLSID";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { null };
             }
         }
 
-        public class POINTL_OBJ
+        public class POINTL_OBJ : ClipboardFormatBase
         {
             public LONG x { get; set; }
             public LONG y { get; set; }
 
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "POINTL";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { null };
             }
         }
-        public class SIZEL_OBJ
+
+        public class SIZEL_OBJ : ClipboardFormatBase
         {
             public DWORD cx { get; set; }
             public DWORD cy { get; set; }
 
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "SIZEL";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { null };
             }
         }
 
-        public class FILETIME_OBJ
+        public class FILETIME_OBJ : ClipboardFormatBase
         {
             public DWORD dwLowDateTime { get; set; }
             public DWORD dwHighDateTime { get; set; }
 
-            public static (string, string) GetDocumentationUrl()
+            public override (string, string) GetDocumentationUrl()
             {
                 string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
             }
-            public static string StructName()
+
+            public override string StructName()
             {
                 return "FILETIME";
             }
-            public static string[] VariableSizedItems()
+
+            public override string[] GetVariableSizedItems()
             {
                 return new string[] { null };
             }

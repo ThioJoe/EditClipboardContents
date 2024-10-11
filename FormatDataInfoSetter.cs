@@ -89,7 +89,7 @@ namespace ClipboardManager
                         processedObject = new ClipDataObject
                         {
                             ObjectData = CF_bitmapProcessed,
-                            StructName = ClipboardFormats.StructName<BITMAP_OBJ>() // The struct name is the same so don't need to use the specific instance
+                            StructName = CF_bitmapProcessed.StructName()
                         };
 
                     }
@@ -105,7 +105,7 @@ namespace ClipboardManager
                     processedObject = new ClipDataObject
                     {
                         ObjectData = bitmapProcessed,
-                        StructName = BITMAPINFO_OBJ.StructName()
+                        StructName = bitmapProcessed.StructName()
                     };
 
                     break;
@@ -118,7 +118,7 @@ namespace ClipboardManager
                     processedObject = new ClipDataObject
                     {
                         ObjectData = bitmapInfoV5Processed,
-                        StructName = BITMAPV5HEADER_OBJ.StructName()
+                        StructName = bitmapInfoV5Processed.StructName()
                     };
 
                     break;
@@ -177,7 +177,7 @@ namespace ClipboardManager
                         processedObject = new ClipDataObject
                         {
                             ObjectData = dropFilesProcessed,
-                            StructName = DROPFILES_OBJ.StructName()
+                            StructName = dropFilesProcessed.StructName()
                         };
 
                         break;
@@ -189,7 +189,7 @@ namespace ClipboardManager
                     processedObject = new ClipDataObject
                     {
                         ObjectData = metafilePictProcessed,
-                        StructName = METAFILEPICT_OBJ.StructName()
+                        StructName = metafilePictProcessed.StructName()
                     };
                     break;
 
@@ -222,7 +222,7 @@ namespace ClipboardManager
                     processedObject = new ClipDataObject
                     {
                         ObjectData = paletteProcessed,
-                        StructName = LOGPALETTE_OBJ.StructName()
+                        StructName = paletteProcessed.StructName()
                     };
                     break;
 
@@ -236,7 +236,7 @@ namespace ClipboardManager
                     processedObject = new ClipDataObject
                     {
                         ObjectData = fileGroupDescriptorWProcessed,
-                        StructName = FILEGROUPDESCRIPTORW_OBJ.StructName()
+                        StructName = fileGroupDescriptorWProcessed.StructName()
                     };
                     break;
 
