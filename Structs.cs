@@ -52,8 +52,12 @@ namespace EditClipboardItems
 
             public static (string, string) GetDocumentationUrl()
             {
-                string structName = "BITMAP";
+                string structName = StructName();
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static string StructName()
+            {
+                return "BITMAP";
             }
         }
 
@@ -392,6 +396,10 @@ namespace EditClipboardItems
             {
                 string structName = "LOGCOLORSPACEA";
                 return (structName, StructDocsLinks[structName]);
+            }
+            public static int MaxStringLength()
+            {
+                return 260;
             }
         }
 
