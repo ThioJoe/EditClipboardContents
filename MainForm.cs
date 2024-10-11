@@ -2102,7 +2102,20 @@ namespace ClipboardManager
                 string localStructName = structNameMethod.Invoke(null, null) as string;
                 if (localStructName != null)
                 {
-                    return ClipboardFormats.VariableSizedItems[localStructName];
+                    try
+                    {
+                        return ClipboardFormats.VariableSizedItems[localStructName];
+                    }
+                    catch(KeyNotFoundException)
+                    {
+                        Console.WriteLine($"Lookup of variable properties failed for {localStructName}: Key not found in dictionary.");
+                        return null;
+                    }
+                    catch(Exception ex)
+                    {
+                        Console.WriteLine($"Lookup of variable properties failed for {localStructName}: {ex}");
+                        return null;
+                    }
                 }
             }
             return null;

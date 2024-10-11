@@ -59,6 +59,10 @@ namespace EditClipboardItems
             {
                 return "BITMAP";
             }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { "bmBits" };
+            }
         }
         public class BITMAPV5HEADER_OBJ
         {
@@ -95,6 +99,10 @@ namespace EditClipboardItems
             public static string StructName()
             {
                 return "BITMAPV5HEADER";
+            }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { null };
             }
         }
 
@@ -134,6 +142,10 @@ namespace EditClipboardItems
             {
                 return "BITMAPINFOHEADER";
             }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { null };
+            }
         }
 
         public class RGBQUAD_OBJ
@@ -152,6 +164,10 @@ namespace EditClipboardItems
             {
                 return "RGBQUAD";
             }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { null };
+            }
         }
 
         public class BITMAPINFO_OBJ
@@ -167,6 +183,10 @@ namespace EditClipboardItems
             public static string StructName()
             {
                 return "BITMAPINFO";
+            }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { "bmiColors" };
             }
         }
 
@@ -187,6 +207,11 @@ namespace EditClipboardItems
             {
                 return "METAFILEPICT";
             }
+
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { "hMF" };
+            }
         }
 
         public class CIEXYZ_OBJ
@@ -204,6 +229,10 @@ namespace EditClipboardItems
             {
                 return "CIEXYZ";
             }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { null };
+            }
         }
 
         public class CIEXYZTRIPLE_OBJ
@@ -220,6 +249,10 @@ namespace EditClipboardItems
             public static string StructName()
             {
                 return "CIEXYZTRIPLE";
+            }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { null };
             }
         }
 
@@ -245,6 +278,10 @@ namespace EditClipboardItems
             {
                 return "DROPFILES";
             }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { "pt" };
+            }
         }
 
         public class POINT_OBJ
@@ -260,6 +297,10 @@ namespace EditClipboardItems
             public static string StructName()
             {
                 return "POINT";
+            }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { null };
             }
         }
 
@@ -279,6 +320,10 @@ namespace EditClipboardItems
             {
                 return "PALETTEENTRY";
             }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { null };
+            }
         }
 
         public class LOGPALETTE_OBJ
@@ -294,6 +339,10 @@ namespace EditClipboardItems
             public static string StructName()
             {
                 return "LOGPALETTE";
+            }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { "palPalEntry" };
             }
         }
 
@@ -354,6 +403,10 @@ namespace EditClipboardItems
             {
                 return "FILEGROUPDESCRIPTORW";
             }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { null };
+            }
         }
         public class FILEDESCRIPTOR_OBJ
         {
@@ -387,6 +440,10 @@ namespace EditClipboardItems
             {
                 return "FILEDESCRIPTORW";
             }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { null };
+            }
 
         }
 
@@ -411,6 +468,10 @@ namespace EditClipboardItems
             {
                 return "CLSID";
             }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { null };
+            }
         }
 
         public class POINTL_OBJ
@@ -427,6 +488,10 @@ namespace EditClipboardItems
             {
                 return "POINTL";
             }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { null };
+            }
         }
         public class SIZEL_OBJ
         {
@@ -441,6 +506,10 @@ namespace EditClipboardItems
             public static string StructName()
             {
                 return "SIZEL";
+            }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { null };
             }
         }
 
@@ -457,6 +526,10 @@ namespace EditClipboardItems
             public static string StructName()
             {
                 return "FILETIME";
+            }
+            public static string[] VariableSizedItems()
+            {
+                return new string[] { null };
             }
         }
 
