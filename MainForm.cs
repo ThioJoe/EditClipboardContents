@@ -1898,10 +1898,7 @@ namespace ClipboardManager
             {
                 _objectData = value;
                 InitializeNestedObjects();
-                if (StructName == null)
-                {
-                    _structName = ObjectData.StructName();
-                }
+                _structName = ObjectData.StructName();
             }
         }
 

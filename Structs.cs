@@ -51,21 +51,14 @@ namespace EditClipboardItems
         {
             // Private field to store the struct name
             private readonly string _structName;
-
-            // Constructor to set the struct name
-            protected ClipboardFormatBase(string structName)
-            {
-                _structName = structName;
-            }
+            // Default implementation for StructName
+            public virtual string StructName() => _structName;
 
             // Common method applies to all classes of the type
             public virtual (string, string) GetDocumentationUrl()
             {
                 return (_structName, StructDocsLinks[_structName]);
             }
-
-            // Default implementation for StructName
-            public virtual string StructName() => _structName;
 
             // This method remains abstract
             public abstract string[] GetVariableSizedItems();
@@ -97,7 +90,7 @@ namespace EditClipboardItems
             public WORD bmBitsPixel { get; set; }
             public LPVOID bmBits { get; set; }
 
-            private readonly string _structName = "BITMAP";
+            private string _structName = "BITMAP";
 
             public override string[] GetVariableSizedItems()
             {
@@ -132,10 +125,7 @@ namespace EditClipboardItems
             public DWORD bV5ProfileSize { get; set; }
             public DWORD bV5Reserved { get; set; }
 
-            public override string StructName()
-            {
-                return "BITMAPV5HEADER";
-            }
+            private readonly string _structName = "BITMAPV5HEADER";
 
             public override string[] GetVariableSizedItems()
             {
@@ -170,10 +160,7 @@ namespace EditClipboardItems
             public DWORD biClrUsed { get; set; }
             public DWORD biClrImportant { get; set; }
 
-            public override string StructName()
-            {
-                return "BITMAPINFOHEADER";
-            }
+            private readonly string _structName = "BITMAPINFOHEADER";
 
             public override string[] GetVariableSizedItems()
             {
@@ -188,10 +175,7 @@ namespace EditClipboardItems
             public BYTE rgbRed { get; set; }
             public BYTE rgbReserved { get; set; }
 
-            public override string StructName()
-            {
-                return "RGBQUAD";
-            }
+            private readonly string _structName = "RGBQUAD";
 
             public override string[] GetVariableSizedItems()
             {
@@ -204,10 +188,7 @@ namespace EditClipboardItems
             public BITMAPINFOHEADER_OBJ bmiHeader { get; set; }
             public List<RGBQUAD_OBJ> bmiColors { get; set; }
 
-            public override string StructName()
-            {
-                return "BITMAPINFO";
-            }
+            private readonly string _structName = "BITMAPINFO";
 
             public override string[] GetVariableSizedItems()
             {
@@ -222,10 +203,7 @@ namespace EditClipboardItems
             public LONG yExt { get; set; }
             public HMETAFILE hMF { get; set; }
 
-            public override string StructName()
-            {
-                return "METAFILEPICT";
-            }
+            private readonly string _structName = "METAFILEPICT";
 
             public override string[] GetVariableSizedItems()
             {
@@ -238,10 +216,7 @@ namespace EditClipboardItems
             public FXPT2DOT30 ciexyzX { get; set; }
             public FXPT2DOT30 ciexyzY { get; set; }
             public FXPT2DOT30 ciexyzZ { get; set; }
-            public override string StructName()
-            {
-                return "CIEXYZ";
-            }
+            private readonly string _structName = "CIEXYZ";
 
             public override string[] GetVariableSizedItems()
             {
@@ -255,10 +230,7 @@ namespace EditClipboardItems
             public CIEXYZ_OBJ ciexyzGreen { get; set; }
             public CIEXYZ_OBJ ciexyzBlue { get; set; }
 
-            public override string StructName()
-            {
-                return "CIEXYZTRIPLE";
-            }
+            private readonly string _structName = "CIEXYZTRIPLE";
 
             public override string[] GetVariableSizedItems()
             {
@@ -279,10 +251,7 @@ namespace EditClipboardItems
                 return Marshal.SizeOf(this);
             }
 
-            public override string StructName()
-            {
-                return "DROPFILES";
-            }
+            private readonly string _structName = "DROPFILES";
 
             public override string[] GetVariableSizedItems()
             {
@@ -295,10 +264,7 @@ namespace EditClipboardItems
             public LONG x { get; set; }
             public LONG y { get; set; }
 
-            public override string StructName()
-            {
-                return "POINT";
-            }
+            private readonly string _structName = "POINT";
 
             public override string[] GetVariableSizedItems()
             {
@@ -313,10 +279,7 @@ namespace EditClipboardItems
             public BYTE peBlue { get; set; }
             public BYTE peFlags { get; set; }
 
-            public override string StructName()
-            {
-                return "PALETTEENTRY";
-            }
+            private readonly string _structName = "PALETTEENTRY";
 
             public override string[] GetVariableSizedItems()
             {
@@ -330,10 +293,7 @@ namespace EditClipboardItems
             public WORD palNumEntries { get; set; }
             public List<PALETTEENTRY_OBJ> palPalEntry { get; set; }
 
-            public override string StructName()
-            {
-                return "LOGPALETTE";
-            }
+            private readonly string _structName = "LOGPALETTE";
 
             public override string[] GetVariableSizedItems()
             {
@@ -354,10 +314,7 @@ namespace EditClipboardItems
             public DWORD lcsGammaBlue { get; set; }
             public string lcsFilename { get; set; }
 
-            public override string StructName()
-            {
-                return "LOGCOLORSPACEA";
-            }
+            private readonly string _structName = "LOGCOLORSPACEA";
 
             public override string[] GetVariableSizedItems()
             {
@@ -391,10 +348,7 @@ namespace EditClipboardItems
             public DWORD cItems { get; set; }
             public List<FILEDESCRIPTOR_OBJ> fgd { get; set; }
 
-            public override string StructName()
-            {
-                return "FILEGROUPDESCRIPTORW";
-            }
+            private readonly string _structName = "FILEGROUPDESCRIPTORW";
 
             public override string[] GetVariableSizedItems()
             {
@@ -425,10 +379,7 @@ namespace EditClipboardItems
                 return 260;
             }
 
-            public override string StructName()
-            {
-                return "FILEDESCRIPTORW";
-            }
+            private readonly string _structName = "FILEDESCRIPTORW";
 
             public override string[] GetVariableSizedItems()
             {
@@ -450,10 +401,7 @@ namespace EditClipboardItems
                 return 16;
             }
 
-            public override string StructName()
-            {
-                return "CLSID";
-            }
+            private readonly string _structName = "CLSID";
 
             public override string[] GetVariableSizedItems()
             {
@@ -466,10 +414,7 @@ namespace EditClipboardItems
             public LONG x { get; set; }
             public LONG y { get; set; }
 
-            public override string StructName()
-            {
-                return "POINTL";
-            }
+            private readonly string _structName = "POINTL";
 
             public override string[] GetVariableSizedItems()
             {
@@ -482,10 +427,7 @@ namespace EditClipboardItems
             public DWORD cx { get; set; }
             public DWORD cy { get; set; }
 
-            public override string StructName()
-            {
-                return "SIZEL";
-            }
+            private readonly string _structName = "SIZEL";
 
             public override string[] GetVariableSizedItems()
             {
@@ -498,10 +440,7 @@ namespace EditClipboardItems
             public DWORD dwLowDateTime { get; set; }
             public DWORD dwHighDateTime { get; set; }
 
-            public override string StructName()
-            {
-                return "FILETIME";
-            }
+            private readonly string _structName = "FILETIME";
 
             public override string[] GetVariableSizedItems()
             {
