@@ -60,19 +60,6 @@ namespace EditClipboardItems
                 return "BITMAP";
             }
         }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct BITMAP
-        {
-            public LONG bmType;
-            public LONG bmWidth;
-            public LONG bmHeight;
-            public LONG bmWidthBytes;
-            public WORD bmPlanes;
-            public WORD bmBitsPixel;
-            public LPVOID bmBits;
-        }
-
         public class BITMAPV5HEADER_OBJ
         {
             public DWORD bV5Size { get; set; }
@@ -104,35 +91,6 @@ namespace EditClipboardItems
                 string structName = "BITMAPV5HEADER";
                 return (structName, StructDocsLinks[structName]);
             }
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct BITMAPV5HEADER
-        {
-            public DWORD bV5Size;
-            public LONG bV5Width;
-            public LONG bV5Height;
-            public WORD bV5Planes;
-            public WORD bV5BitCount;
-            public DWORD bV5Compression;
-            public DWORD bV5SizeImage;
-            public LONG bV5XPelsPerMeter;
-            public LONG bV5YPelsPerMeter;
-            public DWORD bV5ClrUsed;
-            public DWORD bV5ClrImportant;
-            public DWORD bV5RedMask;
-            public DWORD bV5GreenMask;
-            public DWORD bV5BlueMask;
-            public DWORD bV5AlphaMask;
-            public LOGCOLORSPACEA bV5CSType;
-            public CIEXYZTRIPLE bV5Endpoints;
-            public DWORD bV5GammaRed;
-            public DWORD bV5GammaGreen;
-            public DWORD bV5GammaBlue;
-            public DWORD bV5Intent;
-            public DWORD bV5ProfileData;
-            public DWORD bV5ProfileSize;
-            public DWORD bV5Reserved;
         }
 
         public enum bV5Compression : uint // DWORD
@@ -169,22 +127,6 @@ namespace EditClipboardItems
             }
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct BITMAPINFOHEADER
-        {
-            public DWORD biSize;
-            public LONG biWidth;
-            public LONG biHeight;
-            public WORD biPlanes;
-            public WORD biBitCount;
-            public DWORD biCompression;
-            public DWORD biSizeImage;
-            public LONG biXPelsPerMeter;
-            public LONG biYPelsPerMeter;
-            public DWORD biClrUsed;
-            public DWORD biClrImportant;
-        }
-
         public class RGBQUAD_OBJ
         {
             public BYTE rgbBlue { get; set; }
@@ -199,15 +141,6 @@ namespace EditClipboardItems
             }
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct RGBQUAD
-        {
-            public BYTE rgbBlue;
-            public BYTE rgbGreen;
-            public BYTE rgbRed;
-            public BYTE rgbReserved;
-        }
-
         public class BITMAPINFO_OBJ
         {
             public BITMAPINFOHEADER_OBJ bmiHeader { get; set; }
@@ -220,13 +153,6 @@ namespace EditClipboardItems
             }
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct BITMAPINFO
-        {
-            public BITMAPINFOHEADER bmiHeader;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
-            public RGBQUAD[] bmiColors;
-        }
 
         public class METAFILEPICT_OBJ
         {
@@ -242,15 +168,6 @@ namespace EditClipboardItems
             }
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct METAFILEPICT
-        {
-            public LONG mm;
-            public LONG xExt;
-            public LONG yExt;
-            public HMETAFILE hMF;
-        }
-
         public class CIEXYZ_OBJ
         {
             public FXPT2DOT30 ciexyzX { get; set; }
@@ -264,14 +181,6 @@ namespace EditClipboardItems
             }
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct CIEXYZ
-        {
-            public FXPT2DOT30 ciexyzX;
-            public FXPT2DOT30 ciexyzY;
-            public FXPT2DOT30 ciexyzZ;
-        }
-
         public class CIEXYZTRIPLE_OBJ
         {
             public CIEXYZ_OBJ ciexyzRed { get; set; }
@@ -283,14 +192,6 @@ namespace EditClipboardItems
                 string structName = "CIEXYZTRIPLE";
                 return (structName, StructDocsLinks[structName]);
             }
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct CIEXYZTRIPLE
-        {
-            public CIEXYZ ciexyzRed;
-            public CIEXYZ ciexyzGreen;
-            public CIEXYZ ciexyzBlue;
         }
 
         public class DROPFILES_OBJ
@@ -319,22 +220,6 @@ namespace EditClipboardItems
             public LONG y { get; set; }
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct DROPFILES
-        {
-            public DWORD pFiles;
-            public POINT pt;
-            public BOOL fNC;
-            public BOOL fWide;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct POINT
-        {
-            public LONG x;
-            public LONG y;
-        }
-
         public class PALETTEENTRY_OBJ
         {
             public BYTE peRed { get; set; }
@@ -349,15 +234,6 @@ namespace EditClipboardItems
             }
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct PALETTEENTRY
-        {
-            public BYTE peRed;
-            public BYTE peGreen;
-            public BYTE peBlue;
-            public BYTE peFlags;
-        }
-
         public class LOGPALETTE_OBJ
         {
             public WORD palVersion { get; set; }
@@ -369,16 +245,6 @@ namespace EditClipboardItems
                 return (structName, StructDocsLinks[structName]);
             }
         }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct LOGPALETTE
-        {
-            public WORD palVersion;
-            public WORD palNumEntries;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
-            public PALETTEENTRY[] palPalEntry;
-        }
-
 
         public class LOGCOLORSPACEA_OBJ
         {
@@ -401,22 +267,6 @@ namespace EditClipboardItems
             {
                 return 260;
             }
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct LOGCOLORSPACEA
-        {
-            public DWORD lcsSignature;
-            public DWORD lcsVersion;
-            public DWORD lcsSize;
-            public DWORD lcsCSType;
-            public DWORD lcsIntent;
-            public CIEXYZTRIPLE lcsEndpoints;
-            public DWORD lcsGammaRed;
-            public DWORD lcsGammaGreen;
-            public DWORD lcsGammaBlue;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 260)]
-            public CHAR[] lcsFilename;
         }
 
         public enum LCSCSTYPE : uint // DWORD
@@ -446,7 +296,6 @@ namespace EditClipboardItems
                 return (structName, StructDocsLinks[structName]);
             }
         }
-
         public class FILEDESCRIPTOR_OBJ
         {
             public DWORD dwFlags { get; set; }
@@ -508,7 +357,6 @@ namespace EditClipboardItems
                 return (structName, StructDocsLinks[structName]);
             }
         }
-
         public class SIZEL_OBJ
         {
             public DWORD cx { get; set; }
@@ -521,7 +369,6 @@ namespace EditClipboardItems
             }
         }
 
-
         public class FILETIME_OBJ
         {
             public DWORD dwLowDateTime { get; set; }
@@ -532,6 +379,160 @@ namespace EditClipboardItems
                 string structName = "FILETIME";
                 return (structName, StructDocsLinks[structName]);
             }
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------- Struct definitions ---------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------------
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct BITMAP
+        {
+            public LONG bmType;
+            public LONG bmWidth;
+            public LONG bmHeight;
+            public LONG bmWidthBytes;
+            public WORD bmPlanes;
+            public WORD bmBitsPixel;
+            public LPVOID bmBits;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct BITMAPV5HEADER
+        {
+            public DWORD bV5Size;
+            public LONG bV5Width;
+            public LONG bV5Height;
+            public WORD bV5Planes;
+            public WORD bV5BitCount;
+            public DWORD bV5Compression;
+            public DWORD bV5SizeImage;
+            public LONG bV5XPelsPerMeter;
+            public LONG bV5YPelsPerMeter;
+            public DWORD bV5ClrUsed;
+            public DWORD bV5ClrImportant;
+            public DWORD bV5RedMask;
+            public DWORD bV5GreenMask;
+            public DWORD bV5BlueMask;
+            public DWORD bV5AlphaMask;
+            public LOGCOLORSPACEA bV5CSType;
+            public CIEXYZTRIPLE bV5Endpoints;
+            public DWORD bV5GammaRed;
+            public DWORD bV5GammaGreen;
+            public DWORD bV5GammaBlue;
+            public DWORD bV5Intent;
+            public DWORD bV5ProfileData;
+            public DWORD bV5ProfileSize;
+            public DWORD bV5Reserved;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct BITMAPINFOHEADER
+        {
+            public DWORD biSize;
+            public LONG biWidth;
+            public LONG biHeight;
+            public WORD biPlanes;
+            public WORD biBitCount;
+            public DWORD biCompression;
+            public DWORD biSizeImage;
+            public LONG biXPelsPerMeter;
+            public LONG biYPelsPerMeter;
+            public DWORD biClrUsed;
+            public DWORD biClrImportant;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RGBQUAD
+        {
+            public BYTE rgbBlue;
+            public BYTE rgbGreen;
+            public BYTE rgbRed;
+            public BYTE rgbReserved;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct BITMAPINFO
+        {
+            public BITMAPINFOHEADER bmiHeader;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
+            public RGBQUAD[] bmiColors;
+        }
+
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct METAFILEPICT
+        {
+            public LONG mm;
+            public LONG xExt;
+            public LONG yExt;
+            public HMETAFILE hMF;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct CIEXYZ
+        {
+            public FXPT2DOT30 ciexyzX;
+            public FXPT2DOT30 ciexyzY;
+            public FXPT2DOT30 ciexyzZ;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct CIEXYZTRIPLE
+        {
+            public CIEXYZ ciexyzRed;
+            public CIEXYZ ciexyzGreen;
+            public CIEXYZ ciexyzBlue;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DROPFILES
+        {
+            public DWORD pFiles;
+            public POINT pt;
+            public BOOL fNC;
+            public BOOL fWide;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINT
+        {
+            public LONG x;
+            public LONG y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct PALETTEENTRY
+        {
+            public BYTE peRed;
+            public BYTE peGreen;
+            public BYTE peBlue;
+            public BYTE peFlags;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct LOGPALETTE
+        {
+            public WORD palVersion;
+            public WORD palNumEntries;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
+            public PALETTEENTRY[] palPalEntry;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct LOGCOLORSPACEA
+        {
+            public DWORD lcsSignature;
+            public DWORD lcsVersion;
+            public DWORD lcsSize;
+            public DWORD lcsCSType;
+            public DWORD lcsIntent;
+            public CIEXYZTRIPLE lcsEndpoints;
+            public DWORD lcsGammaRed;
+            public DWORD lcsGammaGreen;
+            public DWORD lcsGammaBlue;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 260)]
+            public CHAR[] lcsFilename;
         }
 
         // --------------------------------------------------- Helper methods ---------------------------------------------------
