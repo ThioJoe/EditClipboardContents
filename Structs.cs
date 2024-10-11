@@ -49,15 +49,25 @@ namespace EditClipboardItems
 
         public abstract class ClipboardFormatBase : IClipboardFormat
         {
+            // Private field to store the struct name
+            private readonly string _structName;
+
+            // Constructor to set the struct name
+            protected ClipboardFormatBase(string structName)
+            {
+                _structName = structName;
+            }
+
             // Common method applies to all classes of the type
             public virtual (string, string) GetDocumentationUrl()
             {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
+                return (_structName, StructDocsLinks[_structName]);
             }
 
-            // These methods remain abstract
-            public abstract string StructName();
+            // Default implementation for StructName
+            public virtual string StructName() => _structName;
+
+            // This method remains abstract
             public abstract string[] GetVariableSizedItems();
         }
 
@@ -87,10 +97,7 @@ namespace EditClipboardItems
             public WORD bmBitsPixel { get; set; }
             public LPVOID bmBits { get; set; }
 
-            public override string StructName()
-            {
-                return "BITMAP";
-            }
+            private readonly string _structName = "BITMAP";
 
             public override string[] GetVariableSizedItems()
             {
