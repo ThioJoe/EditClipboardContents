@@ -59,7 +59,36 @@ namespace EditClipboardItems
         {"FileGroupDescriptorW", new FormatInfo {Value = 49275, Kind = "struct", HandleOutput = "Describes the properties of a file that is being copied."}},
         };
 
-        public static string CreateFormatDataStringForTextbox(string formatName, byte[] data, ClipboardItem fullItem, string indent = "")
+        public static string GetDataStringForTextbox(string formatName, byte[] data, ClipboardItem fullItem, string indent = "")
+        {
+            string displayText;
+
+            if (fullItem != null && fullItem.ClipDataObject != null && fullItem.ClipDataObject.ObjectData != null)
+            {
+                displayText = fullItem.ClipDataObject.ObjectData.GetCacheStructObjectDisplayInfo();
+            }
+            else
+            {
+                displayText = CreateDataString(formatName, data, fullItem, indent);
+                return displayText;
+            }
+
+            // At this point we know the data object exists - Check if the fullItem has the data info cached in its data object first
+            if (!string.IsNullOrEmpty(displayText))
+            {
+                return displayText;
+            }
+            // Otherwise put it in the cache after generating
+            else
+            {
+                displayText = CreateDataString(formatName, data, fullItem, indent);
+
+                fullItem.ClipDataObject.ObjectData.SetCacheStructObjectDisplayInfo(displayText);
+                return displayText;
+            }
+        }
+
+        public static string CreateDataString(string formatName, byte[] data, ClipboardItem fullItem, string indent = "")
         {
             if (!FormatDictionary.TryGetValue(formatName, out FormatInfo formatInfo))
             {
@@ -173,10 +202,6 @@ namespace EditClipboardItems
                     RecursivePrintCollection(obj.ObjectData, indent); // This will print out the collection (if it's a collection
                 }
             }
-                
-
-
-
 
             if (fullItem.ClipDataObject != null)
             {

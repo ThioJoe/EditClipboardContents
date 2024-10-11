@@ -1152,7 +1152,7 @@ namespace ClipboardManager
                     break;
                 case 3: // Object / Struct View
                     richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
-                    richTextBoxContents.Text = FormatInspector.CreateFormatDataStringForTextbox(formatName: GetClipboardFormatName(item.FormatId), data: item.RawData, fullItem: item);
+                    richTextBoxContents.Text = FormatInspector.GetDataStringForTextbox(formatName: GetClipboardFormatName(item.FormatId), data: item.RawData, fullItem: item);
                     richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
 
                     richTextBoxContents.ReadOnly = true;

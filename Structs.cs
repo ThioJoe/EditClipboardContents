@@ -45,23 +45,40 @@ namespace EditClipboardItems
             (string, string) GetDocumentationUrl();
             string StructName();
             string[] GetVariableSizedItems();
+            void SetCacheStructObjectDisplayInfo(string structInfo);
+            string GetCacheStructObjectDisplayInfo();
         }
 
         public abstract class ClipboardFormatBase : IClipboardFormat
         {
             // Private field to store the struct name
             private readonly string _structName;
+
+            // Private field to store the cached struct display info
+            private string _cachedStructDisplayInfo;
+
             // Default implementation for StructName
             public virtual string StructName() => _structName;
 
-            // Common method applies to all classes of the type
+            // Common methods apply to all classes of the type
             public virtual (string, string) GetDocumentationUrl()
             {
                 return (_structName, StructDocsLinks[_structName]);
             }
 
-            // This method remains abstract
             public abstract string[] GetVariableSizedItems();
+
+            // Method to cache the display info of the struct object
+            public void SetCacheStructObjectDisplayInfo(string structInfo)
+            {
+                _cachedStructDisplayInfo = structInfo;
+            }
+
+            // Method to retrieve the cached display info of the struct object
+            public string GetCacheStructObjectDisplayInfo()
+            {
+                return _cachedStructDisplayInfo ?? string.Empty;
+            }
         }
 
         // Static helper methods
