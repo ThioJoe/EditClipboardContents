@@ -1890,21 +1890,6 @@ namespace ClipboardManager
     {
         private Dictionary<string, object> _nestedObjects = new Dictionary<string, object>();
 
-        // Struct name will be gotten automatically via class method if possible and it wasn't set
-        private string _structName = null;
-        public string StructName
-        {
-            get => _structName;
-            set
-            {
-                _structName = value;
-                if (_structName == null && ObjectData != null)
-                {
-                    TrySetStructNameFromObjectData();
-                }
-            }
-        }
-
         private IClipboardFormat _objectData = null;
         public IClipboardFormat ObjectData
         {
@@ -1915,7 +1900,22 @@ namespace ClipboardManager
                 InitializeNestedObjects();
                 if (StructName == null)
                 {
-                    TrySetStructNameFromObjectData();
+                    _structName = ObjectData.StructName();
+                }
+            }
+        }
+
+        // Struct name will be gotten automatically via class method if possible and it wasn't set manually
+        private string _structName = null;
+        public string StructName
+        {
+            get => _structName;
+            set
+            {
+                _structName = value;
+                if (_structName == null && ObjectData != null)
+                {
+                    _structName = ObjectData.StructName();
                 }
             }
         }

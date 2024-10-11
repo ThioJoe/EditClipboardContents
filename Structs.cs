@@ -49,12 +49,16 @@ namespace EditClipboardItems
 
         public abstract class ClipboardFormatBase : IClipboardFormat
         {
-            // Abstract methods required to be inhereted by all classes of this type
-            public abstract (string, string) GetDocumentationUrl();
+            // Common method applies to all classes of the type
+            public virtual (string, string) GetDocumentationUrl()
+            {
+                string structName = StructName();
+                return (structName, StructDocsLinks[structName]);
+            }
+
+            // These methods remain abstract
             public abstract string StructName();
             public abstract string[] GetVariableSizedItems();
-
-            // You can add other common methods or properties here
         }
 
         // Static helper methods
@@ -82,12 +86,6 @@ namespace EditClipboardItems
             public WORD bmPlanes { get; set; }
             public WORD bmBitsPixel { get; set; }
             public LPVOID bmBits { get; set; }
-
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
 
             public override string StructName()
             {
@@ -127,12 +125,6 @@ namespace EditClipboardItems
             public DWORD bV5ProfileSize { get; set; }
             public DWORD bV5Reserved { get; set; }
 
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
-
             public override string StructName()
             {
                 return "BITMAPV5HEADER";
@@ -171,12 +163,6 @@ namespace EditClipboardItems
             public DWORD biClrUsed { get; set; }
             public DWORD biClrImportant { get; set; }
 
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
-
             public override string StructName()
             {
                 return "BITMAPINFOHEADER";
@@ -195,12 +181,6 @@ namespace EditClipboardItems
             public BYTE rgbRed { get; set; }
             public BYTE rgbReserved { get; set; }
 
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
-
             public override string StructName()
             {
                 return "RGBQUAD";
@@ -216,12 +196,6 @@ namespace EditClipboardItems
         {
             public BITMAPINFOHEADER_OBJ bmiHeader { get; set; }
             public List<RGBQUAD_OBJ> bmiColors { get; set; }
-
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
 
             public override string StructName()
             {
@@ -241,12 +215,6 @@ namespace EditClipboardItems
             public LONG yExt { get; set; }
             public HMETAFILE hMF { get; set; }
 
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
-
             public override string StructName()
             {
                 return "METAFILEPICT";
@@ -263,13 +231,6 @@ namespace EditClipboardItems
             public FXPT2DOT30 ciexyzX { get; set; }
             public FXPT2DOT30 ciexyzY { get; set; }
             public FXPT2DOT30 ciexyzZ { get; set; }
-
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
-
             public override string StructName()
             {
                 return "CIEXYZ";
@@ -286,12 +247,6 @@ namespace EditClipboardItems
             public CIEXYZ_OBJ ciexyzRed { get; set; }
             public CIEXYZ_OBJ ciexyzGreen { get; set; }
             public CIEXYZ_OBJ ciexyzBlue { get; set; }
-
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
 
             public override string StructName()
             {
@@ -316,11 +271,6 @@ namespace EditClipboardItems
             {
                 return Marshal.SizeOf(this);
             }
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
 
             public override string StructName()
             {
@@ -337,12 +287,6 @@ namespace EditClipboardItems
         {
             public LONG x { get; set; }
             public LONG y { get; set; }
-
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
 
             public override string StructName()
             {
@@ -362,12 +306,6 @@ namespace EditClipboardItems
             public BYTE peBlue { get; set; }
             public BYTE peFlags { get; set; }
 
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
-
             public override string StructName()
             {
                 return "PALETTEENTRY";
@@ -384,12 +322,6 @@ namespace EditClipboardItems
             public WORD palVersion { get; set; }
             public WORD palNumEntries { get; set; }
             public List<PALETTEENTRY_OBJ> palPalEntry { get; set; }
-
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
 
             public override string StructName()
             {
@@ -414,12 +346,6 @@ namespace EditClipboardItems
             public DWORD lcsGammaGreen { get; set; }
             public DWORD lcsGammaBlue { get; set; }
             public string lcsFilename { get; set; }
-
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
 
             public override string StructName()
             {
@@ -458,12 +384,6 @@ namespace EditClipboardItems
             public DWORD cItems { get; set; }
             public List<FILEDESCRIPTOR_OBJ> fgd { get; set; }
 
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
-
             public override string StructName()
             {
                 return "FILEGROUPDESCRIPTORW";
@@ -498,12 +418,6 @@ namespace EditClipboardItems
                 return 260;
             }
 
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
-
             public override string StructName()
             {
                 return "FILEDESCRIPTORW";
@@ -528,11 +442,6 @@ namespace EditClipboardItems
             {
                 return 16;
             }
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
 
             public override string StructName()
             {
@@ -550,12 +459,6 @@ namespace EditClipboardItems
             public LONG x { get; set; }
             public LONG y { get; set; }
 
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
-
             public override string StructName()
             {
                 return "POINTL";
@@ -572,12 +475,6 @@ namespace EditClipboardItems
             public DWORD cx { get; set; }
             public DWORD cy { get; set; }
 
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
-
             public override string StructName()
             {
                 return "SIZEL";
@@ -593,12 +490,6 @@ namespace EditClipboardItems
         {
             public DWORD dwLowDateTime { get; set; }
             public DWORD dwHighDateTime { get; set; }
-
-            public override (string, string) GetDocumentationUrl()
-            {
-                string structName = StructName();
-                return (structName, StructDocsLinks[structName]);
-            }
 
             public override string StructName()
             {
@@ -958,7 +849,7 @@ namespace EditClipboardItems
         }
 
         // Dictionary containing names of structs as keys and links to microsoft articles about them
-        public static Dictionary<string, string> StructDocsLinks = new Dictionary<string, string>
+        public static readonly Dictionary<string, string> StructDocsLinks = new Dictionary<string, string>
         {
             { "BITMAP", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmap" },
             { "BITMAPV5HEADER", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapv5header" },
