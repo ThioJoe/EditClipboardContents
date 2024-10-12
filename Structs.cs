@@ -838,7 +838,7 @@ namespace EditClipboardItems
             { "CLSID", "https://learn.microsoft.com/en-us/windows/win32/api/guiddef/ns-guiddef-guid" }
         };
 
-        public static readonly Dictionary<string, string> KnownBinaryExtensionAssociations = new Dictionary<string, string>
+        public static readonly Dictionary<string, string> KnownBinaryExtensionAssociations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) // Case insensitive
         {
             // Key is the format name (lower case), value is the file extension 
             { "png", "png" },
@@ -849,9 +849,11 @@ namespace EditClipboardItems
             { "cf_sylk", "slk" },
             { "rich text format", "rtf" },
             { "jfif", "jpg" },
-            { "Text", "txt" },
+            { "text", "txt" },
             { "gif", "gif" },
-            { "image/svg+xml", "svg" }
+            { "image/svg+xml", "svg" },
+            { "cf_dif", "dif" },
+            { "xml spreadsheet", "xml" }
 
         };
 
