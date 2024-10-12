@@ -21,7 +21,7 @@ using static EditClipboardItems.ClipboardFormats;
 
 namespace EditClipboardItems
 {
-    public static partial class FormatHandleTranslators
+    public static partial class FormatConverters
     {
         public static IntPtr AllocateGeneralHandle_FromRawData(byte[] data)
         {
@@ -544,6 +544,67 @@ namespace EditClipboardItems
             // If we reach here, something went wrong
             NativeMethods.GlobalFree(hGlobal);
             return IntPtr.Zero;
+        }
+
+        public static string ConvertHtmlFormat(string htmlFormatText)
+        {
+            try
+            {
+                // Ensure the input is UTF-8 encoded
+                byte[] bytes = Encoding.UTF8.GetBytes(htmlFormatText);
+                string utf8String = Encoding.UTF8.GetString(bytes);
+
+                // Parse header information
+                var headerLines = utf8String.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                int startHtml = -1, endHtml = -1, startFragment = -1, endFragment = -1;
+
+                foreach (var line in headerLines)
+                {
+                    if (line.StartsWith("StartHTML:")) int.TryParse(line.Substring(10), out startHtml);
+                    else if (line.StartsWith("EndHTML:")) int.TryParse(line.Substring(8), out endHtml);
+                    else if (line.StartsWith("StartFragment:")) int.TryParse(line.Substring(15), out startFragment);
+                    else if (line.StartsWith("EndFragment:")) int.TryParse(line.Substring(13), out endFragment);
+
+                    if (startHtml != -1 && endHtml != -1 && startFragment != -1 && endFragment != -1)
+                        break;
+                }
+
+                if (startHtml == -1 || endHtml == -1 || startFragment == -1 || endFragment == -1)
+                {
+                    throw new ArgumentException("Invalid HTML Format: Missing required header information.");
+                }
+
+                // Extract the HTML content
+                string htmlContent = utf8String.Substring(startHtml, endHtml - startHtml);
+
+                // Extract the fragment
+                string fragment = htmlContent.Substring(
+                    htmlContent.IndexOf("<!--StartFragment-->") + "<!--StartFragment-->".Length,
+                    htmlContent.IndexOf("<!--EndFragment-->") - htmlContent.IndexOf("<!--StartFragment-->") - "<!--StartFragment-->".Length
+                );
+
+                // Clean up the fragment
+                fragment = fragment.Trim();
+
+                // Construct the final HTML
+                var htmlBuilder = new StringBuilder();
+                htmlBuilder.AppendLine("<!DOCTYPE html>");
+                htmlBuilder.AppendLine("<html>");
+                htmlBuilder.AppendLine("<head>");
+                htmlBuilder.AppendLine("    <meta charset=\"utf-8\">");
+                htmlBuilder.AppendLine("    <title>Converted HTML</title>");
+                htmlBuilder.AppendLine("</head>");
+                htmlBuilder.AppendLine("<body>");
+                htmlBuilder.AppendLine(fragment);
+                htmlBuilder.AppendLine("</body>");
+                htmlBuilder.AppendLine("</html>");
+
+                return htmlBuilder.ToString();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error converting HTML Format: " + ex.Message, ex);
+            }
         }
 
         //------------------------------------------------------------------------------------------------------------------------------------------------------

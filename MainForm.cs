@@ -564,19 +564,19 @@ namespace ClipboardManager
                             }
                             break;
                         case 3: // CF_METAFILEPICT
-                            rawData = FormatHandleTranslators.MetafilePict_RawData_FromHandle(hData);
+                            rawData = FormatConverters.MetafilePict_RawData_FromHandle(hData);
                             dataSize = (ulong)(rawData?.Length ?? 0);
                             break;
                         case 9: // CF_PALETTE -- NOT YET HANDLED
-                            rawData = FormatHandleTranslators.CF_PALETTE_RawData_FromHandle(hData);
+                            rawData = FormatConverters.CF_PALETTE_RawData_FromHandle(hData);
                             dataSize = (ulong)(rawData?.Length ?? 0);
                             break;
                         case 14: // CF_ENHMETAFILE
-                            rawData = FormatHandleTranslators.EnhMetafile_RawData_FromHandle(hData);
+                            rawData = FormatConverters.EnhMetafile_RawData_FromHandle(hData);
                             dataSize = (ulong)(rawData?.Length ?? 0);
                             break;
                         case 15: // CF_HDROP
-                            rawData = FormatHandleTranslators.CF_HDROP_RawData_FromHandle(hData);
+                            rawData = FormatConverters.CF_HDROP_RawData_FromHandle(hData);
                             dataSize = (ulong)(rawData?.Length ?? 0);
                             break;
                         
@@ -1293,29 +1293,29 @@ namespace ClipboardManager
                             using (MemoryStream ms = new MemoryStream(item.RawData))
                             using (Bitmap bmp = new Bitmap(ms))
                             {
-                                hGlobal = FormatHandleTranslators.Bitmap_hBitmapHandle_FromHandle(bmp.GetHbitmap());
+                                hGlobal = FormatConverters.Bitmap_hBitmapHandle_FromHandle(bmp.GetHbitmap());
                             }
                             break;
                         case 3: // CF_METAFILEPICT
-                            hGlobal = FormatHandleTranslators.MetafilePict_Handle_FromRawData(item.RawData);
+                            hGlobal = FormatConverters.MetafilePict_Handle_FromRawData(item.RawData);
                             break;
                         case 9: // CF_PALETTE
-                            hGlobal = FormatHandleTranslators.CF_PALETTE_Handle_FromRawData(item.RawData);
+                            hGlobal = FormatConverters.CF_PALETTE_Handle_FromRawData(item.RawData);
                             break;
                         case 14: // CF_ENHMETAFILE
-                            hGlobal = FormatHandleTranslators.EnhMetafile_Handle_FromRawData(item.RawData);
+                            hGlobal = FormatConverters.EnhMetafile_Handle_FromRawData(item.RawData);
                             break;
                         case 15: // CF_HDROP
-                            hGlobal = FormatHandleTranslators.CF_HDROP_Handle_FromRawData(item.RawData);
+                            hGlobal = FormatConverters.CF_HDROP_Handle_FromRawData(item.RawData);
                             break;
                         case 8: // CF_DIB
                         case 17: // CF_DIBV5
-                            hGlobal = FormatHandleTranslators.BitmapDIB_hGlobalHandle_FromHandle(FormatHandleTranslators.AllocateGeneralHandle_FromRawData(item.RawData));
+                            hGlobal = FormatConverters.BitmapDIB_hGlobalHandle_FromHandle(FormatConverters.AllocateGeneralHandle_FromRawData(item.RawData));
                             break;
 
                         // Default handling for all other formats
                         default:
-                            hGlobal = FormatHandleTranslators.AllocateGeneralHandle_FromRawData(item.RawData);
+                            hGlobal = FormatConverters.AllocateGeneralHandle_FromRawData(item.RawData);
                             break;
                     }
 
@@ -1885,19 +1885,19 @@ namespace ClipboardManager
             // If it's a DIBV5 format, convert it to a bitmap
             if (itemToExport.FormatId == 17)
             {
-                Bitmap bitmap = FormatHandleTranslators.BitmapFile_From_CF_DIBV5_RawData(itemToExport.RawData);
+                Bitmap bitmap = FormatConverters.BitmapFile_From_CF_DIBV5_RawData(itemToExport.RawData);
 
                 SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
                     bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
-                    
+
                 }
                 return;
             }
             else if (itemToExport.FormatId == 8) // CF_DIB
             {
-                Bitmap bitmap = FormatHandleTranslators.BitmapFile_From_CF_DIB_RawData(itemToExport.RawData);
+                Bitmap bitmap = FormatConverters.BitmapFile_From_CF_DIB_RawData(itemToExport.RawData);
                 SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
@@ -1915,12 +1915,26 @@ namespace ClipboardManager
                         using (Bitmap bitmap = new Bitmap(ms))
                         {
                             bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
-                            
+
                         }
                     }
                 }
                 return;
             }
+            else if (itemToExport.FormatName == "HTML Format")
+            {
+                string inputString = Encoding.UTF8.GetString(itemToExport.RawData);
+                string outputString = FormatConverters.ConvertHtmlFormat(inputString);
+
+                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "html", defaultFileNameStem: nameStem);
+                if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
+                {
+                    File.WriteAllText(saveFileDialogResult.FileName, outputString);
+                }
+                return;
+            }
+
+            // --------- For generic binary data ------------
 
             string fileExt = "dat"; // Default extension if not in the list of known formats
 
