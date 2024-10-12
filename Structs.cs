@@ -36,6 +36,7 @@ namespace EditClipboardItems
     using LPVOID = System.IntPtr;       // Handle to any type
     using HMETAFILE = System.IntPtr;    // Handle to metafile
     using CHAR = System.Byte;           // 1 Byte
+    using static System.Net.WebRequestMethods;
 
 
     public static class ClipboardFormats
@@ -841,7 +842,10 @@ namespace EditClipboardItems
         // Dictionary for docs to non-standard registered formats other than structs
         public static readonly Dictionary<string, string> FormatDocsLinks = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            { "HTML Format", "https://learn.microsoft.com/en-us/windows/win32/dataxchg/html-clipboard-format" }
+            { "HTML Format", "https://learn.microsoft.com/en-us/windows/win32/dataxchg/html-clipboard-format" },
+            { "CanIncludeInClipboardHistory", "https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats" },
+            { "CanUploadToCloudClipboard", "https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats" },
+            { "ExcludeClipboardContentFromMonitorProcessing", "https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats" }
         };
 
         public static readonly Dictionary<string, string> KnownBinaryExtensionAssociations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) // Case insensitive

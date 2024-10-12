@@ -275,6 +275,10 @@ namespace ClipboardManager
                     dataInfoList.Add("Excel 2007 Binary File");
                     break;
 
+                case "HTML Format":
+                    dataInfoList.Add("HTML Format");
+                    break;
+
 
                 // ------------------- Cloud Clipboard Formats -------------------
                 // See: See: https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats
@@ -308,7 +312,6 @@ namespace ClipboardManager
                         dataInfoList.Add("The value of this format should be a DWORD (4 bytes), but it is not. There could be a new feature or a problem.");
                     }
 
-                    dataInfoList.Add("Details: https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats");
                     break;
 
                 case "CanUploadToCloudClipboard": // DWORD - Value of zero prevents all formats from being synced to other devices, value of 1 explicitly requests all formats to be synced to other devices
@@ -336,7 +339,6 @@ namespace ClipboardManager
                         dataInfoList.Add("The value of this format should be a DWORD (4 bytes), but it is not. There could be a new feature or a problem.");
                     }
 
-                    dataInfoList.Add("Details: https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats");
                     break;
 
                 // --------------- End Cloud Formats -----------------
@@ -354,6 +356,12 @@ namespace ClipboardManager
                     break;
 
             } // End switch (formatName)
+
+            // Add URL Link if it exists by dictionary lookup
+            if (ClipboardFormats.FormatDocsLinks.TryGetValue(formatName, out string docURL))
+            {
+                dataInfoList.Add("Details: " + ClipboardFormats.FormatDocsLinks[formatName]);
+            }
 
             return (dataInfoList, processedData, processedObject);
 
