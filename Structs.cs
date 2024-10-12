@@ -49,7 +49,7 @@ namespace EditClipboardItems
             string[] GetVariableSizedItems();
             void SetCacheStructObjectDisplayInfo(string structInfo);
             string GetCacheStructObjectDisplayInfo();
-            IEnumerable<(string Name, object Value)> EnumerateProperties();
+            IEnumerable<(string Name, object Value, Type Type, int? ArraySize)> EnumeratePropertiesWithType();
         }
 
         public abstract class ClipboardFormatBase : IClipboardFormat
@@ -82,12 +82,23 @@ namespace EditClipboardItems
             {
                 return _cachedStructDisplayInfo ?? string.Empty;
             }
-            public virtual IEnumerable<(string Name, object Value)> EnumerateProperties()
+
+            // Gets the type, and if it's a collection (like an array), the size of the collection as well
+            public virtual IEnumerable<(string Name, object Value, Type Type, int? ArraySize)> EnumeratePropertiesWithType()
             {
                 var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
                 foreach (var property in properties)
                 {
-                    yield return (property.Name, property.GetValue(this));
+                    var value = property.GetValue(this);
+                    var type = property.PropertyType;
+                    int? arraySize = null;
+
+                    if (value is Array array)
+                    {
+                        arraySize = array.Length;
+                    }
+
+                    yield return (property.Name, value, type, arraySize);
                 }
             }
         }
@@ -481,6 +492,7 @@ namespace EditClipboardItems
             private uint _cidl;
             private uint[] _aoffset;
 
+            // Automatically updates the size of aoffset when cidl is set because it is dependent on it
             public uint cidl
             {
                 get => _cidl;
@@ -490,8 +502,12 @@ namespace EditClipboardItems
                     _aoffset = new uint[_cidl + 1];
                 }
             }
-            public uint[] aoffset => _aoffset;
- 
+            // Still allow setting aoffset directly so we can put values into it
+            public uint[] aoffset
+            {
+                get => _aoffset;
+                set => _aoffset = value;
+            }
 
             private readonly string _structName = "CIDA";
 
@@ -678,7 +694,7 @@ namespace EditClipboardItems
             return (T)ReadValue(typeof(T), data, ref offset);
         }
 
-        private static object ReadValue(Type type, byte[] data, ref int offset, Type callingClass = null)
+        private static object ReadValue(Type type, byte[] data, ref int offset, Type callingClass = null, int collectionSize = -1)
         {
             int remainingBytes = data.Length - offset;
 
@@ -796,7 +812,38 @@ namespace EditClipboardItems
             // For arrays
             else if (type.IsArray)
             {
-                return type; // Placeholder
+                // If it's a known size, we can recurse through it that many times
+                if (collectionSize > 0)
+                {
+                    var elementType = type.GetElementType();
+                    var array = Array.CreateInstance(elementType, collectionSize);
+                    for (int i = 0; i < collectionSize; i++)
+                    {
+                        array.SetValue(ReadValue(elementType, data, ref offset), i);
+                    }
+                    return array;
+                }
+                // If it's a variable size, we will iterate through based on primitive type 
+                else
+                {
+                    var elementType = type.GetElementType();
+                    var list = new List<object>();
+                    while (remainingBytes > 0)
+                    {
+                        try
+                        {
+                            object element = ReadValue(elementType, data, ref offset);
+                            list.Add(element);
+                            remainingBytes = data.Length - offset;
+                        }
+                        catch (ArgumentException)
+                        {
+                            // We've reached the end of the data or can't read another element
+                            break;
+                        }
+                    }
+                    return list.ToArray();
+                }
             }
             else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
             {
@@ -824,15 +871,22 @@ namespace EditClipboardItems
             else if (type.IsClass)
             {
                 object obj = Activator.CreateInstance(type);
+                int collectionSizeToPassIn = -1;
 
-                foreach (var (propertyName, propertyValue) in ((IClipboardFormat)obj).EnumerateProperties())
+                foreach (var (propertyName, propertyValue, propertyType, arraySize) in ((IClipboardFormat)obj).EnumeratePropertiesWithType())
                 {
                     if (remainingBytes <= 0)
                         break;  // Stop reading if we've reached the end of the data
 
                     try
                     {
-                        object value = ReadValue(propertyValue.GetType(), data, ref offset);
+                        Type typeToUse = propertyType;
+                        if (arraySize.HasValue)
+                        {
+                            collectionSizeToPassIn = arraySize ?? -1; // It shouldn't be null here because of if statement, but compiler requires null check
+                        }
+
+                        object value = ReadValue(typeToUse, data, ref offset, collectionSize: collectionSizeToPassIn);
                         type.GetProperty(propertyName).SetValue(obj, value);
                         remainingBytes = data.Length - offset;
                     }
