@@ -47,7 +47,7 @@ namespace EditClipboardItems
         {
             (string, string) GetDocumentationUrl();
             string StructName();
-            string[] ItemsNotToPrint();
+            Dictionary<string, string> DataDisplayReplacements();
             void SetCacheStructObjectDisplayInfo(string structInfo);
             string GetCacheStructObjectDisplayInfo();
             IEnumerable<(string Name, object Value, Type Type, int? ArraySize)> EnumeratePropertiesWithType();
@@ -70,7 +70,9 @@ namespace EditClipboardItems
                 return (_structName, StructDocsLinks[_structName]);
             }
 
-            public abstract string[] ItemsNotToPrint(); // Things that are too big or not useful to print, like binary data
+            // Default implementation for DataDisplayReplacements - Things that are too big or not useful to print, like binary data
+            // Can also return a method that will replace the otherwise printed value with a custom string
+            public virtual Dictionary<string, string> DataDisplayReplacements() => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase); 
 
             // Method to cache the display info of the struct object
             public void SetCacheStructObjectDisplayInfo(string structInfo)
@@ -115,9 +117,9 @@ namespace EditClipboardItems
             return new T().StructName();
         }
 
-        public static string[] GetVariableSizedItems<T>() where T : IClipboardFormat, new()
+        public static Dictionary<string, string> GetVariableSizedItems<T>() where T : IClipboardFormat, new()
         {
-            return new T().ItemsNotToPrint();
+            return new T().DataDisplayReplacements();
         }
 
         public class BITMAP_OBJ : ClipboardFormatBase
@@ -131,11 +133,6 @@ namespace EditClipboardItems
             public LPVOID bmBits { get; set; }
 
             private string _structName = "BITMAP";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[] { "bmBits" };
-            }
         }
 
         public class BITMAPV5HEADER_OBJ : ClipboardFormatBase
@@ -166,11 +163,6 @@ namespace EditClipboardItems
             public DWORD bV5Reserved { get; set; }
 
             private readonly string _structName = "BITMAPV5HEADER";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
         }
 
         public enum bV5Compression : uint // DWORD
@@ -201,11 +193,6 @@ namespace EditClipboardItems
             public DWORD biClrImportant { get; set; }
 
             private readonly string _structName = "BITMAPINFOHEADER";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
         }
 
         public class RGBQUAD_OBJ : ClipboardFormatBase
@@ -216,11 +203,6 @@ namespace EditClipboardItems
             public BYTE rgbReserved { get; set; }
 
             private readonly string _structName = "RGBQUAD";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
         }
 
         public class BITMAPINFO_OBJ : ClipboardFormatBase
@@ -230,9 +212,12 @@ namespace EditClipboardItems
 
             private readonly string _structName = "BITMAPINFO";
 
-            public override string[] ItemsNotToPrint()
+            public override Dictionary<string, string> DataDisplayReplacements()
             {
-                return new string[] { "bmiColors" };
+                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "bmiColors", "[Color data bytes]" }
+                };
             }
         }
 
@@ -245,9 +230,12 @@ namespace EditClipboardItems
 
             private readonly string _structName = "METAFILEPICT";
 
-            public override string[] ItemsNotToPrint()
+            public override Dictionary<string, string> DataDisplayReplacements()
             {
-                return new string[] { "hMF" };
+                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "hMF", null }
+                };
             }
         }
 
@@ -257,11 +245,6 @@ namespace EditClipboardItems
             public FXPT2DOT30 ciexyzY { get; set; }
             public FXPT2DOT30 ciexyzZ { get; set; }
             private readonly string _structName = "CIEXYZ";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
         }
 
         public class CIEXYZTRIPLE_OBJ : ClipboardFormatBase
@@ -271,11 +254,6 @@ namespace EditClipboardItems
             public CIEXYZ_OBJ ciexyzBlue { get; set; }
 
             private readonly string _structName = "CIEXYZTRIPLE";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
         }
 
         public class DROPFILES_OBJ : ClipboardFormatBase
@@ -293,10 +271,14 @@ namespace EditClipboardItems
 
             private readonly string _structName = "DROPFILES";
 
-            public override string[] ItemsNotToPrint()
+            public override Dictionary<string, string> DataDisplayReplacements()
             {
-                return new string[] { "pt" };
+                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "pt", "[Memory Handle]" }
+                };
             }
+
         }
 
         public class POINT_OBJ : ClipboardFormatBase
@@ -305,11 +287,6 @@ namespace EditClipboardItems
             public LONG y { get; set; }
 
             private readonly string _structName = "POINT";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
         }
 
         public class PALETTEENTRY_OBJ : ClipboardFormatBase
@@ -320,11 +297,6 @@ namespace EditClipboardItems
             public BYTE peFlags { get; set; }
 
             private readonly string _structName = "PALETTEENTRY";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
         }
 
         public class LOGPALETTE_OBJ : ClipboardFormatBase
@@ -335,9 +307,12 @@ namespace EditClipboardItems
 
             private readonly string _structName = "LOGPALETTE";
 
-            public override string[] ItemsNotToPrint()
+            public override Dictionary<string, string> DataDisplayReplacements()
             {
-                return new string[] { "palPalEntry" };
+                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "palPalEntry", "[Color Data Bytes]" }
+                };
             }
         }
 
@@ -355,11 +330,6 @@ namespace EditClipboardItems
             public string lcsFilename { get; set; }
 
             private readonly string _structName = "LOGCOLORSPACEA";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
             public static int MaxStringLength()
             {
                 return 260;
@@ -389,11 +359,6 @@ namespace EditClipboardItems
             public List<FILEDESCRIPTOR_OBJ> fgd { get; set; }
 
             private readonly string _structName = "FILEGROUPDESCRIPTORW";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
         }
 
         public class FILEDESCRIPTOR_OBJ : ClipboardFormatBase
@@ -421,11 +386,6 @@ namespace EditClipboardItems
 
             private readonly string _structName = "FILEDESCRIPTORW";
 
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
-
         }
 
         public class CLSID_OBJ : ClipboardFormatBase
@@ -442,11 +402,6 @@ namespace EditClipboardItems
             }
 
             private readonly string _structName = "CLSID";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
         }
 
         public class POINTL_OBJ : ClipboardFormatBase
@@ -455,11 +410,6 @@ namespace EditClipboardItems
             public LONG y { get; set; }
 
             private readonly string _structName = "POINTL";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
         }
 
         public class SIZEL_OBJ : ClipboardFormatBase
@@ -468,11 +418,6 @@ namespace EditClipboardItems
             public DWORD cy { get; set; }
 
             private readonly string _structName = "SIZEL";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
         }
 
         public class FILETIME_OBJ : ClipboardFormatBase
@@ -481,17 +426,13 @@ namespace EditClipboardItems
             public DWORD dwHighDateTime { get; set; }
 
             private readonly string _structName = "FILETIME";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
         }
 
         public class CIDA_OBJ : ClipboardFormatBase
         {
             private uint _cidl;
             private uint[] _aoffset;
+            private ITEMIDLIST_OBJ[] _ITEMIDLIST;
 
             // Automatically updates the size of aoffset when cidl is set because it is dependent on it
             public uint cidl
@@ -501,6 +442,7 @@ namespace EditClipboardItems
                 {
                     _cidl = value;
                     _aoffset = new uint[_cidl + 1];
+                    _ITEMIDLIST = new ITEMIDLIST_OBJ[_cidl];
                 }
             }
             // Still allow setting aoffset directly so we can put values into it
@@ -510,14 +452,13 @@ namespace EditClipboardItems
                 set => _aoffset = value;
             }
 
-            public ITEMIDLIST_OBJ[] ITEMIDLIST { get; set; } = new ITEMIDLIST_OBJ[0];
+            public ITEMIDLIST_OBJ[] ITEMIDLIST
+            {
+                get => _ITEMIDLIST;
+                set => _ITEMIDLIST = value;
+            }
 
             private readonly string _structName = "CIDA";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
         }
 
         public class ITEMIDLIST_OBJ : ClipboardFormatBase
@@ -525,11 +466,6 @@ namespace EditClipboardItems
             public SHITEMID_OBJ mkid { get; set; }
 
             private readonly string _structName = "ITEMIDLIST";
-
-            public override string[] ItemsNotToPrint()
-            {
-                return new string[0];
-            }
         }
 
         public class SHITEMID_OBJ : ClipboardFormatBase
@@ -546,20 +482,27 @@ namespace EditClipboardItems
                     _abID = new byte[_cb - sizeof(USHORT)];
                 }
             }
-
-            // Still allow setting aoffset directly so we can put values into it
             public byte[] abID
             {
                 get => _abID;
                 set => _abID = value;
             }
 
-            private readonly string _structName = "SHITEMID";
-
-            public override string[] ItemsNotToPrint()
+            // Method to decode the abID into a string
+            public string abIDString()
             {
-                return new string[0];
+                return Encoding.Unicode.GetString(_abID);
             }
+
+            public override Dictionary<string, string> DataDisplayReplacements()
+            {
+                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "abID", abIDString() }
+                };
+            }
+
+            private readonly string _structName = "SHITEMID";
         }
 
         // --------------------------------------------------------------------------------------------------------------------------
@@ -985,7 +928,9 @@ namespace EditClipboardItems
             { "POINTL", "https://learn.microsoft.com/en-us/windows/win32/api/windef/ns-windef-pointl" },
             { "SIZEL", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/17b541c5-f8ee-4111-b1f2-012128f35871" },
             { "CLSID", "https://learn.microsoft.com/en-us/windows/win32/api/guiddef/ns-guiddef-guid" },
-            { "CIDA", "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-cida" }
+            { "CIDA", "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-cida" },
+            { "ITEMIDLIST", "https://learn.microsoft.com/en-us/windows/win32/api/shtypes/ns-shtypes-itemidlist" },
+            { "SHITEMID", "https://learn.microsoft.com/en-us/windows/win32/api/shtypes/ns-shtypes-shitemid" }
         };
 
         // Dictionary for docs to non-standard registered formats other than structs

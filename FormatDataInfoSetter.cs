@@ -296,7 +296,18 @@ namespace ClipboardManager
                     }
 
                     // Add property to cidaProcessed called ITEMIDLIST with the list of ITEMIDLIST_OBJ objects
-                    cidaProcessed.ITEMIDLIST = pidlList;
+                    //cidaProcessed.ITEMIDLIST = pidlList;
+                    List<List<string>> testList = new List<List<string>>();
+                    foreach (ITEMIDLIST_OBJ item in pidlList)
+                    {
+                        List<string> strings = new List<string>();
+                        var abid = item.mkid.abID;
+                        // Convert to string in multiple forms
+                        strings.Add(Encoding.Default.GetString(abid));
+                        strings.Add(Encoding.Unicode.GetString(abid));
+                        strings.Add(BitConverter.ToString(abid).Replace("-", ""));
+                        testList.Add(strings);
+                    }
 
                     processedObject = new ClipDataObject
                     {
