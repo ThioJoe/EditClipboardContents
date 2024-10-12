@@ -1095,15 +1095,30 @@ namespace EditClipboardItems
                             }
                         }
                     }
-                    else
+                    // Arrays will trigger IsClass too
+                    else if (propertyType.IsArray)
                     {
-                            foreach (var kvp in GetDocumentationUrls(value))
+                        foreach (var item in (Array)value)
+                        {
+                            // Skip primitive types or else we'll get an infinite loop
+                            if (item.GetType().IsPrimitive)
+                                continue;
+
+                            foreach (var kvp in GetDocumentationUrls(item))
                             {
                                 results[kvp.Key] = kvp.Value;
                             }
                         }
                     }
+                    else
+                    {
+                        foreach (var kvp in GetDocumentationUrls(value))
+                        {
+                            results[kvp.Key] = kvp.Value;
+                        }
+                    }
                 }
+            }
 
             return results;
         }
