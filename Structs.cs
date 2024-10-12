@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
@@ -20,8 +21,8 @@ using System.Text;
 // This file contains struct definitions for various clipboard formats. The definitions are based on the official Microsoft documentation.
 // But it also contains classes that mirror the structs, which may contain lists in place of arrays and other differences to make them easier to parse
 // The actual structs are used with Marshal to read the data from the clipboard. The classes are used to store the data in a more readable format as an object
-// Structs are really only used for the standard clipboard formats, since those formats often are just pointers to the struct, and Marsshal requires a struct to copy the data out
-//   Then the class version can be used to process those too
+// Structs are really only used for certain standard clipboard formats, since those formats often are just pointers to the struct, and Marsshal requires a struct to copy the data out
+//   Then the class version can be used to process those too. Some don't require the struct to get the data out, so the class is used directly
 
 namespace EditClipboardItems
 {
@@ -48,6 +49,7 @@ namespace EditClipboardItems
             string[] GetVariableSizedItems();
             void SetCacheStructObjectDisplayInfo(string structInfo);
             string GetCacheStructObjectDisplayInfo();
+            IEnumerable<(string Name, object Value)> EnumerateProperties();
         }
 
         public abstract class ClipboardFormatBase : IClipboardFormat
@@ -79,6 +81,14 @@ namespace EditClipboardItems
             public string GetCacheStructObjectDisplayInfo()
             {
                 return _cachedStructDisplayInfo ?? string.Empty;
+            }
+            public virtual IEnumerable<(string Name, object Value)> EnumerateProperties()
+            {
+                var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                foreach (var property in properties)
+                {
+                    yield return (property.Name, property.GetValue(this));
+                }
             }
         }
 
@@ -468,12 +478,20 @@ namespace EditClipboardItems
 
         public class CIDA_OBJ : ClipboardFormatBase
         {
-            public uint cidl { get; set; }
-            public uint[] aoffset { get; set; }
-            public CIDA_OBJ() // Constructor to initialize aoffset to 1 item
+            private uint _cidl;
+            private uint[] _aoffset;
+
+            public uint cidl
             {
-                aoffset = new uint[1];
+                get => _cidl;
+                set
+                {
+                    _cidl = value;
+                    _aoffset = new uint[_cidl + 1];
+                }
             }
+            public uint[] aoffset => _aoffset;
+ 
 
             private readonly string _structName = "CIDA";
 
@@ -637,13 +655,13 @@ namespace EditClipboardItems
             public CHAR[] lcsFilename;
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        public readonly struct CIDA
-        {
-            public readonly uint cidl;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
-            public readonly uint[] aoffset;
-        }
+        //[StructLayout(LayoutKind.Sequential)]
+        //public struct CIDA
+        //{
+        //    public uint cidl;
+        //    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
+        //    public uint[] aoffset;
+        //}
 
         // --------------------------------------------------- Helper methods ---------------------------------------------------
 
@@ -691,7 +709,7 @@ namespace EditClipboardItems
             else if (type == typeof(DWORD))
             {
                 if (remainingBytes < sizeof(DWORD))
-                    throw new ArgumentException("Not enough data to read DWORD");
+                    throw new ArgumentException("Not enough data to read DWORD / uint");
                 DWORD value = BitConverter.ToUInt32(data, offset);
                 offset += sizeof(DWORD);
                 return value;
@@ -775,7 +793,11 @@ namespace EditClipboardItems
                 offset += maxStringLength * 2; // Still increment till the end of the allocated space
                 return value;
             }
-
+            // For arrays
+            else if (type.IsArray)
+            {
+                return type; // Placeholder
+            }
             else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
             {
                 Type elementType = type.GetGenericArguments()[0];
@@ -802,25 +824,25 @@ namespace EditClipboardItems
             else if (type.IsClass)
             {
                 object obj = Activator.CreateInstance(type);
-                foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+
+                foreach (var (propertyName, propertyValue) in ((IClipboardFormat)obj).EnumerateProperties())
                 {
-                    if (property.CanWrite)
+                    if (remainingBytes <= 0)
+                        break;  // Stop reading if we've reached the end of the data
+
+                    try
                     {
-                        if (remainingBytes <= 0)
-                            break;  // Stop reading if we've reached the end of the data
-                        try
-                        {
-                            object value = ReadValue(property.PropertyType, data, ref offset);
-                            property.SetValue(obj, value);
-                            remainingBytes = data.Length - offset;
-                        }
-                        catch (ArgumentException)
-                        {
-                            // We've reached the end of the data or can't read this property
-                            break;
-                        }
+                        object value = ReadValue(propertyValue.GetType(), data, ref offset);
+                        type.GetProperty(propertyName).SetValue(obj, value);
+                        remainingBytes = data.Length - offset;
+                    }
+                    catch (ArgumentException)
+                    {
+                        // We've reached the end of the data or can't read this property
+                        break;
                     }
                 }
+
                 return obj;
             }
             else if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(uint))

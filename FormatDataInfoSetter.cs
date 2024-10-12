@@ -262,6 +262,17 @@ namespace ClipboardManager
                     };
                     break;
 
+                case "Shell IDList Array":
+                    CIDA_OBJ cidaProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.CIDA_OBJ>(rawData);
+                    int itemCount = (int)cidaProcessed.cidl;
+                    dataInfoList.Add($"Item Count: {itemCount}");
+
+                    processedObject = new ClipDataObject
+                    {
+                        ObjectData = cidaProcessed
+                    };
+                    break;
+
                 // Excel Related Formats
                 case "Biff5":
                     dataInfoList.Add("Excel 5.0/95 Binary File");
