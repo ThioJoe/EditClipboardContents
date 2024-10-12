@@ -1926,6 +1926,11 @@ namespace ClipboardManager
                 string inputString = Encoding.UTF8.GetString(itemToExport.RawData);
                 string outputString = FormatConverters.ConvertHtmlFormat(inputString);
 
+                if (outputString == null)
+                {
+                    return; // Error message box will be shown in the function itself with error
+                }
+
                 SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "html", defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {

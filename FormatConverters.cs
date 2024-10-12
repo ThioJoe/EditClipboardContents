@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 // My classes
 using static EditClipboardItems.ClipboardFormats;
+using System.Windows.Forms;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -574,14 +575,39 @@ namespace EditClipboardItems
                     throw new ArgumentException("Invalid HTML Format: Missing required header information.");
                 }
 
+                // Adjust end indices if they exceed the string length
+                endHtml = Math.Min(endHtml, utf8String.Length);
+                endFragment = Math.Min(endFragment, utf8String.Length);
+
+                // Validate indices
+                if (startHtml < 0 || startHtml >= utf8String.Length ||
+                    endHtml <= startHtml || endHtml > utf8String.Length ||
+                    startFragment < startHtml || startFragment >= utf8String.Length ||
+                    endFragment <= startFragment || endFragment > utf8String.Length)
+                {
+                    throw new ArgumentException($"Invalid HTML Format: Index out of range after adjustment. StartHTML: {startHtml}, EndHTML: {endHtml}, StartFragment: {startFragment}, EndFragment: {endFragment}, StringLength: {utf8String.Length}");
+                }
+
                 // Extract the HTML content
                 string htmlContent = utf8String.Substring(startHtml, endHtml - startHtml);
 
+                // Find fragment markers
+                int fragmentStartIndex = htmlContent.IndexOf("<!--StartFragment-->");
+                int fragmentEndIndex = htmlContent.IndexOf("<!--EndFragment-->");
+
+                if (fragmentStartIndex == -1 || fragmentEndIndex == -1)
+                {
+                    // If markers are not found, use the entire HTML content
+                    fragmentStartIndex = 0;
+                    fragmentEndIndex = htmlContent.Length;
+                }
+                else
+                {
+                    fragmentStartIndex += "<!--StartFragment-->".Length;
+                }
+
                 // Extract the fragment
-                string fragment = htmlContent.Substring(
-                    htmlContent.IndexOf("<!--StartFragment-->") + "<!--StartFragment-->".Length,
-                    htmlContent.IndexOf("<!--EndFragment-->") - htmlContent.IndexOf("<!--StartFragment-->") - "<!--StartFragment-->".Length
-                );
+                string fragment = htmlContent.Substring(fragmentStartIndex, fragmentEndIndex - fragmentStartIndex);
 
                 // Clean up the fragment
                 fragment = fragment.Trim();
@@ -603,7 +629,9 @@ namespace EditClipboardItems
             }
             catch (Exception ex)
             {
-                throw new Exception("Error converting HTML Format: " + ex.Message, ex);
+                //throw new Exception($"Error converting HTML Format: {ex.Message}\nInput string length: {htmlFormatText?.Length}\nFirst 100 chars: {htmlFormatText?.Substring(0, Math.Min(100, htmlFormatText?.Length ?? 0))}", ex);
+                MessageBox.Show($"Error converting HTML Format: {ex}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return null;
             }
         }
 
