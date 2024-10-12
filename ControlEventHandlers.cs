@@ -181,6 +181,11 @@ namespace ClipboardManager
                     // Change the cell focus
                     ChangeCellFocus(rowIndex: e.RowIndex, cellIndex: e.ColumnIndex);
                 }
+                // If only one row is selected, change the cell focus
+                else if (isClickedRowSelected && dataGridViewClipboard.SelectedRows.Count == 1)
+                {
+                    ChangeCellFocus(rowIndex: e.RowIndex, cellIndex: e.ColumnIndex);
+                }
             }
         }
 
