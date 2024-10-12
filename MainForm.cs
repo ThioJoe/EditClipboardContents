@@ -1871,7 +1871,71 @@ namespace ClipboardManager
             return plaintextLength / 2; 
         }
 
+        private void SaveBinaryFile()
+        {
+            // Get the clipboard selectedItem and its info
+            ClipboardItem itemToExport = GetSelectedClipboardItemObject();
 
+            if (itemToExport == null)
+            {
+                return;
+            }
+            string nameStem = itemToExport.FormatName;
+
+            // If it's a DIBV5 format, convert it to a bitmap
+            if (itemToExport.FormatId == 17)
+            {
+                Bitmap bitmap = FormatHandleTranslators.BitmapFile_From_CF_DIBV5_RawData(itemToExport.RawData);
+
+                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
+                if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
+                {
+                    bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
+                    return;
+                }
+            }
+            else if (itemToExport.FormatId == 8) // CF_DIB
+            {
+                Bitmap bitmap = FormatHandleTranslators.BitmapFile_From_CF_DIB_RawData(itemToExport.RawData);
+                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
+                if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
+                {
+                    bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
+                    return;
+                }
+            }
+            else if (itemToExport.FormatId == 2) // CF_BITMAP
+            {
+                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
+                if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
+                {
+                    using (MemoryStream ms = new MemoryStream(itemToExport.RawData))
+                    {
+                        using (Bitmap bitmap = new Bitmap(ms))
+                        {
+                            bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            string[] knownFormatExtensions = new string[] { "PNG" };
+            string fileExt = "dat"; // Default extension if not in the list of known formats
+
+            // Just export the raw data as a file. If it's in the list of known formats where the raw data is the actual file data, and the extension matches the format name, use that extension
+            if (knownFormatExtensions.Contains(nameStem.ToUpper()))
+            {
+                fileExt = nameStem;
+                nameStem = "Clipboard";
+            }
+
+            SaveFileDialog saveRawFileDialogResult = SaveFileDialog(extension: fileExt, defaultFileNameStem: nameStem);
+            if (saveRawFileDialogResult.ShowDialog() == DialogResult.OK)
+            {
+                File.WriteAllBytes(saveRawFileDialogResult.FileName, itemToExport.RawData);
+            }
+        }
 
         // -----------------------------------------------------------------------------
     }

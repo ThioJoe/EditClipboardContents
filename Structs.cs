@@ -838,6 +838,18 @@ namespace EditClipboardItems
             { "CLSID", "https://learn.microsoft.com/en-us/windows/win32/api/guiddef/ns-guiddef-guid" }
         };
 
+        public static readonly Dictionary<string, string> KnownBinaryExtensionAssociations = new Dictionary<string, string>
+        {
+            // Key is the format name (lower case), value is the file extension 
+            { "png", "png" },
+            { "csv", "csv" },
+            { "biff12", "xlsb" },
+            { "biff8", "xls" },
+            { "biff5", "xls" },
+            { "sylk", "slk" }
+
+        };
+
         // Helper function to get documentation URLs for a class and it's sub-classes using DocumentationUrl() method of each
         // Iterates them and puts them into list. Parameter is the object itself. Recursive.
         public static Dictionary<string, string> GetDocumentationUrls(object obj)

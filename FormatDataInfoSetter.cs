@@ -54,18 +54,7 @@ namespace ClipboardManager
                     dataInfoList.Add($"{ansiText.Length} Chars (ANSI)");
                     dataInfoList.Add($"Encoding: ANSI");
                     dataInfoList.Add($"Chars: {ansiText.Length}");
-                    break;
-
-                case "CF_UNICODETEXT": // 13 - CF_UNICODETEXT
-                    string unicodeText = Encoding.Unicode.GetString(rawData);
-                    int unicodeTextLength = unicodeText.Length;
-                    dataInfoList.Add($"{unicodeTextLength} Chars (Unicode)");
-                    dataInfoList.Add($"Encoding: Unicode (UTF-16)");
-                    dataInfoList.Add($"Character Count: {unicodeTextLength}");
-                    dataInfoList.Add($"Byte Count: {rawData.Length}");
-
-                    processedData = Encoding.Unicode.GetBytes(unicodeText);
-                    break;
+                    break;              
 
                 case "CF_BITMAP": // 2 - CF_BITMAP
                     BITMAP_OBJ CF_bitmapProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAP_OBJ>(rawData);
@@ -94,6 +83,16 @@ namespace ClipboardManager
                     }
                     break;
 
+                case "CF_METAFILEPICT": // 3
+                    METAFILEPICT_OBJ metafilePictProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.METAFILEPICT_OBJ>(rawData);
+                    dataInfoList.Add($"Mode: {metafilePictProcessed.mm}");
+
+                    processedObject = new ClipDataObject
+                    {
+                        ObjectData = metafilePictProcessed
+                    };
+                    break;
+
                 case "CF_DIB":   // 8  - CF_DIB
                     BITMAPINFO_OBJ bitmapProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPINFO_OBJ>(rawData);
                     int width = bitmapProcessed.bmiHeader.biWidth;
@@ -108,16 +107,29 @@ namespace ClipboardManager
 
                     break;
 
-                case "CF_DIBV5": // 17 - CF_DIBV5
-                    BITMAPV5HEADER_OBJ bitmapInfoV5Processed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPV5HEADER_OBJ>(rawData);
-                    dataInfoList.Add($"{bitmapInfoV5Processed.bV5Width}x{bitmapInfoV5Processed.bV5Height}, {bitmapInfoV5Processed.bV5BitCount} bpp");
-
+                case "CF_PALETTE": // 9 - CF_PALETTE
+                    LOGPALETTE_OBJ paletteProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.LOGPALETTE_OBJ>(rawData);
+                    int paletteEntries = paletteProcessed.palNumEntries;
+                    dataInfoList.Add($"{paletteEntries} Entries");
+                    dataInfoList.Add($"Version: {paletteProcessed.palVersion}");
+                    dataInfoList.Add($"Flags: {paletteProcessed.palPalEntry}");
+                    dataInfoList.Add($"Color Count: {paletteEntries}");
 
                     processedObject = new ClipDataObject
                     {
-                        ObjectData = bitmapInfoV5Processed
+                        ObjectData = paletteProcessed
                     };
+                    break;
 
+                case "CF_UNICODETEXT": // 13 - CF_UNICODETEXT
+                    string unicodeText = Encoding.Unicode.GetString(rawData);
+                    int unicodeTextLength = unicodeText.Length;
+                    dataInfoList.Add($"{unicodeTextLength} Chars (Unicode)");
+                    dataInfoList.Add($"Encoding: Unicode (UTF-16)");
+                    dataInfoList.Add($"Character Count: {unicodeTextLength}");
+                    dataInfoList.Add($"Byte Count: {rawData.Length}");
+
+                    processedData = Encoding.Unicode.GetBytes(unicodeText);
                     break;
 
                 case "CF_HDROP": // 15 - CF_HDROP
@@ -178,15 +190,6 @@ namespace ClipboardManager
 
                         break;
                     }
-                case "CF_METAFILEPICT": // 3
-                    METAFILEPICT_OBJ metafilePictProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.METAFILEPICT_OBJ>(rawData);
-                    dataInfoList.Add($"Mode: {metafilePictProcessed.mm}");
-
-                    processedObject = new ClipDataObject
-                    {
-                        ObjectData = metafilePictProcessed
-                    };
-                    break;
 
                 case "CF_LOCALE": // 16 - CF_LOCALE
                     string dataInfo = "Invalid CF_LOCALE data"; // Default to invalid data
@@ -206,23 +209,21 @@ namespace ClipboardManager
                     dataInfoList.Add(dataInfo);
                     break;
 
-                case "CF_PALETTE": // 9 - CF_PALETTE
-                    LOGPALETTE_OBJ paletteProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.LOGPALETTE_OBJ>(rawData);
-                    int paletteEntries = paletteProcessed.palNumEntries;
-                    dataInfoList.Add($"{paletteEntries} Entries");
-                    dataInfoList.Add($"Version: {paletteProcessed.palVersion}");
-                    dataInfoList.Add($"Flags: {paletteProcessed.palPalEntry}");
-                    dataInfoList.Add($"Color Count: {paletteEntries}");
-                    
+                case "CF_DIBV5": // 17 - CF_DIBV5
+                    BITMAPV5HEADER_OBJ bitmapInfoV5Processed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPV5HEADER_OBJ>(rawData);
+                    dataInfoList.Add($"{bitmapInfoV5Processed.bV5Width}x{bitmapInfoV5Processed.bV5Height}, {bitmapInfoV5Processed.bV5BitCount} bpp");
+
+
                     processedObject = new ClipDataObject
                     {
-                        ObjectData = paletteProcessed
+                        ObjectData = bitmapInfoV5Processed
                     };
+
                     break;
 
                 // ------------------- Non-Standard Clipboard Formats -------------------
 
-                case "FileGroupDescriptorW": // 0x00000000
+                case "FileGroupDescriptorW": 
                     FILEGROUPDESCRIPTORW_OBJ fileGroupDescriptorWProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.FILEGROUPDESCRIPTORW_OBJ>(rawData);
                     int fileCount = (int)fileGroupDescriptorWProcessed.cItems;
                     dataInfoList.Add($"File Count: {fileCount}");
@@ -232,6 +233,20 @@ namespace ClipboardManager
                         ObjectData = fileGroupDescriptorWProcessed
                     };
                     break;
+
+                // Excel Related Formats
+                case "Biff5":
+                    dataInfoList.Add("Excel 5.0/95 Binary File");
+                    break;
+
+                case "Biff8":
+                    dataInfoList.Add("Excel 97-2003 Binary File");
+                    break;
+
+                case "Biff12":
+                    dataInfoList.Add("Excel 2007 Binary File");
+                    break;
+
 
                 // ------------------- Cloud Clipboard Formats -------------------
                 // See: See: https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats
