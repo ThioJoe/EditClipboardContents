@@ -187,7 +187,7 @@ namespace ClipboardManager
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
             {
                 // Manually set width to minimal number to be resized auto later. Apparently autosize will only make columns larger, not smaller
-                column.Width = CompensateDPI(20);
+                column.Width = CompensateDPI(22);
 
                 if (column.Name != "TextPreview" && column.Name != "Index")
                 {
