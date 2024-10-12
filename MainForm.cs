@@ -137,9 +137,16 @@ namespace ClipboardManager
             Padding textPreviewPadding = dataGridViewClipboard.Columns["TextPreview"].DefaultCellStyle.Padding;
             textPreviewPadding.Left = 3;
             dataGridViewClipboard.Columns["TextPreview"].DefaultCellStyle.Padding = textPreviewPadding;
+            Padding formatNamePadding = dataGridViewClipboard.Columns["TextPreview"].DefaultCellStyle.Padding;
+            formatNamePadding.Left = 3;
+            dataGridViewClipboard.Columns["FormatName"].DefaultCellStyle.Padding = formatNamePadding;
 
             // Hide the row headers (the leftmost column)
             dataGridViewClipboard.RowHeadersVisible = false;
+
+            // Set miscellaensous properties for specific columns
+            dataGridViewClipboard.Columns["Index"].DefaultCellStyle.ForeColor = Color.Gray;
+            dataGridViewClipboard.Columns["Index"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
             // Add event handler for scroll wheel
             dataGridViewClipboard.MouseWheel += new MouseEventHandler(dataGridViewClipboard_MouseWheel);
@@ -180,7 +187,7 @@ namespace ClipboardManager
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
             {
                 // Manually set width to minimal number to be resized auto later. Apparently autosize will only make columns larger, not smaller
-                column.Width = CompensateDPI(13);
+                column.Width = CompensateDPI(20);
 
                 if (column.Name != "TextPreview" && column.Name != "Index")
                 {
@@ -201,6 +208,10 @@ namespace ClipboardManager
                     dataGridViewClipboard.Rows[dataGridViewClipboard.Rows.Count - 1].Cells[column.Name].Style.ForeColor = Color.DarkRed;
                 }
             }
+
+            // Miscelaneous operations to always apply
+            // Set index column text color to gray
+            dataGridViewClipboard.Rows[dataGridViewClipboard.Rows.Count - 1].Cells["Index"].Style.ForeColor = Color.Gray;
 
             // Allow layout to update
             dataGridViewClipboard.PerformLayout();
@@ -452,37 +463,6 @@ namespace ClipboardManager
 
             //Console.WriteLine("RefreshClipboardItems completed");
         }
-
-        //private void TestingWinFormsClipboard()
-        //{
-        //    IDataObject testData = null;
-        //    try
-        //    {
-        //        testData = Clipboard.GetDataObject();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"Error getting data object: {ex.Message}");
-        //    }
-        //    Console.WriteLine("Here");
-
-        //    string[] formatTypes = testData.GetFormats();
-        //    List<byte[]> testBytes = new List<byte[]>();
-
-        //    var testFormat1 =testData.GetData("CF_PALETTE", autoConvert:true);
-
-        //    // Creates a new data object using a string and the Text format.
-        //    string myString = "Hello World!";
-        //    DataObject myDataObject = new DataObject(DataFormats.Text, myString);
-
-        //    // Checks whether the data is present in the Text format and displays the result.
-        //    //if (myDataObject.GetDataPresent(DataFormats.Text))
-        //        //MessageBox.Show("The stored data is in the Text format.", "Test Result");
-        //    //else
-        //        //MessageBox.Show("The stored data is not in the Text format.", "Test Result");
-
-        //    Console.WriteLine("Hello");
-        //}
 
         private void CopyClipboardData()
         {
@@ -875,20 +855,6 @@ namespace ClipboardManager
                     diagnosis.AppendLine($"GetClipboardData failed. Error: {currentError} | {ErrMsg(currentError)}");
                 }
 
-                // Count clipboard formats
-                //int formatCount = NativeMethods.CountClipboardFormats();
-                //diagnosis.AppendLine($"Total number of clipboard formats: {formatCount}");
-
-                // Enumerate all available formats
-                //diagnosis.AppendLine("Available clipboard formats:");
-                //uint enumFormat = 0;
-                //while ((enumFormat = NativeMethods.EnumClipboardFormats(enumFormat)) != 0)
-                //{
-                //    StringBuilder formatName = new StringBuilder(256);
-                //    int nameLength = NativeMethods.GetClipboardFormatName(enumFormat, formatName, formatName.Capacity);
-                //    string formatString = nameLength > 0 ? formatName.ToString() : $"Format {enumFormat}";
-                //    diagnosis.AppendLine($"  {enumFormat}: {formatString}");
-                //}
             }
             catch (Exception ex)
             {

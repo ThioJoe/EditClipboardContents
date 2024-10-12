@@ -703,11 +703,26 @@ namespace ClipboardManager
 
         private void dataGridViewClipboard_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            // If it's the index column, sort by index ascending
             if (e.ColumnIndex == dataGridViewClipboard.Columns["Index"].Index)
             {
+                // Suspend layout updates
+                dataGridViewClipboard.SuspendLayout();
+
+                // Sort the Index column
                 dataGridViewClipboard.Sort(dataGridViewClipboard.Columns["Index"], System.ComponentModel.ListSortDirection.Ascending);
+
+                // Hide the sort indicator
+                dataGridViewClipboard.Columns["Index"].HeaderCell.SortGlyphDirection = SortOrder.None;
+
+                // Resume layout updates
+                dataGridViewClipboard.ResumeLayout();
             }
+            else
+            {
+                // Set the focused cell to the same column as the clicked header
+                dataGridViewClipboard.CurrentCell = dataGridViewClipboard.Rows[0].Cells[e.ColumnIndex];
+            }
+
         }
     }
 }
