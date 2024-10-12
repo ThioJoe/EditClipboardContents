@@ -14,6 +14,7 @@ using System.Drawing;
 using EditClipboardItems;
 using System.ComponentModel;
 using static EditClipboardItems.ClipboardFormats;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -93,6 +94,18 @@ namespace ClipboardManager
                     };
                     break;
 
+                case "CF_SYLK": // 4 - CF_SYLK
+                    dataInfoList.Add("Microsoft Symbolic Link format");
+                    break;
+
+                case "CF_DIF": // 5 - CF_DIF
+                    dataInfoList.Add("Software Arts Data Interchange Format");
+                    break;
+
+                case "CF_TIFF": // 6 - CF_TIFF
+                    dataInfoList.Add("Tagged Image File Format");
+                    break;
+
                 case "CF_DIB":   // 8  - CF_DIB
                     BITMAPINFO_OBJ bitmapProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPINFO_OBJ>(rawData);
                     int width = bitmapProcessed.bmiHeader.biWidth;
@@ -119,6 +132,21 @@ namespace ClipboardManager
                     {
                         ObjectData = paletteProcessed
                     };
+                    break;
+
+                case "CF_PENDATA": // 10 - CF_PENDATA
+                    dataInfoList.Add("Windows Pen Computing data");
+                    dataInfoList.Add("Data for the pen extensions to the Microsoft Windows for Pen Computing.");
+                    break;
+
+                case "CF_RIFF": // 11 - CF_RIFF
+                    dataInfoList.Add("Wave format audio");
+                    dataInfoList.Add("Represents audio data more complex than can be represented in a CF_WAVE standard wave format.");
+                    break;
+
+                case "CF_WAVE": // 12 - CF_WAVE
+                    dataInfoList.Add("Standard wave format audio");
+                    dataInfoList.Add("Represents audio data in one of the standard wave formats, such as 11 kHz or 22 kHz PCM.");
                     break;
 
                 case "CF_UNICODETEXT": // 13 - CF_UNICODETEXT

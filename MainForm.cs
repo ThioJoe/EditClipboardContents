@@ -1891,8 +1891,9 @@ namespace ClipboardManager
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
                     bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
-                    return;
+                    
                 }
+                return;
             }
             else if (itemToExport.FormatId == 8) // CF_DIB
             {
@@ -1901,8 +1902,8 @@ namespace ClipboardManager
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
                     bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
-                    return;
                 }
+                return;
             }
             else if (itemToExport.FormatId == 2) // CF_BITMAP
             {
@@ -1914,20 +1915,19 @@ namespace ClipboardManager
                         using (Bitmap bitmap = new Bitmap(ms))
                         {
                             bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
-                            return;
+                            
                         }
                     }
                 }
+                return;
             }
 
-            string[] knownFormatExtensions = new string[] { "PNG" };
             string fileExt = "dat"; // Default extension if not in the list of known formats
 
-            // Just export the raw data as a file. If it's in the list of known formats where the raw data is the actual file data, and the extension matches the format name, use that extension
-            if (knownFormatExtensions.Contains(nameStem.ToUpper()))
+            // Check the dictionary for known binary file associations for which to save directly as files with given extensions
+            if (KnownBinaryExtensionAssociations.TryGetValue(itemToExport.FormatName.ToLower(), out string ext))
             {
-                fileExt = nameStem;
-                nameStem = "Clipboard";
+                fileExt = ext;
             }
 
             SaveFileDialog saveRawFileDialogResult = SaveFileDialog(extension: fileExt, defaultFileNameStem: nameStem);
