@@ -112,7 +112,7 @@ namespace ClipboardManager
             dataGridViewClipboard.Columns.Add("Index", ""); // For default sorting, no data
             dataGridViewClipboard.Columns.Add("FormatName", "Format Name");
             dataGridViewClipboard.Columns.Add("FormatId", "Format ID");
-            dataGridViewClipboard.Columns.Add("HandleType", "Handle Type");
+            dataGridViewClipboard.Columns.Add("HandleType", "Format Type");
             dataGridViewClipboard.Columns.Add("DataSize", "Data Size");
             dataGridViewClipboard.Columns.Add("DataInfo", "Data Info");
             dataGridViewClipboard.Columns.Add("TextPreview", "Text Preview");
@@ -703,7 +703,7 @@ namespace ClipboardManager
                 item.ProcessedData = processedData; // Update the processed data in the selectedItem
                 item.DataInfoList = dataInfoList; // Update the data info in the selectedItem
 
-                // Determine handle type. If it's below 0xC0000 it's a standard format type.
+                // Determine format type. If it's below 0xC0000 it's a standard format type.
                 // See here for details about the specific ranges: https://learn.microsoft.com/en-us/windows/win32/dataxchg/standard-clipboard-formats
                 string formatType;
                 if (item.FormatId >= 0x0200 && item.FormatId <= 0x02FF) // 512 - 767

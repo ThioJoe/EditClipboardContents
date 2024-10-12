@@ -350,7 +350,7 @@ namespace ClipboardManager
                     dropdownContentsViewMode.SelectedIndex = 0; // Text
                 }
                 // If there is data object info, show object view mode
-                else if (item.ClipDataObject != null || item.DataInfoList.Count > 1)
+                else if (item.ClipDataObject != null || item.DataInfoList.Count >= 1)
                 {
                     dropdownContentsViewMode.SelectedIndex = 3; // Object View
                 }
