@@ -847,7 +847,11 @@ namespace EditClipboardItems
             { "biff8", "xls" },
             { "biff5", "xls" },
             { "cf_sylk", "slk" },
-            { "rich text format", "rtf" }
+            { "rich text format", "rtf" },
+            { "jfif", "jpg" },
+            { "Text", "txt" },
+            { "gif", "gif" },
+            { "image/svg+xml", "svg" }
 
         };
 

@@ -1944,6 +1944,18 @@ namespace ClipboardManager
                 fileExt = ext;
             }
 
+            // Sanitize the name stem
+            nameStem = nameStem.Replace(" ", "_")
+                .Replace("/", "_")
+                .Replace("\\", "_")
+                .Replace(":", "_")
+                .Replace("*", "_")
+                .Replace("?", "_")
+                .Replace("\"", "_")
+                .Replace("<", "_")
+                .Replace(">", "_")
+                .Replace("|", "_");
+
             SaveFileDialog saveRawFileDialogResult = SaveFileDialog(extension: fileExt, defaultFileNameStem: nameStem);
             if (saveRawFileDialogResult.ShowDialog() == DialogResult.OK)
             {

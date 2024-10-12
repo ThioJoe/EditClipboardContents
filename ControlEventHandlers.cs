@@ -349,8 +349,8 @@ namespace ClipboardManager
                 {
                     dropdownContentsViewMode.SelectedIndex = 0; // Text
                 }
-                // If there is data object info, show object view mode
-                else if (item.ClipDataObject != null || item.DataInfoList.Count >= 1)
+                // If there is data object info, show object view mode. Also show if there are multiple data info entries or the first one isn't empty
+                else if (item.ClipDataObject != null || item.DataInfoList.Count > 1 || !(string.IsNullOrEmpty(item.DataInfoList[0])))
                 {
                     dropdownContentsViewMode.SelectedIndex = 3; // Object View
                 }
