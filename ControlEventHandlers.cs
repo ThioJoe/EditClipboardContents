@@ -687,15 +687,8 @@ namespace ClipboardManager
 
         private void dataGridViewClipboard_SortCompare(object sender, DataGridViewSortCompareEventArgs e)
         {
-            // If it's the dummy column then reset sorting
-            if (e.Column.Name == "Dummy")
-            {
-                e.SortResult = 0;
-                e.Handled = true;
-                return;
-            }
-            // If it's the format ID column, sort them numerically instead of alphabetically
-            if (e.Column.Name == "FormatId")
+            // If it's the format ID column or another numerical column, sort them numerically instead of alphabetically
+            if (e.Column.Name == "FormatId" || e.Column.Name == "Index")
             {
                 // Try to parse the values as numbers
                 if (int.TryParse(e.CellValue1?.ToString(), out int value1) &&
@@ -705,6 +698,15 @@ namespace ClipboardManager
                     e.SortResult = value1.CompareTo(value2);
                     e.Handled = true;
                 }
+            }
+        }
+
+        private void dataGridViewClipboard_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            // If it's the index column, sort by index ascending
+            if (e.ColumnIndex == dataGridViewClipboard.Columns["Index"].Index)
+            {
+                dataGridViewClipboard.Sort(dataGridViewClipboard.Columns["Index"], System.ComponentModel.ListSortDirection.Ascending);
             }
         }
     }

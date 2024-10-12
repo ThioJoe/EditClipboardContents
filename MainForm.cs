@@ -108,7 +108,8 @@ namespace ClipboardManager
 
         private void InitializeDataGridView()
         {
-            dataGridViewClipboard.Columns.Add("Dummy", " "); // For default sorting, no data
+            // If addng a new column, don't forget to add it to the UpdateClipboardItemsGridViewWithAdditionalItem function on the line where rows are added
+            dataGridViewClipboard.Columns.Add("Index", ""); // For default sorting, no data
             dataGridViewClipboard.Columns.Add("FormatName", "Format Name");
             dataGridViewClipboard.Columns.Add("FormatId", "Format ID");
             dataGridViewClipboard.Columns.Add("HandleType", "Handle Type");
@@ -121,9 +122,6 @@ namespace ClipboardManager
             {
                 column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
             }
-
-            // Set dummy column width to something small
-            //dataGridViewClipboard.Columns["Dummy"].Width = CompensateDPI(5);
 
             // Set default AutoSizeMode
             //dataGridViewClipboard.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
@@ -148,7 +146,7 @@ namespace ClipboardManager
         }
 
         // Update processedData grid view with clipboard contents during refresh
-        private void UpdateClipboardItemsGridView(ClipboardItem formatItem, string handleType)
+        private void UpdateClipboardItemsGridViewWithAdditionalItem(ClipboardItem formatItem, string handleType)
         {
             // Get needed data from the item
             byte[] rawData = formatItem.RawData;
@@ -156,6 +154,7 @@ namespace ClipboardManager
             string formatID = formatItem.FormatId.ToString();
             List<string> dataInfo = formatItem.DataInfoList;
             string dataSize = formatItem.DataSize.ToString();
+            int index = formatItem.OriginalIndex;
 
             // Preprocess certain info
             string textPreview = TryParseText(rawData, maxLength: 200, prefixEncodingType: false, debugging_formatName: formatName, debugging_callFrom: "Text Preview / UpdateClipboardItemsGridView");
@@ -175,15 +174,15 @@ namespace ClipboardManager
             }
 
             // Add info to the grid view, then will be resized
-            dataGridViewClipboard.Rows.Add(formatName, formatID, handleType, dataSize, dataInfoString, textPreview);
+            dataGridViewClipboard.Rows.Add(index, formatName, formatID, handleType, dataSize, dataInfoString, textPreview);
 
             // Temporarily set AutoSizeMode to calculate proper widths
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
             {
-                // Manually set width to minimal 5 to be resized auto later. Apparently autosize will only make columns larger, not smaller
-                column.Width = CompensateDPI(5);
+                // Manually set width to minimal number to be resized auto later. Apparently autosize will only make columns larger, not smaller
+                column.Width = CompensateDPI(13);
 
-                if (column.Name != "TextPreview" && column.Name != "Dummy")
+                if (column.Name != "TextPreview" && column.Name != "Index")
                 {
                     // Use all cells instead of displayed cells, otherwise those scrolled out of view won't count
                     column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
@@ -210,7 +209,7 @@ namespace ClipboardManager
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
             {
                 // Keep the TextPreview column as fill
-                if (column.Name == "TextPreview" || column.Name == "Dummy")
+                if (column.Name == "TextPreview" || column.Name == "Index")
                 {
                     continue;
                 }
@@ -522,6 +521,7 @@ namespace ClipboardManager
                 int? error = null;
                 string errorString = null;
                 string diagnosisReport = null;
+                int originalIndex = currentCount - 1;
 
                 //Console.WriteLine($"Checking Format {currentCount}: {formatName} ({format})"); // Debugging
 
@@ -640,7 +640,8 @@ namespace ClipboardManager
                     RawData = rawData,
                     ProcessedData = null,
                     ErrorReason = errorString,
-                    ErrorDiagnosisReport = diagnosisReport
+                    ErrorDiagnosisReport = diagnosisReport,
+                    OriginalIndex = originalIndex
                 };
                 clipboardItems.Add(item);
             }
@@ -755,7 +756,7 @@ namespace ClipboardManager
                 item.FormatType = formatType; // Update the format type in the selectedItem
                 item.ClipDataObject = processedObject; // Update the clipDataObject in the selectedItem, even if it's null
 
-                UpdateClipboardItemsGridView(formatItem: item, handleType: formatType);
+                UpdateClipboardItemsGridViewWithAdditionalItem(formatItem: item, handleType: formatType);
             }
         }
 
@@ -1559,7 +1560,7 @@ namespace ClipboardManager
                 foreach (DataGridViewColumn col in dataGridViewClipboard.Columns)
                 {
                     // Ignore the dummy column
-                    if (col.Name != "Dummy")
+                    if (col.Name != "Index")
                     {
                         headerRow.Add(col.HeaderText);
                     }
@@ -1613,7 +1614,7 @@ namespace ClipboardManager
                 foreach (DataGridViewCell cell in row.Cells)
                 {
                     // Ignore the dummy column
-                    if (cell.OwningColumn.Name != "Dummy")
+                    if (cell.OwningColumn.Name != "Index")
                     {
                         rowCells.Add(cell.Value.ToString());
                     }
@@ -1904,6 +1905,8 @@ namespace ClipboardManager
             return plaintextLength / 2; 
         }
 
+
+
         // -----------------------------------------------------------------------------
     }
 
@@ -2109,8 +2112,9 @@ namespace ClipboardManager
         public string FormatType { get; set; } = "Unknown";
         public string ErrorReason { get; set; } = null;
         public string ErrorDiagnosisReport { get; set; } = null;
+        public int OriginalIndex { get; set; } = -1;
         public ClipDataObject ClipDataObject { get; set; } = null ;
-
+        
 
         public object Clone()
         {
@@ -2128,6 +2132,7 @@ namespace ClipboardManager
                 FormatType = this.FormatType,
                 ErrorReason = this.ErrorReason,
                 ErrorDiagnosisReport = this.ErrorDiagnosisReport,
+                OriginalIndex = this.OriginalIndex,
                 ClipDataObject = this.ClipDataObject != null
                 ? new ClipDataObject // If it 's not null, clone it
                 {

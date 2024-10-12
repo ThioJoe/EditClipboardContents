@@ -114,6 +114,7 @@
             this.dataGridViewClipboard.TabIndex = 0;
             this.dataGridViewClipboard.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewClipboard_CellClick);
             this.dataGridViewClipboard.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridViewClipboard_CellMouseDown);
+            this.dataGridViewClipboard.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridViewClipboard_ColumnHeaderMouseClick);
             this.dataGridViewClipboard.SelectionChanged += new System.EventHandler(this.dataGridViewClipboard_SelectionChanged);
             this.dataGridViewClipboard.SortCompare += new System.Windows.Forms.DataGridViewSortCompareEventHandler(this.dataGridViewClipboard_SortCompare);
             this.dataGridViewClipboard.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dataGridViewClipboard_KeyDown);
@@ -437,7 +438,7 @@
             // 
             this.checkBoxPlainTextEditing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxPlainTextEditing.AutoSize = true;
-            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(4, 397);
+            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(-2, 397);
             this.checkBoxPlainTextEditing.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.checkBoxPlainTextEditing.Name = "checkBoxPlainTextEditing";
             this.checkBoxPlainTextEditing.Size = new System.Drawing.Size(148, 24);
@@ -455,7 +456,7 @@
             this.dropdownHexToTextEncoding.Items.AddRange(new object[] {
             "UTF-8",
             "UTF-16 (Unicode)"});
-            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(264, 392);
+            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(258, 392);
             this.dropdownHexToTextEncoding.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dropdownHexToTextEncoding.Name = "dropdownHexToTextEncoding";
             this.dropdownHexToTextEncoding.Size = new System.Drawing.Size(217, 28);
@@ -466,7 +467,7 @@
             // 
             this.labelHexToPlaintextEncoding.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelHexToPlaintextEncoding.AutoSize = true;
-            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(172, 398);
+            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(166, 398);
             this.labelHexToPlaintextEncoding.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelHexToPlaintextEncoding.Name = "labelHexToPlaintextEncoding";
             this.labelHexToPlaintextEncoding.Size = new System.Drawing.Size(80, 20);
