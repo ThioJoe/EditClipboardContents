@@ -1097,9 +1097,6 @@ namespace EditClipboardItems
                     }
                     else
                     {
-                        // Ensure it's not a primitive or else we'll get stuck in an infinite loop
-                        if (!propertyType.IsPrimitive)
-                        {
                             foreach (var kvp in GetDocumentationUrls(value))
                             {
                                 results[kvp.Key] = kvp.Value;
@@ -1107,7 +1104,6 @@ namespace EditClipboardItems
                         }
                     }
                 }
-            }
 
             return results;
         }
