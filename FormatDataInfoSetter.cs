@@ -267,6 +267,35 @@ namespace ClipboardManager
                     int itemCount = (int)cidaProcessed.cidl;
                     dataInfoList.Add($"Item Count: {itemCount}");
 
+                    // Using the offset location entries in the aoffset array, get the PIDLs from the rawdata
+                    List<string> pidlList = new List<string>();
+                    int nextOffset = 0;
+                    for (int i = 0; i < itemCount; i++)
+                    {
+                        int offset = (int)cidaProcessed.aoffset[i];
+                        if (i < itemCount - 1)
+                        {
+                            nextOffset = (int)cidaProcessed.aoffset[i + 1];
+                        }
+                        else
+                        {
+                            nextOffset = rawData.Length;
+                        }
+
+                        if (offset < rawData.Length)
+                        {
+                            int length = nextOffset - offset;
+                            byte[] individualPIDLBytes = new byte[length];
+                            Array.Copy(rawData, individualPIDLBytes, length);
+                            string pidlString = BitConverter.ToString(individualPIDLBytes).Replace("-", "");
+
+                            string pidlString2 = Encoding.Unicode.GetString(rawData,offset, length);
+                            //pidlList.Add(pidlString);
+                            pidlList.Add(pidlString2);
+
+                        }
+                    }
+
                     processedObject = new ClipDataObject
                     {
                         ObjectData = cidaProcessed
