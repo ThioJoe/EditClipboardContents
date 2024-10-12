@@ -2042,7 +2042,7 @@ namespace ClipboardManager
             if (_nestedObjects.TryGetValue(propertyName, out var nestedObject))
                 return nestedObject;
 
-            if (ObjectData.GetVariableSizedItems().Contains(propertyName) == true)
+            if (ObjectData.ItemsNotToPrint().Contains(propertyName) == true)
                 return "[Binary data or handle]";
 
             PropertyInfo propInfo = ObjectData.GetType().GetProperty(propertyName);
@@ -2061,7 +2061,7 @@ namespace ClipboardManager
             if (ObjectData == null)
                 return;
 
-            var variableSized = ObjectData.GetVariableSizedItems() ?? Array.Empty<string>();
+            var variableSized = ObjectData.ItemsNotToPrint() ?? Array.Empty<string>();
 
             foreach (var prop in ObjectData.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {

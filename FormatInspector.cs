@@ -90,30 +90,22 @@ namespace EditClipboardItems
 
         public static string CreateDataString(string formatName, byte[] data, ClipboardItem fullItem, string indent = "")
         {
-            if (!FormatDictionary.TryGetValue(formatName, out FormatInfo formatInfo))
+            StringBuilder result = new StringBuilder();
+            result.AppendLine($"{indent}Format: {formatName}");
+
+            if (FormatDictionary.TryGetValue(formatName, out FormatInfo formatInfo))
             {
-                // If there is data info, we'll show that
-                if (fullItem.DataInfoList.Count > 0 && !string.IsNullOrEmpty(fullItem.DataInfoList[0]))
-                {
-                    indent = "    ";
-                    string stringToPrint = "Data Info: ";
-                    foreach (string dataInfoItem in fullItem.DataInfoList)
-                    {
-                        stringToPrint += $"\n{indent}• " + dataInfoItem;
-                    }
-                    return stringToPrint;
-                }
-                else
+                result.AppendLine($"{indent}Handle Output: {formatInfo.HandleOutput}");
+            }
+            // If there's no full item or object data, we'll still check if there is any data info
+            else if (fullItem == null || fullItem.ClipDataObject == null || fullItem.ClipDataObject.ObjectData == null)
+            {
+                if (fullItem.DataInfoList.Count == 0 || string.IsNullOrEmpty(fullItem.DataInfoList[0]))
                 {
                     return $"{indent}Unknown format: {formatName}";
                 }
             }
-
-            StringBuilder result = new StringBuilder();
-            result.AppendLine($"{indent}Format: {formatName}");
-            result.AppendLine($"{indent}Format ID: {formatInfo.Value}");
-            //result.AppendLine($"{indent}Kind: {formatInfo.Kind}");
-            result.AppendLine($"{indent}Handle Output: {formatInfo.HandleOutput}");
+            
 
             if (fullItem.DataInfoList.Count > 0 && !string.IsNullOrEmpty(fullItem.DataInfoList[0]))
             {

@@ -37,6 +37,7 @@ namespace EditClipboardItems
     using LPVOID = System.IntPtr;       // Handle to any type
     using HMETAFILE = System.IntPtr;    // Handle to metafile
     using CHAR = System.Byte;           // 1 Byte
+    using USHORT = System.UInt16;       // 2 Bytes
     using static System.Net.WebRequestMethods;
 
 
@@ -46,7 +47,7 @@ namespace EditClipboardItems
         {
             (string, string) GetDocumentationUrl();
             string StructName();
-            string[] GetVariableSizedItems();
+            string[] ItemsNotToPrint();
             void SetCacheStructObjectDisplayInfo(string structInfo);
             string GetCacheStructObjectDisplayInfo();
             IEnumerable<(string Name, object Value, Type Type, int? ArraySize)> EnumeratePropertiesWithType();
@@ -69,7 +70,7 @@ namespace EditClipboardItems
                 return (_structName, StructDocsLinks[_structName]);
             }
 
-            public abstract string[] GetVariableSizedItems();
+            public abstract string[] ItemsNotToPrint(); // Things that are too big or not useful to print, like binary data
 
             // Method to cache the display info of the struct object
             public void SetCacheStructObjectDisplayInfo(string structInfo)
@@ -116,7 +117,7 @@ namespace EditClipboardItems
 
         public static string[] GetVariableSizedItems<T>() where T : IClipboardFormat, new()
         {
-            return new T().GetVariableSizedItems();
+            return new T().ItemsNotToPrint();
         }
 
         public class BITMAP_OBJ : ClipboardFormatBase
@@ -131,7 +132,7 @@ namespace EditClipboardItems
 
             private string _structName = "BITMAP";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[] { "bmBits" };
             }
@@ -166,7 +167,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "BITMAPV5HEADER";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[0];
             }
@@ -201,7 +202,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "BITMAPINFOHEADER";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[0];
             }
@@ -216,7 +217,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "RGBQUAD";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[0];
             }
@@ -229,7 +230,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "BITMAPINFO";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[] { "bmiColors" };
             }
@@ -244,7 +245,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "METAFILEPICT";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[] { "hMF" };
             }
@@ -257,7 +258,7 @@ namespace EditClipboardItems
             public FXPT2DOT30 ciexyzZ { get; set; }
             private readonly string _structName = "CIEXYZ";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[0];
             }
@@ -271,7 +272,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "CIEXYZTRIPLE";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[0];
             }
@@ -292,7 +293,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "DROPFILES";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[] { "pt" };
             }
@@ -305,7 +306,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "POINT";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[0];
             }
@@ -320,7 +321,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "PALETTEENTRY";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[0];
             }
@@ -334,7 +335,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "LOGPALETTE";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[] { "palPalEntry" };
             }
@@ -355,7 +356,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "LOGCOLORSPACEA";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[0];
             }
@@ -389,7 +390,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "FILEGROUPDESCRIPTORW";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[0];
             }
@@ -420,7 +421,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "FILEDESCRIPTORW";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[0];
             }
@@ -442,7 +443,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "CLSID";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[0];
             }
@@ -455,7 +456,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "POINTL";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[0];
             }
@@ -468,7 +469,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "SIZEL";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[0];
             }
@@ -481,7 +482,7 @@ namespace EditClipboardItems
 
             private readonly string _structName = "FILETIME";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
             {
                 return new string[0];
             }
@@ -509,9 +510,53 @@ namespace EditClipboardItems
                 set => _aoffset = value;
             }
 
+            public ITEMIDLIST_OBJ[] ITEMIDLIST { get; set; } = new ITEMIDLIST_OBJ[0];
+
             private readonly string _structName = "CIDA";
 
-            public override string[] GetVariableSizedItems()
+            public override string[] ItemsNotToPrint()
+            {
+                return new string[0];
+            }
+        }
+
+        public class ITEMIDLIST_OBJ : ClipboardFormatBase
+        {
+            public SHITEMID_OBJ mkid { get; set; }
+
+            private readonly string _structName = "ITEMIDLIST";
+
+            public override string[] ItemsNotToPrint()
+            {
+                return new string[0];
+            }
+        }
+
+        public class SHITEMID_OBJ : ClipboardFormatBase
+        {
+            private USHORT _cb; // Size of the structure in bytes, including the cb field itself
+            private byte[] _abID; // The actual data
+
+            public uint cb
+            {
+                get => _cb;
+                set
+                {
+                    _cb = (USHORT)value;
+                    _abID = new byte[_cb - sizeof(USHORT)];
+                }
+            }
+
+            // Still allow setting aoffset directly so we can put values into it
+            public byte[] abID
+            {
+                get => _abID;
+                set => _abID = value;
+            }
+
+            private readonly string _structName = "SHITEMID";
+
+            public override string[] ItemsNotToPrint()
             {
                 return new string[0];
             }
@@ -671,14 +716,6 @@ namespace EditClipboardItems
             public CHAR[] lcsFilename;
         }
 
-        //[StructLayout(LayoutKind.Sequential)]
-        //public struct CIDA
-        //{
-        //    public uint cidl;
-        //    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
-        //    public uint[] aoffset;
-        //}
-
         // --------------------------------------------------- Helper methods ---------------------------------------------------
 
         public const int MAX_PATH = 260;
@@ -714,7 +751,7 @@ namespace EditClipboardItems
                 offset += sizeof(CHAR);
                 return value;
             }
-            else if (type == typeof(WORD))
+            else if (type == typeof(WORD)) // 2 bytes - Ushort, UInt16
             {
                 if (remainingBytes < sizeof(WORD))
                     throw new ArgumentException("Not enough data to read WORD");
@@ -878,12 +915,22 @@ namespace EditClipboardItems
                     if (remainingBytes <= 0)
                         break;  // Stop reading if we've reached the end of the data
 
+                    //if (propertyValue == null)
+                    //    continue;
+
                     try
                     {
                         Type typeToUse = propertyType;
                         if (arraySize.HasValue)
                         {
-                            collectionSizeToPassIn = arraySize ?? -1; // It shouldn't be null here because of if statement, but compiler requires null check
+                            if (arraySize.Value > 0)
+                            {
+                                collectionSizeToPassIn = arraySize ?? -1; // It shouldn't be null here because of if statement, but compiler requires null check
+                            }
+                            else
+                            {
+                                continue; // Skip this property if the array size is 0. It's probably a placeholder to add processed data later
+                            }
                         }
 
                         object value = ReadValue(typeToUse, data, ref offset, collectionSize: collectionSizeToPassIn);
@@ -1050,9 +1097,13 @@ namespace EditClipboardItems
                     }
                     else
                     {
-                        foreach (var kvp in GetDocumentationUrls(value))
+                        // Ensure it's not a primitive or else we'll get stuck in an infinite loop
+                        if (!propertyType.IsPrimitive)
                         {
-                            results[kvp.Key] = kvp.Value;
+                            foreach (var kvp in GetDocumentationUrls(value))
+                            {
+                                results[kvp.Key] = kvp.Value;
+                            }
                         }
                     }
                 }
