@@ -466,6 +466,23 @@ namespace EditClipboardItems
             }
         }
 
+        public class CIDA_OBJ : ClipboardFormatBase
+        {
+            public uint cidl { get; set; }
+            public uint[] aoffset { get; set; }
+            public CIDA_OBJ() // Constructor to initialize aoffset to 1 item
+            {
+                aoffset = new uint[1];
+            }
+
+            private readonly string _structName = "CIDA";
+
+            public override string[] GetVariableSizedItems()
+            {
+                return new string[0];
+            }
+        }
+
         // --------------------------------------------------------------------------------------------------------------------------
         // --------------------------------------------------- Struct definitions ---------------------------------------------------
         // --------------------------------------------------------------------------------------------------------------------------
@@ -618,6 +635,14 @@ namespace EditClipboardItems
             public DWORD lcsGammaBlue;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 260)]
             public CHAR[] lcsFilename;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public readonly struct CIDA
+        {
+            public readonly uint cidl;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
+            public readonly uint[] aoffset;
         }
 
         // --------------------------------------------------- Helper methods ---------------------------------------------------
@@ -836,7 +861,8 @@ namespace EditClipboardItems
             { "FILETIME", "https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime" },
             { "POINTL", "https://learn.microsoft.com/en-us/windows/win32/api/windef/ns-windef-pointl" },
             { "SIZEL", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/17b541c5-f8ee-4111-b1f2-012128f35871" },
-            { "CLSID", "https://learn.microsoft.com/en-us/windows/win32/api/guiddef/ns-guiddef-guid" }
+            { "CLSID", "https://learn.microsoft.com/en-us/windows/win32/api/guiddef/ns-guiddef-guid" },
+            { "CIDA", "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-cida" }
         };
 
         // Dictionary for docs to non-standard registered formats other than structs
@@ -863,7 +889,8 @@ namespace EditClipboardItems
             { "gif", "gif" },
             { "image/svg+xml", "svg" },
             { "cf_dif", "dif" },
-            { "xml spreadsheet", "xml" }
+            { "xml spreadsheet", "xml" },
+            { "text/html", "html" }
 
         };
 

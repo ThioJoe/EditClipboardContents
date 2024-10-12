@@ -706,7 +706,11 @@ namespace ClipboardManager
                 // Determine format type. If it's below 0xC0000 it's a standard format type.
                 // See here for details about the specific ranges: https://learn.microsoft.com/en-us/windows/win32/dataxchg/standard-clipboard-formats
                 string formatType;
-                if (item.FormatId >= 0x0200 && item.FormatId <= 0x02FF) // 512 - 767
+                if (item.FormatId == 0x0082 || item.FormatId == 0x008E || item.FormatId == 0x0083 || item.FormatId == 0x0081)
+                {
+                    formatType = "Standard / Display";
+                }
+                else if (item.FormatId >= 0x0200 && item.FormatId <= 0x02FF) // 512 - 767
                 {
                     formatType = "Private";
                 }
