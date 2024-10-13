@@ -46,34 +46,44 @@ namespace EditClipboardItems
 
         public static string CreateDataString(string formatName, byte[] data, ClipboardItem fullItem, string indent = "")
         {
+            bool anyFormatInfoAvailable = false;
+
             StringBuilder result = new StringBuilder();
             result.AppendLine($"{indent}Format: {formatName}");
 
             if (FormatDescriptions.TryGetValue(formatName, out string formatDescription))
             {
                 result.AppendLine($"{indent}Description: {formatDescription}");
+                anyFormatInfoAvailable = true;
+            }
+
+            // Add URL Link if it exists by dictionary lookup
+            if (ClipboardFormats.FormatDocsLinks.TryGetValue(formatName, out string docURL))
+            {
+                result.AppendLine($"{indent}Details: " + ClipboardFormats.FormatDocsLinks[formatName]);
+                anyFormatInfoAvailable = true;
+            }
+
+            if (fullItem.DataInfoList.Count > 0 && !string.IsNullOrEmpty(fullItem.DataInfoList[0]))
+            {
+                indent = "  ";
+                result.AppendLine($"\nData Info:");
+                // Add each selectedItem in DataInfoList to the result indented
+                foreach (string dataInfoItem in fullItem.DataInfoList)
+                {
+                    result.AppendLine($"{indent}{dataInfoItem}");
+                }
+                anyFormatInfoAvailable = true;
             }
 
             // If there's no full item or object data, we'll still check if there is any data info
             if (fullItem == null || fullItem.ClipDataObject == null || fullItem.ClipDataObject.ObjectData == null)
             {
-                if (fullItem.DataInfoList.Count == 0 || string.IsNullOrEmpty(fullItem.DataInfoList[0]))
+                if (!anyFormatInfoAvailable)
                 {
                     return $"{indent}Unknown format: {formatName}";
                 }
-            }
-            
-
-            if (fullItem.DataInfoList.Count > 0 && !string.IsNullOrEmpty(fullItem.DataInfoList[0]))
-            {
-                indent = "    ";
-                result.AppendLine($"\nData Info:");
-                // Add each selectedItem in DataInfoList to the result indented
-                foreach (string dataInfoItem in fullItem.DataInfoList)
-                {
-                    result.AppendLine($"{indent}  {dataInfoItem}");
-                }
-            }
+            }           
 
             void RecursivePrintCollection(object obj, string indent)
             {
@@ -85,15 +95,15 @@ namespace EditClipboardItems
                         if (item is ClipDataObject clipDataObject)
                         {
                             result.AppendLine($"{indent}{index}:");
-                            RecursivePrintClipDataObject(clipDataObject, indent + "  ");
+                            RecursivePrintClipDataObject(clipDataObject, indent + indent);
                         }
                         else if(item is IEnumerable nestedEnumerable)
                         {
-                            RecursivePrintCollection(nestedEnumerable, indent + "  ");
+                            RecursivePrintCollection(nestedEnumerable, indent + indent);
                         }
                         else if (item is Array nestedArray)
                         {
-                            RecursivePrintArray(nestedArray, indent + "  ");
+                            RecursivePrintArray(nestedArray, indent + indent);
                         }
                         else
                         {
@@ -113,15 +123,15 @@ namespace EditClipboardItems
                     if (item is ClipDataObject clipDataObject)
                     {
                         result.AppendLine($"{indent}{i}:");
-                        RecursivePrintClipDataObject(clipDataObject, indent + "  ");
+                        RecursivePrintClipDataObject(clipDataObject, indent + indent);
                     }
                     else if (item is IEnumerable nestedEnumerable)
                     {
-                        RecursivePrintCollection(nestedEnumerable, indent + "  ");
+                        RecursivePrintCollection(nestedEnumerable, indent + indent);
                     }
                     else if (item is Array nestedArray)
                     {
-                        RecursivePrintArray(nestedArray, indent + "  ");
+                        RecursivePrintArray(nestedArray, indent + indent);
                     }
                     else
                     {
@@ -152,17 +162,17 @@ namespace EditClipboardItems
                         if (propertyValue is ClipDataObject nestedObject)
                         {
                             result.AppendLine($"{indent}{propertyName}:");
-                            RecursivePrintClipDataObject(nestedObject, indent + "    ");
+                            RecursivePrintClipDataObject(nestedObject, indent + indent);
                         }
                         else if (propertyValue is IEnumerable enumerable && !(propertyValue is string))
                         {
                             result.AppendLine($"{indent}{propertyName}:");
-                            RecursivePrintCollection(enumerable, indent + "    ");
+                            RecursivePrintCollection(enumerable, indent + indent);
                         }
                         else if (propertyValue is Array array)
                         {
                             result.AppendLine($"{indent}{propertyName}:");
-                            RecursivePrintArray(array, indent + "    ");
+                            RecursivePrintArray(array, indent + indent);
                         }
                         else
                         {
@@ -189,8 +199,6 @@ namespace EditClipboardItems
 
             if (fullItem.ClipDataObject != null)
             {
-                indent = "    ";
-
                 // Documentation links for the struct and its members
                 Dictionary<string, string> structDocs = ClipboardFormats.GetDocumentationUrls_ForEntireObject(fullItem.ClipDataObject.ObjectData);
                 if (structDocs.Count > 0)
@@ -276,7 +284,7 @@ namespace EditClipboardItems
                     {
                         // Nested struct
                         result.AppendLine($"{indent}  Value:");
-                        InspectStruct(field.FieldType, data, ref result, indent + "    ", ref offset);
+                        InspectStruct(field.FieldType, data, ref result, indent + indent, ref offset);
                     }
                     else if (field.FieldType.IsArray)
                     {

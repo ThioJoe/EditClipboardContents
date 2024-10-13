@@ -965,7 +965,7 @@ namespace EditClipboardItems
             { "ExcludeClipboardContentFromMonitorProcessing", "https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats" }
         };
 
-        public static readonly Dictionary<string, string> FormatDescriptions = new Dictionary<string, string>
+        public static readonly Dictionary<string, string> FormatDescriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             {"CF_BITMAP", "HBITMAP"},
             {"CF_DIB", "BITMAPINFO followed by bitmap bits"},
@@ -984,16 +984,16 @@ namespace EditClipboardItems
             {"CF_OEMTEXT", "Text in OEM character set"},
             {"CF_OWNERDISPLAY", "Owner-display format data"},
             {"CF_PALETTE", "HPALETTE"},
-            {"CF_PENDATA", "Pen computing extension data"},
+            {"CF_PENDATA", "Data for the pen extensions to the Microsoft Windows for Pen Computing."},
             {"CF_PRIVATEFIRST", "Start of range of integers for private clipboard formats"},
             {"CF_PRIVATELAST", "End of range of integers for private clipboard formats"},
-            {"CF_RIFF", "Complex audio data, can be represented in a CF_WAVE standard wave format."},
+            {"CF_RIFF", "Represents audio data more complex than can be represented in a CF_WAVE standard wave format."},
             {"CF_SYLK", "Microsoft Symbolic Link format (SYLK)"},
             {"CF_TEXT", "ANSI text"},
             {"CF_TIFF", "Tagged-image file format"},
             {"CF_UNICODETEXT", "Unicode text"},
-            {"CF_WAVE", "Standard wave format audio data"},
-            {"FileGroupDescriptorW", "Describes the properties of a file that is being copied."}
+            {"CF_WAVE", "Represents audio data in one of the standard wave formats, such as 11 kHz or 22 kHz PCM."},
+            {"FileGroupDescriptorW", "Describes the properties of a file that is being copied."},
         };
 
         public static readonly Dictionary<string, string> KnownBinaryExtensionAssociations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) // Case insensitive
