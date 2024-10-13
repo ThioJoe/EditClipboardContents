@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -52,6 +53,7 @@ namespace EditClipboardItems
             void SetCacheStructObjectDisplayInfo(string structInfo);
             string GetCacheStructObjectDisplayInfo();
             IEnumerable<(string Name, object Value, Type Type, int? ArraySize)> EnumeratePropertiesWithType();
+            IEnumerable<(string Name, Type Type, int? ArraySize)> EnumeratePropertyTypes();
         }
 
         public abstract class ClipboardFormatBase : IClipboardFormat
@@ -101,16 +103,53 @@ namespace EditClipboardItems
                 var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
                 foreach (var property in properties)
                 {
-                    var value = property.GetValue(this);
+                    //Debug.WriteLine($"Processing property: {property.Name}");
+                    object value;
+                    try
+                    {
+                        value = property.GetValue(this);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Error getting value for property {property.Name}: {ex.Message}");
+                        continue;
+                    }
                     var type = property.PropertyType;
                     int? arraySize = null;
-
                     if (value is Array array)
                     {
                         arraySize = array.Length;
                     }
-
                     yield return (property.Name, value, type, arraySize);
+                }
+            }
+
+            public virtual IEnumerable<(string Name, Type Type, int? ArraySize)> EnumeratePropertyTypes()
+            {
+                var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                foreach (var property in properties)
+                {
+                    var type = property.PropertyType;
+                    int? arraySize = null;
+
+                    if (typeof(ICollection).IsAssignableFrom(type))
+                    {
+                        // For collections, we can get the count without instantiating
+                        var countProperty = type.GetProperty("Count");
+                        if (countProperty != null)
+                        {
+                            var collection = property.GetValue(this) as ICollection;
+                            arraySize = collection?.Count;
+                        }
+                    }
+                    else if (type.IsArray)
+                    {
+                        // For arrays, we need to get the value to determine the length
+                        var array = property.GetValue(this) as Array;
+                        arraySize = array?.Length;
+                    }
+
+                    yield return (property.Name, type, arraySize);
                 }
             }
         }
@@ -870,24 +909,32 @@ namespace EditClipboardItems
             else if (type.IsClass)
             {
                 object obj = Activator.CreateInstance(type);
-                int collectionSizeToPassIn = -1;
+                var clipboardFormat = obj as IClipboardFormat;
+                if (clipboardFormat == null)
+                {
+                    throw new InvalidOperationException($"Type {type.Name} does not implement IClipboardFormat");
+                }
 
-                foreach (var (propertyName, propertyValue, propertyType, arraySize) in ((IClipboardFormat)obj).EnumeratePropertiesWithType())
+                var replacements = clipboardFormat.DataDisplayReplacements();
+
+                foreach (var (propertyName, propertyType, arraySize) in clipboardFormat.EnumeratePropertyTypes())
                 {
                     if (remainingBytes <= 0)
                         break;  // Stop reading if we've reached the end of the data
 
-                    //if (propertyValue == null)
-                    //    continue;
+                    if (replacements.ContainsKey(propertyName))
+                        continue;  // Skip properties that are in the replacement dictionary
 
                     try
                     {
                         Type typeToUse = propertyType;
+                        int collectionSizeToPassIn = -1;
+
                         if (arraySize.HasValue)
                         {
                             if (arraySize.Value > 0)
                             {
-                                collectionSizeToPassIn = arraySize ?? -1; // It shouldn't be null here because of if statement, but compiler requires null check
+                                collectionSizeToPassIn = arraySize.Value;
                             }
                             else
                             {
@@ -905,7 +952,6 @@ namespace EditClipboardItems
                         break;
                     }
                 }
-
                 return obj;
             }
             else if (type.IsEnum && Enum.GetUnderlyingType(type) == typeof(uint))

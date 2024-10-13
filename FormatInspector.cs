@@ -104,7 +104,7 @@ namespace EditClipboardItems
                 }
 
                 result.AppendLine($"\nStruct Info:");
-                RecursivePrintClipDataObject(fullItem.ClipDataObject, indent);
+                RecursivePrintClipDataObject(fullItem.ClipDataObject.ObjectData, indent);
             }
 
             return result.ToString();
@@ -112,58 +112,42 @@ namespace EditClipboardItems
 
             // -------------------- LOCAL FUNCTIONS --------------------
 
-            void RecursivePrintClipDataObject(ClipDataObject obj, string indent)
+            void RecursivePrintClipDataObject(IClipboardFormat obj, string indent, int depth = 0)
             {
-                if (obj.ObjectData == null)
+                if (obj == null || depth > 100)
                 {
-                    result.AppendLine($"{indent}ObjectData is null");
+                    result.AppendLine($"{indent}Max depth reached or object is null");
                     return;
                 }
 
-                // Get the property names if there areny. If ObjectData is null, it will return null. If it's a collection, it returns an empty list
-                IEnumerable<string> propertyNames = obj.PropertyNames;
+                var replacements = obj.DataDisplayReplacements();
 
-                if (propertyNames.Any()) // If there are items in it
+                foreach (var (propertyName, propertyType, arraySize) in obj.EnumeratePropertyTypes())
                 {
-                    foreach (var propertyName in propertyNames)
+                    if (replacements.TryGetValue(propertyName, out string replacementValue))
                     {
-                        object propertyValue = obj.GetPropertyValue(propertyName);
-
-                        if (propertyValue is ClipDataObject nestedObject)
-                        {
-                            result.AppendLine($"{indent}{propertyName}:");
-                            RecursivePrintClipDataObject(nestedObject, indent + originalIndent);
-                        }
-                        else if (propertyValue is IEnumerable enumerable && !(propertyValue is string))
-                        {
-                            result.AppendLine($"{indent}{propertyName}:");
-                            RecursivePrintCollection(enumerable, indent + originalIndent);
-                        }
-                        else if (propertyValue is Array array)
-                        {
-                            result.AppendLine($"{indent}{propertyName}:");
-                            RecursivePrintArray(array, indent + originalIndent);
-                        }
-                        else
-                        {
-                            // Try to also get hex version of the value
-                            if (propertyValue != null && propertyValue.GetType().IsPrimitive)
-                            {
-                                string hexValue = GetValueString(propertyValue, asHex: true);
-                                if (!string.IsNullOrEmpty(hexValue))
-                                {
-                                    // Updates the property value to include hex value, otherwise it will just include the decimal value
-                                    propertyValue = $"{propertyValue} ({hexValue})";
-                                }
-                            }
-                            result.AppendLine($"{indent}{propertyName}: {propertyValue}");
-                        }
+                        result.AppendLine($"{indent}{propertyName}: {replacementValue}");
+                        continue;
                     }
-                }
-                // This means it's a collection if it was empty, so just go through as indexes
-                else
-                {
-                    RecursivePrintCollection(obj.ObjectData, indent); // This will print out the collection (if it's a collection
+
+                    if (typeof(IClipboardFormat).IsAssignableFrom(propertyType))
+                    {
+                        result.AppendLine($"{indent}{propertyName}: [Nested IClipboardFormat object]");
+                        // Optionally, you can still recurse:
+                        // var nestedObj = obj.GetType().GetProperty(propertyName).GetValue(obj) as IClipboardFormat;
+                        // RecursivePrintClipDataObject(nestedObj, indent + originalIndent, depth + 1);
+                    }
+                    else if (typeof(IEnumerable).IsAssignableFrom(propertyType) && propertyType != typeof(string))
+                    {
+                        result.AppendLine($"{indent}{propertyName}: [Collection of type {propertyType.Name} with {arraySize?.ToString() ?? "unknown"} items]");
+                    }
+                    else
+                    {
+                        // For non-collection types, we might still want to get the value
+                        var value = obj.GetType().GetProperty(propertyName).GetValue(obj);
+                        string valueToDisplay = GetValueString(value);
+                        result.AppendLine($"{indent}{propertyName}: {valueToDisplay}");
+                    }
                 }
             }
 
@@ -175,10 +159,10 @@ namespace EditClipboardItems
                     int index = 1;
                     foreach (var item in enumerable)
                     {
-                        if (item is ClipDataObject clipDataObject)
+                        if (item is IClipboardFormat)
                         {
                             result.AppendLine($"{indent}{index}:");
-                            RecursivePrintClipDataObject(clipDataObject, indent + originalIndent);
+                            RecursivePrintClipDataObject((IClipboardFormat)item, indent + originalIndent);
                         }
                         else if(item is IEnumerable nestedEnumerable)
                         {
@@ -204,10 +188,10 @@ namespace EditClipboardItems
                 for (int i = 0; i < array.Length; i++)
                 {
                     object item = array.GetValue(i);
-                    if (item is ClipDataObject clipDataObject)
+                    if (item is IClipboardFormat)
                     {
                         result.AppendLine($"{indent}{i}:");
-                        RecursivePrintClipDataObject(clipDataObject, indent + indent);
+                        RecursivePrintClipDataObject((IClipboardFormat)item, indent + indent);
                     }
                     else if (item is IEnumerable nestedEnumerable)
                     {

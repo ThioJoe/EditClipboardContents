@@ -2155,84 +2155,9 @@ namespace ClipboardManager
 
         private void InitializeNestedObjects()
         {
-            if (ObjectData == null)
-                return;
-
-            var variableSized = ObjectData.DataDisplayReplacements()?.Keys.ToArray() ?? Array.Empty<string>();
-
-            foreach (var prop in ObjectData.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
-            {
-                if (variableSized.Contains(prop.Name))
-                    continue;
-
-                try
-                {
-                    var value = prop.GetValue(ObjectData);
-                    if (value != null)
-                    {
-                        if (value is IList list && prop.PropertyType.IsGenericType)
-                        {
-                            var elementType = prop.PropertyType.GetGenericArguments()[0];
-                            if (!elementType.IsPrimitive && elementType != typeof(string))
-                            {
-                                var nestedList = new List<ClipDataObject>();
-                                foreach (var item in list)
-                                {
-                                    var nestedClipDataObject = new ClipDataObject
-                                    {
-                                        ObjectData = (IClipboardFormat)item
-                                        // StructName will be set automatically
-                                    };
-                                    nestedList.Add(nestedClipDataObject);
-                                }
-                                _nestedObjects[prop.Name] = nestedList;
-                            }
-                        }
-                        // If its an array
-                        if (value.GetType().IsArray)
-                        {
-                            var elementType = value.GetType().GetElementType();
-                            if (!elementType.IsPrimitive && elementType != typeof(string))
-                            {
-                                var nestedList = new List<ClipDataObject>();
-                                foreach (var item in (Array)value)
-                                {
-                                    var nestedClipDataObject = new ClipDataObject
-                                    {
-                                        ObjectData = (IClipboardFormat)item
-                                        // StructName will be set automatically
-                                    };
-                                    nestedList.Add(nestedClipDataObject);
-                                }
-                                _nestedObjects[prop.Name] = nestedList;
-                            }
-                        }
-                        else if (!prop.PropertyType.IsPrimitive && prop.PropertyType != typeof(string))
-                        {
-                            ClipDataObject nestedClipDataObject = new ClipDataObject
-                            {
-                                ObjectData = (IClipboardFormat)value
-                                // StructName will be set automatically
-                            };
-                            _nestedObjects[prop.Name] = nestedClipDataObject;
-                        }
-                    }
-
-                    Debug.WriteLine($"Initialized nested object for property '{prop.Name}' with StructName '{prop.PropertyType.Name}' and ObjectData '{value}'");
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Exception while initializing property '{prop.Name}': {ex.Message}");
-                }
-            }
+            return;
         }
 
-        public override string ToString()
-        {
-            StringBuilder sb = new StringBuilder();
-            BuildString(sb, "");
-            return sb.ToString();
-        }
 
         private void BuildString(StringBuilder sb, string indent)
         {
@@ -2260,22 +2185,7 @@ namespace ClipboardManager
             }
         }
 
-        public object GetNestedObject(string propertyName)
-        {
-            return _nestedObjects.TryGetValue(propertyName, out var nestedObject) ? nestedObject : null;
-        }
 
-        private void TrySetStructNameFromObjectData()
-        {
-            if (ObjectData != null)
-            {
-                var structNameMethod = ObjectData.GetType().GetMethod("StructName", BindingFlags.Public | BindingFlags.Static);
-                if (structNameMethod != null)
-                {
-                    _structName = structNameMethod.Invoke(null, null) as string;
-                }
-            }
-        }
     }
 
     public class ClipboardItem : ICloneable
