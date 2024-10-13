@@ -134,6 +134,10 @@ namespace EditClipboardItems
                         {
                             RecursivePrintCollection(nestedEnumerable, indent + "  ");
                         }
+                        else if (item is Array nestedArray)
+                        {
+                            RecursivePrintArray(nestedArray, indent + "  ");
+                        }
                         else
                         {
                             result.AppendLine($"{indent}{item}");
@@ -141,6 +145,32 @@ namespace EditClipboardItems
                         result.AppendLine("");
                         index++;
                     }
+                }
+            }
+
+            void RecursivePrintArray(Array array, string indent)
+            {
+                for (int i = 0; i < array.Length; i++)
+                {
+                    object item = array.GetValue(i);
+                    if (item is ClipDataObject clipDataObject)
+                    {
+                        result.AppendLine($"{indent}{i}:");
+                        RecursivePrintClipDataObject(clipDataObject, indent + "  ");
+                    }
+                    else if (item is IEnumerable nestedEnumerable)
+                    {
+                        RecursivePrintCollection(nestedEnumerable, indent + "  ");
+                    }
+                    else if (item is Array nestedArray)
+                    {
+                        RecursivePrintArray(nestedArray, indent + "  ");
+                    }
+                    else
+                    {
+                        result.AppendLine($"{indent}{item}");
+                    }
+                    result.AppendLine("");
                 }
             }
 
@@ -171,6 +201,11 @@ namespace EditClipboardItems
                         {
                             result.AppendLine($"{indent}{propertyName}:");
                             RecursivePrintCollection(enumerable, indent + "    ");
+                        }
+                        else if (propertyValue is Array array)
+                        {
+                            result.AppendLine($"{indent}{propertyName}:");
+                            RecursivePrintArray(array, indent + "    ");
                         }
                         else
                         {

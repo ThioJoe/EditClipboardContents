@@ -2094,6 +2094,25 @@ namespace ClipboardManager
                                 _nestedObjects[prop.Name] = nestedList;
                             }
                         }
+                        // If its an array
+                        if (value.GetType().IsArray)
+                        {
+                            var elementType = value.GetType().GetElementType();
+                            if (!elementType.IsPrimitive && elementType != typeof(string))
+                            {
+                                var nestedList = new List<ClipDataObject>();
+                                foreach (var item in (Array)value)
+                                {
+                                    var nestedClipDataObject = new ClipDataObject
+                                    {
+                                        ObjectData = (IClipboardFormat)item
+                                        // StructName will be set automatically
+                                    };
+                                    nestedList.Add(nestedClipDataObject);
+                                }
+                                _nestedObjects[prop.Name] = nestedList;
+                            }
+                        }
                         else if (!prop.PropertyType.IsPrimitive && prop.PropertyType != typeof(string))
                         {
                             ClipDataObject nestedClipDataObject = new ClipDataObject

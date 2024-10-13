@@ -455,7 +455,7 @@ namespace EditClipboardItems
                 {
                     _cidl = value;
                     _aoffset = new uint[_cidl + 1];
-                    _ITEMIDLIST = new ITEMIDLIST_OBJ[_cidl];
+                    _ITEMIDLIST = new ITEMIDLIST_OBJ[0]; // Initialize to empty array since we are manually going to fill it later with separate processing
                 }
             }
             // Still allow setting aoffset directly so we can put values into it
@@ -472,6 +472,15 @@ namespace EditClipboardItems
             }
 
             private readonly string _structName = "CIDA";
+
+            public override Dictionary<string, string> DataDisplayReplacements()
+            {
+                string aoffsetString = string.Join(", ", _aoffset.Select(x => x.ToString()));
+                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "aoffset", $"[{aoffsetString}]" },
+                };
+            }
         }
 
         public class ITEMIDLIST_OBJ : ClipboardFormatBase
@@ -504,7 +513,8 @@ namespace EditClipboardItems
             // Method to decode the abID into a string
             public string abIDString()
             {
-                return Encoding.Unicode.GetString(_abID);
+                string byteString = BitConverter.ToString(_abID).Replace("-", "");
+                return byteString;
             }
 
             public override Dictionary<string, string> DataDisplayReplacements()

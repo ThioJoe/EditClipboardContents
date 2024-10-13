@@ -241,7 +241,6 @@ namespace ClipboardManager
                     BITMAPV5HEADER_OBJ bitmapInfoV5Processed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPV5HEADER_OBJ>(rawData);
                     dataInfoList.Add($"{bitmapInfoV5Processed.bV5Width}x{bitmapInfoV5Processed.bV5Height}, {bitmapInfoV5Processed.bV5BitCount} bpp");
 
-
                     processedObject = new ClipDataObject
                     {
                         ObjectData = bitmapInfoV5Processed
@@ -296,18 +295,7 @@ namespace ClipboardManager
                     }
 
                     // Add property to cidaProcessed called ITEMIDLIST with the list of ITEMIDLIST_OBJ objects
-                    //cidaProcessed.ITEMIDLIST = pidlList;
-                    List<List<string>> testList = new List<List<string>>();
-                    foreach (ITEMIDLIST_OBJ item in pidlList)
-                    {
-                        List<string> strings = new List<string>();
-                        var abid = item.mkid.abID;
-                        // Convert to string in multiple forms
-                        strings.Add(Encoding.Default.GetString(abid));
-                        strings.Add(Encoding.Unicode.GetString(abid));
-                        strings.Add(BitConverter.ToString(abid).Replace("-", ""));
-                        testList.Add(strings);
-                    }
+                    cidaProcessed.ITEMIDLIST = pidlList;
 
                     processedObject = new ClipDataObject
                     {
