@@ -1489,7 +1489,7 @@ namespace ClipboardManager
             {
                 richTextBox_HexPlaintext.ReadOnly = true;
                 // Change the color to gray to indicate it's not editable
-                richTextBox_HexPlaintext.BackColor = SystemColors.Control;
+                richTextBox_HexPlaintext.BackColor = SystemColors.ControlLight;
             }
             else
             {
@@ -1834,7 +1834,26 @@ namespace ClipboardManager
             string rawSelectedTextSection = text.Substring(start, length);
             string cleanedText = rawSelectedTextSection.Replace(" ", "");
 
-            int byteSize = isUtf16 ? 4 : 2;
+            // Choose bytesize baseed on dropdown encoding
+            int byteSize;
+            switch(dropdownHexToTextEncoding.SelectedIndex)
+            {
+                case 0: // UTF-8
+                    byteSize = 2;
+                    break;
+                case 1: // UTF-16 LE
+                case 2: // UTF-16 BE
+                    byteSize = 4;
+                    break;
+                case 3: // UTF-32 LE
+                case 4: // UTF-32 BE
+                    byteSize = 8;
+                    break;
+                default:
+                    byteSize = 2;
+                    break;
+            }
+
 
             for (int i = 0; i < cleanedText.Length; i += byteSize)
             {
@@ -1853,6 +1872,13 @@ namespace ClipboardManager
                         if (ushort.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out ushort us))
                         {
                             ProcessUtf16(us);
+                        }
+                    }
+                    else if (byteSize == 8)
+                    {
+                        if (uint.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out uint ui))
+                        {
+                            plaintextLength += 4; // UTF-32 is fixed length, one character per 32-bit value
                         }
                     }
                 }
@@ -1912,8 +1938,34 @@ namespace ClipboardManager
                 }
             }
 
+            void ProcessUtf32(uint ui)
+            {
+                if (editMode)
+                {
+                    switch (ui)
+                    {
+                        case 0x00000000: // \0
+                        case 0x00000007: // \a
+                        case 0x00000008: // \b
+                        case 0x0000000C: // \f
+                        case 0x0000000A: // \n
+                        case 0x0000000D: // \r
+                        case 0x00000009: // \t
+                        case 0x0000000B: // \v
+                            plaintextLength += 8; // These are represented as four characters in edit mode
+                            break;
+                        default:
+                            plaintextLength += 4; // Normal character
+                            break;
+
+                    }
+                }
+                    
+            }
+
             // All lengths are multiplied by two so that we can divide by two now and account for UTF-16
             // Otherwise we would have had to use 0.5 for the UTF-16 case
+            // Actually that was for a previous version, might not be necessary at the moment
             return plaintextLength / 2; 
         }
 
