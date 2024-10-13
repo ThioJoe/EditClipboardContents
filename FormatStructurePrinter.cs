@@ -13,7 +13,7 @@ using static EditClipboardItems.ClipboardFormats;
 
 namespace EditClipboardItems
 {
-    public static class FormatInspector
+    public static class FormatStructurePrinter
     {
         public static string GetDataStringForTextbox(string formatName, byte[] data, ClipboardItem fullItem, string indent = "")
         {
@@ -54,16 +54,16 @@ namespace EditClipboardItems
             StringBuilder result = new StringBuilder();
             result.AppendLine($"Format: {formatName}");
 
-            if (FormatDescriptions.TryGetValue(formatName, out string formatDescription))
+            if (FormatInfoHardcoded.FormatDescriptions.TryGetValue(formatName, out string formatDescription))
             {
                 result.AppendLine($"Description: {formatDescription}");
                 anyFormatInfoAvailable = true;
             }
 
             // Add URL Link if it exists by dictionary lookup
-            if (ClipboardFormats.FormatDocsLinks.TryGetValue(formatName, out string docURL))
+            if (FormatInfoHardcoded.FormatDocsLinks.TryGetValue(formatName, out string docURL))
             {
-                result.AppendLine($"Details: " + ClipboardFormats.FormatDocsLinks[formatName]);
+                result.AppendLine($"Details: " + FormatInfoHardcoded.FormatDocsLinks[formatName]);
                 anyFormatInfoAvailable = true;
             }
 
@@ -93,7 +93,7 @@ namespace EditClipboardItems
             if (fullItem.ClipDataObject != null)
             {
                 // Documentation links for the struct and its members
-                Dictionary<string, string> structDocs = ClipboardFormats.GetDocumentationUrls_ForEntireObject(fullItem.ClipDataObject.ObjectData);
+                Dictionary<string, string> structDocs = FormatInfoHardcoded.GetDocumentationUrls_ForEntireObject(fullItem.ClipDataObject.ObjectData);
                 if (structDocs.Count > 0)
                 {
                     result.AppendLine($"\nStruct Documentation:");
@@ -139,6 +139,10 @@ namespace EditClipboardItems
                     else if (typeof(IEnumerable).IsAssignableFrom(propertyType) && propertyType != typeof(string))
                     {
                         result.AppendLine($"{indent}{propertyName}: [Collection of type {propertyType.Name} with {arraySize?.ToString() ?? "unknown"} items]");
+                    }
+                    else if (propertyType.IsEnum)
+                    {
+                        result.AppendLine($"{indent}{propertyName}: {obj.GetType().GetProperty(propertyName).GetValue(obj)}");
                     }
                     else
                     {

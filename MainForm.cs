@@ -1132,7 +1132,7 @@ namespace ClipboardManager
                     break;
                 case 3: // Object / Struct View
                     richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
-                    richTextBoxContents.Text = FormatInspector.GetDataStringForTextbox(formatName: GetClipboardFormatName(item.FormatId), data: item.RawData, fullItem: item);
+                    richTextBoxContents.Text = FormatStructurePrinter.GetDataStringForTextbox(formatName: GetClipboardFormatName(item.FormatId), data: item.RawData, fullItem: item);
                     richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
                     richTextBoxContents.BackColor = SystemColors.ControlLight;
 
@@ -2042,7 +2042,7 @@ namespace ClipboardManager
             string fileExt = "dat"; // Default extension if not in the list of known formats
 
             // Check the dictionary for known binary file associations for which to save directly as files with given extensions
-            if (KnownBinaryExtensionAssociations.TryGetValue(itemToExport.FormatName.ToLower(), out string ext))
+            if (FormatInfoHardcoded.KnownBinaryExtensionAssociations.TryGetValue(itemToExport.FormatName.ToLower(), out string ext))
             {
                 fileExt = ext;
             }
