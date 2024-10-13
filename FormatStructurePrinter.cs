@@ -6,12 +6,12 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using static EditClipboardItems.ClipboardFormats;
+using static ClipboardManager.ClipboardFormats;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0090 // Disable messages about New expression simplification
 
-namespace EditClipboardItems
+namespace ClipboardManager
 {
     public static class FormatStructurePrinter
     {

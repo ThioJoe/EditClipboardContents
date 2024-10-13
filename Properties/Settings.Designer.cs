@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace EditClipboardItems.Properties
+namespace ClipboardManager.Properties
 {
 
 

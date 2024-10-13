@@ -11,9 +11,8 @@ using System.Windows.Forms;
 using System.Drawing;
 
 // My Classes
-using EditClipboardItems;
 using System.ComponentModel;
-using static EditClipboardItems.ClipboardFormats;
+using static ClipboardManager.ClipboardFormats;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9

@@ -5,9 +5,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using static EditClipboardItems.ClipboardFormats;
+using static ClipboardManager.ClipboardFormats;
 
-namespace EditClipboardItems
+namespace ClipboardManager
 {
     public static class FormatInfoHardcoded
     {

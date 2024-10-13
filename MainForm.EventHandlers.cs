@@ -1,4 +1,4 @@
-﻿using EditClipboardItems;
+﻿using ClipboardManager;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
