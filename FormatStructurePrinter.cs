@@ -15,7 +15,7 @@ namespace EditClipboardContents
 {
     public static class FormatStructurePrinter
     {
-        public static string GetDataStringForTextbox(string formatName, byte[] data, ClipboardItem fullItem, string indent = "")
+        public static string GetDataStringForTextbox(string formatName, ClipboardItem fullItem)
         {
             string displayText;
 
@@ -25,7 +25,7 @@ namespace EditClipboardContents
             }
             else
             {
-                displayText = CreateDataString(formatName, data, fullItem, indent);
+                displayText = CreateDataString(formatName, fullItem);
                 return displayText;
             }
 
@@ -37,18 +37,18 @@ namespace EditClipboardContents
             // Otherwise put it in the cache after generating
             else
             {
-                displayText = CreateDataString(formatName, data, fullItem, indent);
+                displayText = CreateDataString(formatName, fullItem);
 
                 fullItem.ClipDataObject.ObjectData.SetCacheStructObjectDisplayInfo(displayText);
                 return displayText;
             }
         }
 
-        public static string CreateDataString(string formatName, byte[] data, ClipboardItem fullItem, string indent = "")
+        public static string CreateDataString(string formatName, ClipboardItem fullItem)
         {
             bool anyFormatInfoAvailable = false;
 
-            indent = "   ";
+            string indent = "   ";
             string originalIndent = indent; // Save the original indent for later, otherwise it will keep doubling in recursive functions
 
             StringBuilder result = new StringBuilder();

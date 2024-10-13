@@ -265,7 +265,7 @@ namespace EditClipboardContents
                     // Using the offset location entries in the aoffset array, get the PIDLs from the rawdata
                     ITEMIDLIST_OBJ[] pidlList = new ITEMIDLIST_OBJ[itemCount];
 
-                    int nextOffset = 0;
+                    int nextOffset;
                     for (int i = 0; i < itemCount; i++)
                     {
                         int offset = (int)cidaProcessed.aoffset[i];

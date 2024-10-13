@@ -164,7 +164,7 @@ namespace EditClipboardContents
             int index = formatItem.OriginalIndex;
 
             // Preprocess certain info
-            string textPreview = TryParseText(rawData, maxLength: 200, prefixEncodingType: false, debugging_formatName: formatName, debugging_callFrom: "Text Preview / UpdateClipboardItemsGridView");
+            string textPreview = TryParseText(rawData, maxLength: 200, prefixEncodingType: false);
 
             // The first item will have selected important info, to ensure it's not too long. The rest will show in data box in object/struct view mode
             string dataInfoString = dataInfo[0];
@@ -252,7 +252,7 @@ namespace EditClipboardContents
         }
 
         // Function to try and parse the raw data for text if it is text
-        private string TryParseText(byte[] rawData, int maxLength = 150, bool prefixEncodingType = false, string debugging_formatName = "", string debugging_callFrom = "")
+        private string TryParseText(byte[] rawData, int maxLength = 150, bool prefixEncodingType = false)
         {
             if (rawData == null || rawData.Length == 0)
             {
@@ -265,9 +265,6 @@ namespace EditClipboardContents
 
             string utf8Result = "";
             string utf16Result = "";
-
-            //bool invalidUTF8 = false;
-            //bool invalidUTF16 = false;
 
             // Try UTF-8
             try
@@ -292,22 +289,6 @@ namespace EditClipboardContents
                 // Invalid UTF-16, utf16Result remains empty
                 //invalidUTF16 = true;
             }
-
-            //if (invalidUTF8 && invalidUTF16)
-            //{
-            //    // Both Invalid
-            //    Console.WriteLine("Both UTF-8 and UTF-16 are invalid");
-            //}
-            //if (invalidUTF8 && !invalidUTF16)
-            //{
-            //    // Valid UTF-16 but Invalid UTF-8
-            //    Console.WriteLine("Only UTF-16 is valid");
-            //}
-            //if (!invalidUTF8 && invalidUTF16)
-            //{
-            //    // Valid UTF-8, but invalid UTF-16
-            //    Console.WriteLine("Only UTF-8 is valid");
-            //}
 
             string result;
             bool likelyUTF16 = false;
@@ -747,7 +728,7 @@ namespace EditClipboardContents
         public static string DiagnoseClipboardState(uint format, string formatName = "")
         {
             StringBuilder diagnosis = new StringBuilder();
-            int currentError = 0;
+            int currentError;
             NativeMethods.SetLastErrorEx(0, 0); // Clear last error
 
             diagnosis.AppendLine("------------------------------------------------------");
@@ -768,7 +749,7 @@ namespace EditClipboardContents
             // Clipboard should already be opened by the caller
 
             // Set alias for NativeMethods.FormatMessage
-            string ErrMsg(int errorCode)
+            static string ErrMsg(int errorCode)
             {
                 return GetWin32ErrorMessage(errorCode);
             }
@@ -1106,7 +1087,7 @@ namespace EditClipboardContents
             switch (modeIndex)
             {
                 case 0: // Text view mode
-                    richTextBoxContents.Text = TryParseText(item.RawData, maxLength: 0, prefixEncodingType: false, debugging_formatName: item.FormatName, debugging_callFrom: "Contents Text Box / DisplayClipboardData");
+                    richTextBoxContents.Text = TryParseText(item.RawData, maxLength: 0, prefixEncodingType: false);
                     richTextBoxContents.ReadOnly = true;
                     richTextBoxContents.BackColor = SystemColors.ControlLight;
                     break;
@@ -1132,7 +1113,7 @@ namespace EditClipboardContents
                     break;
                 case 3: // Object / Struct View
                     richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
-                    richTextBoxContents.Text = FormatStructurePrinter.GetDataStringForTextbox(formatName: GetClipboardFormatName(item.FormatId), data: item.RawData, fullItem: item);
+                    richTextBoxContents.Text = FormatStructurePrinter.GetDataStringForTextbox(formatName: GetClipboardFormatName(item.FormatId), fullItem: item);
                     richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
                     richTextBoxContents.BackColor = SystemColors.ControlLight;
 
@@ -1829,7 +1810,6 @@ namespace EditClipboardContents
         {
             int plaintextLength = 0;
             string text = richTextBoxContents.Text;
-            bool isUtf16 = dropdownHexToTextEncoding.SelectedIndex == 1;
 
             string rawSelectedTextSection = text.Substring(start, length);
             string cleanedText = rawSelectedTextSection.Replace(" ", "");
@@ -2074,8 +2054,6 @@ namespace EditClipboardContents
 
     public class ClipDataObject
     {
-        private Dictionary<string, object> _nestedObjects = new Dictionary<string, object>();
-
         private IClipboardFormat _objectData = null;
         public IClipboardFormat ObjectData
         {
@@ -2083,7 +2061,6 @@ namespace EditClipboardContents
             set
             {
                 _objectData = value;
-                InitializeNestedObjects();
                 _structName = ObjectData.StructName();
             }
         }
@@ -2136,9 +2113,6 @@ namespace EditClipboardContents
                 return ObjectData.GetType().GetProperty(propertyName).GetValue(ObjectData);
             }
 
-            if (_nestedObjects.TryGetValue(propertyName, out var nestedObject))
-                return nestedObject;
-
             // Check for display replacements. If there is one, use that instead of the actual value
             if (ObjectData.DataDisplayReplacements()?.TryGetValue(propertyName, out string replacementValue) == true)
             {
@@ -2155,12 +2129,6 @@ namespace EditClipboardContents
                 return null;
             }
         }
-
-        private void InitializeNestedObjects()
-        {
-            return;
-        }
-
 
         private void BuildString(StringBuilder sb, string indent)
         {

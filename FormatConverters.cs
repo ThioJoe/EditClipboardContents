@@ -244,8 +244,6 @@ namespace EditClipboardContents
 
         public static IntPtr CF_HDROP_Handle_FromRawData(byte[] rawData)
         {
-            int dropFilesSize = Marshal.SizeOf(typeof(DROPFILES));
-
             // Lock rawData for pinning in memory
             GCHandle handle = GCHandle.Alloc(rawData, GCHandleType.Pinned);
             try
