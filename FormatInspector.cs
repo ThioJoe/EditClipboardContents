@@ -15,50 +15,6 @@ namespace EditClipboardItems
 {
     public static class FormatInspector
     {
-        public class FormatInfo
-        {
-            public uint Value { get; set; }
-            public string Kind { get; set; }
-            public string HandleOutput { get; set; }
-            public Type StructType { get; set; }
-        }
-
-        private static readonly Dictionary<string, FormatInfo> FormatDictionary = new Dictionary<string, FormatInfo>
-        {
-        // "Kinds" of formats:
-        //  - typedef: A simple typedef, like CF_TEXT or CF_BITMAP
-        //  - struct: A complex structure, like CF_DIB or CF_METAFILEPICT
-        //  - data: A simple data format, like CF_OEMTEXT or CF_WAVE
-
-        {"CF_BITMAP", new FormatInfo {Value = 2, Kind = "typedef", HandleOutput = "HBITMAP"}},
-        {"CF_DIB", new FormatInfo {Value = 8, Kind = "struct", HandleOutput = "BITMAPINFO followed by bitmap bits", StructType = typeof(BITMAPINFO)}},
-        {"CF_DIBV5", new FormatInfo {Value = 17, Kind = "struct", HandleOutput = "BITMAPV5HEADER followed by color space info and bitmap bits", StructType = typeof(BITMAPV5HEADER)}},
-        {"CF_DIF", new FormatInfo {Value = 5, Kind = "data", HandleOutput = "Software Arts' Data Interchange Format"}},
-        {"CF_DSPBITMAP", new FormatInfo {Value = 0x0082, Kind = "data", HandleOutput = "Bitmap display data"}},
-        {"CF_DSPENHMETAFILE", new FormatInfo {Value = 0x008E, Kind = "data", HandleOutput = "Enhanced metafile display data"}},
-        {"CF_DSPMETAFILEPICT", new FormatInfo {Value = 0x0083, Kind = "data", HandleOutput = "Metafile picture display data"}},
-        {"CF_DSPTEXT", new FormatInfo {Value = 0x0081, Kind = "data", HandleOutput = "Text display data"}},
-        {"CF_ENHMETAFILE", new FormatInfo {Value = 14, Kind = "typedef", HandleOutput = "HENHMETAFILE"}},
-        {"CF_GDIOBJFIRST", new FormatInfo {Value = 0x0300, Kind = "data", HandleOutput = "Start of range of integers for application-defined GDI object formats"}},
-        {"CF_GDIOBJLAST", new FormatInfo {Value = 0x03FF, Kind = "data", HandleOutput = "End of range of integers for application-defined GDI object formats"}},
-        {"CF_HDROP", new FormatInfo {Value = 15, Kind = "struct", HandleOutput = "HDROP (list of files)", StructType = typeof(DROPFILES)}},
-        {"CF_LOCALE", new FormatInfo {Value = 16, Kind = "data", HandleOutput = "LCID (locale identifier)"}},
-        {"CF_METAFILEPICT", new FormatInfo {Value = 3, Kind = "struct", HandleOutput = "METAFILEPICT", StructType = typeof(METAFILEPICT)}},
-        {"CF_OEMTEXT", new FormatInfo {Value = 7, Kind = "data", HandleOutput = "Text in OEM character set"}},
-        {"CF_OWNERDISPLAY", new FormatInfo {Value = 0x0080, Kind = "data", HandleOutput = "Owner-display format data"}},
-        {"CF_PALETTE", new FormatInfo {Value = 9, Kind = "typedef", HandleOutput = "HPALETTE"}},
-        {"CF_PENDATA", new FormatInfo {Value = 10, Kind = "data", HandleOutput = "Pen computing extension data"}},
-        {"CF_PRIVATEFIRST", new FormatInfo {Value = 0x0200, Kind = "data", HandleOutput = "Start of range of integers for private clipboard formats"}},
-        {"CF_PRIVATELAST", new FormatInfo {Value = 0x02FF, Kind = "data", HandleOutput = "End of range of integers for private clipboard formats"}},
-        {"CF_RIFF", new FormatInfo {Value = 11, Kind = "data", HandleOutput = "Complex audio data, can be represented in a CF_WAVE standard wave format."}},
-        {"CF_SYLK", new FormatInfo {Value = 4, Kind = "data", HandleOutput = "Microsoft Symbolic Link format (SYLK)"}},
-        {"CF_TEXT", new FormatInfo {Value = 1, Kind = "data", HandleOutput = "ANSI text"}},
-        {"CF_TIFF", new FormatInfo {Value = 6, Kind = "data", HandleOutput = "Tagged-image file format"}},
-        {"CF_UNICODETEXT", new FormatInfo {Value = 13, Kind = "data", HandleOutput = "Unicode text"}},
-        {"CF_WAVE", new FormatInfo {Value = 12, Kind = "data", HandleOutput = "Standard wave format audio data"}},
-        {"FileGroupDescriptorW", new FormatInfo {Value = 49275, Kind = "struct", HandleOutput = "Describes the properties of a file that is being copied."}},
-        };
-
         public static string GetDataStringForTextbox(string formatName, byte[] data, ClipboardItem fullItem, string indent = "")
         {
             string displayText;
@@ -93,12 +49,13 @@ namespace EditClipboardItems
             StringBuilder result = new StringBuilder();
             result.AppendLine($"{indent}Format: {formatName}");
 
-            if (FormatDictionary.TryGetValue(formatName, out FormatInfo formatInfo))
+            if (FormatDescriptions.TryGetValue(formatName, out string formatDescription))
             {
-                result.AppendLine($"{indent}Handle Output: {formatInfo.HandleOutput}");
+                result.AppendLine($"{indent}Description: {formatDescription}");
             }
+
             // If there's no full item or object data, we'll still check if there is any data info
-            else if (fullItem == null || fullItem.ClipDataObject == null || fullItem.ClipDataObject.ObjectData == null)
+            if (fullItem == null || fullItem.ClipDataObject == null || fullItem.ClipDataObject.ObjectData == null)
             {
                 if (fullItem.DataInfoList.Count == 0 || string.IsNullOrEmpty(fullItem.DataInfoList[0]))
                 {

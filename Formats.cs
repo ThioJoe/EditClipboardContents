@@ -965,6 +965,37 @@ namespace EditClipboardItems
             { "ExcludeClipboardContentFromMonitorProcessing", "https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats" }
         };
 
+        public static readonly Dictionary<string, string> FormatDescriptions = new Dictionary<string, string>
+        {
+            {"CF_BITMAP", "HBITMAP"},
+            {"CF_DIB", "BITMAPINFO followed by bitmap bits"},
+            {"CF_DIBV5", "BITMAPV5HEADER followed by color space info and bitmap bits"},
+            {"CF_DIF", "Software Arts' Data Interchange Format"},
+            {"CF_DSPBITMAP", "Bitmap display data"},
+            {"CF_DSPENHMETAFILE", "Enhanced metafile display data"},
+            {"CF_DSPMETAFILEPICT", "Metafile picture display data"},
+            {"CF_DSPTEXT", "Text display data"},
+            {"CF_ENHMETAFILE", "A handle to an enhanced metafile (HENHMETAFILE)"},
+            {"CF_GDIOBJFIRST", "Start of range of integers for application-defined GDI object formats"},
+            {"CF_GDIOBJLAST", "End of range of integers for application-defined GDI object formats"},
+            {"CF_HDROP", "HDROP (list of files)"},
+            {"CF_LOCALE", "LCID (locale identifier)"},
+            {"CF_METAFILEPICT", "METAFILEPICT"},
+            {"CF_OEMTEXT", "Text in OEM character set"},
+            {"CF_OWNERDISPLAY", "Owner-display format data"},
+            {"CF_PALETTE", "HPALETTE"},
+            {"CF_PENDATA", "Pen computing extension data"},
+            {"CF_PRIVATEFIRST", "Start of range of integers for private clipboard formats"},
+            {"CF_PRIVATELAST", "End of range of integers for private clipboard formats"},
+            {"CF_RIFF", "Complex audio data, can be represented in a CF_WAVE standard wave format."},
+            {"CF_SYLK", "Microsoft Symbolic Link format (SYLK)"},
+            {"CF_TEXT", "ANSI text"},
+            {"CF_TIFF", "Tagged-image file format"},
+            {"CF_UNICODETEXT", "Unicode text"},
+            {"CF_WAVE", "Standard wave format audio data"},
+            {"FileGroupDescriptorW", "Describes the properties of a file that is being copied."}
+        };
+
         public static readonly Dictionary<string, string> KnownBinaryExtensionAssociations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) // Case insensitive
         {
             // Key is the format name (lower case), value is the file extension 
