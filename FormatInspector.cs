@@ -48,25 +48,28 @@ namespace EditClipboardItems
         {
             bool anyFormatInfoAvailable = false;
 
+            indent = "   ";
+            string originalIndent = indent; // Save the original indent for later, otherwise it will keep doubling in recursive functions
+
             StringBuilder result = new StringBuilder();
-            result.AppendLine($"{indent}Format: {formatName}");
+            result.AppendLine($"Format: {formatName}");
 
             if (FormatDescriptions.TryGetValue(formatName, out string formatDescription))
             {
-                result.AppendLine($"{indent}Description: {formatDescription}");
+                result.AppendLine($"Description: {formatDescription}");
                 anyFormatInfoAvailable = true;
             }
 
             // Add URL Link if it exists by dictionary lookup
             if (ClipboardFormats.FormatDocsLinks.TryGetValue(formatName, out string docURL))
             {
-                result.AppendLine($"{indent}Details: " + ClipboardFormats.FormatDocsLinks[formatName]);
+                result.AppendLine($"Details: " + ClipboardFormats.FormatDocsLinks[formatName]);
                 anyFormatInfoAvailable = true;
             }
 
             if (fullItem.DataInfoList.Count > 0 && !string.IsNullOrEmpty(fullItem.DataInfoList[0]))
             {
-                indent = "  ";
+                
                 result.AppendLine($"\nData Info:");
                 // Add each selectedItem in DataInfoList to the result indented
                 foreach (string dataInfoItem in fullItem.DataInfoList)
@@ -83,7 +86,87 @@ namespace EditClipboardItems
                 {
                     return $"{indent}Unknown format: {formatName}";
                 }
-            }           
+            }
+
+            // ----------------- If there is a full item and object data -----------------
+
+            if (fullItem.ClipDataObject != null)
+            {
+                // Documentation links for the struct and its members
+                Dictionary<string, string> structDocs = ClipboardFormats.GetDocumentationUrls_ForEntireObject(fullItem.ClipDataObject.ObjectData);
+                if (structDocs.Count > 0)
+                {
+                    result.AppendLine($"\nStruct Documentation:");
+                    foreach (var doc in structDocs)
+                    {
+                        result.AppendLine($"{indent}{doc.Key}: {doc.Value}");
+                    }
+                }
+
+                result.AppendLine($"\nStruct Info:");
+                RecursivePrintClipDataObject(fullItem.ClipDataObject, indent);
+            }
+
+            return result.ToString();
+
+
+            // -------------------- LOCAL FUNCTIONS --------------------
+
+            void RecursivePrintClipDataObject(ClipDataObject obj, string indent)
+            {
+                if (obj.ObjectData == null)
+                {
+                    result.AppendLine($"{indent}ObjectData is null");
+                    return;
+                }
+
+                // Get the property names if there areny. If ObjectData is null, it will return null. If it's a collection, it returns an empty list
+                IEnumerable<string> propertyNames = obj.PropertyNames;
+
+                if (propertyNames.Any()) // If there are items in it
+                {
+                    foreach (var propertyName in propertyNames)
+                    {
+                        object propertyValue = obj.GetPropertyValue(propertyName);
+
+                        if (propertyValue is ClipDataObject nestedObject)
+                        {
+                            result.AppendLine($"{indent}{propertyName}:");
+                            RecursivePrintClipDataObject(nestedObject, indent + originalIndent);
+                        }
+                        else if (propertyValue is IEnumerable enumerable && !(propertyValue is string))
+                        {
+                            result.AppendLine($"{indent}{propertyName}:");
+                            RecursivePrintCollection(enumerable, indent + originalIndent);
+                        }
+                        else if (propertyValue is Array array)
+                        {
+                            result.AppendLine($"{indent}{propertyName}:");
+                            RecursivePrintArray(array, indent + originalIndent);
+                        }
+                        else
+                        {
+                            // Try to also get hex version of the value
+                            if (propertyValue != null && propertyValue.GetType().IsPrimitive)
+                            {
+                                string hexValue = GetValueString(propertyValue, asHex: true);
+                                if (!string.IsNullOrEmpty(hexValue))
+                                {
+                                    // Updates the property value to include hex value, otherwise it will just include the decimal value
+                                    propertyValue = $"{propertyValue} ({hexValue})";
+                                }
+                            }
+                            result.AppendLine($"{indent}{propertyName}: {propertyValue}");
+                        }
+                    }
+                }
+                // This means it's a collection if it was empty, so just go through as indexes
+                else
+                {
+                    RecursivePrintCollection(obj.ObjectData, indent); // This will print out the collection (if it's a collection
+                }
+            }
+
 
             void RecursivePrintCollection(object obj, string indent)
             {
@@ -95,15 +178,15 @@ namespace EditClipboardItems
                         if (item is ClipDataObject clipDataObject)
                         {
                             result.AppendLine($"{indent}{index}:");
-                            RecursivePrintClipDataObject(clipDataObject, indent + indent);
+                            RecursivePrintClipDataObject(clipDataObject, indent + originalIndent);
                         }
                         else if(item is IEnumerable nestedEnumerable)
                         {
-                            RecursivePrintCollection(nestedEnumerable, indent + indent);
+                            RecursivePrintCollection(nestedEnumerable, indent + originalIndent);
                         }
                         else if (item is Array nestedArray)
                         {
-                            RecursivePrintArray(nestedArray, indent + indent);
+                            RecursivePrintArray(nestedArray, indent + originalIndent);
                         }
                         else
                         {
@@ -114,6 +197,7 @@ namespace EditClipboardItems
                     }
                 }
             }
+
 
             void RecursivePrintArray(Array array, string indent)
             {
@@ -142,84 +226,7 @@ namespace EditClipboardItems
             }
 
 
-            void RecursivePrintClipDataObject(ClipDataObject obj, string indent)
-            {
-                if (obj.ObjectData == null)
-                {
-                    result.AppendLine($"{indent}ObjectData is null");
-                    return;
-                }
-
-                // Get the property names if there areny. If ObjectData is null, it will return null. If it's a collection, it returns an empty list
-                IEnumerable<string> propertyNames = obj.PropertyNames;
-
-                if (propertyNames.Any()) // If there are items in it
-                {
-                    foreach (var propertyName in propertyNames)
-                    {
-                        object propertyValue = obj.GetPropertyValue(propertyName);
-
-                        if (propertyValue is ClipDataObject nestedObject)
-                        {
-                            result.AppendLine($"{indent}{propertyName}:");
-                            RecursivePrintClipDataObject(nestedObject, indent + indent);
-                        }
-                        else if (propertyValue is IEnumerable enumerable && !(propertyValue is string))
-                        {
-                            result.AppendLine($"{indent}{propertyName}:");
-                            RecursivePrintCollection(enumerable, indent + indent);
-                        }
-                        else if (propertyValue is Array array)
-                        {
-                            result.AppendLine($"{indent}{propertyName}:");
-                            RecursivePrintArray(array, indent + indent);
-                        }
-                        else
-                        {
-                            // Try to also get hex version of the value
-                            if (propertyValue != null && propertyValue.GetType().IsPrimitive)
-                            {
-                                string hexValue = GetValueString(propertyValue, asHex: true);
-                                if (!string.IsNullOrEmpty(hexValue))
-                                {
-                                    // Updates the property value to include hex value, otherwise it will just include the decimal value
-                                    propertyValue = $"{propertyValue} ({hexValue})";
-                                }
-                            }
-                            result.AppendLine($"{indent}{propertyName}: {propertyValue}");
-                        }
-                    }
-                }
-                // This means it's a collection if it was empty, so just go through as indexes
-                else
-                {
-                    RecursivePrintCollection(obj.ObjectData, indent); // This will print out the collection (if it's a collection
-                }
-            }
-
-            if (fullItem.ClipDataObject != null)
-            {
-                // Documentation links for the struct and its members
-                Dictionary<string, string> structDocs = ClipboardFormats.GetDocumentationUrls_ForEntireObject(fullItem.ClipDataObject.ObjectData);
-                if (structDocs.Count > 0)
-                {
-                    result.AppendLine($"\nStruct Documentation:");
-                    foreach (var doc in structDocs)
-                    {
-                        result.AppendLine($"{indent}{doc.Key}: {doc.Value}");
-                    }
-                }
-
-                result.AppendLine($"\nStruct Info:");
-                RecursivePrintClipDataObject(fullItem.ClipDataObject, indent);
-            }
-            else
-            {
-                //result.AppendLine($"\nAsDataObject is not available for this item.");
-            }
-
-            return result.ToString();
-        }
+        } // ----------------- END OF CreateDataString -----------------
 
         private static string GetValueString(object value, bool asHex = false)
         {
