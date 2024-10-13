@@ -7,6 +7,15 @@ using System.Text;
 using System.Threading.Tasks;
 using static EditClipboardContents.ClipboardFormats;
 
+// Disable IDE warnings that showed up after going from C# 7 to C# 9
+#pragma warning disable IDE0079 // Disable message about unnecessary suppression
+#pragma warning disable IDE1006 // Disable messages about capitalization of control names
+#pragma warning disable IDE0063 // Disable messages about Using expression simplification
+#pragma warning disable IDE0090 // Disable messages about New expression simplification
+#pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
+#pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
+#pragma warning disable IDE0066 // Disable message about switch case expression
+
 namespace EditClipboardContents
 {
     public static class FormatInfoHardcoded
@@ -84,7 +93,7 @@ namespace EditClipboardContents
 
         public static readonly Dictionary<string, string> KnownBinaryExtensionAssociations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) // Case insensitive
         {
-            // Key is the format name (lower case), value is the file extension 
+            // Key is the formatObject name (lower case), value is the file extension 
             { "png", "png" },
             { "csv", "csv" },
             { "biff12", "xlsb" },
@@ -188,10 +197,9 @@ namespace EditClipboardContents
                 {
                     continue;
                 }
-                else if (value is IClipboardFormat)
+                else if (value is IClipboardFormat formatObject)
                 {
-
-                    propertyResults = GetDocumentationUrls_ForEntireObject((IClipboardFormat)value);
+                    propertyResults = GetDocumentationUrls_ForEntireObject(formatObject);
                 }
                 else if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(List<>))
                 {
@@ -238,9 +246,9 @@ namespace EditClipboardContents
 
                     Dictionary<string, string> itemResults = new Dictionary<string, string>();
 
-                    if (item is IClipboardFormat)
+                    if (item is IClipboardFormat formatObject)
                     {
-                        itemResults = GetDocumentationUrls_ForEntireObject((IClipboardFormat)item);
+                        itemResults = GetDocumentationUrls_ForEntireObject(formatObject);
                         foreach (var kvp in itemResults)
                         {
                             if (!results.ContainsKey(kvp.Key))
@@ -251,7 +259,7 @@ namespace EditClipboardContents
                     {
                         // Skip strings
                     }
-                    else if (item is IEnumerable nestedCollection && !(item is string))
+                    else if (item is IEnumerable nestedCollection && item is not string)
                     {
                         itemResults = RecurseThroughCollection(nestedCollection);
                         foreach (var kvp in itemResults)
@@ -287,16 +295,16 @@ namespace EditClipboardContents
 
                 Dictionary<string, string> itemResults = new Dictionary<string, string>();
 
-                if (item is IClipboardFormat)
+                if (item is IClipboardFormat formatObject)
                 {
-                    itemResults = GetDocumentationUrls_ForEntireObject((IClipboardFormat)item);
+                    itemResults = GetDocumentationUrls_ForEntireObject(formatObject);
                     foreach (var kvp in itemResults)
                     {
                         if (!results.ContainsKey(kvp.Key))
                             results[kvp.Key] = kvp.Value;
                     }
                 }
-                else if (item is IEnumerable nestedCollection && !(item is string))
+                else if (item is IEnumerable nestedCollection && item is not string)
                 {
                     itemResults = RecurseThroughCollection(nestedCollection);
                     foreach (var kvp in itemResults)

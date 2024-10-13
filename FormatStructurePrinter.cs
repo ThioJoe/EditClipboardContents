@@ -9,6 +9,13 @@ using System.Threading.Tasks;
 using static EditClipboardContents.ClipboardFormats;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
+#pragma warning disable IDE0079 // Disable message about unnecessary suppression
+#pragma warning disable IDE1006 // Disable messages about capitalization of control names
+#pragma warning disable IDE0063 // Disable messages about Using expression simplification
+#pragma warning disable IDE0090 // Disable messages about New expression simplification
+#pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
+#pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
+#pragma warning disable IDE0066 // Disable message about switch case expression
 #pragma warning disable IDE0090 // Disable messages about New expression simplification
 
 namespace EditClipboardContents
@@ -157,15 +164,15 @@ namespace EditClipboardContents
 
             void RecursivePrintCollection(object obj, string indent)
             {
-                if (obj is IEnumerable enumerable &&  !(obj is string)) // not a string
+                if (obj is IEnumerable enumerable &&  obj is not string) // not a string
                 {
                     int index = 1;
                     foreach (var item in enumerable)
                     {
-                        if (item is IClipboardFormat)
+                        if (item is IClipboardFormat formatObject)
                         {
                             result.AppendLine($"{indent}{index}:");
-                            RecursivePrintClipDataObject((IClipboardFormat)item, indent + originalIndent);
+                            RecursivePrintClipDataObject(formatObject, indent + originalIndent);
                         }
                         else if(item is IEnumerable nestedEnumerable)
                         {
@@ -191,10 +198,10 @@ namespace EditClipboardContents
                 for (int i = 0; i < array.Length; i++)
                 {
                     object item = array.GetValue(i);
-                    if (item is IClipboardFormat)
+                    if (item is IClipboardFormat formatObject)
                     {
                         result.AppendLine($"{indent}{i}:");
-                        RecursivePrintClipDataObject((IClipboardFormat)item, indent + indent);
+                        RecursivePrintClipDataObject(formatObject, indent + indent);
                     }
                     else if (item is IEnumerable nestedEnumerable)
                     {

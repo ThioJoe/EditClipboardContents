@@ -479,7 +479,7 @@ namespace EditClipboardContents
                 string formatName = GetClipboardFormatName(format);
                 ulong dataSize = 0;
                 byte[] rawData = null;
-                int? error = null;
+                int? error; // Initializes as null anyway
                 string errorString = null;
                 string diagnosisReport = null;
                 int originalIndex = currentCount - 1;
@@ -783,8 +783,7 @@ namespace EditClipboardContents
                     NativeMethods.SetLastErrorEx(0, 0); // Clear last error
 
                     // Get process ID
-                    uint processId;
-                    NativeMethods.GetWindowThreadProcessId(hOwner, out processId);
+                    NativeMethods.GetWindowThreadProcessId(hOwner, out uint processId);
                     diagnosis.AppendLine($"Clipboard owner process ID: {processId}");
                     currentError = Marshal.GetLastWin32Error();
                     if (currentError != 0)
@@ -2092,7 +2091,7 @@ namespace EditClipboardContents
                 // If it's a collection and therefore no actual property names
                 if (ObjectData is IEnumerable enumerable)
                 {
-                    return Enumerable.Empty<string>();
+                    return []; // Same as:  Enumerable.Empty<string>()
                 }
                 else
                 {

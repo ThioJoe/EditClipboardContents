@@ -890,8 +890,7 @@ namespace EditClipboardContents
             else if (type.IsClass)
             {
                 object obj = Activator.CreateInstance(type);
-                var clipboardFormat = obj as IClipboardFormat;
-                if (clipboardFormat == null)
+                if (obj is not IClipboardFormat clipboardFormat)
                 {
                     throw new InvalidOperationException($"Type {type.Name} does not implement IClipboardFormat");
                 }
