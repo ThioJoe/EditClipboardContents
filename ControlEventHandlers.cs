@@ -226,6 +226,7 @@ namespace ClipboardManager
 
         private void checkBoxPlainTextEditing_CheckedChanged(object sender, EventArgs e)
         {
+            UpdateEditControlsVisibility();
             UpdatePlaintextFromHexView();
         }
 

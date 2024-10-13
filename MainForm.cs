@@ -1108,12 +1108,15 @@ namespace ClipboardManager
                 case 0: // Text view mode
                     richTextBoxContents.Text = TryParseText(item.RawData, maxLength: 0, prefixEncodingType: false, debugging_formatName: item.FormatName, debugging_callFrom: "Contents Text Box / DisplayClipboardData");
                     richTextBoxContents.ReadOnly = true;
+                    richTextBoxContents.BackColor = SystemColors.ControlLight;
                     break;
 
                 case 1: // Hex view mode
                     // Show hex data in the left panel text box
                     richTextBoxContents.Text = BitConverter.ToString(item.RawData).Replace("-", " ");
                     richTextBoxContents.ReadOnly = true;
+                    // Set the background color to gray to indicate read-only
+                    richTextBoxContents.BackColor = SystemColors.ControlLight;
                     UpdatePlaintextFromHexView();
                     break;
 
@@ -1121,6 +1124,8 @@ namespace ClipboardManager
                     richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
                     richTextBoxContents.Text = BitConverter.ToString(item.RawData).Replace("-", " ");
                     richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
+                    // Set the background color to white to indicate editable
+                    richTextBoxContents.BackColor = SystemColors.Window;
 
                     richTextBoxContents.ReadOnly = false;
                     UpdatePlaintextFromHexView();
@@ -1129,6 +1134,7 @@ namespace ClipboardManager
                     richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
                     richTextBoxContents.Text = FormatInspector.GetDataStringForTextbox(formatName: GetClipboardFormatName(item.FormatId), data: item.RawData, fullItem: item);
                     richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
+                    richTextBoxContents.BackColor = SystemColors.ControlLight;
 
                     richTextBoxContents.ReadOnly = true;
                     break;
@@ -1150,7 +1156,6 @@ namespace ClipboardManager
             return null;
         }
 
-
         private void UpdatePlaintextFromHexView()
         {
             // Set encoding mode based on dropdown
@@ -1159,9 +1164,30 @@ namespace ClipboardManager
             {
                 encodingToUse = Encoding.UTF8;
             }
-            else if (dropdownHexToTextEncoding.SelectedIndex == 1) // UTF-16
+            else if (dropdownHexToTextEncoding.SelectedIndex == 1) // UTF-16 LE (Unicode
             {
                 encodingToUse = Encoding.Unicode;
+            }
+            else if (dropdownContentsViewMode.SelectedIndex == 2) // UTF-16 BE
+            {
+                encodingToUse = Encoding.BigEndianUnicode;
+            }
+            else if (dropdownHexToTextEncoding.SelectedIndex == 3) // UTF-32 LE
+            {
+                encodingToUse = Encoding.UTF32;
+            }
+            else if (dropdownHexToTextEncoding.SelectedIndex == 4) // UTF-32 Big Endian
+            {
+                encodingToUse = Encoding.GetEncoding(12001); 
+            }
+            else if (dropdownHexToTextEncoding.SelectedIndex == 5) // Windows-1252
+            {
+                encodingToUse = Encoding.GetEncoding(1252);
+            }
+            // System Default
+            else if (dropdownHexToTextEncoding.SelectedIndex == 6) // Default
+            {
+                encodingToUse = Encoding.Default;
             }
             else
             {
@@ -1214,10 +1240,13 @@ namespace ClipboardManager
             {
                 // If the checkbox is checked, show null characters as dots
                 plaintext = EscapeString(plaintextRaw);
+                // Set background color to white to indicate editable
+                richTextBox_HexPlaintext.BackColor = SystemColors.Window;
             }
             else
             {
                 plaintext = ReplaceEscapeWithChar(plaintextRaw); // Remove null characters
+                richTextBox_HexPlaintext.BackColor = SystemColors.ControlLight;
             }
 
             // Convert the bytes to text and update the text box. First disable textchanged event to prevent infinite loop
@@ -1453,6 +1482,19 @@ namespace ClipboardManager
             {
                 buttonApplyEdit.Enabled = false;
                 buttonApplyEdit.Visible = false;
+            }
+
+            // If the plaintext editing checkbox is unchecked, disable editing of the text
+            if (!checkBoxPlainTextEditing.Checked)
+            {
+                richTextBox_HexPlaintext.ReadOnly = true;
+                // Change the color to gray to indicate it's not editable
+                richTextBox_HexPlaintext.BackColor = SystemColors.Control;
+            }
+            else
+            {
+                richTextBox_HexPlaintext.ReadOnly = false;
+                richTextBox_HexPlaintext.BackColor = SystemColors.Window;
             }
 
         }
