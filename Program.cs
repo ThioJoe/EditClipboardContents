@@ -1,10 +1,10 @@
-﻿using ClipboardManager;
+﻿using EditClipboardContents;
 using System;
 using System.Collections.Specialized;
 using System.Windows.Forms;
 using System.Configuration;
 
-namespace ClipboardManager
+namespace EditClipboardContents
 {
     static class Program
     {

@@ -1,4 +1,4 @@
-﻿namespace ClipboardManager
+﻿namespace EditClipboardContents
 {
     partial class MainForm
     {

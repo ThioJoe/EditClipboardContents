@@ -1,4 +1,4 @@
-﻿using ClipboardManager;
+﻿using EditClipboardContents;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -20,7 +20,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 #pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
 #pragma warning disable IDE0066 // Disable message about switch case expression
 
-namespace ClipboardManager
+namespace EditClipboardContents
 {
     public partial class MainForm : Form
     {

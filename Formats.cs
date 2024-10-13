@@ -26,7 +26,7 @@ using System.Text;
 // Structs are really only used for certain standard clipboard formats, since those formats often are just pointers to the struct, and Marsshal requires a struct to copy the data out
 //   Then the class version can be used to process those too. Some don't require the struct to get the data out, so the class is used directly
 
-namespace ClipboardManager
+namespace EditClipboardContents
 {
     // Win32 API Types defined explicitly to avoid confusion and ensure compatibility with Win32 API, and it matches with documentation
     // See: https://learn.microsoft.com/en-us/windows/win32/winprog/windows-data-types

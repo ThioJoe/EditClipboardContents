@@ -24,12 +24,12 @@ using System.Text.RegularExpressions;
 #pragma warning disable IDE0066 // Disable message about switch case expression
 
 // My classes
-using ClipboardManager;
+using EditClipboardContents;
 using System.Collections;
-using static ClipboardManager.ClipboardFormats;
+using static EditClipboardContents.ClipboardFormats;
 
 
-namespace ClipboardManager
+namespace EditClipboardContents
 {
     public partial class MainForm : Form
     {

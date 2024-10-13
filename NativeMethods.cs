@@ -12,10 +12,10 @@ using System.Text;
 #pragma warning disable IDE0066 // Disable message about switch case expression
 
 // My classes
-using ClipboardManager;
+using EditClipboardContents;
 
 
-namespace ClipboardManager
+namespace EditClipboardContents
 {
     internal static class NativeMethods
     {

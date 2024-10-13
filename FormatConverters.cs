@@ -1,4 +1,4 @@
-﻿using ClipboardManager;
+﻿using EditClipboardContents;
 using System;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 // My classes
-using static ClipboardManager.ClipboardFormats;
+using static EditClipboardContents.ClipboardFormats;
 using System.Windows.Forms;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
@@ -20,7 +20,7 @@ using System.Windows.Forms;
 #pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
 #pragma warning disable IDE0066 // Disable message about switch case expression
 
-namespace ClipboardManager
+namespace EditClipboardContents
 {
     public static partial class FormatConverters
     {
