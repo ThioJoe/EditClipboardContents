@@ -1878,7 +1878,7 @@ namespace ClipboardManager
                     {
                         if (uint.TryParse(byteStr, System.Globalization.NumberStyles.HexNumber, null, out uint ui))
                         {
-                            plaintextLength += 4; // UTF-32 is fixed length, one character per 32-bit value
+                            ProcessUtf32(ui);
                         }
                     }
                 }
