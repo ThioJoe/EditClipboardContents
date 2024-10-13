@@ -56,18 +56,14 @@ namespace EditClipboardItems
 
         public abstract class ClipboardFormatBase : IClipboardFormat
         {
-            // Private field to store the struct name
-            private readonly string _structName;
+            // Protected method to be implemented by derived classes
+            protected abstract string GetStructName();
+
+            // Public method to access the struct name
+            public string StructName() => GetStructName();
 
             // Private field to store the cached struct display info
             private string _cachedStructDisplayInfo;
-
-            // Gets the name of the struct from the private field of each class
-            public virtual string StructName()
-            {
-                var field = this.GetType().GetField("_structName", BindingFlags.NonPublic | BindingFlags.Instance);
-                return field?.GetValue(this) as string ?? string.Empty;
-            }
 
             // Common methods apply to all classes of the type
             public virtual string GetDocumentationUrl()
@@ -145,7 +141,7 @@ namespace EditClipboardItems
             public WORD bmBitsPixel { get; set; }
             public LPVOID bmBits { get; set; }
 
-            private string _structName = "BITMAP";
+            protected override string GetStructName() => "BITMAP";
         }
 
         public class BITMAPV5HEADER_OBJ : ClipboardFormatBase
@@ -175,7 +171,7 @@ namespace EditClipboardItems
             public DWORD bV5ProfileSize { get; set; }
             public DWORD bV5Reserved { get; set; }
 
-            private readonly string _structName = "BITMAPV5HEADER";
+            protected override string GetStructName() => "BITMAPV5HEADER";
         }
 
         public enum bV5Compression : uint // DWORD
@@ -205,7 +201,7 @@ namespace EditClipboardItems
             public DWORD biClrUsed { get; set; }
             public DWORD biClrImportant { get; set; }
 
-            private readonly string _structName = "BITMAPINFOHEADER";
+            protected override string GetStructName() => "BITMAPINFOHEADER";
         }
 
         public class RGBQUAD_OBJ : ClipboardFormatBase
@@ -215,7 +211,7 @@ namespace EditClipboardItems
             public BYTE rgbRed { get; set; }
             public BYTE rgbReserved { get; set; }
 
-            private readonly string _structName = "RGBQUAD";
+            protected override string GetStructName() => "RGBQUAD";
         }
 
         public class BITMAPINFO_OBJ : ClipboardFormatBase
@@ -223,7 +219,7 @@ namespace EditClipboardItems
             public BITMAPINFOHEADER_OBJ bmiHeader { get; set; }
             public List<RGBQUAD_OBJ> bmiColors { get; set; }
 
-            private readonly string _structName = "BITMAPINFO";
+            protected override string GetStructName() => "BITMAPINFO";
 
             public override Dictionary<string, string> DataDisplayReplacements()
             {
@@ -241,7 +237,7 @@ namespace EditClipboardItems
             public LONG yExt { get; set; }
             public HMETAFILE hMF { get; set; }
 
-            private readonly string _structName = "METAFILEPICT";
+            protected override string GetStructName() => "METAFILEPICT";
 
             public override Dictionary<string, string> DataDisplayReplacements()
             {
@@ -257,7 +253,7 @@ namespace EditClipboardItems
             public FXPT2DOT30 ciexyzX { get; set; }
             public FXPT2DOT30 ciexyzY { get; set; }
             public FXPT2DOT30 ciexyzZ { get; set; }
-            private readonly string _structName = "CIEXYZ";
+            protected override string GetStructName() => "CIEXYZ";
         }
 
         public class CIEXYZTRIPLE_OBJ : ClipboardFormatBase
@@ -266,7 +262,7 @@ namespace EditClipboardItems
             public CIEXYZ_OBJ ciexyzGreen { get; set; }
             public CIEXYZ_OBJ ciexyzBlue { get; set; }
 
-            private readonly string _structName = "CIEXYZTRIPLE";
+            protected override string GetStructName() => "CIEXYZTRIPLE";
         }
 
         public class DROPFILES_OBJ : ClipboardFormatBase
@@ -282,7 +278,7 @@ namespace EditClipboardItems
                 return Marshal.SizeOf(this);
             }
 
-            private readonly string _structName = "DROPFILES";
+            protected override string GetStructName() => "DROPFILES";
 
             public override Dictionary<string, string> DataDisplayReplacements()
             {
@@ -299,7 +295,7 @@ namespace EditClipboardItems
             public LONG x { get; set; }
             public LONG y { get; set; }
 
-            private readonly string _structName = "POINT";
+            protected override string GetStructName() => "POINT";
         }
 
         public class PALETTEENTRY_OBJ : ClipboardFormatBase
@@ -309,7 +305,7 @@ namespace EditClipboardItems
             public BYTE peBlue { get; set; }
             public BYTE peFlags { get; set; }
 
-            private readonly string _structName = "PALETTEENTRY";
+            protected override string GetStructName() => "PALETTEENTRY";
         }
 
         public class LOGPALETTE_OBJ : ClipboardFormatBase
@@ -318,7 +314,7 @@ namespace EditClipboardItems
             public WORD palNumEntries { get; set; }
             public List<PALETTEENTRY_OBJ> palPalEntry { get; set; }
 
-            private readonly string _structName = "LOGPALETTE";
+            protected override string GetStructName() => "LOGPALETTE";
 
             public override Dictionary<string, string> DataDisplayReplacements()
             {
@@ -342,7 +338,7 @@ namespace EditClipboardItems
             public DWORD lcsGammaBlue { get; set; }
             public string lcsFilename { get; set; }
 
-            private readonly string _structName = "LOGCOLORSPACEA";
+            protected override string GetStructName() => "LOGCOLORSPACEA";
             public static int MaxStringLength()
             {
                 return 260;
@@ -371,7 +367,7 @@ namespace EditClipboardItems
             public DWORD cItems { get; set; }
             public List<FILEDESCRIPTOR_OBJ> fgd { get; set; }
 
-            private readonly string _structName = "FILEGROUPDESCRIPTORW";
+            protected override string GetStructName() => "FILEGROUPDESCRIPTORW";
         }
 
         public class FILEDESCRIPTOR_OBJ : ClipboardFormatBase
@@ -397,7 +393,7 @@ namespace EditClipboardItems
                 return 260;
             }
 
-            private readonly string _structName = "FILEDESCRIPTORW";
+            protected override string GetStructName() => "FILEDESCRIPTORW";
 
         }
 
@@ -414,7 +410,7 @@ namespace EditClipboardItems
                 return 16;
             }
 
-            private readonly string _structName = "CLSID";
+            protected override string GetStructName() => "CLSID";
         }
 
         public class POINTL_OBJ : ClipboardFormatBase
@@ -422,7 +418,7 @@ namespace EditClipboardItems
             public LONG x { get; set; }
             public LONG y { get; set; }
 
-            private readonly string _structName = "POINTL";
+            protected override string GetStructName() => "POINTL";
         }
 
         public class SIZEL_OBJ : ClipboardFormatBase
@@ -430,7 +426,7 @@ namespace EditClipboardItems
             public DWORD cx { get; set; }
             public DWORD cy { get; set; }
 
-            private readonly string _structName = "SIZEL";
+            protected override string GetStructName() => "SIZEL";
         }
 
         public class FILETIME_OBJ : ClipboardFormatBase
@@ -438,7 +434,7 @@ namespace EditClipboardItems
             public DWORD dwLowDateTime { get; set; }
             public DWORD dwHighDateTime { get; set; }
 
-            private readonly string _structName = "FILETIME";
+            protected override string GetStructName() => "FILETIME";
         }
 
         public class CIDA_OBJ : ClipboardFormatBase
@@ -471,7 +467,7 @@ namespace EditClipboardItems
                 set => _ITEMIDLIST = value;
             }
 
-            private readonly string _structName = "CIDA";
+            protected override string GetStructName() => "CIDA";
 
             public override Dictionary<string, string> DataDisplayReplacements()
             {
@@ -487,7 +483,7 @@ namespace EditClipboardItems
         {
             public SHITEMID_OBJ mkid { get; set; }
 
-            private readonly string _structName = "ITEMIDLIST";
+            protected override string GetStructName() => "ITEMIDLIST";
         }
 
         public class SHITEMID_OBJ : ClipboardFormatBase
@@ -525,7 +521,7 @@ namespace EditClipboardItems
                 };
             }
 
-            private readonly string _structName = "SHITEMID";
+            protected override string GetStructName() => "SHITEMID";
         }
 
         // --------------------------------------------------------------------------------------------------------------------------
