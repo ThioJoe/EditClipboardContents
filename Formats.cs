@@ -52,8 +52,7 @@ namespace EditClipboardItems
             Dictionary<string, string> DataDisplayReplacements();
             void SetCacheStructObjectDisplayInfo(string structInfo);
             string GetCacheStructObjectDisplayInfo();
-            IEnumerable<(string Name, object Value, Type Type, int? ArraySize)> EnumeratePropertiesWithType();
-            IEnumerable<(string Name, Type Type, int? ArraySize)> EnumeratePropertyTypes();
+            IEnumerable<(string Name, object Value, Type Type, int? ArraySize)> EnumerateProperties(bool getValues = false);
         }
 
         public abstract class ClipboardFormatBase : IClipboardFormat
@@ -97,61 +96,43 @@ namespace EditClipboardItems
                 return _cachedStructDisplayInfo ?? string.Empty;
             }
 
-            // Gets the type, and if it's a inputArray (like an array), the size of the inputArray as well
-            public virtual IEnumerable<(string Name, object Value, Type Type, int? ArraySize)> EnumeratePropertiesWithType()
-            {
-                var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                foreach (var property in properties)
-                {
-                    //Debug.WriteLine($"Processing property: {property.Name}");
-                    object value;
-                    try
-                    {
-                        value = property.GetValue(this);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"Error getting value for property {property.Name}: {ex.Message}");
-                        continue;
-                    }
-                    var type = property.PropertyType;
-                    int? arraySize = null;
-                    if (value is Array array)
-                    {
-                        arraySize = array.Length;
-                    }
-                    yield return (property.Name, value, type, arraySize);
-                }
-            }
-
-            public virtual IEnumerable<(string Name, Type Type, int? ArraySize)> EnumeratePropertyTypes()
+            public virtual IEnumerable<(string Name, object Value, Type Type, int? ArraySize)> EnumerateProperties(bool getValues = false)
             {
                 var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
                 foreach (var property in properties)
                 {
                     var type = property.PropertyType;
+                    object value = null;
                     int? arraySize = null;
 
-                    if (typeof(ICollection).IsAssignableFrom(type))
+                    if (getValues || typeof(ICollection).IsAssignableFrom(type) || type.IsArray)
                     {
-                        // For collections, we can get the count without instantiating
-                        var countProperty = type.GetProperty("Count");
-                        if (countProperty != null)
+                        try
                         {
-                            var collection = property.GetValue(this) as ICollection;
-                            arraySize = collection?.Count;
+                            value = property.GetValue(this);
+
+                            if (value is ICollection collection)
+                            {
+                                arraySize = collection.Count;
+                            }
+                            else if (value is Array array)
+                            {
+                                arraySize = array.Length;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Error getting value for property {property.Name}: {ex.Message}");
+                            // Continue to the next property if there's an error
+                            continue;
                         }
                     }
-                    else if (type.IsArray)
-                    {
-                        // For arrays, we need to get the value to determine the length
-                        var array = property.GetValue(this) as Array;
-                        arraySize = array?.Length;
-                    }
 
-                    yield return (property.Name, type, arraySize);
+                    // If getValues is false, we always return null for the Value
+                    yield return (property.Name, getValues ? value : null, type, arraySize);
                 }
             }
+
         }
 
         // Static helper methods
@@ -917,7 +898,7 @@ namespace EditClipboardItems
 
                 var replacements = clipboardFormat.DataDisplayReplacements();
 
-                foreach (var (propertyName, propertyType, arraySize) in clipboardFormat.EnumeratePropertyTypes())
+                foreach (var (propertyName, _, propertyType, arraySize) in clipboardFormat.EnumerateProperties(getValues: false))
                 {
                     if (remainingBytes <= 0)
                         break;  // Stop reading if we've reached the end of the data

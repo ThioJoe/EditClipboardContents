@@ -122,7 +122,8 @@ namespace EditClipboardItems
 
                 var replacements = obj.DataDisplayReplacements();
 
-                foreach (var (propertyName, propertyType, arraySize) in obj.EnumeratePropertyTypes())
+                foreach (var (propertyName, _, propertyType, arraySize) in obj.EnumerateProperties(getValues: false))
+
                 {
                     if (replacements.TryGetValue(propertyName, out string replacementValue))
                     {
