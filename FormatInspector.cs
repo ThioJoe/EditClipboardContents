@@ -221,20 +221,6 @@ namespace EditClipboardItems
             return result.ToString();
         }
 
-        private static string GetFormattedValue(object value)
-        {
-            if (value == null)
-                return "null";
-
-            if (value.GetType().IsPrimitive)
-            {
-                string hexValue = GetValueString(value, asHex: true);
-                return !string.IsNullOrEmpty(hexValue) ? $"{value} ({hexValue})" : value.ToString();
-            }
-
-            return value.ToString();
-        }
-
         private static string GetValueString(object value, bool asHex = false)
         {
             if (value == null)
@@ -266,114 +252,6 @@ namespace EditClipboardItems
             }
 
             return value.ToString();
-        }
-
-
-
-        private static void InspectStruct(Type structType, byte[] data, ref StringBuilder result, string indent, ref int offset)
-        {
-            var fields = structType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-            foreach (var field in fields)
-            {
-                result.AppendLine($"{indent}{field.FieldType.Name} {field.Name}");
-
-                if (offset < data.Length)
-                {
-                    if (field.FieldType.IsValueType && !field.FieldType.IsPrimitive && field.FieldType != typeof(IntPtr))
-                    {
-                        // Nested struct
-                        result.AppendLine($"{indent}  Value:");
-                        InspectStruct(field.FieldType, data, ref result, indent + indent, ref offset);
-                    }
-                    else if (field.FieldType.IsArray)
-                    {
-                        // Array field (like RGBQUAD_OBJ[])
-                        result.AppendLine($"{indent}  Value: [Array of {field.FieldType.GetElementType().Name}]");
-                        // Note: We don't process array contents here as the length is unknown
-                    }
-                    else
-                    {
-                        object fieldValue = ReadValueFromBytes(data, ref offset, field.FieldType);
-                        string valueStr = GetValueString(fieldValue);
-                        result.AppendLine($"{indent}  Value: {valueStr}");
-
-                        // Try getting hex value as well. But not if the returned string is empty
-                        string valueStrHex = GetValueString(fieldValue, asHex: true);
-                        if (!string.IsNullOrEmpty(valueStrHex))
-                        {
-                            result.AppendLine($"{indent}  Value (hex): {valueStrHex}");
-                        }
-                    }
-                }
-                else
-                {
-                    result.AppendLine($"{indent}  Value: [Data not available]");
-                }
-            }
-        }
-
-
-        private static object ReadValueFromBytes(byte[] data, ref int offset, Type fieldType)
-        {
-            if (fieldType == typeof(byte))
-            {
-                return data[offset++];
-            }
-            else if (fieldType == typeof(short) || fieldType == typeof(ushort))
-            {
-                var value = BitConverter.ToInt16(data, offset);
-                offset += 2;
-                return value;
-            }
-            else if (fieldType == typeof(int) || fieldType == typeof(uint))
-            {
-                var value = BitConverter.ToInt32(data, offset);
-                offset += 4;
-                return value;
-            }
-            else if (fieldType == typeof(long) || fieldType == typeof(ulong))
-            {
-                var value = BitConverter.ToInt64(data, offset);
-                offset += 8;
-                return value;
-            }
-            else if (fieldType == typeof(float))
-            {
-                var value = BitConverter.ToSingle(data, offset);
-                offset += 4;
-                return value;
-            }
-            else if (fieldType == typeof(double))
-            {
-                var value = BitConverter.ToDouble(data, offset);
-                offset += 8;
-                return value;
-            }
-            else if (fieldType == typeof(bool))
-            {
-                var value = BitConverter.ToBoolean(data, offset);
-                offset += 1;
-                return value;
-            }
-            else if (fieldType == typeof(char))
-            {
-                var value = BitConverter.ToChar(data, offset);
-                offset += 2;
-                return value;
-            }
-            else if (fieldType == typeof(IntPtr) || fieldType == typeof(UIntPtr))
-            {
-                var size = IntPtr.Size;
-                var value = size == 4 ? BitConverter.ToInt32(data, offset) : BitConverter.ToInt64(data, offset);
-                offset += size;
-                return new IntPtr(value);
-            }
-            else
-            {
-                // For complex types, we'll just return the type name
-                return $"[{fieldType.Name}]";
-            }
         }
 
     }
