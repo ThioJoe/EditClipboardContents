@@ -133,10 +133,8 @@ namespace EditClipboardItems
 
                     if (typeof(IClipboardFormat).IsAssignableFrom(propertyType))
                     {
-                        result.AppendLine($"{indent}{propertyName}: [Nested IClipboardFormat object]");
-                        // Optionally, you can still recurse:
-                        // var nestedObj = obj.GetType().GetProperty(propertyName).GetValue(obj) as IClipboardFormat;
-                        // RecursivePrintClipDataObject(nestedObj, indent + originalIndent, depth + 1);
+                        var nestedObj = obj.GetType().GetProperty(propertyName).GetValue(obj) as IClipboardFormat;
+                        RecursivePrintClipDataObject(nestedObj, indent + originalIndent, depth + 1);
                     }
                     else if (typeof(IEnumerable).IsAssignableFrom(propertyType) && propertyType != typeof(string))
                     {
