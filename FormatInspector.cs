@@ -200,7 +200,7 @@ namespace EditClipboardItems
                 indent = "    ";
 
                 // Documentation links for the struct and its members
-                Dictionary<string, string> structDocs = ClipboardFormats.GetDocumentationUrls(fullItem.ClipDataObject.ObjectData);
+                Dictionary<string, string> structDocs = ClipboardFormats.GetDocumentationUrls_ForEntireObject(fullItem.ClipDataObject.ObjectData);
                 if (structDocs.Count > 0)
                 {
                     result.AppendLine($"\nStruct Documentation:");

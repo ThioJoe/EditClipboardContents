@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -12,7 +13,7 @@ using System.Text;
 #pragma warning disable IDE1006 // Disable messages about capitalization of control names
 #pragma warning disable IDE0063 // Disable messages about Using expression simplification
 #pragma warning disable IDE0090 // Disable messages about New expression simplification
-#pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
+#pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about inputArray initialization
 #pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
 #pragma warning disable IDE0066 // Disable message about switch case expression
 
@@ -45,7 +46,7 @@ namespace EditClipboardItems
     {
         public interface IClipboardFormat
         {
-            (string, string) GetDocumentationUrl();
+            string GetDocumentationUrl();
             string StructName();
             Dictionary<string, string> DataDisplayReplacements();
             void SetCacheStructObjectDisplayInfo(string structInfo);
@@ -61,13 +62,25 @@ namespace EditClipboardItems
             // Private field to store the cached struct display info
             private string _cachedStructDisplayInfo;
 
-            // Default implementation for StructName
-            public virtual string StructName() => _structName;
+            // Gets the name of the struct from the private field of each class
+            public virtual string StructName()
+            {
+                var field = this.GetType().GetField("_structName", BindingFlags.NonPublic | BindingFlags.Instance);
+                return field?.GetValue(this) as string ?? string.Empty;
+            }
 
             // Common methods apply to all classes of the type
-            public virtual (string, string) GetDocumentationUrl()
+            public virtual string GetDocumentationUrl()
             {
-                return (_structName, StructDocsLinks[_structName]);
+                string structName = StructName();
+                if (structName == null || !StructDocsLinks.ContainsKey(structName))
+                {
+                    return null;
+                }
+                else
+                {
+                    return StructDocsLinks[structName];
+                }
             }
 
             // Default implementation for DataDisplayReplacements - Things that are too big or not useful to print, like binary data
@@ -86,7 +99,7 @@ namespace EditClipboardItems
                 return _cachedStructDisplayInfo ?? string.Empty;
             }
 
-            // Gets the type, and if it's a collection (like an array), the size of the collection as well
+            // Gets the type, and if it's a inputArray (like an array), the size of the inputArray as well
             public virtual IEnumerable<(string Name, object Value, Type Type, int? ArraySize)> EnumeratePropertiesWithType()
             {
                 var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -107,7 +120,7 @@ namespace EditClipboardItems
         }
 
         // Static helper methods
-        public static (string, string) GetDocumentationUrl<T>() where T : IClipboardFormat, new()
+        public static string GetDocumentationUrl<T>() where T : IClipboardFormat, new()
         {
             return new T().GetDocumentationUrl();
         }
@@ -962,112 +975,213 @@ namespace EditClipboardItems
 
         };
 
+        public static object CheckIfProblematicValue(PropertyInfo property, object obj)
+        {
+            try
+            {
+                // Check if the property is indexed - Skip if it is
+                if (property.GetIndexParameters().Length > 0)
+                {
+                    return null;
+                }
+                if (!property.CanRead)
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting value for property {property.Name}: {ex.Message}");
+                return null;
+            }
+            object value = property.GetValue(obj);
+
+            return value;
+        }
+
+
         // Helper function to get documentation URLs for a class and it's sub-classes using DocumentationUrl() method of each
         // Iterates them and puts them into list. Parameter is the object itself. Recursive.
-        public static Dictionary<string, string> GetDocumentationUrls(object obj)
+        public static Dictionary<string, string> GetDocumentationUrls_ForEntireObject(IClipboardFormat obj)
         {
             Dictionary<string, string> results = new Dictionary<string, string>();
 
             if (obj == null)
                 return results;
 
-            Type type = obj.GetType();
+            // Get documentation URL for the current outer object
+            string structName = obj.StructName();
+            string currentObjDocUrl = obj.GetDocumentationUrl();
 
-            // Only proceed if the object is a class or an enum
-            if (!type.IsClass && !type.IsEnum)
-                return results;
-
-            // Check if the type has a GetDocumentationUrl method
-            var docUrlMethod = type.GetMethod("GetDocumentationUrl", BindingFlags.Public | BindingFlags.Static);
-            if (docUrlMethod != null)
+            if (!string.IsNullOrEmpty(currentObjDocUrl))
             {
-                try
-                {
-                    var result = docUrlMethod.Invoke(null, null);
-                    if (result is ValueTuple<string, string> tuple)
-                    {
-                        results[tuple.Item1] = tuple.Item2;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error invoking GetDocumentationUrl method: {ex.Message}");
-                }
+                results[structName] = currentObjDocUrl;
             }
 
-            // If it's an enum, we're done
-            if (type.IsEnum)
-                return results;
-
             // For classes, process their properties
-            foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            foreach (var property in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                if (!property.CanRead)
-                    continue;
-
-                object value = null;
-                try
+                // ----------------------------- Local Function ---------------------------------------
+                static object CheckIfProblematicValue(PropertyInfo property, object obj)
                 {
-                    // Check if the property is indexed
-                    if (property.GetIndexParameters().Length > 0)
+                    try
                     {
-                        // Skip indexed properties
-                        continue;
+                        // Check if the property is indexed - Skip if it is
+                        if (property.GetIndexParameters().Length > 0)
+                        {
+                            return null;
+                        }
+                        if (!property.CanRead)
+                        {
+                            return null;
+                        }
                     }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error getting value for property {property.Name}: {ex.Message}");
+                        return null;
+                    }
+                    object value = property.GetValue(obj);
 
-                    value = property.GetValue(obj);
+                    return value;
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error getting value for property {property.Name}: {ex.Message}");
-                    continue;
-                }
+                // ------------------------------------------------------------------------------------
+
+                object value = CheckIfProblematicValue(property, obj);
 
                 if (value == null)
                     continue;
 
-                Type propertyType = value.GetType();
+                // Got the value, now check if it's a class or a collection
 
-                if (propertyType.IsClass || propertyType.IsEnum)
+                Type propertyType = value.GetType();
+                Dictionary<string, string> propertyResults = new Dictionary<string, string>();
+
+                if (propertyType.IsPrimitive || propertyType == typeof(string))
+                {
+                    continue;
+                }
+                else if (value is IClipboardFormat)
+                {
+
+                    propertyResults = GetDocumentationUrls_ForEntireObject((IClipboardFormat)value);
+                }
+                else if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(List<>))
                 {
                     if (value is IEnumerable<object> collection)
                     {
-                        foreach (var item in collection)
-                        {
-                            foreach (var kvp in GetDocumentationUrls(item))
-                            {
-                                results[kvp.Key] = kvp.Value;
-                            }
-                        }
+                        propertyResults = RecurseThroughCollection(collection);
                     }
-                    // Arrays will trigger IsClass too
-                    else if (propertyType.IsArray)
-                    {
-                        foreach (var item in (Array)value)
-                        {
-                            // Skip primitive types or else we'll get an infinite loop
-                            if (item.GetType().IsPrimitive)
-                                continue;
+                }
+                else if (propertyType.IsArray)
+                {
+                    propertyResults = RecurseThroughArray(value);
+                }
+                else if (propertyType.IsEnum)
+                {
+                    continue; // Later figure out how to get documentation for enums
+                }
 
-                            foreach (var kvp in GetDocumentationUrls(item))
-                            {
+                // Add the results to the main dictionary. If a key already exists then don't add it
+                foreach (var kvp in propertyResults)
+                {
+                    if (!results.ContainsKey(kvp.Key))
+                    {
+                        results[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+            return results;
+        }
+
+        public static Dictionary<string, string> RecurseThroughArray(object inputArray)
+        {
+            Dictionary<string, string> results = new Dictionary<string, string>();
+            Type propertyType = inputArray.GetType();
+
+            if (inputArray == null)
+                return results;
+
+            if (propertyType.IsArray)
+            {
+                foreach (var item in (Array)inputArray)
+                {
+                    if (item == null)
+                        continue;
+
+                    Dictionary<string, string> itemResults = new Dictionary<string, string>();
+                    
+                    if (item is IClipboardFormat)
+                    {
+                        itemResults = GetDocumentationUrls_ForEntireObject((IClipboardFormat)item);
+                        foreach (var kvp in itemResults)
+                        {
+                            if (!results.ContainsKey(kvp.Key))
                                 results[kvp.Key] = kvp.Value;
-                            }
                         }
                     }
-                    else
+                    else if (item is string)
                     {
-                        foreach (var kvp in GetDocumentationUrls(value))
+                        // Skip strings
+                    }
+                    else if (item is IEnumerable nestedCollection && !(item is string))
+                    {
+                        itemResults = RecurseThroughCollection(nestedCollection);
+                        foreach (var kvp in itemResults)
                         {
-                            results[kvp.Key] = kvp.Value;
+                            if (!results.ContainsKey(kvp.Key))
+                                results[kvp.Key] = kvp.Value;
+                        }
+                    }
+                    // If it's another array
+                    else if (item.GetType().IsArray)
+                    {
+                        itemResults = RecurseThroughArray(item);
+                        foreach (var kvp in itemResults)
+                        {
+                            if (!results.ContainsKey(kvp.Key))
+                                results[kvp.Key] = kvp.Value;
                         }
                     }
                 }
             }
-
             return results;
         }
 
-    }
+
+        public static Dictionary<string, string> RecurseThroughCollection(IEnumerable collection)
+        {
+            Dictionary<string, string> results = new Dictionary<string, string>();
+
+            foreach (var item in collection)
+            {
+                if (item == null)
+                    continue;
+
+                Dictionary<string, string> itemResults = new Dictionary<string, string>();
+
+                if (item is IClipboardFormat)
+                {
+                    itemResults = GetDocumentationUrls_ForEntireObject((IClipboardFormat)item);
+                    foreach (var kvp in itemResults)
+                    {
+                        if (!results.ContainsKey(kvp.Key))
+                            results[kvp.Key] = kvp.Value;
+                    }
+                }
+                else if (item is IEnumerable nestedCollection && !(item is string))
+                {
+                    itemResults = RecurseThroughCollection(nestedCollection);
+                    foreach (var kvp in itemResults)
+                    {
+                        if (!results.ContainsKey(kvp.Key))
+                            results[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+            return results;
+        }
+
+    } // ------------------------------------------------------------------------------------------------------------------------------------
 
 }
