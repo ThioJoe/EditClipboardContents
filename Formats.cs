@@ -50,6 +50,7 @@ namespace EditClipboardContents
             string GetDocumentationUrl();
             string StructName();
             Dictionary<string, string> DataDisplayReplacements();
+            List<string> PropertiesNoProcess();
             void SetCacheStructObjectDisplayInfo(string structInfo);
             string GetCacheStructObjectDisplayInfo();
             IEnumerable<(string Name, object Value, Type Type, int? ArraySize)> EnumerateProperties(bool getValues = false);
@@ -80,9 +81,11 @@ namespace EditClipboardContents
                 }
             }
 
-            // Default implementation for DataDisplayReplacements - Things that are too big or not useful to print, like binary data
-            // Can also return a method that will replace the otherwise printed value with a custom string
-            public virtual Dictionary<string, string> DataDisplayReplacements() => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase); 
+            // Default implementation for DataDisplayReplacements - Things that need to be replaced or pre-processed before displaying
+            public virtual Dictionary<string, string> DataDisplayReplacements() => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            // Properties to not even process into the object because it won't be used at all
+            public virtual List<string> PropertiesNoProcess() => new List<string>();
 
             // Method to cache the display info of the struct object
             public void SetCacheStructObjectDisplayInfo(string structInfo)
@@ -149,6 +152,11 @@ namespace EditClipboardContents
         public static Dictionary<string, string> GetVariableSizedItems<T>() where T : IClipboardFormat, new()
         {
             return new T().DataDisplayReplacements();
+        }
+
+        public static List<string> PropertiesNoProcess<T>() where T : IClipboardFormat, new()
+        {
+            return new T().PropertiesNoProcess();
         }
 
         public class BITMAP_OBJ : ClipboardFormatBase
@@ -247,6 +255,11 @@ namespace EditClipboardContents
                 {
                     { "bmiColors", "[Color data bytes]" }
                 };
+            }
+
+            public override List<string> PropertiesNoProcess()
+            {
+                return new List<string> { "bmiColors" };
             }
         }
 
@@ -491,11 +504,21 @@ namespace EditClipboardContents
 
             public override Dictionary<string, string> DataDisplayReplacements()
             {
-                string aoffsetString = string.Join(", ", _aoffset.Select(x => x.ToString()));
-                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                try
                 {
-                    { "aoffset", $"[{aoffsetString}]" },
-                };
+                    string aoffsetString = string.Join(", ", _aoffset.Select(x => x.ToString()));
+                    return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        { "aoffset", $"[{aoffsetString}]" },
+                    };
+                }
+                catch
+                {
+                    return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        { "aoffset", $"[Data Not Available]" },
+                    };
+                }
             }
         }
 
@@ -895,14 +918,14 @@ namespace EditClipboardContents
                     throw new InvalidOperationException($"Type {type.Name} does not implement IClipboardFormat");
                 }
 
-                var replacements = clipboardFormat.DataDisplayReplacements();
+                var propertiesNoProcess = clipboardFormat.PropertiesNoProcess();
 
                 foreach (var (propertyName, _, propertyType, arraySize) in clipboardFormat.EnumerateProperties(getValues: false))
                 {
                     if (remainingBytes <= 0)
                         break;  // Stop reading if we've reached the end of the data
 
-                    if (replacements.ContainsKey(propertyName))
+                    if (propertiesNoProcess.Contains(propertyName))
                         continue;  // Skip properties that are in the replacement dictionary
 
                     try

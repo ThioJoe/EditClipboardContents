@@ -121,9 +121,14 @@ namespace EditClipboardContents
 
             void RecursivePrintClipDataObject(IClipboardFormat obj, string indent, int depth = 0)
             {
-                if (obj == null || depth > 100)
+                if (obj == null)
                 {
                     result.AppendLine($"{indent}Max depth reached or object is null");
+                    return;
+                }
+                if (depth > 100)
+                {
+                    result.AppendLine($"{indent}Max depth of 100 reached");
                     return;
                 }
 
@@ -145,11 +150,17 @@ namespace EditClipboardContents
                     }
                     else if (typeof(IEnumerable).IsAssignableFrom(propertyType) && propertyType != typeof(string))
                     {
-                        result.AppendLine($"{indent}{propertyName}: [Collection of type {propertyType.Name} with {arraySize?.ToString() ?? "unknown"} items]");
+                        var nestedObj = obj.GetType().GetProperty(propertyName).GetValue(obj);
+                        RecursivePrintCollection(nestedObj, indent + originalIndent, depth: depth+1);
                     }
                     else if (propertyType.IsEnum)
                     {
                         result.AppendLine($"{indent}{propertyName}: {obj.GetType().GetProperty(propertyName).GetValue(obj)}");
+                    }
+                    else if (propertyType.IsArray)
+                    {
+                        var array = obj.GetType().GetProperty(propertyName).GetValue(obj) as Array;
+                        RecursivePrintArray(array, indent + originalIndent, depth: depth + 1);
                     }
                     else
                     {
@@ -162,7 +173,7 @@ namespace EditClipboardContents
             }
 
 
-            void RecursivePrintCollection(object obj, string indent)
+            void RecursivePrintCollection(object obj, string indent, int depth)
             {
                 if (obj is IEnumerable enumerable &&  obj is not string) // not a string
                 {
@@ -172,15 +183,15 @@ namespace EditClipboardContents
                         if (item is IClipboardFormat formatObject)
                         {
                             result.AppendLine($"{indent}{index}:");
-                            RecursivePrintClipDataObject(formatObject, indent + originalIndent);
+                            RecursivePrintClipDataObject(formatObject, indent + originalIndent, depth: depth + 1);
                         }
                         else if(item is IEnumerable nestedEnumerable)
                         {
-                            RecursivePrintCollection(nestedEnumerable, indent + originalIndent);
+                            RecursivePrintCollection(nestedEnumerable, indent + originalIndent, depth: depth + 1);
                         }
                         else if (item is Array nestedArray)
                         {
-                            RecursivePrintArray(nestedArray, indent + originalIndent);
+                            RecursivePrintArray(nestedArray, indent + originalIndent, depth: depth + 1);
                         }
                         else
                         {
@@ -193,7 +204,7 @@ namespace EditClipboardContents
             }
 
 
-            void RecursivePrintArray(Array array, string indent)
+            void RecursivePrintArray(Array array, string indent, int depth)
             {
                 for (int i = 0; i < array.Length; i++)
                 {
@@ -201,15 +212,15 @@ namespace EditClipboardContents
                     if (item is IClipboardFormat formatObject)
                     {
                         result.AppendLine($"{indent}{i}:");
-                        RecursivePrintClipDataObject(formatObject, indent + indent);
+                        RecursivePrintClipDataObject(formatObject, indent + originalIndent, depth: depth + 1);
                     }
                     else if (item is IEnumerable nestedEnumerable)
                     {
-                        RecursivePrintCollection(nestedEnumerable, indent + indent);
+                        RecursivePrintCollection(nestedEnumerable, indent + originalIndent, depth: depth + 1);
                     }
                     else if (item is Array nestedArray)
                     {
-                        RecursivePrintArray(nestedArray, indent + indent);
+                        RecursivePrintArray(nestedArray, indent + originalIndent, depth: depth + 1);
                     }
                     else
                     {
