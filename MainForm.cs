@@ -27,6 +27,7 @@ using System.Text.RegularExpressions;
 using EditClipboardContents;
 using System.Collections;
 using static EditClipboardContents.ClipboardFormats;
+using System.Threading.Tasks;
 
 
 namespace EditClipboardContents
@@ -108,6 +109,22 @@ namespace EditClipboardContents
         {
             float scaleFactor = this.DeviceDpi / 96f; // 96 is the default DPI
             return (int)(originalValue * scaleFactor);
+        }
+
+        private void ShowLoadingIndicator(bool show)
+        {
+            // Calculate the position of the loading label based on center of SplitContainerMain Panel 1. Also ensures location uses label center
+            int x = splitContainerMain.Panel1.Width / 2 - labelLoading.Width / 2;
+            int y = splitContainerMain.Panel1.Height / 2 - labelLoading.Height / 2;
+
+            labelLoading.Location = new Point(x, y);
+            labelLoading.Visible = show;
+
+            // Updates the cursor
+            this.Cursor = show ? Cursors.WaitCursor : Cursors.Default;
+
+            // Force the form to repaint immediately
+            this.Update();
         }
 
 
@@ -429,11 +446,7 @@ namespace EditClipboardContents
 
         private void RefreshClipboardItems()
         {
-            //Console.WriteLine("Starting RefreshClipboardItems");
-
-            // Count the number of different data formats currently on the clipboard
-            //int formatCount = NativeMethods.CountClipboardFormats();
-            //Console.WriteLine($"Number of clipboard formats: {formatCount}");
+            ShowLoadingIndicator(true);
 
             // Attempt to open the clipboard, retrying up to 10 times with a 10ms delay
             //Console.WriteLine("Attempting to open clipboard");
@@ -478,6 +491,7 @@ namespace EditClipboardContents
             ProcessClipboardData();
             editedClipboardItems = clipboardItems.Select(item => (ClipboardItem)item.Clone()).ToList(); // Clone clipboardItems to editedClipboardItems
 
+            ShowLoadingIndicator(false);
             UpdateSplitterPosition_FitDataGrid();
         }
 

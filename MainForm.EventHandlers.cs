@@ -30,9 +30,22 @@ namespace EditClipboardContents
             dataGridViewClipboard.MouseWheel += dataGridViewClipboard_MouseWheel;
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        // Form has finished loading and is about to be displayed, but not yet visible
+        private void MainForm_Load(object sender, EventArgs e)
         {
-            RefreshClipboardItems();
+            
+        }
+
+        // Form is now visible
+        private void MainForm_Shown(object sender, EventArgs e)
+        {
+            // Use BeginInvoke to ensure the form is fully rendered
+            this.BeginInvoke(new Action(() =>
+            {
+                //ShowLoadingIndicator(true);
+                RefreshClipboardItems();
+                //ShowLoadingIndicator(false);
+            }));
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -728,5 +741,19 @@ namespace EditClipboardContents
             }
 
         }
-    }
+        private void menuHelp_WhyTakingLong_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("In some cases, loading the clipboard may take longer than expected.\n\n" +
+                "The reason is that many apps use a clipboard feature called \"Delayed Rendering\" to " +
+                "optimize performance. With delayed rendering, apps don't actually copy data to the " +
+                "clipboard until another app requests it.\n\n" +
+                "When this app fetches the clipboard, it requests ALL of these delayed render formats for " +
+                "so you can view the contents, causing the original apps to generate and transfer the data on demand. " +
+                "This process can take time, especially for large amounts of data or complex formats.\n\n" +
+                "This is also why you usually never notice the delay when pasting data into another app.",
+                "Why is clipboard loading slow?", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+
+    } // ----------------------------- End of MainForm partial class -----------------------------
 }

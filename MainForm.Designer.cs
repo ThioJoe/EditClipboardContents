@@ -47,6 +47,7 @@
             this.menuOptions_CommaSeparation = new System.Windows.Forms.MenuItem();
             this.menuItemHelp = new System.Windows.Forms.MenuItem();
             this.menuHelp_About = new System.Windows.Forms.MenuItem();
+            this.menuHelp_WhyTakingLong = new System.Windows.Forms.MenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonRefresh = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
@@ -54,6 +55,7 @@
             this.toolStripButtonExportSelected = new System.Windows.Forms.ToolStripButton();
             this.richTextBoxContents = new System.Windows.Forms.RichTextBox();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
+            this.labelLoading = new System.Windows.Forms.Label();
             this.checkBoxAutoViewMode = new System.Windows.Forms.CheckBox();
             this.splitterContainer_InnerTextBoxes = new System.Windows.Forms.SplitContainer();
             this.checkBoxPlainTextEditing = new System.Windows.Forms.CheckBox();
@@ -63,7 +65,7 @@
             this.labelSynthesizedTypeWarn = new System.Windows.Forms.Label();
             this.buttonResetEdit = new System.Windows.Forms.Button();
             this.buttonApplyEdit = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
+            this.labelViewMode = new System.Windows.Forms.Label();
             this.dropdownContentsViewMode = new System.Windows.Forms.ComboBox();
             this.labelPendingChanges = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
@@ -289,7 +291,8 @@
             // 
             this.menuItemHelp.Index = 3;
             this.menuItemHelp.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-            this.menuHelp_About});
+            this.menuHelp_About,
+            this.menuHelp_WhyTakingLong});
             this.menuItemHelp.Text = "Help";
             // 
             // menuHelp_About
@@ -297,6 +300,12 @@
             this.menuHelp_About.Index = 0;
             this.menuHelp_About.Text = "About";
             this.menuHelp_About.Click += new System.EventHandler(this.menuHelp_About_Click);
+            // 
+            // menuHelp_WhyTakingLong
+            // 
+            this.menuHelp_WhyTakingLong.Index = 1;
+            this.menuHelp_WhyTakingLong.Text = "Why Is It Taking So Long?";
+            this.menuHelp_WhyTakingLong.Click += new System.EventHandler(this.menuHelp_WhyTakingLong_Click);
             // 
             // toolStrip1
             // 
@@ -382,6 +391,7 @@
             // 
             // splitContainerMain.Panel1
             // 
+            this.splitContainerMain.Panel1.Controls.Add(this.labelLoading);
             this.splitContainerMain.Panel1.Controls.Add(this.dataGridViewClipboard);
             // 
             // splitContainerMain.Panel2
@@ -391,7 +401,7 @@
             this.splitContainerMain.Panel2.Controls.Add(this.labelSynthesizedTypeWarn);
             this.splitContainerMain.Panel2.Controls.Add(this.buttonResetEdit);
             this.splitContainerMain.Panel2.Controls.Add(this.buttonApplyEdit);
-            this.splitContainerMain.Panel2.Controls.Add(this.label1);
+            this.splitContainerMain.Panel2.Controls.Add(this.labelViewMode);
             this.splitContainerMain.Panel2.Controls.Add(this.dropdownContentsViewMode);
             this.splitContainerMain.Size = new System.Drawing.Size(1548, 902);
             this.splitContainerMain.SplitterDistance = 418;
@@ -399,6 +409,21 @@
             this.splitContainerMain.TabIndex = 6;
             this.splitContainerMain.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainerMain_SplitterMoved);
             this.splitContainerMain.DoubleClick += new System.EventHandler(this.splitContainerMain_DoubleClick);
+            // 
+            // labelLoading
+            // 
+            this.labelLoading.AutoSize = true;
+            this.labelLoading.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.labelLoading.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelLoading.ForeColor = System.Drawing.SystemColors.ControlDark;
+            this.labelLoading.Location = new System.Drawing.Point(413, 170);
+            this.labelLoading.Name = "labelLoading";
+            this.labelLoading.Padding = new System.Windows.Forms.Padding(15);
+            this.labelLoading.Size = new System.Drawing.Size(721, 88);
+            this.labelLoading.TabIndex = 14;
+            this.labelLoading.Text = "Loading Data From Clipboard\r\nSometimes this can take a while (See \"Help\" dropdown" +
+    " for why)";
+            this.labelLoading.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // checkBoxAutoViewMode
             // 
@@ -439,7 +464,7 @@
             // 
             this.checkBoxPlainTextEditing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxPlainTextEditing.AutoSize = true;
-            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(23, 397);
+            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(-25, 397);
             this.checkBoxPlainTextEditing.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.checkBoxPlainTextEditing.Name = "checkBoxPlainTextEditing";
             this.checkBoxPlainTextEditing.Size = new System.Drawing.Size(148, 24);
@@ -462,7 +487,7 @@
             "UTF-32 BE",
             "Codepage 1252",
             "System Default"});
-            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(326, 392);
+            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(278, 392);
             this.dropdownHexToTextEncoding.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dropdownHexToTextEncoding.Name = "dropdownHexToTextEncoding";
             this.dropdownHexToTextEncoding.Size = new System.Drawing.Size(217, 28);
@@ -473,7 +498,7 @@
             // 
             this.labelHexToPlaintextEncoding.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelHexToPlaintextEncoding.AutoSize = true;
-            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(239, 398);
+            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(191, 398);
             this.labelHexToPlaintextEncoding.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelHexToPlaintextEncoding.Name = "labelHexToPlaintextEncoding";
             this.labelHexToPlaintextEncoding.Size = new System.Drawing.Size(80, 20);
@@ -535,16 +560,16 @@
             this.buttonApplyEdit.Visible = false;
             this.buttonApplyEdit.Click += new System.EventHandler(this.buttonApplyEdit_Click);
             // 
-            // label1
+            // labelViewMode
             // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(4, 5);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(116, 25);
-            this.label1.TabIndex = 8;
-            this.label1.Text = "View Mode:";
+            this.labelViewMode.AutoSize = true;
+            this.labelViewMode.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelViewMode.Location = new System.Drawing.Point(4, 5);
+            this.labelViewMode.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelViewMode.Name = "labelViewMode";
+            this.labelViewMode.Size = new System.Drawing.Size(116, 25);
+            this.labelViewMode.TabIndex = 8;
+            this.labelViewMode.Text = "View Mode:";
             // 
             // dropdownContentsViewMode
             // 
@@ -604,13 +629,15 @@
             this.Menu = this.mainMenu1;
             this.Name = "MainForm";
             this.Text = "Edit Clipboard Contents";
-            this.Load += new System.EventHandler(this.Form1_Load);
+            this.Load += new System.EventHandler(this.MainForm_Load);
+            this.Shown += new System.EventHandler(this.MainForm_Shown);
             this.Resize += new System.EventHandler(this.MainForm_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).EndInit();
             this.contextMenuStrip_dataGridView.ResumeLayout(false);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.splitContainerMain.Panel1.ResumeLayout(false);
+            this.splitContainerMain.Panel1.PerformLayout();
             this.splitContainerMain.Panel2.ResumeLayout(false);
             this.splitContainerMain.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).EndInit();
@@ -640,7 +667,7 @@
         private System.Windows.Forms.RichTextBox richTextBoxContents;
         private System.Windows.Forms.SplitContainer splitContainerMain;
         private System.Windows.Forms.ComboBox dropdownContentsViewMode;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label labelViewMode;
         private System.Windows.Forms.Label labelSynthesizedTypeWarn;
         private System.Windows.Forms.ToolStripButton toolStripButtonSaveEdited;
         private System.Windows.Forms.ToolStripButton toolStripButtonExportSelected;
@@ -674,5 +701,7 @@
         private System.Windows.Forms.MenuItem menuHelp_About;
         private System.Windows.Forms.Label labelVersion;
         private System.Windows.Forms.CheckBox checkBoxAutoViewMode;
+        private System.Windows.Forms.Label labelLoading;
+        private System.Windows.Forms.MenuItem menuHelp_WhyTakingLong;
     }
 }
