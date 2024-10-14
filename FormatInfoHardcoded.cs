@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using static EditClipboardContents.ClipboardFormats;
+using static System.Net.WebRequestMethods;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -48,7 +49,17 @@ namespace EditClipboardContents
             { "CLSID", "https://learn.microsoft.com/en-us/windows/win32/api/guiddef/ns-guiddef-guid" },
             { "CIDA", "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-cida" },
             { "ITEMIDLIST", "https://learn.microsoft.com/en-us/windows/win32/api/shtypes/ns-shtypes-itemidlist" },
-            { "SHITEMID", "https://learn.microsoft.com/en-us/windows/win32/api/shtypes/ns-shtypes-shitemid" }
+            { "SHITEMID", "https://learn.microsoft.com/en-us/windows/win32/api/shtypes/ns-shtypes-shitemid" },
+            { "METAHEADER", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-metaheader" },
+            { "ENHMETAHEADER", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-enhmetaheader" },
+            { "METARECORD", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-metarecord" },
+            { "ENHMETARECORD", "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-enhmetarecord" },
+            { "RECTL", "https://learn.microsoft.com/en-us/windows/win32/api/windef/ns-windef-rectl" },
+            { "META_PLACEABLE", "https://learn.microsoft.com/en-us/windows/win32/api/gdiplusmetaheader/ns-gdiplusmetaheader-wmfplaceablefileheader" },
+            { "PWMFRect16", "https://learn.microsoft.com/en-us/windows/win32/api/gdiplusmetaheader/ns-gdiplusmetaheader-pwmfrect16" },
+            { "MS-WMF", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/ba5458c6-e885-41e6-b5d7-d54ef9e1065f" },
+            { "MS-EMF" , "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/daaf9447-0c47-446e-b72e-ac6bd7a2e8f1"},
+            { "MetafileType", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/2d09c51e-062b-4d9b-94c4-6ffd0e12dfb6" }
         };
 
         // Dictionary for docs to non-standard registered formats other than structs

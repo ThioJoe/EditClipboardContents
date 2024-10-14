@@ -85,6 +85,19 @@ namespace EditClipboardContents
 
                 case "CF_METAFILEPICT": // 3
                     METAFILEPICT_OBJ metafilePictProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.METAFILEPICT_OBJ>(rawData);
+
+                    //byte[] rawDataMetafile = metafilePictProcessed.hMF;
+
+                    //METAFILE_OBJ metaFile = ClipboardFormats.BytesToObject<ClipboardFormats.METAFILE_OBJ>(rawDataMetafile);
+                    //METAHEADER_OBJ metaHeader = metaFile.METAHEADER;
+
+                    //int numBytesInHeader = metaHeader.mtHeaderSize * 2; // mtHeaderSize is in WORDs, so multiply by 2 to get bytes
+                    //// Create new byte array for the recordsBytes starting after the header
+                    //byte[] recordsBytes = new byte[rawDataMetafile.Length - numBytesInHeader];
+                    //Array.Copy(rawDataMetafile, numBytesInHeader, recordsBytes, 0, recordsBytes.Length);
+
+                    //METARECORD_OBJ metaRecords = ClipboardFormats.BytesToObject<ClipboardFormats.METARECORD_OBJ>(rawDataMetafile);
+
                     dataInfoList.Add($"Mode: {metafilePictProcessed.mm}");
 
                     processedObject = new ClipDataObject
@@ -154,6 +167,19 @@ namespace EditClipboardContents
                     dataInfoList.Add($"Byte Count: {rawData.Length}");
 
                     processedData = Encoding.Unicode.GetBytes(unicodeText);
+                    break;
+
+                case "CF_ENHMETAFILE": // 14
+                    ClipboardFormats.ENHMETAFILE_OBJ enhMetafile = ClipboardFormats.BytesToObject<ClipboardFormats.ENHMETAFILE_OBJ>(rawData);
+
+                    //byte[] rawDataEnhMetafile = enhMetafile.ENHMETARECORD;
+                    //ENHMETARECORD_OBJ enhMetaRecord = ClipboardFormats.BytesToObject<ClipboardFormats.ENHMETARECORD_OBJ>(rawDataEnhMetafile);
+
+                    processedObject = new ClipDataObject
+                    {
+                        ObjectData = enhMetafile
+                    };
+
                     break;
 
                 case "CF_HDROP": // 15 - CF_HDROP

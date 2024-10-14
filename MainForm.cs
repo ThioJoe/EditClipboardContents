@@ -194,11 +194,14 @@ namespace EditClipboardContents
             string textPreview = TryParseText(rawData, maxLength: 200, prefixEncodingType: false);
 
             // The first item will have selected important info, to ensure it's not too long. The rest will show in data box in object/struct view mode
-            string dataInfoString = dataInfo[0];
-
-            if (string.IsNullOrEmpty(dataInfoString))
+            string dataInfoString;
+            if (dataInfo.Count <= 0 || string.IsNullOrEmpty(dataInfo[0]))
             {
                 dataInfoString = "N/A";
+            }
+            else
+            {
+                dataInfoString = dataInfo[0];
             }
 
             // Manually handle certain known formats
@@ -223,7 +226,7 @@ namespace EditClipboardContents
                 }
 
                 // Set text color to gray for empty data info
-                if (column.Name == "DataInfo" && (string.IsNullOrEmpty(dataInfo[0]) || dataInfoString == "N/A" || dataInfoString.ToLower() == "[null]")) // Check for both N/A or null in case we add more reasons to set N/A later
+                if (column.Name == "DataInfo" && (dataInfo.Count <= 0 || string.IsNullOrEmpty(dataInfo[0]) || dataInfoString == "N/A" || dataInfoString.ToLower() == "[null]")) // Check for both N/A or null in case we add more reasons to set N/A later
                 {
                     // Make this cell in this column gray text
                     dataGridViewClipboard.Rows[dataGridViewClipboard.Rows.Count - 1].Cells[column.Name].Style.ForeColor = Color.Gray;
@@ -507,7 +510,6 @@ namespace EditClipboardContents
             int formatCount = NativeMethods.CountClipboardFormats();
             uint format = 0;
             int actuallyLoadableCount = 0;
-            int finishedLoadingCount = 0;
 
             while (true)
             {
