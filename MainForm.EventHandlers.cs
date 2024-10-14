@@ -386,7 +386,12 @@ namespace EditClipboardContents
                     dropdownContentsViewMode.SelectedIndex = 0; // Text
                 }
                 // If there is data object info, show object view mode. Also show if there are multiple data info entries or the first one isn't empty
-                else if (item.ClipDataObject != null || item.DataInfoList.Count > 1 || !(string.IsNullOrEmpty(item.DataInfoList[0])))
+                else if (
+                    item.ClipDataObject != null 
+                    || item.DataInfoList.Count > 1 
+                    || !(string.IsNullOrEmpty(item.DataInfoList[0]))
+                    || item.RawData.Length > 5000 // If data is enough to cause performance issues in hex view, show object view
+                    )
                 {
                     dropdownContentsViewMode.SelectedIndex = 3; // Object View
                 }
