@@ -624,6 +624,30 @@ namespace EditClipboardContents
             UpdateToolLocations();
         }
 
+        // If double click on the splitter bar, fit the datagridview to the available space (resets the splitter position to fit data grid)
+        private void splitContainerMain_DoubleClick(object sender, EventArgs e)
+        {
+            SplitContainer container = (SplitContainer)sender;
+            Point clickPoint = container.PointToClient(Cursor.Position);
+
+            // Define the area of the splitter
+            Rectangle splitterRect;
+            if (container.Orientation == Orientation.Vertical)
+            {
+                splitterRect = new Rectangle(container.SplitterDistance, 0, container.SplitterWidth, container.Height);
+            }
+            else
+            {
+                splitterRect = new Rectangle(0, container.SplitterDistance, container.Width, container.SplitterWidth);
+            }
+
+            if (splitterRect.Contains(clickPoint))
+            {
+                UpdateSplitterPosition_FitDataGrid(force: true);
+            }
+
+        }
+
         private void dropdownContentsViewMode_SelectedIndexChanged(object sender, EventArgs e)
         {
             // Indexes:

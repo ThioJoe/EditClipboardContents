@@ -1401,7 +1401,7 @@ namespace EditClipboardContents
             }
         }
 
-        private void UpdateSplitterPosition_FitDataGrid()
+        private void UpdateSplitterPosition_FitDataGrid(bool force = false)
         {
             DataGridView dgv = dataGridViewClipboard;
 
@@ -1409,11 +1409,19 @@ namespace EditClipboardContents
             // Row height doesn't include cell borders so add 1 pixel each to the height
             int newSize = dgv.Rows.GetRowsHeight(DataGridViewElementStates.Visible) + dgv.ColumnHeadersHeight + dgv.Rows.GetRowCount(DataGridViewElementStates.Visible);
 
-            int maxSize = (int)Math.Round((decimal)splitContainerMain.Height * (decimal)0.6);
+            int idealMaxSize = (int)Math.Round((decimal)splitContainerMain.Height * (decimal)0.6);
+            int trueMaxSize = splitContainerMain.Height - CompensateDPI(75);
             // Don't exceed 60% of the splitter panel
-            if (newSize > maxSize)
+            if (newSize > idealMaxSize)
             {
-                newSize = maxSize;
+                if (force == false)
+                {
+                    newSize = idealMaxSize;
+                }
+                else if (newSize > trueMaxSize)
+                {
+                    newSize = trueMaxSize;
+                }
             }
 
             splitContainerMain.SplitterDistance = newSize;
@@ -2100,8 +2108,7 @@ namespace EditClipboardContents
         }
 
 
-    }
-    // -----------------------------------------------------------------------------------------------------
+    } // ---------------------------------------------------------------------------------------------------
     // --------------------------------------- End of MainForm Class ---------------------------------------
     // -----------------------------------------------------------------------------------------------------
 
