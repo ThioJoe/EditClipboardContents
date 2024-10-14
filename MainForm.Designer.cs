@@ -397,7 +397,7 @@
             this.splitContainerMain.SplitterDistance = 418;
             this.splitContainerMain.SplitterWidth = 10;
             this.splitContainerMain.TabIndex = 6;
-            this.splitContainerMain.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer1_SplitterMoved);
+            this.splitContainerMain.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainerMain_SplitterMoved);
             // 
             // checkBoxAutoViewMode
             // 

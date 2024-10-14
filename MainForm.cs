@@ -46,6 +46,10 @@ namespace EditClipboardContents
         // Variables to store info about initial GUI state
         public int hexTextBoxTopBuffer { get; init; }
 
+        public int previousWindowHeight = 0;
+        public int previousSplitterDistance = 0;
+        public bool isResizing = false;
+
         // Get version number from assembly
         static readonly System.Version versionFull = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
         public readonly string versionString = $"{versionFull.Major}.{versionFull.Minor}.{versionFull.Build}";
@@ -97,6 +101,7 @@ namespace EditClipboardContents
             // Set the version number label
             labelVersion.Text = $"Version {versionString}";
 
+            previousWindowHeight = this.Height;
         }
 
         private int CompensateDPI(int originalValue)
@@ -356,16 +361,45 @@ namespace EditClipboardContents
         }
 
         //Function to fit processedData grid view to the form window
-        private void UpdateToolLocations()
+        private void UpdateToolLocations(WhichPanelResize splitAnchor = WhichPanelResize.None, int sizeDiff = 0)
         {
+            splitContainerMain.SplitterMoved -= new SplitterEventHandler(splitContainerMain_SplitterMoved);
             int titlebarAccomodate = CompensateDPI(40);
             int bottomBuffer = CompensateDPI(30); // Adjust this value to set the desired buffer size
-
             int splitterPanelsBottomPosition = this.Height - toolStrip1.Height - titlebarAccomodate;
+
+            //int splitDistancebeforeToolAdjust = splitContainerMain.SplitterDistance;
+            int splitDistancebeforeToolAdjust = previousSplitterDistance;
+
+            // Calculate difference between form height and splitter distance
+            int splitDistanceBottomBeforeToolAdjust = splitContainerMain.Height - splitDistancebeforeToolAdjust;
 
             // Resize splitContainerMain to fit the form
             splitContainerMain.Width = this.Width - CompensateDPI(32);
             splitContainerMain.Height = splitterPanelsBottomPosition - bottomBuffer;
+
+
+            // "Anchors" the splitter to prevent either top or bottom panel from resizing based on visibility of data grid view cells
+            // This only applies if the window is being resized, not if the splitter is being moved manually
+            if (splitAnchor != WhichPanelResize.None)
+            {
+                // Before setting SplitterDistance, ensure the value is valid
+                int maxSplitterDistance = splitContainerMain.Height - splitContainerMain.Panel2MinSize - CompensateDPI(150);
+                int minSplitterDistance = splitContainerMain.Panel1MinSize + CompensateDPI(150);
+
+                // Position splitter based on anchoring
+                if (splitAnchor == WhichPanelResize.Bottom)
+                {
+                    int desiredSplitterDistance = splitDistancebeforeToolAdjust;
+                    splitContainerMain.SplitterDistance = Math.Max(minSplitterDistance, Math.Min(desiredSplitterDistance, maxSplitterDistance));
+                }
+                else if (splitAnchor == WhichPanelResize.Top)
+                {
+                    int desiredSplitterDistance = splitContainerMain.Height - splitDistanceBottomBeforeToolAdjust;
+                    desiredSplitterDistance = Math.Max(minSplitterDistance, Math.Min(desiredSplitterDistance, maxSplitterDistance));
+                    splitContainerMain.SplitterDistance = desiredSplitterDistance;
+                }
+            } // End of anchoring
 
             // Resize splitterContainer_InnerTextBoxes to fit the form
             splitterContainer_InnerTextBoxes.Width = splitContainerMain.Width;
@@ -389,6 +423,8 @@ namespace EditClipboardContents
             dataGridViewClipboard.Width = splitContainerMain.Panel1.Width;
             dataGridViewClipboard.Height = splitContainerMain.Panel1.Height - CompensateDPI(3);
 
+            previousSplitterDistance = splitContainerMain.SplitterDistance;
+            splitContainerMain.SplitterMoved += new SplitterEventHandler(splitContainerMain_SplitterMoved);
         }
 
         private void RefreshClipboardItems()
@@ -442,7 +478,7 @@ namespace EditClipboardContents
             ProcessClipboardData();
             editedClipboardItems = clipboardItems.Select(item => (ClipboardItem)item.Clone()).ToList(); // Clone clipboardItems to editedClipboardItems
 
-            //Console.WriteLine("RefreshClipboardItems completed");
+            UpdateSplitterPosition_FitDataGrid();
         }
 
         private void CopyClipboardData()
@@ -525,12 +561,12 @@ namespace EditClipboardContents
                     {
                         errorString = $"[Error {error}]";
                     }
-                    
+
                 }
 
                 try
                 {
-                    // First need to speciall handle certain formats that don't use HGlobal
+                    // First need to specially handle certain formats that don't use HGlobal
                     switch (format)
                     {
                         case 2: // CF_BITMAP
@@ -560,7 +596,7 @@ namespace EditClipboardContents
                             rawData = FormatConverters.CF_HDROP_RawData_FromHandle(hData);
                             dataSize = (ulong)(rawData?.Length ?? 0);
                             break;
-                        
+
                         // All other formats that use Hglobal
                         default:
                             IntPtr pData = NativeMethods.GlobalLock(hData);
@@ -581,11 +617,11 @@ namespace EditClipboardContents
                                     NativeMethods.GlobalUnlock(hData);
                                 }
                             }
-                            else { 
+                            else {
                                 Console.WriteLine($"GlobalLock returned null for format {format}");
                             }
                             break;
-                        }
+                    }
 
                 }
                 catch (Exception ex)
@@ -1045,7 +1081,7 @@ namespace EditClipboardContents
                 // Disable plaintext box and related controls
                 richTextBox_HexPlaintext.Enabled = false;
                 checkBoxPlainTextEditing.Enabled = false;
-                dropdownHexToTextEncoding.Enabled = false; 
+                dropdownHexToTextEncoding.Enabled = false;
 
                 return;
             }
@@ -1158,7 +1194,7 @@ namespace EditClipboardContents
             }
             else if (dropdownHexToTextEncoding.SelectedIndex == 4) // UTF-32 Big Endian
             {
-                encodingToUse = Encoding.GetEncoding(12001); 
+                encodingToUse = Encoding.GetEncoding(12001);
             }
             else if (dropdownHexToTextEncoding.SelectedIndex == 5) // Windows-1252
             {
@@ -1292,7 +1328,7 @@ namespace EditClipboardContents
                 NativeMethods.EmptyClipboard();
                 foreach (var item in editedClipboardItems)
                 {
-                    if (formatsToExclude != null && formatsToExclude.Count !=0 && formatsToExclude.Contains(item.FormatId))
+                    if (formatsToExclude != null && formatsToExclude.Count != 0 && formatsToExclude.Contains(item.FormatId))
                     {
                         continue; // Skip this format if it's in the exclusion list
                     }
@@ -1350,7 +1386,7 @@ namespace EditClipboardContents
                 {
                     MessageBox.Show("Clipboard data saved successfully.");
                 }
-                
+
                 return true;
             }
             catch (Exception ex)
@@ -1363,6 +1399,24 @@ namespace EditClipboardContents
             {
                 NativeMethods.CloseClipboard();
             }
+        }
+
+        private void UpdateSplitterPosition_FitDataGrid()
+        {
+            DataGridView dgv = dataGridViewClipboard;
+
+            // Set the splitter distance to fit the datagridview total height of visible cells
+            // Row height doesn't include cell borders so add 1 pixel each to the height
+            int newSize = dgv.Rows.GetRowsHeight(DataGridViewElementStates.Visible) + dgv.ColumnHeadersHeight + dgv.Rows.GetRowCount(DataGridViewElementStates.Visible);
+
+            int maxSize = (int)Math.Round((decimal)splitContainerMain.Height * (decimal)0.6);
+            // Don't exceed 60% of the splitter panel
+            if (newSize > maxSize)
+            {
+                newSize = maxSize;
+            }
+
+            splitContainerMain.SplitterDistance = newSize;
         }
 
         private void UpdateEditControlsVisibility(ClipboardItem selectedItem = null, ClipboardItem selectedEditedItem = null)
@@ -2050,6 +2104,15 @@ namespace EditClipboardContents
     // -----------------------------------------------------------------------------------------------------
     // --------------------------------------- End of MainForm Class ---------------------------------------
     // -----------------------------------------------------------------------------------------------------
+
+    public enum WhichPanelResize
+    {
+        None,
+        Bottom,
+        Top
+    }
+
+    // ----------------------------------- Object Definitions---------------------------------------------------
 
     public class ClipDataObject
     {

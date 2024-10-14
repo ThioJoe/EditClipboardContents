@@ -438,7 +438,7 @@ namespace EditClipboardContents
                 int stride = ((width * bmi.bmiHeader.biBitCount + 31) / 32) * 4;
                 IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPINFOHEADER_OBJ)) + paletteSize);
 
-                if (bmi.bmiHeader.biHeight > 0) // Bottom-up DIB
+                if (bmi.bmiHeader.biHeight > 0) // Top-up DIB
                 {
                     scan0 = new IntPtr(scan0.ToInt64() + (height - 1) * stride);
                     stride = -stride;

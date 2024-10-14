@@ -42,10 +42,40 @@ namespace EditClipboardContents
 
         private void MainForm_Resize(object sender, EventArgs e)
         {
-            // Don't change tool locations if the window is minimized
-            if (this.WindowState != FormWindowState.Minimized)
+            if (isResizing) return; // Prevent re-entry
+            isResizing = true;
+
+            try
             {
-                UpdateToolLocations();
+                // Your existing code...
+                WhichPanelResize splitAnchor;
+                int maxSize = (int)Math.Round((decimal)splitContainerMain.Height * (decimal)0.6);
+
+                DataGridView dgv = dataGridViewClipboard;
+                int cellsTotalHeight = dgv.Rows.GetRowsHeight(DataGridViewElementStates.Visible);// + dgv.ColumnHeadersHeight + dgv.Rows.GetRowCount(DataGridViewElementStates.Visible);
+
+                if ((dataGridViewClipboard.DisplayedRowCount(includePartialRow: false)) >= dataGridViewClipboard.Rows.Count && cellsTotalHeight <= maxSize)
+                {
+                    splitAnchor = WhichPanelResize.Bottom;
+                }
+                else
+                {
+                    splitAnchor = WhichPanelResize.Top;
+                }
+
+                int sizeDiff = this.Height - previousWindowHeight;
+
+                if (this.WindowState != FormWindowState.Minimized)
+                {
+                    UpdateToolLocations(splitAnchor: splitAnchor, sizeDiff: sizeDiff);
+                }
+
+                previousWindowHeight = this.Height;
+                previousSplitterDistance = splitContainerMain.SplitterDistance;
+            }
+            finally
+            {
+                isResizing = false;
             }
         }
 
@@ -588,7 +618,7 @@ namespace EditClipboardContents
             }
         }
 
-        private void splitContainer1_SplitterMoved(object sender, SplitterEventArgs e)
+        private void splitContainerMain_SplitterMoved(object sender, SplitterEventArgs e)
         {
             // Resize processedData grid view to fit the form window
             UpdateToolLocations();
