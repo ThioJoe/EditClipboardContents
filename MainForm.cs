@@ -46,7 +46,9 @@ namespace EditClipboardContents
 
         // Variables to store info about initial GUI state
         public int hexTextBoxTopBuffer { get; init; }
+        public string defaultLoadingLabelText { get; init; }
 
+        // Store recent GUI states
         public int previousWindowHeight = 0;
         public int previousSplitterDistance = 0;
         public bool isResizing = false;
@@ -87,7 +89,10 @@ namespace EditClipboardContents
         public MainForm()
         {
             InitializeComponent();
+
+            // Set init only GUI state variables
             hexTextBoxTopBuffer = richTextBoxContents.Height - richTextBox_HexPlaintext.Height;
+            defaultLoadingLabelText = labelLoading.Text;
 
             InitializeDataGridView();
             UpdateToolLocations();
@@ -501,7 +506,8 @@ namespace EditClipboardContents
             editedClipboardItems.Clear();
             int formatCount = NativeMethods.CountClipboardFormats();
             uint format = 0;
-            int currentCount = 0;
+            int actuallyLoadableCount = 0;
+            int finishedLoadingCount = 0;
 
             while (true)
             {
@@ -522,7 +528,12 @@ namespace EditClipboardContents
                     }
                 }
 
-                currentCount++;
+                actuallyLoadableCount++; // Only increments if the format is successfully enumerated. Not if it reached end, or there was an error
+
+                // Update label to show progress
+                labelLoading.Text = $"{defaultLoadingLabelText}\n\n" + $"Loading: {actuallyLoadableCount} of {formatCount}...";
+                // Update the form to show the new label
+                this.Update();
 
                 // -------- Start / Continue Enumeration ------------
 
@@ -532,9 +543,9 @@ namespace EditClipboardContents
                 int? error; // Initializes as null anyway
                 string errorString = null;
                 string diagnosisReport = null;
-                int originalIndex = currentCount - 1;
+                int originalIndex = actuallyLoadableCount - 1;
 
-                //Console.WriteLine($"Checking Format {currentCount}: {formatName} ({format})"); // Debugging
+                //Console.WriteLine($"Checking Format {actuallyLoadableCount}: {formatName} ({format})"); // Debugging
 
                 IntPtr hData = NativeMethods.GetClipboardData(format);
                 if (hData == IntPtr.Zero)
@@ -656,8 +667,8 @@ namespace EditClipboardContents
                 };
                 clipboardItems.Add(item);
             }
-            //Console.WriteLine($"Checked {currentCount} formats out of {formatCount} reported formats.");
-            if (currentCount < formatCount)
+            //Console.WriteLine($"Checked {actuallyLoadableCount} formats out of {formatCount} reported formats.");
+            if (actuallyLoadableCount < formatCount)
             {
                 Console.WriteLine("Warning: Not all reported formats were enumerated.");
             }
