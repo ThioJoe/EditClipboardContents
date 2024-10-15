@@ -355,7 +355,7 @@ namespace EditClipboardContents
                 {
                     case 8:
                         pixelFormat = PixelFormat.Format8bppIndexed;
-                        paletteSize = 256 * Marshal.SizeOf(typeof(RGBQUAD_OBJ));
+                        paletteSize = 256 * Marshal.SizeOf(typeof(RGBQUAD));
                         break;
                     case 24:
                         pixelFormat = PixelFormat.Format24bppRgb;
@@ -369,7 +369,7 @@ namespace EditClipboardContents
 
                 int stride = ((width * bmi.bV5BitCount + 31) / 32) * 4;
                 bool isTopDown = bmi.bV5Height < 0;
-                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPV5HEADER)) + paletteSize);
+                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + bmi.bV5Size + paletteSize);
 
                 if (!isTopDown)
                 {
@@ -382,11 +382,11 @@ namespace EditClipboardContents
                 if (pixelFormat == PixelFormat.Format8bppIndexed)
                 {
                     ColorPalette palette = bitmap.Palette;
-                    IntPtr palettePtr = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + headerSize);
+                    IntPtr palettePtr = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + bmi.bV5Size);
 
                     for (int i = 0; i < 256; i++)
                     {
-                        RGBQUAD_OBJ colorQuad = (RGBQUAD_OBJ)Marshal.PtrToStructure(new IntPtr(palettePtr.ToInt64() + i * Marshal.SizeOf(typeof(RGBQUAD_OBJ))), typeof(RGBQUAD_OBJ));
+                        RGBQUAD colorQuad = (RGBQUAD)Marshal.PtrToStructure(new IntPtr(palettePtr.ToInt64() + i * Marshal.SizeOf(typeof(RGBQUAD))), typeof(RGBQUAD));
                         palette.Entries[i] = Color.FromArgb(colorQuad.rgbRed, colorQuad.rgbGreen, colorQuad.rgbBlue);
                     }
 
@@ -423,7 +423,7 @@ namespace EditClipboardContents
                 {
                     case 8:
                         pixelFormat = PixelFormat.Format8bppIndexed;
-                        paletteSize = 256 * Marshal.SizeOf(typeof(RGBQUAD_OBJ));
+                        paletteSize = 256 * Marshal.SizeOf(typeof(RGBQUAD));
                         break;
                     case 24:
                         pixelFormat = PixelFormat.Format24bppRgb;
@@ -436,7 +436,7 @@ namespace EditClipboardContents
                 }
 
                 int stride = ((width * bmi.bmiHeader.biBitCount + 31) / 32) * 4;
-                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPINFOHEADER_OBJ)) + paletteSize);
+                IntPtr scan0 = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPINFOHEADER)) + paletteSize);
 
                 if (bmi.bmiHeader.biHeight > 0) // Top-up DIB
                 {
@@ -449,11 +449,11 @@ namespace EditClipboardContents
                 if (pixelFormat == PixelFormat.Format8bppIndexed)
                 {
                     ColorPalette palette = bitmap.Palette;
-                    IntPtr palettePtr = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPINFOHEADER_OBJ)));
+                    IntPtr palettePtr = new IntPtr(handle.AddrOfPinnedObject().ToInt64() + Marshal.SizeOf(typeof(BITMAPINFOHEADER)));
 
                     for (int i = 0; i < 256; i++)
                     {
-                        RGBQUAD_OBJ colorQuad = (RGBQUAD_OBJ)Marshal.PtrToStructure(new IntPtr(palettePtr.ToInt64() + i * Marshal.SizeOf(typeof(RGBQUAD_OBJ))), typeof(RGBQUAD_OBJ));
+                        RGBQUAD colorQuad = (RGBQUAD)Marshal.PtrToStructure(new IntPtr(palettePtr.ToInt64() + i * Marshal.SizeOf(typeof(RGBQUAD))), typeof(RGBQUAD));
                         palette.Entries[i] = Color.FromArgb(colorQuad.rgbRed, colorQuad.rgbGreen, colorQuad.rgbBlue);
                     }
 
