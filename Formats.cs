@@ -39,6 +39,7 @@ namespace EditClipboardContents
     using LPVOID = System.IntPtr;       // Handle to any type
     using HMETAFILE = System.IntPtr;    // Handle to metafile
     using CHAR = System.Byte;           // 1 Byte
+    using WCHAR = System.Char;        // 2 Bytes
     using USHORT = System.UInt16;       // 2 Bytes
     using UINT32 = System.UInt32;       // 4 Bytes
     using INT16 = System.Int16;         // 2 Bytes
@@ -57,6 +58,7 @@ namespace EditClipboardContents
             string GetCacheStructObjectDisplayInfo();
             IEnumerable<(string Name, object Value, Type Type, int? ArraySize)> EnumerateProperties(bool getValues = false);
             bool FillEmptyArrayWithRemainingBytes();
+            int MaxStringLength();
         }
 
         public abstract class ClipboardFormatBase : IClipboardFormat
@@ -66,6 +68,9 @@ namespace EditClipboardContents
 
             // Public method to access the struct name
             public string StructName() => GetStructName();
+
+            // MaxStringLength method
+            public virtual int MaxStringLength() => 0;
 
             // Private field to store the cached struct display info
             private string _cachedStructDisplayInfo;
@@ -165,6 +170,16 @@ namespace EditClipboardContents
             return new T().PropertiesNoProcess();
         }
 
+        public static bool FillEmptyArrayWithRemainingBytes<T>() where T : IClipboardFormat, new()
+        {
+            return new T().FillEmptyArrayWithRemainingBytes();
+        }
+
+        public static int MaxStringLength<T>() where T : IClipboardFormat, new()
+        {
+            return new T().MaxStringLength();
+        }
+
         public class BITMAP_OBJ : ClipboardFormatBase
         {
             public LONG bmType { get; set; }
@@ -195,7 +210,7 @@ namespace EditClipboardContents
             public DWORD bV5GreenMask { get; set; }
             public DWORD bV5BlueMask { get; set; }
             public DWORD bV5AlphaMask { get; set; }
-            public LOGCOLORSPACEA_OBJ bV5CSType { get; set; }
+            public LOGCOLORSPACEW_OBJ bV5CSType { get; set; }
             public CIEXYZTRIPLE_OBJ bV5Endpoints { get; set; }
             public DWORD bV5GammaRed { get; set; }
             public DWORD bV5GammaGreen { get; set; }
@@ -354,7 +369,7 @@ namespace EditClipboardContents
             }
         }
 
-        public class LOGCOLORSPACEA_OBJ : ClipboardFormatBase
+        public class LOGCOLORSPACEW_OBJ : ClipboardFormatBase
         {
             public DWORD lcsSignature { get; set; }
             public DWORD lcsVersion { get; set; }
@@ -367,11 +382,8 @@ namespace EditClipboardContents
             public DWORD lcsGammaBlue { get; set; }
             public string lcsFilename { get; set; }
 
-            protected override string GetStructName() => "LOGCOLORSPACEA";
-            public static int MaxStringLength()
-            {
-                return 260;
-            }
+            protected override string GetStructName() => "LOGCOLORSPACEW";
+            public override int MaxStringLength() => MAX_PATH;
         }
 
 
@@ -402,10 +414,7 @@ namespace EditClipboardContents
             {
                 return 4 + 16 + 8 + 8 + 4 + 8 + 8 + 8 + 4 + 4;
             }
-            public static int MaxStringLength()
-            {
-                return 260;
-            }
+            public override int MaxStringLength() => MAX_PATH;
 
             protected override string GetStructName() => "FILEDESCRIPTORW";
 
@@ -1035,7 +1044,7 @@ namespace EditClipboardContents
             public DWORD bV5GreenMask;
             public DWORD bV5BlueMask;
             public DWORD bV5AlphaMask;
-            public LOGCOLORSPACEA bV5CSType;
+            public LOGCOLORSPACEW bV5CSType;
             public CIEXYZTRIPLE bV5Endpoints;
             public DWORD bV5GammaRed;
             public DWORD bV5GammaGreen;
@@ -1140,7 +1149,7 @@ namespace EditClipboardContents
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct LOGCOLORSPACEA
+        public struct LOGCOLORSPACEW
         {
             public DWORD lcsSignature;
             public DWORD lcsVersion;
@@ -1151,8 +1160,8 @@ namespace EditClipboardContents
             public DWORD lcsGammaRed;
             public DWORD lcsGammaGreen;
             public DWORD lcsGammaBlue;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 260)]
-            public CHAR[] lcsFilename;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = MAX_PATH)]
+            public WCHAR[] lcsFilename;
         }
 
         // --------------------------------------------------- Helper methods ---------------------------------------------------
@@ -1268,29 +1277,41 @@ namespace EditClipboardContents
                 if (remainingBytes <= 0)
                     throw new ArgumentException("Not enough data to read string");
 
-                int maxStringLength = MAX_PATH;
+                // The 'max' string length often is a fixed size property. It means the max size that it can store, not the actual size of the string.
+                int maxStringLength;
 
-                // Try to get MaxStringLength from the declaring type of the calling method
-                if (callingClass != null)
+                if (collectionSize > 0)
                 {
-                    var declaringType = callingClass.DeclaringType;
-                    var maxStringLengthMethod = declaringType?.GetMethod("MaxStringLength", BindingFlags.Public | BindingFlags.Static);
-                    if (maxStringLengthMethod != null)
-                    {
-                        maxStringLength = (int)maxStringLengthMethod.Invoke(null, null);
-                    }
+                    maxStringLength = collectionSize;
+                }
+                else if (Activator.CreateInstance(callingClass) is IClipboardFormat stringParentType)
+                {
+                    maxStringLength = stringParentType.MaxStringLength();
+                }
+                else
+                {
+                    maxStringLength = 0;
                 }
 
-                string value = Encoding.Unicode.GetString(data, offset, Math.Min(maxStringLength * 2, remainingBytes));
+                // Get the bytes for the string
+                int byteLength = Math.Min(maxStringLength * 2, remainingBytes);
+                byte[] stringBytes = new byte[byteLength];
+                Array.Copy(data, offset, stringBytes, 0, byteLength);
+
+                // Assuming UTF-16 Unicode encoding as standard for C# and Windows
+                string value = Encoding.Unicode.GetString(stringBytes);
                 int terminatorIndex = value.IndexOf('\0');
 
                 // Only return the string up to the null terminator.
                 value = terminatorIndex >= 0 ? value.Substring(0, terminatorIndex) : value;
                 // Decode to UTF-8 to remove any null characters in between the string, then remove any remaining null characters
+                // Probably really roundabout way to do this but whatever for now
                 value = Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(value));
                 value = value.Replace("\0", "");
 
-                offset += maxStringLength * 2; // Still increment till the end of the allocated space
+                //string hexStringVersion = BitConverter.ToString(stringBytes).Replace("-", " ");
+
+                offset += byteLength; // Still increment till the end of the allocated space
                 return value;
             }
             // For arrays
@@ -1392,7 +1413,7 @@ namespace EditClipboardContents
                             }
                         }
 
-                        object value = ReadValue(typeToUse, data, ref offset, collectionSize: collectionSizeToPassIn);
+                        object value = ReadValue(typeToUse, data, ref offset, callingClass: type, collectionSize: collectionSizeToPassIn);
                         type.GetProperty(propertyName).SetValue(obj, value);
                         remainingBytes = data.Length - offset;
                     }
