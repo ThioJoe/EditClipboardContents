@@ -470,6 +470,38 @@ namespace EditClipboardContents
             }
         }
 
+        public static byte[] DIBits_From_HBitmap(IntPtr hBitmap)
+        {
+            BITMAPINFO bmi = new BITMAPINFO();
+            bmi.bmiHeader.biSize = (uint)Marshal.SizeOf(typeof(BITMAPINFOHEADER));
+
+            IntPtr hDC = NativeMethods.CreateCompatibleDC(IntPtr.Zero);
+            IntPtr hOldBitmap = NativeMethods.SelectObject(hDC, hBitmap);
+
+            try
+            {
+                // Get the bitmap information
+                NativeMethods.GetDIBits(hDC, hBitmap, 0, 0, null, ref bmi, (uint)ColorUsage.DIB_RGB_COLORS);
+
+                // Allocate the buffer for the bits
+                int imageSize = (int)bmi.bmiHeader.biSizeImage;
+                byte[] bits = new byte[imageSize];
+
+                // Get the actual bitmap data
+                if (NativeMethods.GetDIBits(hDC, hBitmap, 0, (uint)bmi.bmiHeader.biHeight, bits, ref bmi, (uint)ColorUsage.DIB_RGB_COLORS) == 0)
+                {
+                    throw new Exception("Failed to get the bitmap bits.");
+                }
+
+                return bits;
+            }
+            finally
+            {
+                NativeMethods.SelectObject(hDC, hOldBitmap);
+                NativeMethods.DeleteDC(hDC);
+            }
+        }
+
         public static byte[] CF_PALETTE_RawData_FromHandle(IntPtr hPalette)
         {
             if (hPalette == IntPtr.Zero)

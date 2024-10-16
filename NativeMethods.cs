@@ -13,6 +13,7 @@ using System.Text;
 
 // My classes
 using EditClipboardContents;
+using static EditClipboardContents.ClipboardFormats;
 
 
 namespace EditClipboardContents
@@ -115,6 +116,10 @@ namespace EditClipboardContents
         [DllImport("gdi32.dll")]
         public static extern IntPtr CreatePalette([In] ref ClipboardFormats.LOGPALETTE lplgpl);
 
+        [DllImport("gdi32.dll")]
+        public static extern int GetDIBits(IntPtr hdc, IntPtr hbmp, uint uStartScan, uint cScanLines,
+        [Out] byte[] lpvBits, ref BITMAPINFO lpbi, uint uUsage);
+
         // ------------------------- Related to Diagnostics ---------------------------
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool IsClipboardFormatAvailable(uint format);
@@ -154,12 +159,20 @@ namespace EditClipboardContents
             int nSize,
             IntPtr Arguments
         );
-
         // -----------------------------------------------------------------------------
 
-        public const uint GMEM_MOVEABLE = 0x0002;
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam); // Sending window messages like WM_RENDERFORMAT
 
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+
+        // Constants
+        public const uint GMEM_MOVEABLE = 0x0002;
         public const uint GMEM_ZEROINIT = 0x0040;
+        public const int WM_RENDERFORMAT = 0x0305;
+        public const int WM_RENDERALLFORMATS = 0x0306;
     }
 
 }

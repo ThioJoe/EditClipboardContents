@@ -43,6 +43,7 @@ namespace EditClipboardContents
     using USHORT = System.UInt16;       // 2 Bytes
     using UINT32 = System.UInt32;       // 4 Bytes
     using INT16 = System.Int16;         // 2 Bytes
+    using UINT = System.UInt32;         // 4 Bytes
     using static System.Net.WebRequestMethods;
 
 
@@ -1008,6 +1009,13 @@ namespace EditClipboardContents
             EMR_SETTEXTJUSTIFICATION = 0x00000078,
             EMR_COLORMATCHTOTARGETW = 0x00000079,
             EMR_CREATECOLORSPACEW = 0x0000007A
+        }
+
+        public enum ColorUsage : UINT
+        {
+            DIB_RGB_COLORS = 0x0000,
+            DIB_PAL_COLORS = 0x0001,
+            DIB_PAL_INDICES = 0x0002
         }
 
         // --------------------------------------------------------------------------------------------------------------------------

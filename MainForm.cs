@@ -510,6 +510,7 @@ namespace EditClipboardContents
             int formatCount = NativeMethods.CountClipboardFormats();
             uint format = 0;
             int actuallyLoadableCount = 0;
+            List<uint> formatsToRetry = new List<uint>();
 
             while (true)
             {
@@ -538,123 +539,192 @@ namespace EditClipboardContents
                 this.Update();
 
                 // -------- Start / Continue Enumeration ------------
-
-                string formatName = GetClipboardFormatName(format);
-                ulong dataSize = 0;
-                byte[] rawData = null;
-                int? error; // Initializes as null anyway
-                string errorString = null;
-                string diagnosisReport = null;
-                int originalIndex = actuallyLoadableCount - 1;
-
-                //Console.WriteLine($"Checking Format {actuallyLoadableCount}: {formatName} ({format})"); // Debugging
-
-                IntPtr hData = NativeMethods.GetClipboardData(format);
-                if (hData == IntPtr.Zero)
+                bool successResutl = CopyIndividualClipboardFormat(format: format, loadedFormatCount: actuallyLoadableCount);
+                if (!successResutl)
                 {
-                    error = Marshal.GetLastWin32Error();
-                    string errorMessage = GetWin32ErrorMessage(error);
-
-                    Console.WriteLine($"GetClipboardData returned null for format {format}. Error: {error} | Message: {errorMessage}");
-
-                    if (!string.IsNullOrEmpty(formatName))
-                    {
-                        diagnosisReport = (DiagnoseClipboardState(format, formatName));
-                    }
-                    else
-                    {
-                        diagnosisReport = DiagnoseClipboardState(format);
-                    }
-
-                    if (!string.IsNullOrEmpty(diagnosisReport))
-                    {
-                        //Console.WriteLine(diagnosisReport);
-                    }
-
-
-                    if (error == null)
-                    {
-                        errorString = "[Unknown Error]";
-                    }
-                    else if (error == 5)
-                    {
-                        errorString = "[Error : Access Denied]";
-                    }
-                    else if (error == 0)
-                    {
-                        errorString = null;
-                    }
-                    else
-                    {
-                        errorString = $"[Error {error}]";
-                    }
-
+                    formatsToRetry.Add(format);
                 }
 
+            }
+            //Console.WriteLine($"Checked {actuallyLoadableCount} formats out of {formatCount} reported formats.");
+            if (actuallyLoadableCount < formatCount)
+            {
+                Console.WriteLine("Warning: Not all reported formats were enumerated.");
+            }
+
+            // Retry any formats that failed
+            foreach (uint formatId in formatsToRetry)
+            {
+                RetryCopyClipboardFormat(formatId);
+            }
+
+        }
+
+        private void RetryCopyClipboardFormat(uint formatId)
+        {
+            bool successResult = false;
+            // First open the clipboard
+            if (NativeMethods.OpenClipboard(this.Handle))
+            {
+                ClipboardItem item;
                 try
                 {
-                    // First need to specially handle certain formats that don't use HGlobal
-                    switch (format)
-                    {
-                        case 2: // CF_BITMAP
-                            using (Bitmap bitmap = Image.FromHbitmap(hData))
-                            {
-                                using (MemoryStream ms = new MemoryStream())
-                                {
-                                    bitmap.Save(ms, ImageFormat.Bmp);
-                                    rawData = ms.ToArray();
-                                    dataSize = (ulong)rawData.Length;
-                                }
-                            }
-                            break;
-                        case 3: // CF_METAFILEPICT
-                            rawData = FormatConverters.MetafilePict_RawData_FromHandle(hData);
-                            dataSize = (ulong)(rawData?.Length ?? 0);
-                            break;
-                        case 9: // CF_PALETTE -- NOT YET HANDLED
-                            rawData = FormatConverters.CF_PALETTE_RawData_FromHandle(hData);
-                            dataSize = (ulong)(rawData?.Length ?? 0);
-                            break;
-                        case 14: // CF_ENHMETAFILE
-                            rawData = FormatConverters.EnhMetafile_RawData_FromHandle(hData);
-                            dataSize = (ulong)(rawData?.Length ?? 0);
-                            break;
-                        case 15: // CF_HDROP
-                            rawData = FormatConverters.CF_HDROP_RawData_FromHandle(hData);
-                            dataSize = (ulong)(rawData?.Length ?? 0);
-                            break;
-
-                        // All other formats that use Hglobal
-                        default:
-                            IntPtr pData = NativeMethods.GlobalLock(hData);
-                            if (pData != IntPtr.Zero)
-                            {
-                                try
-                                {
-                                    dataSize = (ulong)NativeMethods.GlobalSize(hData).ToUInt64();
-                                    rawData = new byte[dataSize];
-                                    Marshal.Copy(pData, rawData, 0, (int)dataSize);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Error processing format {format}: {ex.Message}");
-                                }
-                                finally
-                                {
-                                    NativeMethods.GlobalUnlock(hData);
-                                }
-                            }
-                            else {
-                                Console.WriteLine($"GlobalLock returned null for format {format}");
-                            }
-                            break;
-                    }
-
+                    CopyIndividualClipboardFormat(formatId, retryMode: true);
                 }
-                catch (Exception ex)
+                finally
                 {
-                    Console.WriteLine($"Error processing format {format}: {ex.Message}");
+                    NativeMethods.CloseClipboard();
+                    // Wait a short time
+                    System.Threading.Thread.Sleep(25);
                 }
+
+                // If the clipboard item is still null, it might be delayed render. Send request to the application to render the data
+                item = clipboardItems.FirstOrDefault(item => item.FormatId == formatId);
+                if (item == null || item.RawData == null)
+                {
+                    // Send a delayed rendering request to the application. The window handle should be available in the diagnostics report
+                    IntPtr windowHandle = item.ErrorDiagnosisReport.OwnerWindowHandle;
+
+                    bool result = RequestDelayedRendering(windowHandle, formatId);
+
+                    if (result == true)
+                    {
+                        // If the delayed rendering was successful, retry the format
+                        try
+                        {
+                            NativeMethods.OpenClipboard(this.Handle);
+                            successResult = CopyIndividualClipboardFormat(formatId, retryMode: true);
+                        }
+                        finally
+                        {
+                            NativeMethods.CloseClipboard();
+                        }
+                    }
+                }
+            }
+        }
+
+        private bool CopyIndividualClipboardFormat(uint format, int loadedFormatCount = -1, bool retryMode = false)
+        {
+            string formatName = GetClipboardFormatName(format);
+            ulong dataSize = 0;
+            byte[] rawData = null;
+            int? error; // Initializes as null anyway
+            string errorString = null;
+            DiagnosticsInfo diagnosisReport = null;
+            int originalIndex = loadedFormatCount - 1; // Stored for reference of clipboard order. If loadCount is -1, it means it's a retry
+            bool copySuccess = true;
+
+            //Console.WriteLine($"Checking Format {actuallyLoadableCount}: {formatName} ({format})"); // Debugging
+
+            IntPtr hData = NativeMethods.GetClipboardData(format);
+            if (hData == IntPtr.Zero)
+            {
+                copySuccess = false;
+                error = Marshal.GetLastWin32Error();
+                string errorMessage = GetWin32ErrorMessage(error);
+
+                Console.WriteLine($"GetClipboardData returned null for format {format}. Error: {error} | Message: {errorMessage}");
+
+                if (!string.IsNullOrEmpty(formatName))
+                {
+                    diagnosisReport = (DiagnoseClipboardState(format, formatName));
+                }
+                else
+                {
+                    diagnosisReport = DiagnoseClipboardState(format);
+                }
+
+                if (error == null)
+                {
+                    errorString = "[Unknown Error]";
+                }
+                else if (error == 5)
+                {
+                    errorString = "[Error : Access Denied]";
+                }
+                else if (error == 0)
+                {
+                    errorString = null;
+                }
+                else
+                {
+                    errorString = $"[Error {error}]";
+                }
+
+            }
+
+            try
+            {
+                // First need to specially handle certain formats that don't use HGlobal
+                switch (format)
+                {
+                    case 2: // CF_BITMAP
+                        // Test getting raw data using GetDIBits
+                        //byte[] rawImageBitsOnly = FormatConverters.DIBits_From_HBitmap(hData);
+                        //string byteStringHex = BitConverter.ToString(rawImageBitsOnly).Replace("-", " ");
+
+                        using (Bitmap bitmap = Image.FromHbitmap(hData))
+                        {
+                            using (MemoryStream ms = new MemoryStream())
+                            {
+                                bitmap.Save(ms, ImageFormat.Bmp);
+                                rawData = ms.ToArray();
+                                dataSize = (ulong)rawData.Length;
+                            }
+                        }
+                        break;
+                    case 3: // CF_METAFILEPICT
+                        rawData = FormatConverters.MetafilePict_RawData_FromHandle(hData);
+                        dataSize = (ulong)(rawData?.Length ?? 0);
+                        break;
+                    case 9: // CF_PALETTE -- NOT YET HANDLED
+                        rawData = FormatConverters.CF_PALETTE_RawData_FromHandle(hData);
+                        dataSize = (ulong)(rawData?.Length ?? 0);
+                        break;
+                    case 14: // CF_ENHMETAFILE
+                        rawData = FormatConverters.EnhMetafile_RawData_FromHandle(hData);
+                        dataSize = (ulong)(rawData?.Length ?? 0);
+                        break;
+                    case 15: // CF_HDROP
+                        rawData = FormatConverters.CF_HDROP_RawData_FromHandle(hData);
+                        dataSize = (ulong)(rawData?.Length ?? 0);
+                        break;
+
+                    // All other formats that use Hglobal
+                    default:
+                        IntPtr pData = NativeMethods.GlobalLock(hData);
+                        if (pData != IntPtr.Zero)
+                        {
+                            try
+                            {
+                                dataSize = (ulong)NativeMethods.GlobalSize(hData).ToUInt64();
+                                rawData = new byte[dataSize];
+                                Marshal.Copy(pData, rawData, 0, (int)dataSize);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Error processing format {format}: {ex.Message}");
+                            }
+                            finally
+                            {
+                                NativeMethods.GlobalUnlock(hData);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"GlobalLock returned null for format {format}");
+                        }
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error processing format {format}: {ex.Message}");
+                copySuccess = false;
+            }
+            if (retryMode == false)
+            {
                 var item = new ClipboardItem
                 {
                     FormatName = formatName,
@@ -669,11 +739,47 @@ namespace EditClipboardContents
                 };
                 clipboardItems.Add(item);
             }
-            //Console.WriteLine($"Checked {actuallyLoadableCount} formats out of {formatCount} reported formats.");
-            if (actuallyLoadableCount < formatCount)
+            else
             {
-                Console.WriteLine("Warning: Not all reported formats were enumerated.");
+                // If the retry was a success, update the existing item
+                // Find the item in the list
+                var item = clipboardItems.FirstOrDefault(item => item.FormatId == format);
+                if (item != null)
+                {
+                    item.RawData = rawData;
+                    item.DataSize = dataSize;
+                    item.ErrorReason = errorString;
+                    item.ErrorDiagnosisReport = diagnosisReport;
+                }
             }
+
+            return copySuccess;
+        } // End of CopyIndividualClipboardFormat
+
+        public static bool RequestDelayedRendering(IntPtr windowHandle, uint format)
+        {
+            IntPtr hWnd = windowHandle;
+            //IntPtr hWnd = NativeMethods.FindWindow(null, windowName);
+
+            if (hWnd == IntPtr.Zero)
+            {
+                throw new Exception("Window not found");
+            }
+
+            IntPtr result = NativeMethods.SendMessage(hWnd, NativeMethods.WM_RENDERFORMAT, (IntPtr)format, IntPtr.Zero);
+
+            // Wait a bit for the application to process the message. The user can always manually refresh if it doesn't work
+            System.Threading.Thread.Sleep(50);
+
+            // Check if the application is still processing
+            if (result == IntPtr.Zero)
+            {
+                // The application is still processing
+                return false;
+            }
+
+            // The application has completed processing
+            return true;
         }
 
         public static string GetWin32ErrorMessage(int? inputError)
@@ -788,26 +894,28 @@ namespace EditClipboardContents
             }
         }
 
-        public static string DiagnoseClipboardState(uint format, string formatName = "")
+        public static DiagnosticsInfo DiagnoseClipboardState(uint format, string formatName = "")
         {
-            StringBuilder diagnosis = new StringBuilder();
+            DiagnosticsInfo diagnostics = new DiagnosticsInfo();
+            StringBuilder diagnosisString = new StringBuilder();
             int currentError;
             NativeMethods.SetLastErrorEx(0, 0); // Clear last error
 
-            diagnosis.AppendLine("------------------------------------------------------");
+            diagnosisString.AppendLine("------------------------------------------------------");
 
             if (!string.IsNullOrEmpty(formatName))
             {
-                diagnosis.AppendLine($"Diagnosing clipboard state for format: {formatName} ({format})");
+                diagnosisString.AppendLine($"Diagnosing clipboard state for format: {formatName} ({format})");
             }
             else
             {
-                diagnosis.AppendLine($"Diagnosing clipboard state for format: {format}");
+                diagnosisString.AppendLine($"Diagnosing clipboard state for format: {format}");
             }
 
             // Check if the format is available
             bool isFormatAvailable = NativeMethods.IsClipboardFormatAvailable(format);
-            diagnosis.AppendLine($"Is format available: {isFormatAvailable}");
+            diagnosisString.AppendLine($"Is format available: {isFormatAvailable}");
+            diagnostics.IsFormatAvailable = isFormatAvailable;
 
             // Clipboard should already be opened by the caller
 
@@ -821,37 +929,41 @@ namespace EditClipboardContents
             {
                 // Get clipboard owner
                 IntPtr hOwner = NativeMethods.GetClipboardOwner();
-                diagnosis.AppendLine($"Clipboard owner handle: 0x{hOwner.ToInt64():X}");
+                diagnosisString.AppendLine($"Clipboard owner handle: 0x{hOwner.ToInt64():X}");
+                diagnostics.OwnerHandle = hOwner;
 
                 if (hOwner != IntPtr.Zero)
                 {
                     StringBuilder className = new StringBuilder(256);
                     NativeMethods.GetClassName(hOwner, className, className.Capacity);
-                    diagnosis.AppendLine($"Clipboard owner class: {className}");
+                    diagnosisString.AppendLine($"Clipboard owner class: {className}");
                     currentError = Marshal.GetLastWin32Error();
+                    diagnostics.WindowClass = className.ToString();
                     if (currentError != 0)
                     {
-                        diagnosis.AppendLine($"GetClassName failed. Error: {currentError} | {ErrMsg(currentError)}");
+                        diagnosisString.AppendLine($"GetClassName failed. Error: {currentError} | {ErrMsg(currentError)}");
                     }
                     NativeMethods.SetLastErrorEx(0, 0); // Clear last error
 
                     StringBuilder windowText = new StringBuilder(256);
                     NativeMethods.GetWindowText(hOwner, windowText, windowText.Capacity);
-                    diagnosis.AppendLine($"Clipboard owner window text: {windowText}");
+                    diagnosisString.AppendLine($"Clipboard owner window text: {windowText}");
+                    diagnostics.WindowText = windowText.ToString();
                     currentError = Marshal.GetLastWin32Error();
                     if (currentError != 0)
                     {
-                        diagnosis.AppendLine($"GetWindowText failed. Error: {currentError} | {ErrMsg(currentError)}");
+                        diagnosisString.AppendLine($"GetWindowText failed. Error: {currentError} | {ErrMsg(currentError)}");
                     }
                     NativeMethods.SetLastErrorEx(0, 0); // Clear last error
 
                     // Get process ID
                     NativeMethods.GetWindowThreadProcessId(hOwner, out uint processId);
-                    diagnosis.AppendLine($"Clipboard owner process ID: {processId}");
+                    diagnosisString.AppendLine($"Clipboard owner process ID: {processId}");
+                    diagnostics.OwnerProcessID = processId;
                     currentError = Marshal.GetLastWin32Error();
                     if (currentError != 0)
                     {
-                        diagnosis.AppendLine($"GetWindowThreadProcessId failed. Error: {currentError} | {ErrMsg(currentError)}");
+                        diagnosisString.AppendLine($"GetWindowThreadProcessId failed. Error: {currentError} | {ErrMsg(currentError)}");
                     }
                     NativeMethods.SetLastErrorEx(0, 0); // Clear last error
 
@@ -860,63 +972,67 @@ namespace EditClipboardContents
                     {
                         using (Process process = Process.GetProcessById((int)processId))
                         {
-                            diagnosis.AppendLine($"Clipboard owner process name: {process.ProcessName}");
+                            diagnosisString.AppendLine($"Clipboard owner process name: {process.ProcessName}");
+                            diagnostics.OwnerProcessName = process.ProcessName;
                         }
                     }
                     catch (ArgumentException)
                     {
-                        diagnosis.AppendLine("Failed to get process name. The process may have ended.");
+                        diagnosisString.AppendLine("Failed to get process name. The process may have ended.");
                     }
                 }
                 else
                 {
-                    diagnosis.AppendLine("Clipboard owner handle is null. No owner.");
+                    diagnosisString.AppendLine("Clipboard owner handle is null. No owner.");
                 }
 
                 // Get clipboard sequence number
                 uint sequenceNumber = NativeMethods.GetClipboardSequenceNumber();
-                diagnosis.AppendLine($"Clipboard sequence number: {sequenceNumber}");
+                diagnosisString.AppendLine($"Clipboard sequence number: {sequenceNumber}");
+                diagnostics.ClipboardSequenceNumber = sequenceNumber;
                 currentError = Marshal.GetLastWin32Error();
                 if (currentError != 0)
                 {
-                    diagnosis.AppendLine($"GetClipboardSequenceNumber failed. Error: {currentError} | {ErrMsg(currentError)}");
+                    diagnosisString.AppendLine($"GetClipboardSequenceNumber failed. Error: {currentError} | {ErrMsg(currentError)}");
                 }
                 NativeMethods.SetLastErrorEx(0, 0); // Clear last error
 
                 // Get open clipboard window
                 IntPtr hOpenWindow = NativeMethods.GetOpenClipboardWindow();
-                diagnosis.AppendLine($"Open clipboard window handle: 0x{hOpenWindow.ToInt64():X}");
+                diagnosisString.AppendLine($"Open clipboard window handle: 0x{hOpenWindow.ToInt64():X}");
+                diagnostics.OwnerWindowHandle = hOpenWindow;
                 currentError = Marshal.GetLastWin32Error();
                 if (currentError != 0)
                 {
-                    diagnosis.AppendLine($"GetOpenClipboardWindow failed. Error: {currentError} | {ErrMsg(currentError)}");
+                    diagnosisString.AppendLine($"GetOpenClipboardWindow failed. Error: {currentError} | {ErrMsg(currentError)}");
                 }
                 NativeMethods.SetLastErrorEx(0, 0); // Clear last error
 
                 // Attempt to get clipboard data
                 IntPtr hData = NativeMethods.GetClipboardData(format);
-                diagnosis.AppendLine($"GetClipboardData result: 0x{hData.ToInt64():X}");
+                diagnosisString.AppendLine($"GetClipboardData result: 0x{hData.ToInt64():X}");
                 currentError = Marshal.GetLastWin32Error();
                 if (currentError != 0)
                 {
-                    diagnosis.AppendLine($"GetClipboardData failed. Error: {currentError} | {ErrMsg(currentError)}");
+                    diagnosisString.AppendLine($"GetClipboardData failed. Error: {currentError} | {ErrMsg(currentError)}");
                 }
 
             }
             catch (Exception ex)
             {
-                diagnosis.AppendLine($"An exception occurred while diagnosing: {ex.Message}");
+                diagnosisString.AppendLine($"An exception occurred while diagnosing: {ex.Message}");
             }
             finally
             {
                 //NativeMethods.CloseClipboard(); // CLipboard will be closed elsewhere
             }
 
-            diagnosis.AppendLine("------------------------------------------------------");
+            diagnosisString.AppendLine("------------------------------------------------------");
 
-            string finalResult = diagnosis.ToString();
+            string finalResult = diagnosisString.ToString();
+            diagnostics.ReportString = finalResult;
 
-            return finalResult;
+            return diagnostics;
         }
 
 
@@ -1094,9 +1210,9 @@ namespace EditClipboardContents
                 richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
                 richTextBoxContents.Text = "Data not available";
                 richTextBoxContents.ForeColor = Color.Red;
-                if (item.ErrorDiagnosisReport != null)
+                if (item.ErrorDiagnosisReport != null && item.ErrorDiagnosisReport.ReportString != null)
                 {
-                    richTextBoxContents.Text += "\n\n" + "   Info about error retrieving clipboard item:" + "\n" + item.ErrorDiagnosisReport;
+                    richTextBoxContents.Text += "\n\n" + "   Info about error retrieving clipboard item:" + "\n" + item.ErrorDiagnosisReport.ReportString;
                     richTextBoxContents.ForeColor = Color.DarkRed;
                 }
                 richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
@@ -2148,7 +2264,24 @@ namespace EditClipboardContents
 
     // ----------------------------------- Object Definitions---------------------------------------------------
 
-    public class ClipDataObject
+    public class DiagnosticsInfo
+    {
+        // Clipboard owner
+        public string Owner { get; set; }
+        public string OwnerProcessName { get; set; }
+        public uint OwnerProcessID { get; set; }
+        public string OwnerProcessPath { get; set; }
+        public uint ClipboardSequenceNumber { get; set; }
+        public IntPtr OwnerHandle { get; set; }
+        public IntPtr OwnerWindowHandle { get; set; }
+        public bool IsFormatAvailable { get; set; }
+        public string WindowText { get; set; }
+        public string WindowClass { get; set; }
+        public string ReportString { get; set; }
+
+    }
+
+        public class ClipDataObject
     {
         private IClipboardFormat _objectData = null;
         public IClipboardFormat ObjectData
@@ -2269,7 +2402,7 @@ namespace EditClipboardContents
         public bool HasPendingEdit { get; set; } = false;
         public string FormatType { get; set; } = "Unknown";
         public string ErrorReason { get; set; } = null;
-        public string ErrorDiagnosisReport { get; set; } = null;
+        public DiagnosticsInfo ErrorDiagnosisReport { get; set; }
         public int OriginalIndex { get; set; } = -1;
         public ClipDataObject ClipDataObject { get; set; } = null ;
         
