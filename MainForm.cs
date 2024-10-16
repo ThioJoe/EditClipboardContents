@@ -40,6 +40,7 @@ namespace EditClipboardContents
         // Other globals
         public static bool anyPendingEditsOrRemovals = false;
         public static bool enableSplitHexView = false;
+        public ClipboardItem itemBeforeCellEditClone = null;
 
         // Global constants
         public const int maxRawSizeDefault = 50000;
@@ -132,17 +133,16 @@ namespace EditClipboardContents
             this.Update();
         }
 
-
         private void InitializeDataGridView()
         {
-            // If addng a new column, don't forget to add it to the UpdateClipboardItemsGridViewWithAdditionalItem function on the line where rows are added
-            dataGridViewClipboard.Columns.Add("Index", ""); // For default sorting, no data
-            dataGridViewClipboard.Columns.Add("FormatName", "Format Name");
-            dataGridViewClipboard.Columns.Add("FormatId", "Format ID");
-            dataGridViewClipboard.Columns.Add("HandleType", "Format Type");
-            dataGridViewClipboard.Columns.Add("DataSize", "Data Size");
-            dataGridViewClipboard.Columns.Add("DataInfo", "Data Info");
-            dataGridViewClipboard.Columns.Add("TextPreview", "Text Preview");
+            // If addng a new column, don't forget to add it to the UpdateClipboardItemsGridViewWith_AdditionalItem function on the line where rows are added
+            dataGridViewClipboard.Columns.Add(colName.Index, ""); // For default sorting, no data
+            dataGridViewClipboard.Columns.Add(colName.FormatName, "Format Name");
+            dataGridViewClipboard.Columns.Add(colName.FormatId, "Format ID");
+            dataGridViewClipboard.Columns.Add(colName.HandleType, "Format Type");
+            dataGridViewClipboard.Columns.Add(colName.DataSize, "Data Size");
+            dataGridViewClipboard.Columns.Add(colName.DataInfo, "Data Info");
+            dataGridViewClipboard.Columns.Add(colName.TextPreview, "Text Preview");
 
             // Set autosize for all columns to none so we can control individually later
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
@@ -179,12 +179,30 @@ namespace EditClipboardContents
             dataGridViewClipboard.MouseWheel += new MouseEventHandler(dataGridViewClipboard_MouseWheel);
         }
 
-        // Update processedData grid view with clipboard contents during refresh
-        private void UpdateClipboardItemsGridViewWithAdditionalItem(ClipboardItem formatItem, string handleType)
+        private void UpdateClipboardItemsGridView_WithEmptyCustomFormat(ClipboardItem formatItem)
         {
             // Get needed data from the item
             byte[] rawData = formatItem.RawData;
             string formatName = formatItem.FormatName;
+            string formatType = formatItem.FormatType;
+            string formatID = formatItem.FormatId.ToString();
+            List<string> dataInfo = formatItem.DataInfoList;
+            string dataSize = formatItem.DataSize.ToString();
+            int index = formatItem.OriginalIndex;
+
+            string dataInfoString = "[Edit the cells in this row]";
+            string textPreview = "";
+
+            dataGridViewClipboard.Rows.Add(index, formatName, formatID, formatType, dataSize, dataInfoString, textPreview);
+        }
+
+        // Update processedData grid view with clipboard contents during refresh
+        private void UpdateClipboardItemsGridViewWith_AdditionalItem(ClipboardItem formatItem)
+        {
+            // Get needed data from the item
+            byte[] rawData = formatItem.RawData;
+            string formatName = formatItem.FormatName;
+            string formatType = formatItem.FormatType;
             string formatID = formatItem.FormatId.ToString();
             List<string> dataInfo = formatItem.DataInfoList;
             string dataSize = formatItem.DataSize.ToString();
@@ -211,7 +229,7 @@ namespace EditClipboardContents
             }
 
             // Add info to the grid view, then will be resized
-            dataGridViewClipboard.Rows.Add(index, formatName, formatID, handleType, dataSize, dataInfoString, textPreview);
+            dataGridViewClipboard.Rows.Add(index, formatName, formatID, formatType, dataSize, dataInfoString, textPreview);
 
             // Temporarily set AutoSizeMode to calculate proper widths
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
@@ -890,7 +908,7 @@ namespace EditClipboardContents
                 item.FormatType = formatType; // Update the format type in the selectedItem
                 item.ClipDataObject = processedObject; // Update the clipDataObject in the selectedItem, even if it's null
 
-                UpdateClipboardItemsGridViewWithAdditionalItem(formatItem: item, handleType: formatType);
+                UpdateClipboardItemsGridViewWith_AdditionalItem(formatItem: item);
             }
         }
 
@@ -1466,6 +1484,8 @@ namespace EditClipboardContents
                 return false;
             }
 
+            bool errorsOccurred = false;
+
             try
             {
                 NativeMethods.EmptyClipboard();
@@ -1511,12 +1531,28 @@ namespace EditClipboardContents
                             break;
                     }
 
-                    if (hGlobal != IntPtr.Zero)
+                    if (item.PendingCustomAddition == true)
                     {
-                        if (NativeMethods.SetClipboardData(item.FormatId, hGlobal) == IntPtr.Zero)
+                        if (hGlobal != IntPtr.Zero)
+                        {
+                            SetCustomFormatToClipboard(item.FormatId, item.FormatName, hGlobal);
+                        }
+                        else if (item.RawData == null || !item.RawData.Any()) // If the original data was null or empty then assume it's intentional so add it
+                        {
+                            SetCustomFormatToClipboard(item.FormatId, item.FormatName, IntPtr.Zero);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Failed to allocate memory for custom format: {item.FormatId}");
+                        }
+                    }
+                    else if (hGlobal != IntPtr.Zero)
+                    {
+                        if(NativeMethods.SetClipboardData(item.FormatId, hGlobal) == IntPtr.Zero)
                         {
                             NativeMethods.GlobalFree(hGlobal);
                             Console.WriteLine($"Failed to set clipboard data for format: {item.FormatId}");
+                            errorsOccurred = true;
                         }
                     }
                     else
@@ -1525,7 +1561,7 @@ namespace EditClipboardContents
                     }
                 }
 
-                MessageBox.Show("Clipboard data saved successfully.");
+                MessageBox.Show("Clipboard data saved.");
 
                 return true;
             }
@@ -1538,6 +1574,20 @@ namespace EditClipboardContents
             finally
             {
                 NativeMethods.CloseClipboard();
+            }
+        }
+
+        private void SetCustomFormatToClipboard(uint formatId, string formatName, IntPtr handle)
+        {
+            // Register the custom format
+            uint formatIdRegistered = NativeMethods.RegisterClipboardFormat(formatName);
+
+            IntPtr result = NativeMethods.SetClipboardData(formatIdRegistered, handle);
+
+            if (result == IntPtr.Zero)
+            {
+                Console.WriteLine($"Failed to set clipboard data for custom format: {formatName} ({formatIdRegistered})");
+                NativeMethods.GlobalFree(handle);
             }
         }
 
@@ -1569,10 +1619,10 @@ namespace EditClipboardContents
 
         private void UpdateEditControlsVisibility_AndPendingGridAppearance(ClipboardItem selectedItem = null, ClipboardItem selectedEditedItem = null)
         {
-            if (selectedItem == null)
-            {
-                selectedItem = GetSelectedClipboardItemObject();
-            }
+            //if (selectedItem == null)
+            //{
+            //    selectedItem = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
+            //}
             if (selectedEditedItem == null)
             {
                 selectedEditedItem = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
@@ -1620,7 +1670,7 @@ namespace EditClipboardContents
             }
 
             // Beyond here, we need a selected item. If there isn't one, set some buttons that require a selectedItem to be disabled
-            if (selectedItem == null || selectedEditedItem == null)
+            if (selectedEditedItem == null)
             {
                 buttonResetEdit.Enabled = false;
                 buttonApplyEdit.Enabled = false;
@@ -1755,7 +1805,7 @@ namespace EditClipboardContents
             return saveFileDialog;
         }
 
-        private ClipboardItem GetSelectedClipboardItemObject(bool returnEditedItemVersion = false)
+        private ClipboardItem GetSelectedClipboardItemObject(bool returnEditedItemVersion)
         {
             if (dataGridViewClipboard.SelectedRows.Count > 0)
             {
@@ -1768,16 +1818,16 @@ namespace EditClipboardContents
                     }
                     else
                     {
+                        //MessageBox.Show("There is no original data for this item.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return clipboardItems.Find(i => i.FormatId == formatId);
                     }
-                    
                 }
             }
             return null;
         }
 
         // Updates selected clipboard selectedItem in editedClipboardItems list. Does not update the actual clipboard.
-        private void UpdateEditedClipboardItem(int formatId, byte[] rawData, bool setPendingEdit = true, bool setPendingRemoval = false)
+        private void UpdateEditedClipboardItem(uint formatId, byte[] rawData, bool setPendingEdit = true, bool setPendingRemoval = false)
         {
             // Match the selectedItem in the editedClipboardItems list
             for (int i = 0; i < editedClipboardItems.Count; i++)
@@ -2221,7 +2271,7 @@ namespace EditClipboardContents
         private void SaveBinaryFile()
         {
             // Get the clipboard selectedItem and its info
-            ClipboardItem itemToExport = GetSelectedClipboardItemObject();
+            ClipboardItem itemToExport = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
 
             if (itemToExport == null)
             {
@@ -2315,7 +2365,7 @@ namespace EditClipboardContents
             }
         }
 
-
+        
     } // ---------------------------------------------------------------------------------------------------
     // --------------------------------------- End of MainForm Class ---------------------------------------
     // -----------------------------------------------------------------------------------------------------
@@ -2326,6 +2376,34 @@ namespace EditClipboardContents
         Bottom,
         Top
     }
+
+    // ------ Will probably look for a more direct way for this later but this will do for now ------
+    public static class colName
+    {
+        public const string Index = nameof(Index);
+        public const string FormatName = nameof(FormatName);
+        public const string FormatId = nameof(FormatId);
+        public const string HandleType = nameof(HandleType);
+        public const string DataSize = nameof(DataSize);
+        public const string DataInfo = nameof(DataInfo);
+        public const string TextPreview = nameof(TextPreview);
+
+        public static string GetDisplayName(string columnName)
+        {
+            return columnName switch
+            {
+                Index => "",  // For default sorting, no data
+                FormatName => "Format Name",
+                FormatId => "Format ID",
+                HandleType => "Format Type",
+                DataSize => "Data Size",
+                DataInfo => "Data Info",
+                TextPreview => "Text Preview",
+                _ => throw new ArgumentException($"Invalid column name: {columnName}", nameof(columnName))
+            };
+        }
+    }
+    // ---------------------------------------------------------------------------------------------------
 
     // ----------------------------------- Object Definitions---------------------------------------------------
 
@@ -2455,6 +2533,10 @@ namespace EditClipboardContents
 
     public class ClipboardItem : ICloneable
     {
+        // Using a unique ID for each object instance just in case it's needed for tracking
+        // Like an edited item where the ID or name might change
+        public Guid UniqueID { get; init; } = Guid.NewGuid(); 
+
         public string FormatName { get; set; }
         public uint FormatId { get; set; }
         public IntPtr Handle { get; set; }
@@ -2466,6 +2548,7 @@ namespace EditClipboardContents
         public string DataInfoLinesString => string.Join("\n", DataInfoList ?? new List<string>());
         public bool HasPendingEdit { get; set; } = false;
         public bool PendingRemoval { get; set; } = false;
+        public bool PendingCustomAddition { get; set; } = false;
         public string FormatType { get; set; } = "Unknown";
         public string ErrorReason { get; set; } = null;
         public DiagnosticsInfo ErrorDiagnosisReport { get; set; }
@@ -2475,7 +2558,7 @@ namespace EditClipboardContents
 
         public object Clone()
         {
-            return new ClipboardItem
+            var clone = new ClipboardItem
             {
                 FormatName = this.FormatName,
                 FormatId = this.FormatId,
@@ -2487,6 +2570,7 @@ namespace EditClipboardContents
                 DataInfoList = new List<string>(this.DataInfoList ?? new List<string>()),
                 HasPendingEdit = false,
                 PendingRemoval = this.PendingRemoval,
+                PendingCustomAddition = this.PendingCustomAddition,
                 FormatType = this.FormatType,
                 ErrorReason = this.ErrorReason,
                 ErrorDiagnosisReport = this.ErrorDiagnosisReport,
@@ -2499,7 +2583,13 @@ namespace EditClipboardContents
                 }
                 : null // If it's null, set to null
             };
+
+            // Manually set the UniqueID to match the original
+            typeof(ClipboardItem).GetProperty(nameof(UniqueID)).SetValue(clone, this.UniqueID);
+
+            return clone;
         }
+
     } // ------  End of ClipboardItem class definition
 
 }

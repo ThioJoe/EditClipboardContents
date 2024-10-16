@@ -351,28 +351,47 @@ namespace EditClipboardContents
 
         private void buttonResetEdit_Click(object sender, EventArgs e)
         {
+            ClipboardItem originalItem = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
+            uint formatId = originalItem.FormatId;
+            byte[] originalData = originalItem.RawData;
+
             // Get the original item's data and apply it to the edited item
-            UpdateEditedClipboardItem((int)GetSelectedClipboardItemObject().FormatId, GetSelectedClipboardItemObject().RawData, setPendingEdit: false, setPendingRemoval: false);
+            UpdateEditedClipboardItem(formatId, originalData, setPendingEdit: false, setPendingRemoval: false);
 
             // Check if any edited items still have pending changes or are pending removal, and update the pending changes label if necessary
             anyPendingEditsOrRemovals = editedClipboardItems.Any(i => i.HasPendingEdit || i.PendingRemoval);
 
-            // Update the view
-            DisplayClipboardData(GetSelectedClipboardItemObject());
+            // Update the view. Edited version should be the same as the original version now
+            DisplayClipboardData(GetSelectedClipboardItemObject(returnEditedItemVersion: true));
             UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
         private void dataGridViewClipboard_SelectionChanged(object sender, EventArgs e)
         {
+            void setButtonStatus(bool enabledChoice)
+            {
+                menuEdit_CopySelectedRows.Enabled = enabledChoice;
+                menuFile_ExportSelectedAsRawHex.Enabled = enabledChoice;
+                menuFile_ExportSelectedStruct.Enabled = enabledChoice;
+                menuFile_ExportSelectedAsFile.Enabled = enabledChoice;
+            }
+            // -------------------------------------------------------------
+
             if (dataGridViewClipboard.SelectedRows.Count == 0)
             {
                 richTextBoxContents.Clear();
 
                 // Disable menu buttons that require a selectedItem
-                menuEdit_CopySelectedRows.Enabled = false;
-                menuFile_ExportSelectedAsRawHex.Enabled = false;
-                menuFile_ExportSelectedStruct.Enabled = false;
-                menuFile_ExportSelectedAsFile.Enabled = false;
+                setButtonStatus(enabledChoice: false);
+                return;
+            }
+            // If it's a custom format, disable the buttons and always go to the edit view
+            if (GetSelectedDataFromDataGridView(colName.HandleType) == "Custom")
+            {
+                ChangeCellFocus(dataGridViewClipboard.SelectedRows[0].Index);
+                setButtonStatus(enabledChoice: false);
+                dropdownContentsViewMode.SelectedIndex = 2; // Hex (Editable)
+                checkBoxPlainTextEditing.Checked = true;
                 return;
             }
 
@@ -380,17 +399,13 @@ namespace EditClipboardContents
             ChangeCellFocus(dataGridViewClipboard.SelectedRows[0].Index);
 
             // Enable menu buttons that require a selectedItem
-            menuEdit_CopySelectedRows.Enabled = true;
-            menuFile_ExportSelectedAsRawHex.Enabled = true;
-            menuFile_ExportSelectedStruct.Enabled = true;
-            menuFile_ExportSelectedAsFile.Enabled = true;
-
+            setButtonStatus(enabledChoice: true);
 
             // If the auto selection checkbox is checked, decide which view mode to use based on item data
             if (checkBoxAutoViewMode.Checked)
             {
                 // Get the selectedItem object
-                ClipboardItem item = GetSelectedClipboardItemObject();
+                ClipboardItem item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
 
                 // If there is a text preview, show text mode
                 if (!string.IsNullOrEmpty(GetSelectedDataFromDataGridView("TextPreview")))
@@ -398,13 +413,15 @@ namespace EditClipboardContents
                     dropdownContentsViewMode.SelectedIndex = 0; // Text
                 }
                 // If there is data object info, show object view mode. Also show if there are multiple data info entries or the first one isn't empty
-                else if (
-                    item.ClipDataObject != null 
-                    || item.DataInfoList.Count > 1 
-                    || !(string.IsNullOrEmpty(item.DataInfoList[0]))
-                    || item.RawData.Length > 5000 // If data is enough to cause performance issues in hex view, show object view
-                    )
-                {
+                else if (item != null && (
+                        (item.ClipDataObject != null)
+                        || (item.RawData != null && item.RawData.Length > 5000) // If data is enough to cause performance issues in hex view, show object view
+                        || (item.DataInfoList != null && (
+                            item.DataInfoList.Count > 1
+                            || (item.DataInfoList.Count > 0 && !string.IsNullOrEmpty(item.DataInfoList[0]))
+                        ))
+                    ))
+                { 
                     dropdownContentsViewMode.SelectedIndex = 3; // Object View
                 }
                 else
@@ -418,7 +435,7 @@ namespace EditClipboardContents
         private void menuEdit_CopyHexAsText_Click(object sender, EventArgs e)
         {
             // Get the clipboard selectedItem and its info
-            ClipboardItem itemToCopy = GetSelectedClipboardItemObject();
+            ClipboardItem itemToCopy = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
             if (itemToCopy == null)
             {
                 return;
@@ -433,7 +450,7 @@ namespace EditClipboardContents
         private void menuEdit_CopyObjectInfoAsText_Click(object sender, EventArgs e)
         {
             // Get the clipboard selectedItem and its info
-            ClipboardItem itemToCopy = GetSelectedClipboardItemObject();
+            ClipboardItem itemToCopy = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
             if (itemToCopy == null)
             {
                 return;
@@ -499,10 +516,16 @@ namespace EditClipboardContents
                 .Select(x => Convert.ToByte(hexString.Substring(x, 2), 16))
                 .ToArray();
             // Get the format ID of the selected clipboard selectedItem
-            int formatId = (int)GetSelectedClipboardItemObject().FormatId;
+            uint formatId = GetSelectedClipboardItemObject(returnEditedItemVersion: true).FormatId;
 
             // Check if the edited data is actually different from the original data, apply the change and set anyPendingEditsOrRemovals accordingly
-            if (!GetSelectedClipboardItemObject().RawData.SequenceEqual(rawDataFromTextbox))
+            // First check if there is even an original item. If not it's probably a custom added item so just updated it
+            if (GetSelectedClipboardItemObject(returnEditedItemVersion: false) == null)
+            {
+                UpdateEditedClipboardItem(formatId, rawDataFromTextbox);
+                anyPendingEditsOrRemovals = true;
+            }
+            else if(!GetSelectedClipboardItemObject(returnEditedItemVersion: false).RawData.SequenceEqual(rawDataFromTextbox))
             {
                 UpdateEditedClipboardItem(formatId, rawDataFromTextbox);
                 anyPendingEditsOrRemovals = true;
@@ -525,7 +548,7 @@ namespace EditClipboardContents
 
         private void menuFile_ExportSelectedAsRawHex_Click(object sender, EventArgs e)
         {
-            ClipboardItem itemToExport = GetSelectedClipboardItemObject();
+            ClipboardItem itemToExport = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
             if (itemToExport == null)
             {
                 return;
@@ -545,7 +568,7 @@ namespace EditClipboardContents
         private void menuFile_ExportSelectedStruct_Click(object sender, EventArgs e)
         {
             // Get the clipboard selectedItem and its info
-            ClipboardItem itemToExport = GetSelectedClipboardItemObject();
+            ClipboardItem itemToExport = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
             if (itemToExport == null)
             {
                 return;
@@ -578,7 +601,7 @@ namespace EditClipboardContents
             int selectedFormatId = -1;
             // New scope, only need item for this operation
             {
-                ClipboardItem item = GetSelectedClipboardItemObject();
+                ClipboardItem item = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
                 if (item != null)
                 {
                     selectedFormatId = (int)item.FormatId;
@@ -669,7 +692,7 @@ namespace EditClipboardContents
                 richTextBoxContents.DetectUrls = false;
             }
 
-            ClipboardItem item = GetSelectedClipboardItemObject();
+            ClipboardItem item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
             if (item == null)
             {
                 return;
@@ -736,6 +759,114 @@ namespace EditClipboardContents
                 "Why is clipboard loading slow?", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
+        private void toolStripButtonAddFormat_Click(object sender, EventArgs e)
+        {
+            int itemIndex = dataGridViewClipboard.Rows.Count;  // The index of the current last item will be (count - 1) so the new item will be at index count
+
+            // Create a new boilerplate clipboard item
+            ClipboardItem newItem = new ClipboardItem()
+            {
+                FormatId = 0,
+                FormatName = "Custom Format",
+                RawData = new byte[0],
+                ClipDataObject = null,
+                DataInfoList = new List<string>(),
+                OriginalIndex = itemIndex,
+                FormatType = "Custom",
+                PendingCustomAddition = true,
+            };
+
+            UpdateClipboardItemsGridView_WithEmptyCustomFormat(newItem);
+            editedClipboardItems.Add(newItem);
+            UpdateSplitterPosition_FitDataGrid();
+        }
+
+        private void dataGridViewClipboard_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            // Reset editability of the grid to false by default
+            dataGridViewClipboard.ReadOnly = true;
+            dataGridViewClipboard[e.ColumnIndex, e.RowIndex].ReadOnly = false;
+
+            // Only allow editing for custom added formats
+            ClipboardItem item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
+            if (item != null && item.PendingCustomAddition == true)
+            {
+                int rowIndex = e.RowIndex;
+                int columnIndex = e.ColumnIndex;
+                string columnName = dataGridViewClipboard.Columns[columnIndex].Name;
+
+                List<string> allowedToEditColumns = new List<string> { "FormatName", "FormatId" };
+
+                // Dictionary with reasons not allowed to edit specific columns
+                Dictionary<string, string> notAllowedToEditColumns = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    //{ "FormatId", "Cannot Edit Format ID: This number is set automatically by windows." },
+                    { "FormatType", "Cannot Edit Format Type: This column is informational only derived from other properties, it is not an actual value." },
+                    { "Index", "Index cannot currently be changed." },
+                };
+
+                if (allowedToEditColumns.Contains(columnName))
+                {
+                    dataGridViewClipboard.ReadOnly = false;
+                    dataGridViewClipboard[columnIndex, rowIndex].ReadOnly = false;
+                    dataGridViewClipboard.BeginEdit(true);
+                }
+                else
+                {
+                    // If a message is available for the column, show it.
+                    if (notAllowedToEditColumns.TryGetValue(columnName, out string message))
+                    {
+                        MessageBox.Show(message, "Cannot Edit Column", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+
+                //// Get the selected cell
+                //DataGridViewCell cell = dataGridViewClipboard.Rows[rowIndex].Cells[columnIndex];
+                //dataGridViewClipboard.ReadOnly = false;
+                //cell.ReadOnly = false;
+                //dataGridViewClipboard.BeginEdit(true);
+            }
+        }
+
+        private void dataGridViewClipboard_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
+        {
+            itemBeforeCellEditClone = null;
+            itemBeforeCellEditClone = (ClipboardItem)GetSelectedClipboardItemObject(returnEditedItemVersion: true).Clone();
+        }
+
+        private void dataGridViewClipboard_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            // Get the item before the cell was edited
+            ClipboardItem itemBeforeEdit = itemBeforeCellEditClone;
+            if (itemBeforeEdit == null)
+            {
+                MessageBox.Show("Error: Couldn't find the clipboard object from before the edit.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Get the unique id of the item
+            Guid uniqueID = itemBeforeEdit.UniqueID;
+
+            // Updates the editedClipboardItems list with the new data
+            DataGridViewRow row = dataGridViewClipboard.Rows[e.RowIndex];
+            uint formatId = uint.Parse(row.Cells[colName.FormatId].Value.ToString());
+            string formatName = row.Cells[colName.FormatName].Value.ToString();
+
+            // Will need to add a validation function here later
+
+            // Update the edited item
+            ClipboardItem editedItem = editedClipboardItems.FirstOrDefault(i => i.UniqueID == uniqueID);
+            if (editedItem != null)
+            {
+                editedItem.FormatId = formatId;
+                editedItem.FormatName = formatName;
+            }
+            else
+            {
+                MessageBox.Show("Error: Couldn't find the clipboard object in the edited object list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
 
     } // ----------------------------- End of MainForm partial class -----------------------------
 }

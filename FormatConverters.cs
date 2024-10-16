@@ -42,6 +42,10 @@ namespace EditClipboardContents
                     {
                         Marshal.Copy(data, 0, pGlobal, data.Length);
                     }
+                    catch(Exception ex)
+                    {
+                        Console.WriteLine($"Error in AllocateGeneralHandle_FromRawData: {ex.Message}");
+                    }
                     finally
                     {
                         NativeMethods.GlobalUnlock(hGlobal);
