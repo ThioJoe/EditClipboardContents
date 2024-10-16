@@ -269,7 +269,7 @@ namespace EditClipboardContents
 
         private void checkBoxPlainTextEditing_CheckedChanged(object sender, EventArgs e)
         {
-            UpdateEditControlsVisibility();
+            UpdateEditControlsVisibility_AndPendingGridAppearance();
             UpdatePlaintextFromHexView();
         }
 
@@ -352,15 +352,14 @@ namespace EditClipboardContents
         private void buttonResetEdit_Click(object sender, EventArgs e)
         {
             // Get the original item's data and apply it to the edited item
-            UpdateEditedClipboardItem((int)GetSelectedClipboardItemObject().FormatId, GetSelectedClipboardItemObject().RawData, setPending: false);
+            UpdateEditedClipboardItem((int)GetSelectedClipboardItemObject().FormatId, GetSelectedClipboardItemObject().RawData, setPendingEdit: false, setPendingRemoval: false);
 
-            // Check if any edited items have pending changes, and update the pending changes label if necessary
-            hasPendingChanges = editedClipboardItems.Any(i => i.HasPendingEdit);
+            // Check if any edited items still have pending changes or are pending removal, and update the pending changes label if necessary
+            anyPendingEditsOrRemovals = editedClipboardItems.Any(i => i.HasPendingEdit || i.PendingRemoval);
 
             // Update the view
             DisplayClipboardData(GetSelectedClipboardItemObject());
-            UpdateEditControlsVisibility();
-
+            UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
         private void dataGridViewClipboard_SelectionChanged(object sender, EventArgs e)
@@ -502,26 +501,26 @@ namespace EditClipboardContents
             // Get the format ID of the selected clipboard selectedItem
             int formatId = (int)GetSelectedClipboardItemObject().FormatId;
 
-            // Check if the edited data is actually different from the original data, apply the change and set hasPendingChanges accordingly
+            // Check if the edited data is actually different from the original data, apply the change and set anyPendingEditsOrRemovals accordingly
             if (!GetSelectedClipboardItemObject().RawData.SequenceEqual(rawDataFromTextbox))
             {
                 UpdateEditedClipboardItem(formatId, rawDataFromTextbox);
-                hasPendingChanges = true;
+                anyPendingEditsOrRemovals = true;
             }
             else
             {
-                // Don't change hasPendingChanges to false because there might be other items with pending changes
+                // Don't change anyPendingEditsOrRemovals to false because there might be other items with pending changes
             }
 
-            UpdateEditControlsVisibility();
+            UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
         private void toolStripButtonSaveEdited_Click(object sender, EventArgs e)
         {
-            SaveClipboardData(formatsToExclude: null);
+            SaveClipboardData();
             RefreshClipboardItems();
-            hasPendingChanges = false;
-            UpdateEditControlsVisibility();
+            anyPendingEditsOrRemovals = false;
+            UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
         private void menuFile_ExportSelectedAsRawHex_Click(object sender, EventArgs e)
@@ -587,7 +586,7 @@ namespace EditClipboardContents
             }
 
             RefreshClipboardItems();
-            hasPendingChanges = false;
+            anyPendingEditsOrRemovals = false;
 
             // If the new clipboard data contains the same format as the previously selected item, re-select it
             if (selectedFormatId > 0 && clipboardItems != null && clipboardItems.Any(ci => ci.FormatId == selectedFormatId))
@@ -600,39 +599,22 @@ namespace EditClipboardContents
                     dataGridViewClipboard.FirstDisplayedScrollingRowIndex = rowIndex;
                 }
             }
-            UpdateEditControlsVisibility();
+            UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
         private void toolStripButtonDelete_Click(object sender, EventArgs e)
         {
             if (dataGridViewClipboard.SelectedRows.Count > 0)
             {
-                // Make a list of selected row format IDs
-                List<uint> selectedFormatIds = new List<uint>();
                 foreach (DataGridViewRow selectedRow in dataGridViewClipboard.SelectedRows)
                 {
                     if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatIdToRemove))
                     {
-                        selectedFormatIds.Add(formatIdToRemove);
+                        // Update editedClipboardItems to mark the item as deleted
+                        MarkIndividualClipboardItemForRemoval(formatIdToRemove);
                     }
                 }
-
-                if (selectedFormatIds.Count == 0)
-                {
-                    MessageBox.Show("No valid format IDs selected.");
-                    return;
-                }
-
-                //if (RemoveClipboardFormat(formatsToExclude: selectedFormatIds))
-                if (SaveClipboardData(formatsToExclude: selectedFormatIds))
-                {
-                    //MessageBox.Show($"Format {formatIdToRemove} removed successfully.");
-                }
-                else
-                {
-                    MessageBox.Show($"Failed to remove format {selectedFormatIds}.");
-                }
-                RefreshClipboardItems();
+                UpdateEditControlsVisibility_AndPendingGridAppearance();
             }
         }
 
@@ -675,7 +657,7 @@ namespace EditClipboardContents
             // 3: Object / Struct View
 
             // Show buttons and labels for edited mode
-            UpdateEditControlsVisibility();
+            UpdateEditControlsVisibility_AndPendingGridAppearance();
 
             // For object view mode and text view mode, enable auto highlighting URLs in the text box
             if (dropdownContentsViewMode.SelectedIndex == 0 || dropdownContentsViewMode.SelectedIndex == 3)
@@ -699,7 +681,7 @@ namespace EditClipboardContents
         private void dataGridViewClipboard_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             ChangeCellFocus(e.RowIndex);
-            UpdateEditControlsVisibility();
+            UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
         private void dataGridViewClipboard_SortCompare(object sender, DataGridViewSortCompareEventArgs e)

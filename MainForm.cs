@@ -38,7 +38,7 @@ namespace EditClipboardContents
         private List<ClipboardItem> editedClipboardItems = new List<ClipboardItem>(); // Add this line
 
         // Other globals
-        public static bool hasPendingChanges = false;
+        public static bool anyPendingEditsOrRemovals = false;
         public static bool enableSplitHexView = false;
 
         // Global constants
@@ -1457,7 +1457,7 @@ namespace EditClipboardContents
         }
 
 
-        private bool SaveClipboardData(List<uint> formatsToExclude = null)
+        private bool SaveClipboardData()
         {
             if (!NativeMethods.OpenClipboard(this.Handle))
             {
@@ -1471,7 +1471,7 @@ namespace EditClipboardContents
                 NativeMethods.EmptyClipboard();
                 foreach (var item in editedClipboardItems)
                 {
-                    if (formatsToExclude != null && formatsToExclude.Count != 0 && formatsToExclude.Contains(item.FormatId))
+                    if (item.PendingRemoval == true)
                     {
                         continue; // Skip this format if it's in the exclusion list
                     }
@@ -1524,11 +1524,8 @@ namespace EditClipboardContents
                         Console.WriteLine($"Failed to allocate memory for format: {item.FormatId}");
                     }
                 }
-                // Only show the message if saving edits. If just removing it will be visually apparent the change has been made
-                if (formatsToExclude == null)
-                {
-                    MessageBox.Show("Clipboard data saved successfully.");
-                }
+
+                MessageBox.Show("Clipboard data saved successfully.");
 
                 return true;
             }
@@ -1570,7 +1567,7 @@ namespace EditClipboardContents
             splitContainerMain.SplitterDistance = newSize;
         }
 
-        private void UpdateEditControlsVisibility(ClipboardItem selectedItem = null, ClipboardItem selectedEditedItem = null)
+        private void UpdateEditControlsVisibility_AndPendingGridAppearance(ClipboardItem selectedItem = null, ClipboardItem selectedEditedItem = null)
         {
             if (selectedItem == null)
             {
@@ -1582,7 +1579,7 @@ namespace EditClipboardContents
             }
 
             // Visibility updates to make regardless of view mode and selected item
-            if (hasPendingChanges)
+            if (anyPendingEditsOrRemovals)
             {
                 labelPendingChanges.Visible = true;
             }
@@ -1594,6 +1591,7 @@ namespace EditClipboardContents
                 {
                     row.DefaultCellStyle.ForeColor = SystemColors.ControlText;
                     row.DefaultCellStyle.SelectionForeColor = SystemColors.HighlightText;
+                    SetDataGridRowFontStrikeout(dataGridViewClipboard, row, false);
                 }
             }
 
@@ -1633,20 +1631,31 @@ namespace EditClipboardContents
             // For any items in editedClipboardItems that has pending changes, make its row text color red
             foreach (var editedItem in editedClipboardItems)
             {
-                if (editedItem.HasPendingEdit)
+                int rowIndex;
+                // Update the row text appearance depending on pending operations
+                if (editedItem.PendingRemoval)
                 {
-                    int rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells["FormatId"].Value.ToString() == editedItem.FormatId.ToString());
+                    rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells["FormatId"].Value.ToString() == editedItem.FormatId.ToString());
                     if (rowIndex >= 0)
                     {
                         dataGridViewClipboard.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.Red;
-                        // Also text color while selected
+                        dataGridViewClipboard.Rows[rowIndex].DefaultCellStyle.SelectionForeColor = Color.Yellow;
+                        SetDataGridRowFontStrikeout(dataGridViewClipboard, dataGridViewClipboard.Rows[rowIndex], true);
+                    }
+                }
+                else if (editedItem.HasPendingEdit)
+                {
+                    rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells["FormatId"].Value.ToString() == editedItem.FormatId.ToString());
+                    if (rowIndex >= 0)
+                    {
+                        dataGridViewClipboard.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.Red;
                         dataGridViewClipboard.Rows[rowIndex].DefaultCellStyle.SelectionForeColor = Color.Yellow;
                     }
                 }
             }
 
             // Updates based on selected selectedItem only, regardless of view mode
-            if (selectedEditedItem.HasPendingEdit)
+            if (selectedEditedItem.HasPendingEdit || selectedEditedItem.PendingRemoval)
             {
                 buttonResetEdit.Enabled = true;
                 menuEdit_CopyEditedHexAsText.Enabled = true;
@@ -1682,6 +1691,47 @@ namespace EditClipboardContents
                 richTextBox_HexPlaintext.BackColor = SystemColors.Window;
             }
 
+        }
+
+        // Enables or Disables font strikeout for text of a given row, while preserving the otherwise existing font style
+        private void SetDataGridRowFontStrikeout(DataGridView dgv, DataGridViewRow row, bool strikeout)
+        {
+            if (dgv == null || row == null) return;
+
+            // Start with the DataGridView's DefaultCellStyle font
+            Font baseFont = dgv.DefaultCellStyle.Font;
+
+            // If RowsDefaultCellStyle has a font, use that instead
+            if (dgv.RowsDefaultCellStyle.Font != null)
+                baseFont = dgv.RowsDefaultCellStyle.Font;
+
+            // If the specific row has a font, use that
+            if (row.DefaultCellStyle.Font != null)
+                baseFont = row.DefaultCellStyle.Font;
+
+            // If we somehow still don't have a font, exit
+            if (baseFont == null) return;
+
+            // Determine the new font style
+            FontStyle newStyle = baseFont.Style & ~FontStyle.Strikeout;
+            if (strikeout)
+                newStyle |= FontStyle.Strikeout;
+
+            // Create the new font
+            Font newFont = new Font(baseFont, newStyle);
+
+            // Create a new style based on the existing row style
+            DataGridViewCellStyle newCellStyle = row.DefaultCellStyle.Clone();
+            newCellStyle.Font = newFont;
+
+            // Apply the new style to the row
+            row.DefaultCellStyle = newCellStyle;
+
+            // Optionally, apply to individual cells if needed
+            foreach (DataGridViewCell cell in row.Cells)
+            {
+                cell.Style = newCellStyle;
+            }
         }
 
         // Function to display save dialog and save the clipboard data to a file
@@ -1727,7 +1777,7 @@ namespace EditClipboardContents
         }
 
         // Updates selected clipboard selectedItem in editedClipboardItems list. Does not update the actual clipboard.
-        private void UpdateEditedClipboardItem(int formatId, byte[] rawData, bool setPending = true)
+        private void UpdateEditedClipboardItem(int formatId, byte[] rawData, bool setPendingEdit = true, bool setPendingRemoval = false)
         {
             // Match the selectedItem in the editedClipboardItems list
             for (int i = 0; i < editedClipboardItems.Count; i++)
@@ -1736,7 +1786,22 @@ namespace EditClipboardContents
                 {
                     editedClipboardItems[i].RawData = rawData;
                     editedClipboardItems[i].DataSize = (ulong)rawData.Length;
-                    editedClipboardItems[i].HasPendingEdit = setPending;
+                    editedClipboardItems[i].HasPendingEdit = setPendingEdit;
+                    editedClipboardItems[i].PendingRemoval = setPendingRemoval; // If the user applies an edit, presumably they don't want to remove it anymore
+                    return;
+                }
+            }
+        }
+
+        private void MarkIndividualClipboardItemForRemoval(uint formatId)
+        {
+            // Match the selectedItem in the editedClipboardItems list
+            for (int i = 0; i < editedClipboardItems.Count; i++)
+            {
+                if (editedClipboardItems[i].FormatId == formatId)
+                {
+                    editedClipboardItems[i].PendingRemoval = true;
+                    anyPendingEditsOrRemovals = true;
                     return;
                 }
             }
@@ -2400,6 +2465,7 @@ namespace EditClipboardContents
         public List<string> DataInfoList { get; set; }
         public string DataInfoLinesString => string.Join("\n", DataInfoList ?? new List<string>());
         public bool HasPendingEdit { get; set; } = false;
+        public bool PendingRemoval { get; set; } = false;
         public string FormatType { get; set; } = "Unknown";
         public string ErrorReason { get; set; } = null;
         public DiagnosticsInfo ErrorDiagnosisReport { get; set; }
@@ -2420,6 +2486,7 @@ namespace EditClipboardContents
                 AssumedSynthesized = this.AssumedSynthesized,
                 DataInfoList = new List<string>(this.DataInfoList ?? new List<string>()),
                 HasPendingEdit = false,
+                PendingRemoval = this.PendingRemoval,
                 FormatType = this.FormatType,
                 ErrorReason = this.ErrorReason,
                 ErrorDiagnosisReport = this.ErrorDiagnosisReport,
