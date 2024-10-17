@@ -964,10 +964,11 @@ namespace EditClipboardContents
         {
             uint formatId;
             bool result;
+            bool existingItem;
 
             // Get input from the user from a message box. They can enter a format name or format ID
             string input = "";
-            DialogResult inputResult = Utils.ShowInputDialog(owner: this, ref input, instructions: "Enter Format Name or ID:"); // Will put the user input in the "input" variable
+            DialogResult inputResult = Utils.ShowInputDialog(owner: this, ref input, instructions: "Enter format name or ID to add (or update):"); // Will put the user input in the "input" variable
 
             if (inputResult == DialogResult.Cancel)
             {
@@ -977,12 +978,12 @@ namespace EditClipboardContents
             // Try to parse it as a uint first
             if (uint.TryParse(input, out formatId))
             {
-                result = ManuallyCopySpecifiedClipboardFormat(formatId: formatId);
+                (result, existingItem) = ManuallyCopySpecifiedClipboardFormat(formatId: formatId);
 
                 // If the result still failed, also try using the inputted number as a format name string just in case, though unlikely
                 if (!result)
                 {
-                    result = ManuallyCopySpecifiedClipboardFormat(formatName: input, silent: true); // Using silent to avoid invalid format name message
+                    (result, existingItem) = ManuallyCopySpecifiedClipboardFormat(formatName: input, silent: true); // Using silent to avoid invalid format name message
                 }
             }
             // Not a uint, so must be a format name if anything
@@ -992,7 +993,7 @@ namespace EditClipboardContents
 
                 if (formatId != 0)
                 {
-                    result = ManuallyCopySpecifiedClipboardFormat(formatId: formatId);
+                    (result, existingItem) = ManuallyCopySpecifiedClipboardFormat(formatId: formatId);
                 }
                 else
                 {
@@ -1005,11 +1006,19 @@ namespace EditClipboardContents
             if (result)
             {
                 ProcessClipboardData();
-                MessageBox.Show("Successfully fetched the specified format.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (existingItem)
+                {
+                    MessageBox.Show("Successfully fetched and updated specified format.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Successfully fetched and added specified format.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                    
             }
             else
             {
-                MessageBox.Show("Error: Couldn't fetch the specified format. It might not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error: Couldn't fetch the specified format: {input}\n\nIt might not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

@@ -648,8 +648,11 @@ namespace EditClipboardContents
             }
         }
 
-        private bool ManuallyCopySpecifiedClipboardFormat(uint formatId = 0, string formatName = null, bool silent = false)
+        private (bool,bool) ManuallyCopySpecifiedClipboardFormat(uint formatId = 0, string formatName = null, bool silent = false)
         {
+            bool successResult = false;
+            bool existingItem = false;
+
             ClipboardItem item;
             // Check if the format is already in the list, to know whether to use retry mode or not
             if (formatName != null)
@@ -673,7 +676,7 @@ namespace EditClipboardContents
                 {
                     MessageBox.Show("No format ID or name specified", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                return false;
+                return (successResult, existingItem);
             }
 
             // If the item was not found and only the format name is provided, we can compare it against known and registered formats to find the ID
@@ -699,7 +702,7 @@ namespace EditClipboardContents
                         MessageBox.Show("Error: No valid format ID given.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
-                return false;
+                return (successResult, existingItem);
             }
 
             bool retryMode;
@@ -710,21 +713,22 @@ namespace EditClipboardContents
             else
             {
                 retryMode = true;
+                existingItem = true;
             }
 
-            bool result = false;
             if (NativeMethods.OpenClipboard(this.Handle))
             {
                 try
                 {
-                    result = CopyIndividualClipboardFormat(formatId, retryMode: retryMode);
+                    successResult = CopyIndividualClipboardFormat(formatId, retryMode: retryMode);
                 }
                 finally
                 {
                     NativeMethods.CloseClipboard();
                 }
             }
-            return result;
+
+            return (successResult, existingItem);
         }
 
 
