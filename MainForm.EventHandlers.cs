@@ -789,11 +789,23 @@ namespace EditClipboardContents
         {
             int itemIndex = dataGridViewClipboard.Rows.Count;  // The index of the current last item will be (count - 1) so the new item will be at index count
 
+            string customName = MyStrings.DefaultCustomFormatName;
+            // Check if the default name is already in use. If so, add a number to the end
+            if (editedClipboardItems.Any(item => item.FormatName == customName))
+            {
+                int i = 1;
+                while (editedClipboardItems.Any(item => item.FormatName == customName + " " + i))
+                {
+                    i++;
+                }
+                customName = $"{customName} {i}";
+            }
+
             // Create a new boilerplate clipboard item
             ClipboardItem newItem = new ClipboardItem()
             {
                 FormatId = 0,
-                FormatName = MyStrings.DefaultCustomFormatName,
+                FormatName = customName,
                 RawData = new byte[0],
                 ClipDataObject = null,
                 DataInfoList = new List<string>(),

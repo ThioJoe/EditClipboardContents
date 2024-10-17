@@ -1791,9 +1791,9 @@ namespace EditClipboardContents
                         dataGridViewClipboard.Rows[rowIndex].DefaultCellStyle.SelectionForeColor = Color.Yellow;
 
                         // If the format id column is 0, the cell to gray
-                        if (editedItem.UniqueID.ToString() == MyStrings.DefaultCustomFormatID)
+                        if (editedItem.FormatId.ToString() == MyStrings.DefaultCustomFormatID)
                         {
-                            dataGridViewClipboard.Rows[rowIndex].Cells[colName.UniqueID].Style.ForeColor = Color.Gray;
+                            dataGridViewClipboard.Rows[rowIndex].Cells[colName.FormatId].Style.ForeColor = Color.Gray;
                         }
                         // Using an else-if because if the custom format ID is default, the format name will be applied even if it is also default
                         else if (editedItem.FormatName == MyStrings.DefaultCustomFormatName) 
