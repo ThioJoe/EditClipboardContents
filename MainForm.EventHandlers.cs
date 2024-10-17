@@ -479,7 +479,7 @@ namespace EditClipboardContents
                 return;
             }
             // Get the struct / object info that would be displayed in object view of rich text box and copy it to clipboard
-            string data = FormatStructurePrinter.GetDataStringForTextbox(formatName: GetClipboardFormatName(itemToCopy.FormatId), fullItem: itemToCopy);
+            string data = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatName(itemToCopy.FormatId), fullItem: itemToCopy);
             Clipboard.SetText(data);
         }
 
@@ -608,7 +608,7 @@ namespace EditClipboardContents
             if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
             {
                 // Get the hex information
-                string data = FormatStructurePrinter.GetDataStringForTextbox(formatName: GetClipboardFormatName(itemToExport.FormatId), fullItem: itemToExport);
+                string data = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatName(itemToExport.FormatId), fullItem: itemToExport);
                 // TO DO - Export details of each object in the struct
 
                 // Save the data to a file
@@ -958,7 +958,59 @@ namespace EditClipboardContents
             {
                 File.WriteAllText(saveFileDialogResult.FileName, sb.ToString());
             }
+        }
 
+        private void toolStripButtonFetchManualFormat_Click(object sender, EventArgs e)
+        {
+            uint formatId;
+            bool result;
+
+            // Get input from the user from a message box. They can enter a format name or format ID
+            string input = "Enter the format name or format ID of the format you want to manually fetch.";
+            DialogResult inputResult = Utils.ShowInputDialog(ref input); // Will put the user input in the "input" variable
+
+            if (inputResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
+            // Try to parse it as a uint first
+            if (uint.TryParse(input, out formatId))
+            {
+                result = ManuallyCopySpecifiedClipboardFormat(formatId: formatId);
+
+                // If the result still failed, also try using the inputted number as a format name string just in case, though unlikely
+                if (!result)
+                {
+                    result = ManuallyCopySpecifiedClipboardFormat(formatName: input, silent: true); // Using silent to avoid invalid format name message
+                }
+            }
+            // Not a uint, so must be a format name if anything
+            else
+            {
+                formatId = Utils.GetClipboardFormatIdFromName(formatName: input, caseSensitive: false);
+
+                if (formatId != 0)
+                {
+                    result = ManuallyCopySpecifiedClipboardFormat(formatId: formatId);
+                }
+                else
+                {
+                    MessageBox.Show("Error: Couldn't find a format with the name or ID you entered.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+
+            // Final result
+            if (result)
+            {
+                ProcessClipboardData();
+                MessageBox.Show("Successfully fetched the specified format.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                MessageBox.Show("Error: Couldn't fetch the specified format. It might not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
     } // ----------------------------- End of MainForm partial class -----------------------------

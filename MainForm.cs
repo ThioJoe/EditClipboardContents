@@ -568,7 +568,7 @@ namespace EditClipboardContents
                 this.Update();
 
                 // -------- Start / Continue Enumeration ------------
-                bool successResutl = CopyIndividualClipboardFormat(format: format, loadedFormatCount: actuallyLoadableCount);
+                bool successResutl = CopyIndividualClipboardFormat(formatId: format, loadedFormatCount: actuallyLoadableCount);
                 if (!successResutl)
                 {
                     formatsToRetry.Add(format);
@@ -593,7 +593,7 @@ namespace EditClipboardContents
 
         }
 
-        private void RetryCopyClipboardFormat(uint formatId)
+        private void RetryCopyClipboardFormat(uint formatId, string specifiedFormatName = null)
         {
             bool successResult = false;
             // First open the clipboard
@@ -638,9 +638,89 @@ namespace EditClipboardContents
             }
         }
 
-        private bool CopyIndividualClipboardFormat(uint format, int loadedFormatCount = -1, bool retryMode = false)
+        private bool ManuallyCopySpecifiedClipboardFormat(uint formatId = 0, string formatName = null, bool silent = false)
         {
-            string formatName = GetClipboardFormatName(format);
+            ClipboardItem item;
+            // Check if the format is already in the list, to know whether to use retry mode or not
+            if (formatName != null)
+            {
+                // Look for exact match first
+                item = clipboardItems.FirstOrDefault(item => item.FormatName == formatName);
+
+                // Look for non-case sensitive match
+                if (item == null)
+                {
+                    item = clipboardItems.FirstOrDefault(item => item.FormatName.ToLower().Contains(formatName.ToLower()));
+                }
+            }
+            else if (formatId != 0)
+            {
+                item = clipboardItems.FirstOrDefault(item => item.FormatId == formatId);
+            }
+            else
+            {
+                if (!silent)
+                {
+                    MessageBox.Show("No format ID or name specified", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                return false;
+            }
+
+            // If the item was not found and only the format name is provided, we can compare it against known and registered formats to find the ID
+            if (item == null && formatId == 0 && formatName != null)
+            {
+                formatId = Utils.GetClipboardFormatIdFromName(formatName, caseSensitive: false);
+            }
+
+            // We need a format ID at least
+            if (formatId == 0)
+            {
+                if (formatName != null)
+                {
+                    if (!silent)
+                    {
+                        MessageBox.Show("Error: Format name does not appear to match any standard or currently registered formats on the system.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                else
+                {
+                    if (!silent)
+                    {
+                        MessageBox.Show("Error: No valid format ID given.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                return false;
+            }
+
+            bool retryMode;
+            if (item == null)
+            {
+                retryMode = false;
+            }
+            else
+            {
+                retryMode = true;
+            }
+
+            bool result = false;
+            if (NativeMethods.OpenClipboard(this.Handle))
+            {
+                try
+                {
+                    result = CopyIndividualClipboardFormat(formatId, retryMode: retryMode);
+                }
+                finally
+                {
+                    NativeMethods.CloseClipboard();
+                }
+            }
+            return result;
+        }
+
+
+        private bool CopyIndividualClipboardFormat(uint formatId, int loadedFormatCount = -1, bool retryMode = false)
+        {
+            string formatName = Utils.GetClipboardFormatName(formatId);
             ulong dataSize = 0;
             byte[] rawData = null;
             int? error; // Initializes as null anyway
@@ -651,22 +731,22 @@ namespace EditClipboardContents
 
             //Console.WriteLine($"Checking Format {actuallyLoadableCount}: {formatName} ({format})"); // Debugging
 
-            IntPtr hData = NativeMethods.GetClipboardData(format);
+            IntPtr hData = NativeMethods.GetClipboardData(formatId);
             if (hData == IntPtr.Zero)
             {
                 copySuccess = false;
                 error = Marshal.GetLastWin32Error();
                 string errorMessage = GetWin32ErrorMessage(error);
 
-                Console.WriteLine($"GetClipboardData returned null for format {format}. Error: {error} | Message: {errorMessage}");
+                Console.WriteLine($"GetClipboardData returned null for format {formatId}. Error: {error} | Message: {errorMessage}");
 
                 if (!string.IsNullOrEmpty(formatName))
                 {
-                    diagnosisReport = (DiagnoseClipboardState(format, formatName));
+                    diagnosisReport = (DiagnoseClipboardState(formatId, formatName));
                 }
                 else
                 {
-                    diagnosisReport = DiagnoseClipboardState(format);
+                    diagnosisReport = DiagnoseClipboardState(formatId);
                 }
 
                 if (error == null)
@@ -691,7 +771,7 @@ namespace EditClipboardContents
             try
             {
                 // First need to specially handle certain formats that don't use HGlobal
-                switch (format)
+                switch (formatId)
                 {
                     case 2: // CF_BITMAP
                         // Test getting raw data using GetDIBits
@@ -738,7 +818,7 @@ namespace EditClipboardContents
                             }
                             catch (Exception ex)
                             {
-                                Console.WriteLine($"Error processing format {format}: {ex.Message}");
+                                Console.WriteLine($"Error processing format {formatId}: {ex.Message}");
                             }
                             finally
                             {
@@ -747,14 +827,14 @@ namespace EditClipboardContents
                         }
                         else
                         {
-                            Console.WriteLine($"GlobalLock returned null for format {format}");
+                            Console.WriteLine($"GlobalLock returned null for format {formatId}");
                         }
                         break;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error processing format {format}: {ex.Message}");
+                Console.WriteLine($"Error processing format {formatId}: {ex.Message}");
                 copySuccess = false;
             }
             if (retryMode == false)
@@ -762,7 +842,7 @@ namespace EditClipboardContents
                 var item = new ClipboardItem
                 {
                     FormatName = formatName,
-                    FormatId = format,
+                    FormatId = formatId,
                     Handle = hData,
                     DataSize = dataSize,
                     RawData = rawData,
@@ -777,7 +857,7 @@ namespace EditClipboardContents
             {
                 // If the retry was a success, update the existing item
                 // Find the item in the list
-                var item = clipboardItems.FirstOrDefault(item => item.FormatId == format);
+                var item = clipboardItems.FirstOrDefault(item => item.FormatId == formatId);
                 if (item != null)
                 {
                     item.RawData = rawData;
@@ -1128,74 +1208,10 @@ namespace EditClipboardContents
             }
         }
 
-        private string GetClipboardFormatName(uint format)
-        {
-            // Ensure the format ID is within the range of registered clipboard formats.  The windows api method does not work on standard formats, it will just return 0.
-            // See:https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerclipboardformata
-            if (format > 0xFFFF || format < 0xC000)
-            {
-                return GetKnownStandardFormatName(format);
-            }
-
-            // Define a sufficient buffer size
-            StringBuilder formatName = new StringBuilder(256);
-            int result = NativeMethods.GetClipboardFormatNameA(format, formatName, formatName.Capacity); // This will return 0 for standard formats
-
-            if (result > 0)
-            {
-                return formatName.ToString();
-            }
-            else
-            {
-                return GetKnownStandardFormatName(format);
-            }
-        }
-
         internal class ClipboardFormatData
         {
             public uint Format { get; set; }
             public IntPtr Data { get; set; }
-        }
-
-        private string GetKnownStandardFormatName(uint format)
-        {
-            switch (format)
-            {
-                case 1: return "CF_TEXT";
-                case 2: return "CF_BITMAP";
-                case 3: return "CF_METAFILEPICT";
-                case 4: return "CF_SYLK";
-                case 5: return "CF_DIF";
-                case 6: return "CF_TIFF";
-                case 7: return "CF_OEMTEXT";
-                case 8: return "CF_DIB";
-                case 9: return "CF_PALETTE";
-                case 10: return "CF_PENDATA";
-                case 11: return "CF_RIFF";
-                case 12: return "CF_WAVE";
-                case 13: return "CF_UNICODETEXT";
-                case 14: return "CF_ENHMETAFILE";
-                case 15: return "CF_HDROP";
-                case 16: return "CF_LOCALE";
-                case 17: return "CF_DIBV5";
-                case 0x0080: return "CF_OWNERDISPLAY";
-                case 0x0081: return "CF_DSPTEXT";
-                case 0x0082: return "CF_DSPBITMAP";
-                case 0x0083: return "CF_DSPMETAFILEPICT";
-                case 0x008E: return "CF_DSPENHMETAFILE";
-            }
-
-            if (format >= 0x0200 && format <= 0x02FF)
-            {
-                return $"CF_PRIVATEFIRST-CF_PRIVATELAST ({format:X4})";
-            }
-
-            if (format >= 0x0300 && format <= 0x03FF)
-            {
-                return $"CF_GDIOBJFIRST-CF_GDIOBJLAST ({format:X4})";
-            }
-
-            return $"Unknown Format ({format:X4})";
         }
 
         private void ChangeCellFocus(int rowIndex, int cellIndex = -1)
@@ -1333,7 +1349,7 @@ namespace EditClipboardContents
                     break;
                 case 3: // Object / Struct View
                     richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
-                    richTextBoxContents.Text = FormatStructurePrinter.GetDataStringForTextbox(formatName: GetClipboardFormatName(item.FormatId), fullItem: item);
+                    richTextBoxContents.Text = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatName(item.FormatId), fullItem: item);
                     richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
                     richTextBoxContents.BackColor = SystemColors.ControlLight;
 

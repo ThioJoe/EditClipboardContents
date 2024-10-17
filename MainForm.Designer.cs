@@ -18,8 +18,8 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.dataGridViewClipboard = new System.Windows.Forms.DataGridView();
             this.contextMenuStrip_dataGridView = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -52,10 +52,11 @@
             this.menuHelp_WhyTakingLong = new System.Windows.Forms.MenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonRefresh = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonFetchManualFormat = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonAddFormat = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonSaveEdited = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonExportSelected = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButtonAddFormat = new System.Windows.Forms.ToolStripButton();
             this.richTextBoxContents = new System.Windows.Forms.RichTextBox();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
             this.labelLoading = new System.Windows.Forms.Label();
@@ -93,24 +94,24 @@
             this.dataGridViewClipboard.AllowUserToDeleteRows = false;
             this.dataGridViewClipboard.AllowUserToResizeRows = false;
             this.dataGridViewClipboard.BackgroundColor = System.Drawing.SystemColors.ControlLight;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewClipboard.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewClipboard.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridViewClipboard.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewClipboard.ContextMenuStrip = this.contextMenuStrip_dataGridView;
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridViewClipboard.DefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridViewClipboard.DefaultCellStyle = dataGridViewCellStyle2;
             this.dataGridViewClipboard.Location = new System.Drawing.Point(0, 0);
             this.dataGridViewClipboard.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dataGridViewClipboard.Name = "dataGridViewClipboard";
@@ -333,6 +334,7 @@
             this.toolStrip1.ImageScalingSize = new System.Drawing.Size(42, 42);
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripButtonRefresh,
+            this.toolStripButtonFetchManualFormat,
             this.toolStripButtonDelete,
             this.toolStripButtonAddFormat,
             this.toolStripButtonSaveEdited,
@@ -354,6 +356,17 @@
             this.toolStripButtonRefresh.Text = "Reload From Clipboard";
             this.toolStripButtonRefresh.Click += new System.EventHandler(this.toolStripButtonRefresh_Click);
             // 
+            // toolStripButtonFetchManualFormat
+            // 
+            this.toolStripButtonFetchManualFormat.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonFetchManualFormat.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonFetchManualFormat.Image")));
+            this.toolStripButtonFetchManualFormat.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonFetchManualFormat.Name = "toolStripButtonFetchManualFormat";
+            this.toolStripButtonFetchManualFormat.Size = new System.Drawing.Size(46, 46);
+            this.toolStripButtonFetchManualFormat.Text = "Manually Fetch Specific Clipboard Format";
+            this.toolStripButtonFetchManualFormat.ToolTipText = "Manually re-fetch a specific format by name or ID";
+            this.toolStripButtonFetchManualFormat.Click += new System.EventHandler(this.toolStripButtonFetchManualFormat_Click);
+            // 
             // toolStripButtonDelete
             // 
             this.toolStripButtonDelete.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
@@ -363,6 +376,17 @@
             this.toolStripButtonDelete.Size = new System.Drawing.Size(46, 46);
             this.toolStripButtonDelete.Text = "Delete Selected Item From Clipboard";
             this.toolStripButtonDelete.Click += new System.EventHandler(this.toolStripButtonDelete_Click);
+            // 
+            // toolStripButtonAddFormat
+            // 
+            this.toolStripButtonAddFormat.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonAddFormat.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonAddFormat.Image")));
+            this.toolStripButtonAddFormat.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonAddFormat.Name = "toolStripButtonAddFormat";
+            this.toolStripButtonAddFormat.Size = new System.Drawing.Size(46, 46);
+            this.toolStripButtonAddFormat.Text = "Add a custom format";
+            this.toolStripButtonAddFormat.ToolTipText = "Add a custom format";
+            this.toolStripButtonAddFormat.Click += new System.EventHandler(this.toolStripButtonAddFormat_Click);
             // 
             // toolStripButtonSaveEdited
             // 
@@ -385,17 +409,6 @@
             this.toolStripButtonExportSelected.Text = "Export selected item data as file";
             this.toolStripButtonExportSelected.ToolTipText = "Export selected item data as file";
             this.toolStripButtonExportSelected.Click += new System.EventHandler(this.toolStripButtonExportSelected_Click);
-            // 
-            // toolStripButtonAddFormat
-            // 
-            this.toolStripButtonAddFormat.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButtonAddFormat.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonAddFormat.Image")));
-            this.toolStripButtonAddFormat.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonAddFormat.Name = "toolStripButtonAddFormat";
-            this.toolStripButtonAddFormat.Size = new System.Drawing.Size(46, 46);
-            this.toolStripButtonAddFormat.Text = "Add a custom format";
-            this.toolStripButtonAddFormat.ToolTipText = "Add a custom format";
-            this.toolStripButtonAddFormat.Click += new System.EventHandler(this.toolStripButtonAddFormat_Click);
             // 
             // richTextBoxContents
             // 
@@ -510,7 +523,7 @@
             // 
             this.checkBoxPlainTextEditing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxPlainTextEditing.AutoSize = true;
-            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(11, 395);
+            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(-1, 395);
             this.checkBoxPlainTextEditing.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.checkBoxPlainTextEditing.Name = "checkBoxPlainTextEditing";
             this.checkBoxPlainTextEditing.Size = new System.Drawing.Size(148, 24);
@@ -533,7 +546,7 @@
             "UTF-32 BE",
             "Codepage 1252",
             "System Default"});
-            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(263, 391);
+            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(251, 391);
             this.dropdownHexToTextEncoding.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dropdownHexToTextEncoding.Name = "dropdownHexToTextEncoding";
             this.dropdownHexToTextEncoding.Size = new System.Drawing.Size(217, 28);
@@ -544,7 +557,7 @@
             // 
             this.labelHexToPlaintextEncoding.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelHexToPlaintextEncoding.AutoSize = true;
-            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(176, 397);
+            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(164, 397);
             this.labelHexToPlaintextEncoding.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelHexToPlaintextEncoding.Name = "labelHexToPlaintextEncoding";
             this.labelHexToPlaintextEncoding.Size = new System.Drawing.Size(80, 20);
@@ -753,5 +766,6 @@
         private System.Windows.Forms.Label labelCustomFormatNameID;
         private System.Windows.Forms.MenuItem menuItem1;
         private System.Windows.Forms.MenuItem menuItemFile_ExportRegisteredFormats;
+        private System.Windows.Forms.ToolStripButton toolStripButtonFetchManualFormat;
     }
 }

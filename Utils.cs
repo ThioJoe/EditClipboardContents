@@ -50,9 +50,175 @@ namespace EditClipboardContents
             catch (Exception ex)
             {
                 Console.WriteLine("Error in GetAllPossibleRegisteredFormatNames: " + ex.Message);
-                MessageBox.Show($"Something went wrong. Error: {ex}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Something went wrong trying to fetch list of registered formats. Error: {ex}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return null;
             }
+        }
+
+        public static uint GetClipboardFormatIdFromName(string formatName, bool caseSensitive = true)
+        {
+            uint formatId = 0;
+            // Get map where key is the ID and value is the name
+            Dictionary<uint, string> nameIDMap = Utils.GetAllPossibleRegisteredFormatNames();
+
+            if (nameIDMap.ContainsValue(formatName)) // Prefer exact match
+            {
+                formatId = nameIDMap.FirstOrDefault(x => x.Value == formatName).Key;
+            }
+            else if (!caseSensitive) // If case insensitive, try fallback to case insensitive match if specified
+            {
+                formatId = nameIDMap.FirstOrDefault(x => x.Value.ToLower() == formatName.ToLower()).Key;
+            }
+
+            // If it's still zero, try the standard formats
+            if (formatId == 0)
+            {
+                formatId = GetStandardFormatIdFromName(formatName);
+            }
+
+            return formatId;
+        }
+
+        public static string GetClipboardFormatName(uint format)
+        {
+            // Ensure the format ID is within the range of registered clipboard formats.  The windows api method does not work on standard formats, it will just return 0.
+            // See:https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerclipboardformata
+            if (format > 0xFFFF || format < 0xC000)
+            {
+                return GetStandardFormatNameFromId(format);
+            }
+
+            // Define a sufficient buffer size
+            StringBuilder formatName = new StringBuilder(256);
+            int result = NativeMethods.GetClipboardFormatNameA(format, formatName, formatName.Capacity); // This will return 0 for standard formats
+
+            if (result > 0)
+            {
+                return formatName.ToString();
+            }
+            else
+            {
+                return GetStandardFormatNameFromId(format);
+            }
+        }
+
+        private static string GetStandardFormatNameFromId(uint format)
+        {
+            switch (format)
+            {
+                case 1: return "CF_TEXT";
+                case 2: return "CF_BITMAP";
+                case 3: return "CF_METAFILEPICT";
+                case 4: return "CF_SYLK";
+                case 5: return "CF_DIF";
+                case 6: return "CF_TIFF";
+                case 7: return "CF_OEMTEXT";
+                case 8: return "CF_DIB";
+                case 9: return "CF_PALETTE";
+                case 10: return "CF_PENDATA";
+                case 11: return "CF_RIFF";
+                case 12: return "CF_WAVE";
+                case 13: return "CF_UNICODETEXT";
+                case 14: return "CF_ENHMETAFILE";
+                case 15: return "CF_HDROP";
+                case 16: return "CF_LOCALE";
+                case 17: return "CF_DIBV5";
+                case 0x0080: return "CF_OWNERDISPLAY";
+                case 0x0081: return "CF_DSPTEXT";
+                case 0x0082: return "CF_DSPBITMAP";
+                case 0x0083: return "CF_DSPMETAFILEPICT";
+                case 0x008E: return "CF_DSPENHMETAFILE";
+            }
+
+            if (format >= 0x0200 && format <= 0x02FF)
+            {
+                return $"CF_PRIVATEFIRST-CF_PRIVATELAST ({format:X4})";
+            }
+
+            if (format >= 0x0300 && format <= 0x03FF)
+            {
+                return $"CF_GDIOBJFIRST-CF_GDIOBJLAST ({format:X4})";
+            }
+
+            return $"Unknown Format ({format:X4})";
+        }
+
+        public static uint GetStandardFormatIdFromName(string formatName)
+        {
+            formatName = formatName.ToUpper();
+            switch (formatName)
+            {
+                case "CF_TEXT": return 1;
+                case "CF_BITMAP": return 2;
+                case "CF_METAFILEPICT": return 3;
+                case "CF_SYLK": return 4;
+                case "CF_DIF": return 5;
+                case "CF_TIFF": return 6;
+                case "CF_OEMTEXT": return 7;
+                case "CF_DIB": return 8;
+                case "CF_PALETTE": return 9;
+                case "CF_PENDATA": return 10;
+                case "CF_RIFF": return 11;
+                case "CF_WAVE": return 12;
+                case "CF_UNICODETEXT": return 13;
+                case "CF_ENHMETAFILE": return 14;
+                case "CF_HDROP": return 15;
+                case "CF_LOCALE": return 16;
+                case "CF_DIBV5": return 17;
+                case "CF_OWNERDISPLAY": return 0x0080;
+                case "CF_DSPTEXT": return 0x0081;
+                case "CF_DSPBITMAP": return 0x0082;
+                case "CF_DSPMETAFILEPICT": return 0x0083;
+                case "CF_DSPENHMETAFILE": return 0x008E;
+            }
+            if (formatName.StartsWith("CF_PRIVATEFIRST") || formatName.StartsWith("CF_PRIVATELAST"))
+            {
+                return Convert.ToUInt32(formatName.Substring(1, 4), 16);
+            }
+            if (formatName.StartsWith("CF_GDIOBJFIRST") || formatName.StartsWith("CF_GDIOBJLAST"))
+            {
+                return Convert.ToUInt32(formatName.Substring(1, 4), 16);
+            }
+            return 0;
+        }
+
+        public static DialogResult ShowInputDialog(ref string input)
+        {
+            System.Drawing.Size size = new System.Drawing.Size(200, 70);
+            Form inputBox = new Form();
+
+            inputBox.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            inputBox.ClientSize = size;
+            inputBox.Text = "Name";
+
+            System.Windows.Forms.TextBox textBox = new TextBox();
+            textBox.Size = new System.Drawing.Size(size.Width - 10, 23);
+            textBox.Location = new System.Drawing.Point(5, 5);
+            textBox.Text = input;
+            inputBox.Controls.Add(textBox);
+
+            Button okButton = new Button();
+            okButton.DialogResult = System.Windows.Forms.DialogResult.OK;
+            okButton.Name = "okButton";
+            okButton.Size = new System.Drawing.Size(75, 23);
+            okButton.Text = "&OK";
+            okButton.Location = new System.Drawing.Point(size.Width - 80 - 80, 39);
+            inputBox.Controls.Add(okButton);
+
+            Button cancelButton = new Button();
+            cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            cancelButton.Name = "cancelButton";
+            cancelButton.Size = new System.Drawing.Size(75, 23);
+            cancelButton.Text = "&Cancel";
+            cancelButton.Location = new System.Drawing.Point(size.Width - 80, 39);
+            inputBox.Controls.Add(cancelButton);
+
+            inputBox.AcceptButton = okButton;
+            inputBox.CancelButton = cancelButton;
+
+            DialogResult result = inputBox.ShowDialog();
+            input = textBox.Text;
+            return result;
         }
 
     } // ----------------- End of class -----------------
