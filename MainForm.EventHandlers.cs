@@ -541,6 +541,10 @@ namespace EditClipboardContents
 
         private void toolStripButtonSaveEdited_Click(object sender, EventArgs e)
         {
+            if (!ValidateCustomFormats())
+            {
+                return;
+            }
             SaveClipboardData();
             RefreshClipboardItems();
             anyPendingChanges = false;
@@ -623,7 +627,7 @@ namespace EditClipboardContents
                     dataGridViewClipboard.FirstDisplayedScrollingRowIndex = rowIndex;
                 }
             }
-            UpdateEditControlsVisibility_AndPendingGridAppearance();
+            //UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
         private void toolStripButtonDelete_Click(object sender, EventArgs e)

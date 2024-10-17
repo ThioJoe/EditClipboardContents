@@ -29,6 +29,7 @@ using System.Collections;
 using static EditClipboardContents.ClipboardFormats;
 using System.Threading.Tasks;
 using System.Data.Common;
+using System.Windows.Forms.Automation;
 
 
 namespace EditClipboardContents
@@ -102,8 +103,12 @@ namespace EditClipboardContents
             UpdateToolLocations();
 
             // Initial tool settings
+            dropdownContentsViewMode.SelectedIndexChanged -= dropdownContentsViewMode_SelectedIndexChanged;
+            dropdownHexToTextEncoding.SelectedIndexChanged -= dropdownHexToTextEncoding_SelectedIndexChanged;
             dropdownContentsViewMode.SelectedIndex = 0; // Default index 0 is "Text" view mode
             dropdownHexToTextEncoding.SelectedIndex = 0; // Default index 0 is "UTF-8" encoding
+            dropdownContentsViewMode.SelectedIndexChanged += dropdownContentsViewMode_SelectedIndexChanged;
+            dropdownHexToTextEncoding.SelectedIndexChanged += dropdownHexToTextEncoding_SelectedIndexChanged;
 
             // Set color of toolstrip manually because it doesn't set it apparently
             toolStrip1.BackColor = SystemColors.Control;
@@ -203,7 +208,9 @@ namespace EditClipboardContents
             string dataInfoString = MyStrings.CustomPendingData;
             string textPreview = "";
 
+            dataGridViewClipboard.SelectionChanged -= dataGridViewClipboard_SelectionChanged;
             dataGridViewClipboard.Rows.Add(index, uniqueID, formatName, formatID, formatType, dataSize, dataInfoString, textPreview);
+            dataGridViewClipboard.SelectionChanged += dataGridViewClipboard_SelectionChanged;
         }
 
         // Update processedData grid view with clipboard contents during refresh
@@ -240,7 +247,10 @@ namespace EditClipboardContents
             }
 
             // Add info to the grid view, then will be resized
+            // Disable selected index changed event to prevent it from firing
+            dataGridViewClipboard.SelectionChanged -= dataGridViewClipboard_SelectionChanged;
             dataGridViewClipboard.Rows.Add(index, uniqueID, formatName, formatID, formatType, dataSize, dataInfoString, textPreview);
+            dataGridViewClipboard.SelectionChanged += dataGridViewClipboard_SelectionChanged;
 
             // Temporarily set AutoSizeMode to calculate proper widths
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
@@ -518,6 +528,8 @@ namespace EditClipboardContents
 
             ShowLoadingIndicator(false);
             UpdateSplitterPosition_FitDataGrid();
+
+            UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
         private void CopyClipboardData()
@@ -1641,6 +1653,7 @@ namespace EditClipboardContents
 
             int idealMaxSize = (int)Math.Round((decimal)splitContainerMain.Height * (decimal)0.6);
             int trueMaxSize = splitContainerMain.Height - CompensateDPI(75);
+            newSize += CompensateDPI(2); // Add a little extra space
             // Don't exceed 60% of the splitter panel
             if (newSize > idealMaxSize)
             {
@@ -1911,16 +1924,16 @@ namespace EditClipboardContents
             if (dataGridViewClipboard.SelectedRows.Count > 0)
             {
                 DataGridViewRow selectedRow = dataGridViewClipboard.SelectedRows[0];
-                if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatId))
+                if (Guid.TryParse(selectedRow.Cells[colName.UniqueID].Value.ToString(), out Guid uniqueID))
                 {
                     if (returnEditedItemVersion)
                     {
-                        return editedClipboardItems.Find(i => i.FormatId == formatId);
+                        return editedClipboardItems.Find(i => i.UniqueID == uniqueID);
                     }
                     else
                     {
                         //MessageBox.Show("There is no original data for this item.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return clipboardItems.Find(i => i.FormatId == formatId);
+                        return clipboardItems.Find(i => i.UniqueID == uniqueID);
                     }
                 }
             }
@@ -2466,12 +2479,104 @@ namespace EditClipboardContents
             }
         }
 
-        //public bool ValidateCustomFormat(uint formatID, string formatName)
-        //{
+        public bool ValidateCustomFormats()
+        {
+            bool allValid = false ;
+            bool allValidRanges = true;
 
-        //}
+            // Create list of custom format names and id pairs
+            List<string[]> IDNamePairs = new List<string[]>();
+            
+            foreach (ClipboardItem item in editedClipboardItems)
+            {
+                IDNamePairs.Add(new string[] { item.FormatId.ToString(), item.FormatName }); // Create list to check for duplicates next
 
-        
+                bool validRange = false;
+                if (item.FormatType == MyStrings.DefaultCustomFormatType) 
+                {
+                    if (item.FormatId == 0
+                        || (item.FormatId >= MyVals.RegisteredFormatMinID && item.FormatId <= MyVals.RegisteredFormatMaxID)
+                        )
+                    {
+                        validRange = true;
+                    }
+                }
+                else // Not a new custom format
+                {
+                    validRange = true;
+                }
+                
+                if (!validRange)
+                {
+                    allValidRanges = false;
+                }
+            }
+
+            // Go through the pairs and see if any custom formats are identical
+            bool noDuplicateCustomFormats = IDNamePairs.Distinct().Count() == IDNamePairs.Count();
+
+            // Check if any custom formats match a non-custom format's name
+            bool noConflictingCustomNames = true;
+            bool noConflictingCustomIDs = true;
+            List<ClipboardItem> customItems = editedClipboardItems.Where(i => i.FormatType == MyStrings.DefaultCustomFormatType).ToList();
+            List<ClipboardItem> regularItems = editedClipboardItems.Where(i => i.FormatType != MyStrings.DefaultCustomFormatType).ToList();
+
+            foreach (ClipboardItem customItem in customItems)
+            {
+                foreach (ClipboardItem regularItem in regularItems)
+                {
+                    if (regularItem.FormatName == customItem.FormatName)
+                    {
+                        // Allow certain exceptions
+                        if (!regularItem.PendingRemoval && !customItem.PendingRemoval)
+                        {
+                            noConflictingCustomNames = false;
+                            break;
+                        }
+                    }
+
+                    if (regularItem.FormatId == customItem.FormatId)
+                    {
+                        // Allow certain exceptions
+                        if (!regularItem.PendingRemoval || !customItem.PendingRemoval)
+                        {
+                            noConflictingCustomIDs = false;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (allValidRanges && noDuplicateCustomFormats && noConflictingCustomIDs && noConflictingCustomNames)
+            {
+                allValid = true;
+            }
+            else if (!allValidRanges)
+            {
+                int minID = (int)MyVals.RegisteredFormatMinID;
+                int maxID = (int)MyVals.RegisteredFormatMaxID;
+                MessageBox.Show($"Custom format IDs must be between {minID} and {maxID} (the valid registered format range).", "Invalid Custom Format ID", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (!noDuplicateCustomFormats)
+            {
+                MessageBox.Show("Custom format IDs and names must be unique.", "Duplicate Custom Formats", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (!noConflictingCustomNames)
+            {
+                MessageBox.Show("Custom format names must not match any existing format names (unless one or the other is marked for deletion).", "Conflicting Format Names", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (!noConflictingCustomIDs)
+            {
+                MessageBox.Show("Custom format IDs must not match any existing format IDs (unless one or the other is marked for deletion).", "Conflicting Format IDs", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                MessageBox.Show("An unknown error occurred while validating custom formats.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            return allValid;
+        }
+
     } // ---------------------------------------------------------------------------------------------------
     // --------------------------------------- End of MainForm Class ---------------------------------------
     // -----------------------------------------------------------------------------------------------------
