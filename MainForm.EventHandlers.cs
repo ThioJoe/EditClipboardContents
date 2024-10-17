@@ -966,8 +966,8 @@ namespace EditClipboardContents
             bool result;
 
             // Get input from the user from a message box. They can enter a format name or format ID
-            string input = "Enter the format name or format ID of the format you want to manually fetch.";
-            DialogResult inputResult = Utils.ShowInputDialog(ref input); // Will put the user input in the "input" variable
+            string input = "";
+            DialogResult inputResult = Utils.ShowInputDialog(owner: this, ref input, instructions: "Enter Format Name or ID:"); // Will put the user input in the "input" variable
 
             if (inputResult == DialogResult.Cancel)
             {

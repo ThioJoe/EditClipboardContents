@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.Remoting;
 using System.Text;
@@ -182,41 +183,88 @@ namespace EditClipboardContents
             return 0;
         }
 
-        public static DialogResult ShowInputDialog(ref string input)
+        public static DialogResult ShowInputDialog(Form owner, ref string input, string instructions, float scale = 1.0f)
         {
-            System.Drawing.Size size = new System.Drawing.Size(200, 70);
+            int dpi(int value) => MainForm.CompensateDPIStatic(value); // Alias for DPI compensation
+                                                                       // Base dimensions
+            int baseWidth = dpi(300);
+            int baseHeight = dpi(130);
+            int basePadding = dpi(20);
+            int baseButtonWidth = dpi(75);
+            int baseButtonHeight = dpi(23);
+            int baseTextBoxHeight = dpi(23);
+            int baseLabelHeight = dpi(20);
+            int baseTopSpacing = dpi(20);
+            int baseLabelToTextBoxSpacing = dpi(10);
+            int baseButtonToBottomSpacing = dpi(20);
+            int baseFontSize = 10;
+            // Scaled dimensions
+            int scaledWidth = (int)(baseWidth * scale);
+            int scaledHeight = (int)(baseHeight * scale);
+            int scaledPadding = (int)(basePadding * scale);
+            int scaledButtonWidth = (int)(baseButtonWidth * scale);
+            int scaledButtonHeight = (int)(baseButtonHeight * scale);
+            int scaledTextBoxHeight = (int)(baseTextBoxHeight * scale);
+            int scaledLabelHeight = (int)(baseLabelHeight * scale);
+            int scaledTopSpacing = (int)(baseTopSpacing * scale);
+            int scaledLabelToTextBoxSpacing = (int)(baseLabelToTextBoxSpacing * scale);
+            int scaledButtonToBottomSpacing = (int)(baseButtonToBottomSpacing * scale);
+            int scaledFontSize = (int)(baseFontSize * scale);
+            // Form
             Form inputBox = new Form();
-
-            inputBox.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            inputBox.ClientSize = size;
+            inputBox.FormBorderStyle = FormBorderStyle.FixedDialog;
+            inputBox.ClientSize = new Size(scaledWidth, scaledHeight);
             inputBox.Text = "Name";
+            inputBox.StartPosition = FormStartPosition.Manual;
 
-            System.Windows.Forms.TextBox textBox = new TextBox();
-            textBox.Size = new System.Drawing.Size(size.Width - 10, 23);
-            textBox.Location = new System.Drawing.Point(5, 5);
+            // Center the inputBox relative to the owner form
+            inputBox.Location = new Point(
+                owner.Location.X + (owner.Width - inputBox.Width) / 2,
+                owner.Location.Y + (owner.Height - inputBox.Height) / 2
+            );
+
+            // Instructions Label
+            Label instructionsLabel = new Label();
+            instructionsLabel.AutoSize = true;
+            instructionsLabel.MaximumSize = new Size(scaledWidth - 2 * scaledPadding, 0);
+            instructionsLabel.Location = new Point(scaledPadding, scaledTopSpacing);
+            instructionsLabel.Text = instructions;
+            instructionsLabel.Font = new Font(instructionsLabel.Font.FontFamily, scaledFontSize);
+            inputBox.Controls.Add(instructionsLabel);
+            // TextBox
+            TextBox textBox = new TextBox();
+            textBox.Size = new Size(scaledWidth - 2 * scaledPadding, scaledTextBoxHeight);
+            textBox.Location = new Point(scaledPadding, instructionsLabel.Bottom + scaledLabelToTextBoxSpacing);
             textBox.Text = input;
+            textBox.Font = new Font(textBox.Font.FontFamily, scaledFontSize);
             inputBox.Controls.Add(textBox);
-
+            // Calculate button positions
+            int totalButtonWidth = 2 * scaledButtonWidth + scaledPadding;
+            int buttonStartX = (scaledWidth - totalButtonWidth) / 2;
+            int buttonY = scaledHeight - scaledButtonHeight - scaledButtonToBottomSpacing;
+            // OK Button
             Button okButton = new Button();
-            okButton.DialogResult = System.Windows.Forms.DialogResult.OK;
+            okButton.DialogResult = DialogResult.OK;
             okButton.Name = "okButton";
-            okButton.Size = new System.Drawing.Size(75, 23);
+            okButton.Size = new Size(scaledButtonWidth, scaledButtonHeight);
             okButton.Text = "&OK";
-            okButton.Location = new System.Drawing.Point(size.Width - 80 - 80, 39);
+            okButton.Location = new Point(buttonStartX, buttonY);
+            okButton.Font = new Font(okButton.Font.FontFamily, scaledFontSize);
             inputBox.Controls.Add(okButton);
-
+            // Cancel Button
             Button cancelButton = new Button();
-            cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            cancelButton.DialogResult = DialogResult.Cancel;
             cancelButton.Name = "cancelButton";
-            cancelButton.Size = new System.Drawing.Size(75, 23);
+            cancelButton.Size = new Size(scaledButtonWidth, scaledButtonHeight);
             cancelButton.Text = "&Cancel";
-            cancelButton.Location = new System.Drawing.Point(size.Width - 80, 39);
+            cancelButton.Location = new Point(buttonStartX + scaledButtonWidth + scaledPadding, buttonY);
+            cancelButton.Font = new Font(cancelButton.Font.FontFamily, scaledFontSize);
             inputBox.Controls.Add(cancelButton);
-
             inputBox.AcceptButton = okButton;
             inputBox.CancelButton = cancelButton;
 
-            DialogResult result = inputBox.ShowDialog();
+            // Show the dialog as a modal dialog and return the result
+            DialogResult result = inputBox.ShowDialog(owner);
             input = textBox.Text;
             return result;
         }

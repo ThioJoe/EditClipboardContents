@@ -119,10 +119,20 @@ namespace EditClipboardContents
             previousWindowHeight = this.Height;
         }
 
-        private int CompensateDPI(int originalValue)
+        public int CompensateDPI(int originalValue)
         {
             float scaleFactor = this.DeviceDpi / 96f; // 96 is the default DPI
             return (int)(originalValue * scaleFactor);
+        }
+
+        public static int CompensateDPIStatic(int originalValue)
+        {
+            using (Graphics graphics = Graphics.FromHwnd(IntPtr.Zero))
+            {
+                float dpi = graphics.DpiX;
+                float scaleFactor = dpi / 96f; // 96 is the default DPI
+                return (int)(originalValue * scaleFactor);
+            }
         }
 
         private void ShowLoadingIndicator(bool show)
