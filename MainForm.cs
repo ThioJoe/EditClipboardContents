@@ -28,6 +28,7 @@ using EditClipboardContents;
 using System.Collections;
 using static EditClipboardContents.ClipboardFormats;
 using System.Threading.Tasks;
+using System.Data.Common;
 
 
 namespace EditClipboardContents
@@ -38,7 +39,7 @@ namespace EditClipboardContents
         private List<ClipboardItem> editedClipboardItems = new List<ClipboardItem>(); // Add this line
 
         // Other globals
-        public static bool anyPendingEditsOrRemovals = false;
+        public static bool anyPendingChanges = false;
         public static bool enableSplitHexView = false;
         public ClipboardItem itemBeforeCellEditClone = null;
 
@@ -48,6 +49,7 @@ namespace EditClipboardContents
         // Variables to store info about initial GUI state
         public int hexTextBoxTopBuffer { get; init; }
         public string defaultLoadingLabelText { get; init; }
+        public Color defaultCellForeColor { get; init; }
 
         // Store recent GUI states
         public int previousWindowHeight = 0;
@@ -94,6 +96,7 @@ namespace EditClipboardContents
             // Set init only GUI state variables
             hexTextBoxTopBuffer = richTextBoxContents.Height - richTextBox_HexPlaintext.Height;
             defaultLoadingLabelText = labelLoading.Text;
+            defaultCellForeColor = dataGridViewClipboard.DefaultCellStyle.ForeColor;
 
             InitializeDataGridView();
             UpdateToolLocations();
@@ -182,15 +185,15 @@ namespace EditClipboardContents
         private void UpdateClipboardItemsGridView_WithEmptyCustomFormat(ClipboardItem formatItem)
         {
             // Get needed data from the item
-            byte[] rawData = formatItem.RawData;
+            //byte[] rawData = formatItem.RawData;
             string formatName = formatItem.FormatName;
             string formatType = formatItem.FormatType;
             string formatID = formatItem.FormatId.ToString();
-            List<string> dataInfo = formatItem.DataInfoList;
+            //List<string> dataInfo = formatItem.DataInfoList;
             string dataSize = formatItem.DataSize.ToString();
             int index = formatItem.OriginalIndex;
 
-            string dataInfoString = "[Edit the cells in this row]";
+            string dataInfoString = "[Pending: Added By You]";
             string textPreview = "";
 
             dataGridViewClipboard.Rows.Add(index, formatName, formatID, formatType, dataSize, dataInfoString, textPreview);
@@ -241,19 +244,6 @@ namespace EditClipboardContents
                 {
                     // Use all cells instead of displayed cells, otherwise those scrolled out of view won't count
                     column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-                }
-
-                // Set text color to gray for empty data info
-                if (column.Name == "DataInfo" && (dataInfo.Count <= 0 || string.IsNullOrEmpty(dataInfo[0]) || dataInfoString == "N/A" || dataInfoString.ToLower() == "[null]")) // Check for both N/A or null in case we add more reasons to set N/A later
-                {
-                    // Make this cell in this column gray text
-                    dataGridViewClipboard.Rows[dataGridViewClipboard.Rows.Count - 1].Cells[column.Name].Style.ForeColor = Color.Gray;
-                }
-                // Set text color to dark red for errors
-                if (column.Name == "DataInfo" && dataInfoString.Contains("Error"))
-                {
-                    // Make this cell in this column dark red text
-                    dataGridViewClipboard.Rows[dataGridViewClipboard.Rows.Count - 1].Cells[column.Name].Style.ForeColor = Color.DarkRed;
                 }
             }
 
@@ -1217,6 +1207,15 @@ namespace EditClipboardContents
                         labelSynthesizedTypeWarn.Visible = false;
                     }
                 }
+
+                if (selectedRow.Cells[colName.HandleType].Value.ToString() == "Custom")
+                {
+                    labelCustomFormatNameID.Visible = true;
+                }
+                else
+                {
+                    labelCustomFormatNameID.Visible = false;
+                }
             }
         }
 
@@ -1579,14 +1578,37 @@ namespace EditClipboardContents
 
         private void SetCustomFormatToClipboard(uint formatId, string formatName, IntPtr handle)
         {
-            // Register the custom format
-            uint formatIdRegistered = NativeMethods.RegisterClipboardFormat(formatName);
+            bool registerCustomName;
 
-            IntPtr result = NativeMethods.SetClipboardData(formatIdRegistered, handle);
+            if (formatId == 0)
+            {
+                registerCustomName = true;
+            }
+            else
+            {
+                registerCustomName = false;
+            }
+
+            IntPtr result;
+            uint formatIDToUse;
+
+            if (registerCustomName)
+            {
+                // Register the custom format
+                formatIDToUse = NativeMethods.RegisterClipboardFormat(formatName);
+                result = NativeMethods.SetClipboardData(formatIDToUse, handle);
+            }
+            else
+            {
+                // Register the custom format
+                formatIDToUse = formatId;
+                result = NativeMethods.SetClipboardData(formatIDToUse, handle);
+            }
+            
 
             if (result == IntPtr.Zero)
             {
-                Console.WriteLine($"Failed to set clipboard data for custom format: {formatName} ({formatIdRegistered})");
+                Console.WriteLine($"Failed to set clipboard data for custom format: {formatName} ({formatIDToUse})");
                 NativeMethods.GlobalFree(handle);
             }
         }
@@ -1629,14 +1651,14 @@ namespace EditClipboardContents
             }
 
             // Visibility updates to make regardless of view mode and selected item
-            if (anyPendingEditsOrRemovals)
+            if (anyPendingChanges)
             {
                 labelPendingChanges.Visible = true;
             }
             else
             {
                 labelPendingChanges.Visible = false;
-                // Reset all row colors to black
+                // Reset all default row colors to black
                 foreach (DataGridViewRow row in dataGridViewClipboard.Rows)
                 {
                     row.DefaultCellStyle.ForeColor = SystemColors.ControlText;
@@ -1669,23 +1691,47 @@ namespace EditClipboardContents
                 checkBoxPlainTextEditing.Visible = false;
             }
 
-            // Beyond here, we need a selected item. If there isn't one, set some buttons that require a selectedItem to be disabled
-            if (selectedEditedItem == null)
+
+            // --------------- CONDITIONAL CELL COLORING AND STYLING ---------------
+
+            // Color based on fixed values. Only for non-custom formats, because that will be handled later using the editedClipboardItems list
+            foreach (DataGridViewRow row in dataGridViewClipboard.Rows)
             {
-                buttonResetEdit.Enabled = false;
-                buttonApplyEdit.Enabled = false;
-                menuEdit_CopyEditedHexAsText.Enabled = false;
-                return;
+                foreach (DataGridViewCell cell in row.Cells)
+                {
+                    string columnName = dataGridViewClipboard.Columns[cell.ColumnIndex].Name;
+                    object cellValue = cell.Value;
+                    string cellValueString = cellValue?.ToString() ?? string.Empty;
+
+                    // Reset the cell style to inherit from the row
+                    cell.Style = new DataGridViewCellStyle();
+
+                    if (columnName == colName.DataInfo) // Data Info column
+                    {
+                        // Set text color to gray for empty data info
+                        if (string.IsNullOrEmpty(cellValueString) ||
+                            cellValueString == MyStrings.DataNotApplicable || // If the data info is "N/A"
+                            cellValueString.ToLower() == MyStrings.DataNull) // If the data info is "[null]"
+                        {
+                            cell.Style.ForeColor = Color.Gray;
+                        }
+                        // Set text color to dark red for errors
+                        else if (cellValueString.Contains("Error"))
+                        {
+                            cell.Style.ForeColor = Color.DarkRed;
+                        }
+                    }
+                }
             }
 
-            // For any items in editedClipboardItems that has pending changes, make its row text color red
+            // For any items in editedClipboardItems that has pending changes, set the default row color
             foreach (var editedItem in editedClipboardItems)
             {
                 int rowIndex;
                 // Update the row text appearance depending on pending operations
                 if (editedItem.PendingRemoval)
                 {
-                    rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells["FormatId"].Value.ToString() == editedItem.FormatId.ToString());
+                    rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells[colName.FormatId].Value.ToString() == editedItem.FormatId.ToString());
                     if (rowIndex >= 0)
                     {
                         dataGridViewClipboard.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.Red;
@@ -1693,15 +1739,47 @@ namespace EditClipboardContents
                         SetDataGridRowFontStrikeout(dataGridViewClipboard, dataGridViewClipboard.Rows[rowIndex], true);
                     }
                 }
+                else if (editedItem.PendingCustomAddition)
+                {
+                    rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells[colName.FormatId].Value.ToString() == editedItem.FormatId.ToString());
+
+                    if (rowIndex >= 0)
+                    {
+                        dataGridViewClipboard.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.Green;
+                        dataGridViewClipboard.Rows[rowIndex].DefaultCellStyle.SelectionForeColor = Color.Yellow;
+
+                        // If the format id column is 0, the cell to gray
+                        if (editedItem.FormatId.ToString() == MyStrings.DefaultCustomFormatID)
+                        {
+                            dataGridViewClipboard.Rows[rowIndex].Cells[colName.FormatId].Style.ForeColor = Color.Gray;
+                        }
+                        // Using an else-if because if the custom format ID is default, the format name will be applied even if it is also default
+                        else if (editedItem.FormatName == MyStrings.DefaultCustomFormatName) 
+                        {
+                            dataGridViewClipboard.Rows[rowIndex].Cells[colName.FormatName].Style.ForeColor = Color.Gray;
+                        }
+                    }
+                }
                 else if (editedItem.HasPendingEdit)
                 {
-                    rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells["FormatId"].Value.ToString() == editedItem.FormatId.ToString());
+                    rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells[colName.FormatId].Value.ToString() == editedItem.FormatId.ToString());
                     if (rowIndex >= 0)
                     {
                         dataGridViewClipboard.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.Red;
                         dataGridViewClipboard.Rows[rowIndex].DefaultCellStyle.SelectionForeColor = Color.Yellow;
                     }
                 }
+            }
+
+            // ---------------------------------------------------------------------------
+
+            // Beyond here, we need a selected item. If there isn't one, set some buttons that require a selectedItem to be disabled
+            if (selectedEditedItem == null)
+            {
+                buttonResetEdit.Enabled = false;
+                buttonApplyEdit.Enabled = false;
+                menuEdit_CopyEditedHexAsText.Enabled = false;
+                return;
             }
 
             // Updates based on selected selectedItem only, regardless of view mode
@@ -1851,7 +1929,7 @@ namespace EditClipboardContents
                 if (editedClipboardItems[i].FormatId == formatId)
                 {
                     editedClipboardItems[i].PendingRemoval = true;
-                    anyPendingEditsOrRemovals = true;
+                    anyPendingChanges = true;
                     return;
                 }
             }
@@ -2380,29 +2458,24 @@ namespace EditClipboardContents
     // ------ Will probably look for a more direct way for this later but this will do for now ------
     public static class colName
     {
-        public const string Index = nameof(Index);
-        public const string FormatName = nameof(FormatName);
-        public const string FormatId = nameof(FormatId);
-        public const string HandleType = nameof(HandleType);
-        public const string DataSize = nameof(DataSize);
-        public const string DataInfo = nameof(DataInfo);
-        public const string TextPreview = nameof(TextPreview);
-
-        public static string GetDisplayName(string columnName)
-        {
-            return columnName switch
-            {
-                Index => "",  // For default sorting, no data
-                FormatName => "Format Name",
-                FormatId => "Format ID",
-                HandleType => "Format Type",
-                DataSize => "Data Size",
-                DataInfo => "Data Info",
-                TextPreview => "Text Preview",
-                _ => throw new ArgumentException($"Invalid column name: {columnName}", nameof(columnName))
-            };
-        }
+        public const string Index = "Index";
+        public const string FormatName = "FormatName";
+        public const string FormatId = "FormatId";
+        public const string HandleType = "HandleType";
+        public const string DataSize = "DataSize";
+        public const string DataInfo = "DataInfo";
+        public const string TextPreview = "TextPreview";
     }
+
+    public static class MyStrings
+    {
+        public const string DefaultCustomFormatName = "Custom Format";
+        public const string DefaultCustomFormatID = "0";
+        public const string DefaultCustomFormatType = "Custom";
+        public const string DataNotApplicable = "N/A";
+        public const string DataNull = "[null]";
+    }
+
     // ---------------------------------------------------------------------------------------------------
 
     // ----------------------------------- Object Definitions---------------------------------------------------

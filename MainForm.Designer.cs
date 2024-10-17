@@ -57,6 +57,7 @@
             this.richTextBoxContents = new System.Windows.Forms.RichTextBox();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
             this.labelLoading = new System.Windows.Forms.Label();
+            this.labelCustomFormatNameID = new System.Windows.Forms.Label();
             this.checkBoxAutoViewMode = new System.Windows.Forms.CheckBox();
             this.splitterContainer_InnerTextBoxes = new System.Windows.Forms.SplitContainer();
             this.checkBoxPlainTextEditing = new System.Windows.Forms.CheckBox();
@@ -412,6 +413,7 @@
             // 
             // splitContainerMain.Panel2
             // 
+            this.splitContainerMain.Panel2.Controls.Add(this.labelCustomFormatNameID);
             this.splitContainerMain.Panel2.Controls.Add(this.checkBoxAutoViewMode);
             this.splitContainerMain.Panel2.Controls.Add(this.splitterContainer_InnerTextBoxes);
             this.splitContainerMain.Panel2.Controls.Add(this.labelSynthesizedTypeWarn);
@@ -440,6 +442,19 @@
             this.labelLoading.Text = "Loading Data From Clipboard\r\nSometimes this can take a while (See \"Help\" dropdown" +
     " for why)";
             this.labelLoading.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // labelCustomFormatNameID
+            // 
+            this.labelCustomFormatNameID.AutoSize = true;
+            this.labelCustomFormatNameID.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelCustomFormatNameID.ForeColor = System.Drawing.Color.DarkRed;
+            this.labelCustomFormatNameID.Location = new System.Drawing.Point(475, 5);
+            this.labelCustomFormatNameID.Name = "labelCustomFormatNameID";
+            this.labelCustomFormatNameID.Size = new System.Drawing.Size(593, 25);
+            this.labelCustomFormatNameID.TabIndex = 15;
+            this.labelCustomFormatNameID.Text = "⚠️ Note: You can specify a custom Format Name or ID, but not both";
+            this.toolTip1.SetToolTip(this.labelCustomFormatNameID, resources.GetString("labelCustomFormatNameID.ToolTip"));
+            this.labelCustomFormatNameID.Visible = false;
             // 
             // checkBoxAutoViewMode
             // 
@@ -480,7 +495,7 @@
             // 
             this.checkBoxPlainTextEditing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxPlainTextEditing.AutoSize = true;
-            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(53, 395);
+            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(29, 395);
             this.checkBoxPlainTextEditing.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.checkBoxPlainTextEditing.Name = "checkBoxPlainTextEditing";
             this.checkBoxPlainTextEditing.Size = new System.Drawing.Size(148, 24);
@@ -503,7 +518,7 @@
             "UTF-32 BE",
             "Codepage 1252",
             "System Default"});
-            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(305, 391);
+            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(281, 391);
             this.dropdownHexToTextEncoding.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dropdownHexToTextEncoding.Name = "dropdownHexToTextEncoding";
             this.dropdownHexToTextEncoding.Size = new System.Drawing.Size(217, 28);
@@ -514,7 +529,7 @@
             // 
             this.labelHexToPlaintextEncoding.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelHexToPlaintextEncoding.AutoSize = true;
-            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(218, 397);
+            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(194, 397);
             this.labelHexToPlaintextEncoding.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelHexToPlaintextEncoding.Name = "labelHexToPlaintextEncoding";
             this.labelHexToPlaintextEncoding.Size = new System.Drawing.Size(80, 20);
@@ -720,5 +735,6 @@
         private System.Windows.Forms.Label labelLoading;
         private System.Windows.Forms.MenuItem menuHelp_WhyTakingLong;
         private System.Windows.Forms.ToolStripButton toolStripButtonAddFormat;
+        private System.Windows.Forms.Label labelCustomFormatNameID;
     }
 }

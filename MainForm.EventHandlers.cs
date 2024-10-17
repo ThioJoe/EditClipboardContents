@@ -359,7 +359,7 @@ namespace EditClipboardContents
             UpdateEditedClipboardItem(formatId, originalData, setPendingEdit: false, setPendingRemoval: false);
 
             // Check if any edited items still have pending changes or are pending removal, and update the pending changes label if necessary
-            anyPendingEditsOrRemovals = editedClipboardItems.Any(i => i.HasPendingEdit || i.PendingRemoval);
+            anyPendingChanges = editedClipboardItems.Any(i => i.HasPendingEdit || i.PendingRemoval);
 
             // Update the view. Edited version should be the same as the original version now
             DisplayClipboardData(GetSelectedClipboardItemObject(returnEditedItemVersion: true));
@@ -385,6 +385,7 @@ namespace EditClipboardContents
                 setButtonStatus(enabledChoice: false);
                 return;
             }
+
             // If it's a custom format, disable the buttons and always go to the edit view
             if (GetSelectedDataFromDataGridView(colName.HandleType) == "Custom")
             {
@@ -518,21 +519,21 @@ namespace EditClipboardContents
             // Get the format ID of the selected clipboard selectedItem
             uint formatId = GetSelectedClipboardItemObject(returnEditedItemVersion: true).FormatId;
 
-            // Check if the edited data is actually different from the original data, apply the change and set anyPendingEditsOrRemovals accordingly
+            // Check if the edited data is actually different from the original data, apply the change and set anyPendingChanges accordingly
             // First check if there is even an original item. If not it's probably a custom added item so just updated it
             if (GetSelectedClipboardItemObject(returnEditedItemVersion: false) == null)
             {
                 UpdateEditedClipboardItem(formatId, rawDataFromTextbox);
-                anyPendingEditsOrRemovals = true;
+                anyPendingChanges = true;
             }
             else if(!GetSelectedClipboardItemObject(returnEditedItemVersion: false).RawData.SequenceEqual(rawDataFromTextbox))
             {
                 UpdateEditedClipboardItem(formatId, rawDataFromTextbox);
-                anyPendingEditsOrRemovals = true;
+                anyPendingChanges = true;
             }
             else
             {
-                // Don't change anyPendingEditsOrRemovals to false because there might be other items with pending changes
+                // Don't change anyPendingChanges to false because there might be other items with pending changes
             }
 
             UpdateEditControlsVisibility_AndPendingGridAppearance();
@@ -542,7 +543,7 @@ namespace EditClipboardContents
         {
             SaveClipboardData();
             RefreshClipboardItems();
-            anyPendingEditsOrRemovals = false;
+            anyPendingChanges = false;
             UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
@@ -609,7 +610,7 @@ namespace EditClipboardContents
             }
 
             RefreshClipboardItems();
-            anyPendingEditsOrRemovals = false;
+            anyPendingChanges = false;
 
             // If the new clipboard data contains the same format as the previously selected item, re-select it
             if (selectedFormatId > 0 && clipboardItems != null && clipboardItems.Any(ci => ci.FormatId == selectedFormatId))
@@ -767,7 +768,7 @@ namespace EditClipboardContents
             ClipboardItem newItem = new ClipboardItem()
             {
                 FormatId = 0,
-                FormatName = "Custom Format",
+                FormatName = MyStrings.DefaultCustomFormatName,
                 RawData = new byte[0],
                 ClipDataObject = null,
                 DataInfoList = new List<string>(),
@@ -779,6 +780,9 @@ namespace EditClipboardContents
             UpdateClipboardItemsGridView_WithEmptyCustomFormat(newItem);
             editedClipboardItems.Add(newItem);
             UpdateSplitterPosition_FitDataGrid();
+
+            anyPendingChanges = true;
+            UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
         private void dataGridViewClipboard_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
@@ -795,14 +799,14 @@ namespace EditClipboardContents
                 int columnIndex = e.ColumnIndex;
                 string columnName = dataGridViewClipboard.Columns[columnIndex].Name;
 
-                List<string> allowedToEditColumns = new List<string> { "FormatName", "FormatId" };
+                List<string> allowedToEditColumns = new List<string> { colName.FormatName, colName.FormatId };
 
                 // Dictionary with reasons not allowed to edit specific columns
                 Dictionary<string, string> notAllowedToEditColumns = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                 {
                     //{ "FormatId", "Cannot Edit Format ID: This number is set automatically by windows." },
-                    { "FormatType", "Cannot Edit Format Type: This column is informational only derived from other properties, it is not an actual value." },
-                    { "Index", "Index cannot currently be changed." },
+                    { colName.HandleType, "Cannot Edit Format Type: This column is informational only derived from other properties, it is not an actual value." },
+                    { colName.Index, "Index cannot currently be changed." },
                 };
 
                 if (allowedToEditColumns.Contains(columnName))
@@ -820,11 +824,6 @@ namespace EditClipboardContents
                     }
                 }
 
-                //// Get the selected cell
-                //DataGridViewCell cell = dataGridViewClipboard.Rows[rowIndex].Cells[columnIndex];
-                //dataGridViewClipboard.ReadOnly = false;
-                //cell.ReadOnly = false;
-                //dataGridViewClipboard.BeginEdit(true);
             }
         }
 
@@ -844,11 +843,22 @@ namespace EditClipboardContents
                 return;
             }
 
-            // Get the unique id of the item
-            Guid uniqueID = itemBeforeEdit.UniqueID;
+            DataGridViewRow row = dataGridViewClipboard.Rows[e.RowIndex];
+
+            // If the edited cell is in the name column, set the value in the format id column to 0
+            if (dataGridViewClipboard.Columns[e.ColumnIndex].Name == colName.FormatName)
+            {
+                // Currently no cell value change event handler so no need to disable it, otherwise we would
+                row.Cells[colName.FormatId].Value = MyStrings.DefaultCustomFormatID;
+            }
+            // If the edited cell is in the format id column, set the value in the format name column to say custom format
+            else if (dataGridViewClipboard.Columns[e.ColumnIndex].Name == colName.FormatId)
+            {
+                row.Cells[colName.FormatName].Value = MyStrings.DefaultCustomFormatName;
+            }
 
             // Updates the editedClipboardItems list with the new data
-            DataGridViewRow row = dataGridViewClipboard.Rows[e.RowIndex];
+            Guid uniqueID = itemBeforeEdit.UniqueID;
             uint formatId = uint.Parse(row.Cells[colName.FormatId].Value.ToString());
             string formatName = row.Cells[colName.FormatName].Value.ToString();
 
