@@ -139,19 +139,25 @@ namespace EditClipboardContents
         private void InitializeDataGridView()
         {
             // If addng a new column, don't forget to add it to the UpdateClipboardItemsGridViewWith_AdditionalItem function on the line where rows are added
-            dataGridViewClipboard.Columns.Add(colName.Index, ""); // For default sorting, no data
+            
+            dataGridViewClipboard.Columns.Add(colName.Index, "");
+            dataGridViewClipboard.Columns.Add(colName.UniqueID, ""); // This will be invisible but don't put it first or last to avoid default selection behavior. For IDing custom formats that may have same id or name
             dataGridViewClipboard.Columns.Add(colName.FormatName, "Format Name");
             dataGridViewClipboard.Columns.Add(colName.FormatId, "Format ID");
             dataGridViewClipboard.Columns.Add(colName.HandleType, "Format Type");
             dataGridViewClipboard.Columns.Add(colName.DataSize, "Data Size");
             dataGridViewClipboard.Columns.Add(colName.DataInfo, "Data Info");
             dataGridViewClipboard.Columns.Add(colName.TextPreview, "Text Preview");
+            
 
             // Set autosize for all columns to none so we can control individually later
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
             {
                 column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
             }
+
+            // Set unique id column to be invisible
+            dataGridViewClipboard.Columns[colName.UniqueID].Visible = false;
 
             // Set default AutoSizeMode
             //dataGridViewClipboard.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
@@ -187,16 +193,17 @@ namespace EditClipboardContents
             // Get needed data from the item
             //byte[] rawData = formatItem.RawData;
             string formatName = formatItem.FormatName;
+            Guid uniqueID = formatItem.UniqueID;
             string formatType = formatItem.FormatType;
             string formatID = formatItem.FormatId.ToString();
             //List<string> dataInfo = formatItem.DataInfoList;
             string dataSize = formatItem.DataSize.ToString();
             int index = formatItem.OriginalIndex;
-
-            string dataInfoString = "[Pending: Added By You]";
+            
+            string dataInfoString = MyStrings.CustomPendingData;
             string textPreview = "";
 
-            dataGridViewClipboard.Rows.Add(index, formatName, formatID, formatType, dataSize, dataInfoString, textPreview);
+            dataGridViewClipboard.Rows.Add(index, uniqueID, formatName, formatID, formatType, dataSize, dataInfoString, textPreview);
         }
 
         // Update processedData grid view with clipboard contents during refresh
@@ -210,6 +217,7 @@ namespace EditClipboardContents
             List<string> dataInfo = formatItem.DataInfoList;
             string dataSize = formatItem.DataSize.ToString();
             int index = formatItem.OriginalIndex;
+            Guid uniqueID = formatItem.UniqueID;
 
             // Preprocess certain info
             string textPreview = TryParseText(rawData, maxLength: 200, prefixEncodingType: false);
@@ -218,7 +226,7 @@ namespace EditClipboardContents
             string dataInfoString;
             if (dataInfo.Count <= 0 || string.IsNullOrEmpty(dataInfo[0]))
             {
-                dataInfoString = "N/A";
+                dataInfoString = MyStrings.DataNotApplicable;
             }
             else
             {
@@ -232,7 +240,7 @@ namespace EditClipboardContents
             }
 
             // Add info to the grid view, then will be resized
-            dataGridViewClipboard.Rows.Add(index, formatName, formatID, formatType, dataSize, dataInfoString, textPreview);
+            dataGridViewClipboard.Rows.Add(index, uniqueID, formatName, formatID, formatType, dataSize, dataInfoString, textPreview);
 
             // Temporarily set AutoSizeMode to calculate proper widths
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
@@ -240,7 +248,7 @@ namespace EditClipboardContents
                 // Manually set width to minimal number to be resized auto later. Apparently autosize will only make columns larger, not smaller
                 column.Width = CompensateDPI(22);
 
-                if (column.Name != "TextPreview" && column.Name != "Index")
+                if (column.Name != colName.TextPreview && column.Name != colName.Index)
                 {
                     // Use all cells instead of displayed cells, otherwise those scrolled out of view won't count
                     column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
@@ -249,7 +257,7 @@ namespace EditClipboardContents
 
             // Miscelaneous operations to always apply
             // Set index column text color to gray
-            dataGridViewClipboard.Rows[dataGridViewClipboard.Rows.Count - 1].Cells["Index"].Style.ForeColor = Color.Gray;
+            dataGridViewClipboard.Rows[dataGridViewClipboard.Rows.Count - 1].Cells[colName.Index].Style.ForeColor = Color.Gray;
 
             // Allow layout to update
             dataGridViewClipboard.PerformLayout();
@@ -257,8 +265,8 @@ namespace EditClipboardContents
             // Set final column properties
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
             {
-                // Keep the TextPreview column as fill
-                if (column.Name == "TextPreview" || column.Name == "Index")
+                // Keep the autosize mode for certain columns
+                if (column.Name == colName.TextPreview || column.Name == colName.Index || column.Name == colName.UniqueID)
                 {
                     continue;
                 }
@@ -266,23 +274,24 @@ namespace EditClipboardContents
                 column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
                 column.Resizable = DataGridViewTriState.True;
 
-                if (column.Name == "FormatName")
+                if (column.Name == colName.FormatName)
                 {
                     column.Width = originalWidth + 20; // Add some padding
-                } else
+                } 
+                else
                 {
                     column.Width = originalWidth + 0; // For some reason this is necessary after setting resizable and autosize modes
                 }
             }
 
             // Ensure TextPreview fills remaining space
-            dataGridViewClipboard.Columns["TextPreview"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            dataGridViewClipboard.Columns["TextPreview"].Resizable = DataGridViewTriState.True;
+            dataGridViewClipboard.Columns[colName.TextPreview].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            dataGridViewClipboard.Columns[colName.TextPreview].Resizable = DataGridViewTriState.True;
 
             // If DataInfo is too long, manually set a max width
-            if (dataGridViewClipboard.Columns["DataInfo"].Width > CompensateDPI(200))
+            if (dataGridViewClipboard.Columns[colName.DataInfo].Width > CompensateDPI(200))
             {
-                dataGridViewClipboard.Columns["DataInfo"].Width = CompensateDPI(200);
+                dataGridViewClipboard.Columns[colName.DataInfo].Width = CompensateDPI(200);
             }
 
             // Reset selection to none
@@ -1104,8 +1113,9 @@ namespace EditClipboardContents
 
         private string GetClipboardFormatName(uint format)
         {
-            // Ensure the format ID is not above the maximum of 0xFFFF, or below 1 (it shouldn't be but just in case)
-            if (format > 0xFFFF || format < 1)
+            // Ensure the format ID is within the range of registered clipboard formats.  The windows api method does not work on standard formats.
+            // See:https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerclipboardformata
+            if (format > 0xFFFF || format < 0xC000)
             {
                 return GetKnownStandardFormatName(format);
             }
@@ -1560,7 +1570,15 @@ namespace EditClipboardContents
                     }
                 }
 
-                MessageBox.Show("Clipboard data saved.");
+                if (errorsOccurred)
+                {
+                    MessageBox.Show("Errors occurred while saving clipboard data for one or more formats.");
+                    
+                }
+                else
+                {
+                    MessageBox.Show("Clipboard data saved.");
+                }
 
                 return true;
             }
@@ -1720,6 +1738,11 @@ namespace EditClipboardContents
                         {
                             cell.Style.ForeColor = Color.DarkRed;
                         }
+                    }
+
+                    if (columnName == colName.Index) // Index column
+                    {
+                        cell.Style.ForeColor = Color.Gray;
                     }
                 }
             }
@@ -2443,6 +2466,11 @@ namespace EditClipboardContents
             }
         }
 
+        //public bool ValidateCustomFormat(uint formatID, string formatName)
+        //{
+
+        //}
+
         
     } // ---------------------------------------------------------------------------------------------------
     // --------------------------------------- End of MainForm Class ---------------------------------------
@@ -2458,6 +2486,7 @@ namespace EditClipboardContents
     // ------ Will probably look for a more direct way for this later but this will do for now ------
     public static class colName
     {
+        public const string UniqueID = "UniqueID";
         public const string Index = "Index";
         public const string FormatName = "FormatName";
         public const string FormatId = "FormatId";
@@ -2470,10 +2499,17 @@ namespace EditClipboardContents
     public static class MyStrings
     {
         public const string DefaultCustomFormatName = "Custom Format";
+        public const string CustomPendingData = "[Pending: Added By You]";
         public const string DefaultCustomFormatID = "0";
         public const string DefaultCustomFormatType = "Custom";
         public const string DataNotApplicable = "N/A";
         public const string DataNull = "[null]";
+    }
+
+    public static class MyVals
+    {
+        public const uint RegisteredFormatMinID = 0xC000;
+        public const uint RegisteredFormatMaxID = 0xFFFF;
     }
 
     // ---------------------------------------------------------------------------------------------------
