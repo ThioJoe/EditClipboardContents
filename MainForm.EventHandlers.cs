@@ -351,12 +351,30 @@ namespace EditClipboardContents
 
         private void buttonResetEdit_Click(object sender, EventArgs e)
         {
+            Guid guid;
+            byte[] originalData;
             ClipboardItem originalItem = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
-            uint formatId = originalItem.FormatId;
-            byte[] originalData = originalItem.RawData;
+
+            if (originalItem != null)
+            {
+                guid = originalItem.UniqueID;
+                originalData = originalItem.RawData;
+            }
+            else // It must be a custom format so there is no original data. Assume user wants to reset the custom format data and removal status
+            {
+                originalItem = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
+                originalData = new byte[0];
+            }
+            
+            if (originalItem == null)
+            {
+                return; // Something else went wrong, just return
+            }
+
+            guid = originalItem.UniqueID;
 
             // Get the original item's data and apply it to the edited item
-            UpdateEditedClipboardItem(formatId, originalData, setPendingEdit: false, setPendingRemoval: false);
+            UpdateEditedClipboardItem(guid, originalData, setPendingEdit: false, setPendingRemoval: false);
 
             // Check if any edited items still have pending changes or are pending removal, and update the pending changes label if necessary
             anyPendingChanges = editedClipboardItems.Any(i => i.HasPendingEdit || i.PendingRemoval);
@@ -517,18 +535,18 @@ namespace EditClipboardContents
                 .Select(x => Convert.ToByte(hexString.Substring(x, 2), 16))
                 .ToArray();
             // Get the format ID of the selected clipboard selectedItem
-            uint formatId = GetSelectedClipboardItemObject(returnEditedItemVersion: true).FormatId;
+            Guid uniqueID = GetSelectedClipboardItemObject(returnEditedItemVersion: true).UniqueID;
 
             // Check if the edited data is actually different from the original data, apply the change and set anyPendingChanges accordingly
             // First check if there is even an original item. If not it's probably a custom added item so just updated it
             if (GetSelectedClipboardItemObject(returnEditedItemVersion: false) == null)
             {
-                UpdateEditedClipboardItem(formatId, rawDataFromTextbox);
+                UpdateEditedClipboardItem(uniqueID, rawDataFromTextbox);
                 anyPendingChanges = true;
             }
             else if(!GetSelectedClipboardItemObject(returnEditedItemVersion: false).RawData.SequenceEqual(rawDataFromTextbox))
             {
-                UpdateEditedClipboardItem(formatId, rawDataFromTextbox);
+                UpdateEditedClipboardItem(uniqueID, rawDataFromTextbox);
                 anyPendingChanges = true;
             }
             else
@@ -541,6 +559,9 @@ namespace EditClipboardContents
 
         private void toolStripButtonSaveEdited_Click(object sender, EventArgs e)
         {
+            // Trigger the end edit event to save the current cell
+            dataGridViewClipboard.EndEdit();
+
             if (!ValidateCustomFormats())
             {
                 return;
@@ -636,10 +657,10 @@ namespace EditClipboardContents
             {
                 foreach (DataGridViewRow selectedRow in dataGridViewClipboard.SelectedRows)
                 {
-                    if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatIdToRemove))
+                    if (Guid.TryParse(selectedRow.Cells[colName.UniqueID].Value.ToString(), out Guid uniqueID))
                     {
                         // Update editedClipboardItems to mark the item as deleted
-                        MarkIndividualClipboardItemForRemoval(formatIdToRemove);
+                        MarkIndividualClipboardItemForRemoval(uniqueID);
                     }
                 }
                 UpdateEditControlsVisibility_AndPendingGridAppearance();

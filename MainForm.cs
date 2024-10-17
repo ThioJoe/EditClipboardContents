@@ -1125,7 +1125,7 @@ namespace EditClipboardContents
 
         private string GetClipboardFormatName(uint format)
         {
-            // Ensure the format ID is within the range of registered clipboard formats.  The windows api method does not work on standard formats.
+            // Ensure the format ID is within the range of registered clipboard formats.  The windows api method does not work on standard formats, it will just return 0.
             // See:https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerclipboardformata
             if (format > 0xFFFF || format < 0xC000)
             {
@@ -1134,7 +1134,7 @@ namespace EditClipboardContents
 
             // Define a sufficient buffer size
             StringBuilder formatName = new StringBuilder(256);
-            int result = NativeMethods.GetClipboardFormatNameA(format, formatName, formatName.Capacity);
+            int result = NativeMethods.GetClipboardFormatNameA(format, formatName, formatName.Capacity); // This will return 0 for standard formats
 
             if (result > 0)
             {
@@ -1145,8 +1145,6 @@ namespace EditClipboardContents
                 return GetKnownStandardFormatName(format);
             }
         }
-
-
 
         internal class ClipboardFormatData
         {
@@ -1767,7 +1765,7 @@ namespace EditClipboardContents
                 // Update the row text appearance depending on pending operations
                 if (editedItem.PendingRemoval)
                 {
-                    rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells[colName.FormatId].Value.ToString() == editedItem.FormatId.ToString());
+                    rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells[colName.UniqueID].Value.ToString() == editedItem.UniqueID.ToString());
                     if (rowIndex >= 0)
                     {
                         dataGridViewClipboard.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.Red;
@@ -1777,7 +1775,7 @@ namespace EditClipboardContents
                 }
                 else if (editedItem.PendingCustomAddition)
                 {
-                    rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells[colName.FormatId].Value.ToString() == editedItem.FormatId.ToString());
+                    rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells[colName.UniqueID].Value.ToString() == editedItem.UniqueID.ToString());
 
                     if (rowIndex >= 0)
                     {
@@ -1785,9 +1783,9 @@ namespace EditClipboardContents
                         dataGridViewClipboard.Rows[rowIndex].DefaultCellStyle.SelectionForeColor = Color.Yellow;
 
                         // If the format id column is 0, the cell to gray
-                        if (editedItem.FormatId.ToString() == MyStrings.DefaultCustomFormatID)
+                        if (editedItem.UniqueID.ToString() == MyStrings.DefaultCustomFormatID)
                         {
-                            dataGridViewClipboard.Rows[rowIndex].Cells[colName.FormatId].Style.ForeColor = Color.Gray;
+                            dataGridViewClipboard.Rows[rowIndex].Cells[colName.UniqueID].Style.ForeColor = Color.Gray;
                         }
                         // Using an else-if because if the custom format ID is default, the format name will be applied even if it is also default
                         else if (editedItem.FormatName == MyStrings.DefaultCustomFormatName) 
@@ -1798,7 +1796,7 @@ namespace EditClipboardContents
                 }
                 else if (editedItem.HasPendingEdit)
                 {
-                    rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells[colName.FormatId].Value.ToString() == editedItem.FormatId.ToString());
+                    rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells[colName.UniqueID].Value.ToString() == editedItem.UniqueID.ToString());
                     if (rowIndex >= 0)
                     {
                         dataGridViewClipboard.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.Red;
@@ -1941,30 +1939,28 @@ namespace EditClipboardContents
         }
 
         // Updates selected clipboard selectedItem in editedClipboardItems list. Does not update the actual clipboard.
-        private void UpdateEditedClipboardItem(uint formatId, byte[] rawData, bool setPendingEdit = true, bool setPendingRemoval = false)
+        private void UpdateEditedClipboardItem(Guid uniqueID, byte[] rawData, bool setPendingEdit = true, bool setPendingRemoval = false)
         {
-            // Match the selectedItem in the editedClipboardItems list
-            for (int i = 0; i < editedClipboardItems.Count; i++)
+            foreach (ClipboardItem item in editedClipboardItems)
             {
-                if (editedClipboardItems[i].FormatId == formatId)
+                if (item.UniqueID == uniqueID)
                 {
-                    editedClipboardItems[i].RawData = rawData;
-                    editedClipboardItems[i].DataSize = (ulong)rawData.Length;
-                    editedClipboardItems[i].HasPendingEdit = setPendingEdit;
-                    editedClipboardItems[i].PendingRemoval = setPendingRemoval; // If the user applies an edit, presumably they don't want to remove it anymore
+                    item.RawData = rawData;
+                    item.DataSize = (ulong)rawData.Length;
+                    item.HasPendingEdit = setPendingEdit;
+                    item.PendingRemoval = setPendingRemoval; // If the user applies an edit, presumably they don't want to remove it anymore
                     return;
                 }
             }
         }
 
-        private void MarkIndividualClipboardItemForRemoval(uint formatId)
+        private void MarkIndividualClipboardItemForRemoval(Guid uniqueID)
         {
-            // Match the selectedItem in the editedClipboardItems list
-            for (int i = 0; i < editedClipboardItems.Count; i++)
+            foreach (ClipboardItem item in editedClipboardItems)
             {
-                if (editedClipboardItems[i].FormatId == formatId)
+                if (item.UniqueID == uniqueID)
                 {
-                    editedClipboardItems[i].PendingRemoval = true;
+                    item.PendingRemoval = true;
                     anyPendingChanges = true;
                     return;
                 }
@@ -2481,16 +2477,13 @@ namespace EditClipboardContents
 
         public bool ValidateCustomFormats()
         {
-            bool allValid = false ;
+            bool okToProceed = false ;
             bool allValidRanges = true;
+            bool customFormatWithinStandardRange = false;
 
-            // Create list of custom format names and id pairs
-            List<string[]> IDNamePairs = new List<string[]>();
-            
+            // Check that all custom format IDs are within the valid range for registered formats         
             foreach (ClipboardItem item in editedClipboardItems)
             {
-                IDNamePairs.Add(new string[] { item.FormatId.ToString(), item.FormatName }); // Create list to check for duplicates next
-
                 bool validRange = false;
                 if (item.FormatType == MyStrings.DefaultCustomFormatType) 
                 {
@@ -2500,20 +2493,23 @@ namespace EditClipboardContents
                     {
                         validRange = true;
                     }
+                    // Check if it's at least within the standard formats range even if these shouldn't be used
+                    else if (item.FormatId > 0 && item.FormatId <= MyVals.RegisteredFormatMinID)
+                    {
+                        customFormatWithinStandardRange = true;
+                    }
                 }
-                else // Not a new custom format
+                else 
                 {
+                    // Reaching here means it's not a new custom format
                     validRange = true;
                 }
                 
-                if (!validRange)
+                if (!validRange) // Ensures one-way marking as invalid
                 {
                     allValidRanges = false;
                 }
             }
-
-            // Go through the pairs and see if any custom formats are identical
-            bool noDuplicateCustomFormats = IDNamePairs.Distinct().Count() == IDNamePairs.Count();
 
             // Check if any custom formats match a non-custom format's name
             bool noConflictingCustomNames = true;
@@ -2545,21 +2541,65 @@ namespace EditClipboardContents
                         }
                     }
                 }
+                if (!noConflictingCustomNames || !noConflictingCustomIDs)
+                {
+                    break;
+                }
             }
 
-            if (allValidRanges && noDuplicateCustomFormats && noConflictingCustomIDs && noConflictingCustomNames)
+            bool customMutualsAreUnique = true;
+            bool specialCaseBothFormatIDsZero = false;
+            // Compare custom format IDs to other custom format IDs
+            foreach (ClipboardItem customItem in customItems)
             {
-                allValid = true;
+                foreach (ClipboardItem otherCustomItem in customItems)
+                {
+                    // Actual start of checking
+                    if (customItem.UniqueID != otherCustomItem.UniqueID) // Skip comparing the same item
+                    {
+                        if ((customItem.FormatName == otherCustomItem.FormatName) && (customItem.FormatId == otherCustomItem.FormatId)) 
+                        {
+                            // Allow certain exceptions
+                            if (!customItem.PendingRemoval || !otherCustomItem.PendingRemoval) // If one is marked for deletion, it's fine
+                            {
+                                customMutualsAreUnique = false;
+                                if (customItem.FormatId == 0 && otherCustomItem.FormatId == 0)
+                                {
+                                    specialCaseBothFormatIDsZero = true;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!customMutualsAreUnique)
+                {
+                    break;
+                }
+            }
+
+            if (allValidRanges && noConflictingCustomIDs && noConflictingCustomNames && customMutualsAreUnique)
+            {
+                okToProceed = true;
             }
             else if (!allValidRanges)
             {
                 int minID = (int)MyVals.RegisteredFormatMinID;
                 int maxID = (int)MyVals.RegisteredFormatMaxID;
-                MessageBox.Show($"Custom format IDs must be between {minID} and {maxID} (the valid registered format range).", "Invalid Custom Format ID", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else if (!noDuplicateCustomFormats)
-            {
-                MessageBox.Show("Custom format IDs and names must be unique.", "Duplicate Custom Formats", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (customFormatWithinStandardRange)
+                {
+                    // Prompt the user if they want to proceed
+                    DialogResult result = MessageBox.Show(
+                        $"Warning: Custom format IDs technically should be between {minID} and {maxID} (the valid registered format range), to assign a name.\n\n" +
+                        $"You can still add it to the clipboard below {minID} but that isn't normal and it won't have a name.\n\n" +
+                        "Do you want to proceed anyway?",
+                        "Continue?", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    okToProceed = (result == DialogResult.Yes);
+                }
+                else
+                {
+                    MessageBox.Show($"Custom format IDs SHOULD be between {minID} and {maxID} (the valid registered format range), and MUST be between 1 and {maxID}.", "Invalid Custom Format IDs", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
             else if (!noConflictingCustomNames)
             {
@@ -2569,12 +2609,20 @@ namespace EditClipboardContents
             {
                 MessageBox.Show("Custom format IDs must not match any existing format IDs (unless one or the other is marked for deletion).", "Conflicting Format IDs", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            else if (!customMutualsAreUnique && specialCaseBothFormatIDsZero)
+            {
+                MessageBox.Show("Custom format Name/ID pairs must be unique even if they both use a zero placeholder for the format ID number. Because when registering format IDs, names are used.", "Duplicate Custom Formats", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (!customMutualsAreUnique)
+            {
+                MessageBox.Show("Custom format Name/ID pairs must be unique.", "Duplicate Custom Formats", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
             else
             {
                 MessageBox.Show("An unknown error occurred while validating custom formats.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
-            return allValid;
+            return okToProceed;
         }
 
     } // ---------------------------------------------------------------------------------------------------
