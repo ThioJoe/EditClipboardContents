@@ -1503,7 +1503,7 @@ namespace EditClipboardContents
                 return false;
             }
 
-            bool errorsOccurred = false;
+            List<string> erroredFormats = new List<string>();
 
             try
             {
@@ -1554,15 +1554,20 @@ namespace EditClipboardContents
                     {
                         if (hGlobal != IntPtr.Zero)
                         {
-                            SetCustomFormatToClipboard(item.FormatId, item.FormatName, hGlobal);
+                            IntPtr result = SetCustomFormatToClipboard(item.FormatId, item.FormatName, hGlobal);
+                            if (result == IntPtr.Zero)
+                            {
+                                erroredFormats.Add($"ID: {item.FormatId}\tName: {item.FormatName}");
+                            }
                         }
                         else if (item.RawData == null || !item.RawData.Any()) // If the original data was null or empty then assume it's intentional so add it
                         {
-                            SetCustomFormatToClipboard(item.FormatId, item.FormatName, IntPtr.Zero);
+                            IntPtr result = SetCustomFormatToClipboard(item.FormatId, item.FormatName, IntPtr.Zero);
                         }
                         else
                         {
                             Console.WriteLine($"Failed to allocate memory for custom format: {item.FormatId}");
+                            erroredFormats.Add($"ID: {item.FormatId}    Name: {item.FormatName}");
                         }
                     }
                     else if (hGlobal != IntPtr.Zero)
@@ -1571,19 +1576,21 @@ namespace EditClipboardContents
                         {
                             NativeMethods.GlobalFree(hGlobal);
                             Console.WriteLine($"Failed to set clipboard data for format: {item.FormatId}");
-                            errorsOccurred = true;
+                            erroredFormats.Add($"ID: {item.FormatId}\tName: {item.FormatName}");
                         }
                     }
                     else
                     {
                         Console.WriteLine($"Failed to allocate memory for format: {item.FormatId}");
+                        erroredFormats.Add($"ID: {item.FormatId}\tName: {item.FormatName}");
                     }
                 }
 
-                if (errorsOccurred)
+                if (erroredFormats.Count > 0)
                 {
-                    MessageBox.Show("Errors occurred while saving clipboard data for one or more formats.");
-                    
+                    // Join
+                    string erroredFormatsString = string.Join("\n", erroredFormats);
+                    MessageBox.Show($"Errors occurred while saving clipboard data for one or more formats:\n\n{erroredFormatsString}");
                 }
                 else
                 {
@@ -1604,9 +1611,11 @@ namespace EditClipboardContents
             }
         }
 
-        private void SetCustomFormatToClipboard(uint formatId, string formatName, IntPtr handle)
+        private IntPtr SetCustomFormatToClipboard(uint formatId, string formatName, IntPtr handle)
         {
             bool registerCustomName;
+            IntPtr result = IntPtr.Zero;
+            uint formatIDToUse;
 
             if (formatId == 0)
             {
@@ -1616,9 +1625,6 @@ namespace EditClipboardContents
             {
                 registerCustomName = false;
             }
-
-            IntPtr result;
-            uint formatIDToUse;
 
             if (registerCustomName)
             {
@@ -1639,6 +1645,8 @@ namespace EditClipboardContents
                 Console.WriteLine($"Failed to set clipboard data for custom format: {formatName} ({formatIDToUse})");
                 NativeMethods.GlobalFree(handle);
             }
+
+            return result;
         }
 
         private void UpdateSplitterPosition_FitDataGrid(bool force = false)
@@ -2480,6 +2488,7 @@ namespace EditClipboardContents
             bool okToProceed = false ;
             bool allValidRanges = true;
             bool customFormatWithinStandardRange = false;
+            bool customFormatFallsOnReservedRange = false; // If it is a multiple of 0x100 (256), Windows might not register it
 
             // Check that all custom format IDs are within the valid range for registered formats         
             foreach (ClipboardItem item in editedClipboardItems)
@@ -2497,6 +2506,12 @@ namespace EditClipboardContents
                     else if (item.FormatId > 0 && item.FormatId <= MyVals.RegisteredFormatMinID)
                     {
                         customFormatWithinStandardRange = true;
+                    }
+
+                    // Check if it's a multiple of 0x100 it might not work, so warn the user even if it's otherwise valid
+                    if ((item.FormatId % 0x100 == 0) && item.FormatId != 0)
+                    {
+                        customFormatFallsOnReservedRange = true;
                     }
                 }
                 else 
@@ -2578,6 +2593,11 @@ namespace EditClipboardContents
                 }
             }
 
+            if (customFormatFallsOnReservedRange)
+            {
+                MessageBox.Show("Warning: Format IDs that are multiples of 256 (Aka 0x100) might not be registered by Windows.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+
             if (allValidRanges && noConflictingCustomIDs && noConflictingCustomNames && customMutualsAreUnique)
             {
                 okToProceed = true;
@@ -2625,6 +2645,7 @@ namespace EditClipboardContents
             return okToProceed;
         }
 
+        
     } // ---------------------------------------------------------------------------------------------------
     // --------------------------------------- End of MainForm Class ---------------------------------------
     // -----------------------------------------------------------------------------------------------------

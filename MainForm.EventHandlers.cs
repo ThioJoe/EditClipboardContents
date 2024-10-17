@@ -812,6 +812,11 @@ namespace EditClipboardContents
 
         private void dataGridViewClipboard_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
+            // Ensure the indexes are valid
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+            {
+                return;
+            }
             // Reset editability of the grid to false by default
             dataGridViewClipboard.ReadOnly = true;
             dataGridViewClipboard[e.ColumnIndex, e.RowIndex].ReadOnly = false;
@@ -899,6 +904,30 @@ namespace EditClipboardContents
             else
             {
                 MessageBox.Show("Error: Couldn't find the clipboard object in the edited object list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
+        private void menuItemFile_ExportRegisteredFormats_Click(object sender, EventArgs e)
+        {
+            Dictionary<uint,string> formatPairs = Utils.GetAllPossibleRegisteredFormatNames();
+
+            if (formatPairs == null)
+            {
+                return;
+            }
+
+            // Convert to formatted string for file output
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Format ID\tFormat Name");
+            foreach (KeyValuePair<uint, string> pair in formatPairs)
+            {
+                sb.AppendLine($"{pair.Key}\t{pair.Value}");
+            }
+
+            SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "txt", defaultFileNameStem: "RegisteredFormats");
+            if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
+            {
+                File.WriteAllText(saveFileDialogResult.FileName, sb.ToString());
             }
 
         }
