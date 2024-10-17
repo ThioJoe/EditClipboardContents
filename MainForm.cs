@@ -582,9 +582,13 @@ namespace EditClipboardContents
             }
 
             // Retry any formats that failed
+            int retryCount = 1;
             foreach (uint formatId in formatsToRetry)
             {
+                labelLoading.Text = $"{defaultLoadingLabelText}\n\n" + $"Retrying: {retryCount} of {formatsToRetry.Count}...";
+                this.Update();
                 RetryCopyClipboardFormat(formatId);
+                retryCount++;
             }
 
         }
@@ -595,6 +599,7 @@ namespace EditClipboardContents
             // First open the clipboard
             if (NativeMethods.OpenClipboard(this.Handle))
             {
+                // Try the normal way again first
                 ClipboardItem item;
                 try
                 {
