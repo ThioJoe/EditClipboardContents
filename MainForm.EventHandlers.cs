@@ -128,8 +128,12 @@ namespace EditClipboardContents
                     dataGridViewClipboard.Rows[newIndex].Selected = true;
                     dataGridViewClipboard.CurrentCell = dataGridViewClipboard.Rows[newIndex].Cells[0];
 
-                    // Ensure the selected row is visible
-                    dataGridViewClipboard.FirstDisplayedScrollingRowIndex = newIndex;
+                    // Scroll to the new index, but only if it's not already visible
+                    if (newIndex < dataGridViewClipboard.FirstDisplayedScrollingRowIndex ||
+                        newIndex >= dataGridViewClipboard.FirstDisplayedScrollingRowIndex + dataGridViewClipboard.DisplayedRowCount(false))
+                    {
+                        dataGridViewClipboard.FirstDisplayedScrollingRowIndex = newIndex;
+                    }
                 }
 
                 ChangeCellFocus(newIndex);
@@ -820,6 +824,19 @@ namespace EditClipboardContents
 
             anyPendingChanges = true;
             UpdateEditControlsVisibility_AndPendingGridAppearance();
+
+            // Set selected rows to just the new row
+            dataGridViewClipboard.SelectionChanged -= dataGridViewClipboard_SelectionChanged;
+            dataGridViewClipboard.ClearSelection();
+            dataGridViewClipboard.SelectionChanged += dataGridViewClipboard_SelectionChanged;
+            dataGridViewClipboard.Rows[itemIndex].Selected = true;
+
+            // if the row isn't visible, scroll to it
+            if (itemIndex >= dataGridViewClipboard.FirstDisplayedScrollingRowIndex + dataGridViewClipboard.DisplayedRowCount(false))
+            {
+                dataGridViewClipboard.FirstDisplayedScrollingRowIndex = itemIndex;
+            }
+
         }
 
         private void dataGridViewClipboard_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
