@@ -1572,78 +1572,100 @@ namespace EditClipboardContents
 
                     IntPtr hGlobal;
 
-                    // Special handling for certain filetypes if necessary
-                    switch (item.FormatId)
+                    // Try to get the handle for the data
+                    try
                     {
-                        case 2: // CF_BITMAP
-                            using (MemoryStream ms = new MemoryStream(item.RawData))
-                            using (Bitmap bmp = new Bitmap(ms))
-                            {
-                                hGlobal = FormatConverters.Bitmap_hBitmapHandle_FromHandle(bmp.GetHbitmap());
-                            }
-                            break;
-                        case 3: // CF_METAFILEPICT
-                            hGlobal = FormatConverters.MetafilePict_Handle_FromRawData(item.RawData);
-                            break;
-                        case 9: // CF_PALETTE
-                            hGlobal = FormatConverters.CF_PALETTE_Handle_FromRawData(item.RawData);
-                            break;
-                        case 14: // CF_ENHMETAFILE
-                            hGlobal = FormatConverters.EnhMetafile_Handle_FromRawData(item.RawData);
-                            break;
-                        case 15: // CF_HDROP
-                            hGlobal = FormatConverters.CF_HDROP_Handle_FromRawData(item.RawData);
-                            break;
-                        case 8: // CF_DIB
-                        case 17: // CF_DIBV5
-                            hGlobal = FormatConverters.BitmapDIB_hGlobalHandle_FromHandle(FormatConverters.AllocateGeneralHandle_FromRawData(item.RawData));
-                            break;
+                        // Special handling for certain filetypes if necessary
+                        switch (item.FormatId)
+                        {
+                            case 2: // CF_BITMAP
+                                using (MemoryStream ms = new MemoryStream(item.RawData))
+                                using (Bitmap bmp = new Bitmap(ms))
+                                {
+                                    hGlobal = FormatConverters.Bitmap_hBitmapHandle_FromHandle(bmp.GetHbitmap());
+                                }
+                                break;
+                            case 3: // CF_METAFILEPICT
+                                hGlobal = FormatConverters.MetafilePict_Handle_FromRawData(item.RawData);
+                                break;
+                            case 9: // CF_PALETTE
+                                hGlobal = FormatConverters.CF_PALETTE_Handle_FromRawData(item.RawData);
+                                break;
+                            case 14: // CF_ENHMETAFILE
+                                hGlobal = FormatConverters.EnhMetafile_Handle_FromRawData(item.RawData);
+                                break;
+                            case 15: // CF_HDROP
+                                hGlobal = FormatConverters.CF_HDROP_Handle_FromRawData(item.RawData);
+                                break;
+                            case 8: // CF_DIB
+                            case 17: // CF_DIBV5
+                                hGlobal = FormatConverters.BitmapDIB_hGlobalHandle_FromHandle(FormatConverters.AllocateGeneralHandle_FromRawData(item.RawData));
+                                break;
 
-                        // Default handling for all other formats
-                        default:
-                            hGlobal = FormatConverters.AllocateGeneralHandle_FromRawData(item.RawData);
-                            break;
+                            // Default handling for all other formats
+                            default:
+                                hGlobal = FormatConverters.AllocateGeneralHandle_FromRawData(item.RawData);
+                                break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        string message = ex.Message.Replace("\n", "  ").Replace("\r", "");
+                        Console.WriteLine($"Error allocating memory for format {item.FormatId}: {message}");
+                        erroredFormats.Add($"ID: {item.FormatId}\tName: {item.FormatName}\n\t > Error: {message}");
+                        continue;
                     }
 
-                    if (item.PendingCustomAddition == true)
+                    // Try to set the clipboard data using the handle
+                    try
                     {
-                        if (hGlobal != IntPtr.Zero)
+                        if (item.PendingCustomAddition == true)
                         {
-                            IntPtr result = SetCustomFormatToClipboard(item.FormatId, item.FormatName, hGlobal);
-                            if (result == IntPtr.Zero)
+                            if (hGlobal != IntPtr.Zero)
                             {
+                                IntPtr result = SetCustomFormatToClipboard(item.FormatId, item.FormatName, hGlobal);
+                                if (result == IntPtr.Zero)
+                                {
+                                    erroredFormats.Add($"ID: {item.FormatId}\tName: {item.FormatName}");
+                                }
+                            }
+                            else if (item.RawData == null || !item.RawData.Any()) // If the original data was null or empty then assume it's intentional so add it
+                            {
+                                IntPtr result = SetCustomFormatToClipboard(item.FormatId, item.FormatName, IntPtr.Zero);
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Failed to allocate memory for custom format: {item.FormatId}");
+                                erroredFormats.Add($"ID: {item.FormatId}    Name: {item.FormatName}");
+                            }
+                        }
+                        else if (hGlobal != IntPtr.Zero)
+                        {
+                            if (NativeMethods.SetClipboardData(item.FormatId, hGlobal) == IntPtr.Zero)
+                            {
+                                NativeMethods.GlobalFree(hGlobal);
+                                Console.WriteLine($"Failed to set clipboard data for format: {item.FormatId}");
                                 erroredFormats.Add($"ID: {item.FormatId}\tName: {item.FormatName}");
                             }
                         }
-                        else if (item.RawData == null || !item.RawData.Any()) // If the original data was null or empty then assume it's intentional so add it
-                        {
-                            IntPtr result = SetCustomFormatToClipboard(item.FormatId, item.FormatName, IntPtr.Zero);
-                        }
                         else
                         {
-                            Console.WriteLine($"Failed to allocate memory for custom format: {item.FormatId}");
-                            erroredFormats.Add($"ID: {item.FormatId}    Name: {item.FormatName}");
-                        }
-                    }
-                    else if (hGlobal != IntPtr.Zero)
-                    {
-                        if(NativeMethods.SetClipboardData(item.FormatId, hGlobal) == IntPtr.Zero)
-                        {
-                            NativeMethods.GlobalFree(hGlobal);
-                            Console.WriteLine($"Failed to set clipboard data for format: {item.FormatId}");
+                            Console.WriteLine($"Failed to allocate memory for format: {item.FormatId}");
                             erroredFormats.Add($"ID: {item.FormatId}\tName: {item.FormatName}");
                         }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Console.WriteLine($"Failed to allocate memory for format: {item.FormatId}");
-                        erroredFormats.Add($"ID: {item.FormatId}\tName: {item.FormatName}");
+                        string message = ex.Message.Replace("\n", "  ").Replace("\r", "");
+                        Console.WriteLine($"Error setting clipboard data for format {item.FormatId}: {ex.Message}");
+                        erroredFormats.Add($"ID: {item.FormatId}\tName: {item.FormatName}\n\t{message}");
+                        continue;
                     }
-                }
+                    
+                } // End foreach loop
 
                 if (erroredFormats.Count > 0)
                 {
-                    // Join
                     string erroredFormatsString = string.Join("\n", erroredFormats);
                     MessageBox.Show($"Errors occurred while saving clipboard data for one or more formats:\n\n{erroredFormatsString}");
                 }

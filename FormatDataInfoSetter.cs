@@ -257,6 +257,14 @@ namespace EditClipboardContents
                         {
                             dataInfo = $"Unknown Locale (LCID: {lcid})";
                         }
+                        catch (ArgumentException)
+                        {
+                            dataInfo = $"Invalid LCID: {lcid}";
+                        }
+                        catch(Exception ex)
+                        {
+                            dataInfo = $"Error: {ex.Message}";
+                        }
                     }
                     dataInfoList.Add(dataInfo);
                     break;

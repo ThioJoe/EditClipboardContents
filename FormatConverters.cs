@@ -69,27 +69,36 @@ namespace EditClipboardContents
 
         public static IntPtr Bitmap_hBitmapHandle_FromHandle(IntPtr hBitmap)
         {
-            BITMAP bmp = new BITMAP();
-            NativeMethods.GetObject(hBitmap, Marshal.SizeOf(typeof(BITMAP)), ref bmp);
+            try
+            {
+                BITMAP bmp = new BITMAP();
+                NativeMethods.GetObject(hBitmap, Marshal.SizeOf(typeof(BITMAP)), ref bmp);
 
-            IntPtr hBitmapCopy = NativeMethods.CreateBitmap(bmp.bmWidth, bmp.bmHeight, bmp.bmPlanes, bmp.bmBitsPixel, IntPtr.Zero);
+                IntPtr hBitmapCopy = NativeMethods.CreateBitmap(bmp.bmWidth, bmp.bmHeight, bmp.bmPlanes, bmp.bmBitsPixel, IntPtr.Zero);
 
-            IntPtr hdcScreen = NativeMethods.GetDC(IntPtr.Zero);
-            IntPtr hdcSrc = NativeMethods.CreateCompatibleDC(hdcScreen);
-            IntPtr hdcDest = NativeMethods.CreateCompatibleDC(hdcScreen);
+                IntPtr hdcScreen = NativeMethods.GetDC(IntPtr.Zero);
+                IntPtr hdcSrc = NativeMethods.CreateCompatibleDC(hdcScreen);
+                IntPtr hdcDest = NativeMethods.CreateCompatibleDC(hdcScreen);
 
-            IntPtr hOldSrcBitmap = NativeMethods.SelectObject(hdcSrc, hBitmap);
-            IntPtr hOldDestBitmap = NativeMethods.SelectObject(hdcDest, hBitmapCopy);
+                IntPtr hOldSrcBitmap = NativeMethods.SelectObject(hdcSrc, hBitmap);
+                IntPtr hOldDestBitmap = NativeMethods.SelectObject(hdcDest, hBitmapCopy);
 
-            NativeMethods.BitBlt(hdcDest, 0, 0, bmp.bmWidth, bmp.bmHeight, hdcSrc, 0, 0, 0x00CC0020 /* SRCCOPY */);
+                NativeMethods.BitBlt(hdcDest, 0, 0, bmp.bmWidth, bmp.bmHeight, hdcSrc, 0, 0, 0x00CC0020 /* SRCCOPY */);
 
-            NativeMethods.SelectObject(hdcSrc, hOldSrcBitmap);
-            NativeMethods.SelectObject(hdcDest, hOldDestBitmap);
-            NativeMethods.DeleteDC(hdcSrc);
-            NativeMethods.DeleteDC(hdcDest);
-            NativeMethods.ReleaseDC(IntPtr.Zero, hdcScreen);
+                NativeMethods.SelectObject(hdcSrc, hOldSrcBitmap);
+                NativeMethods.SelectObject(hdcDest, hOldDestBitmap);
+                NativeMethods.DeleteDC(hdcSrc);
+                NativeMethods.DeleteDC(hdcDest);
+                NativeMethods.ReleaseDC(IntPtr.Zero, hdcScreen);
 
-            return hBitmapCopy;
+                return hBitmapCopy;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error while trying to copy HBITMAP: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return IntPtr.Zero;
+            }
+
         }
 
         public static IntPtr BitmapDIB_hGlobalHandle_FromHandle(IntPtr hDib)
@@ -117,6 +126,11 @@ namespace EditClipboardContents
 
         public static byte[]? EnhMetafile_RawData_FromHandle(IntPtr hEnhMetaFile)
         {
+            if (hEnhMetaFile == IntPtr.Zero)
+            {
+                return null;
+            }
+
             uint size = NativeMethods.GetEnhMetaFileBits(hEnhMetaFile, 0, null);
             if (size > 0)
             {
@@ -150,6 +164,10 @@ namespace EditClipboardContents
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error while trying to read METAFILEPICT from memory: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
                 finally
                 {
                     NativeMethods.GlobalUnlock(hMetafilePict);
@@ -169,11 +187,31 @@ namespace EditClipboardContents
 
             try
             {
+                // Get the size of the global memory object
+                int globalSize = (int)NativeMethods.GlobalSize(hDrop);
+
                 // Marshal the DROPFILES_OBJ structure from the memory
                 DROPFILES dropFiles = Marshal.PtrToStructure<DROPFILES>(pDropFiles);
 
-                byte[] managedArray  = new byte[dropFiles.pFiles];
-                Marshal.Copy(pDropFiles, managedArray, 0, (Int32)dropFiles.pFiles); // Need to cast Dword to int32 because DWORD is uint32 and Marshal.Copy only takes int32 as the length parameter
+                // Ensure dropFiles.pFiles is within a reasonable range. pFiles defines the offset to the file names, so it should be less than the size of the global memory object.
+                if (dropFiles.pFiles <= 0 || dropFiles.pFiles > globalSize)
+                {
+                    Console.WriteLine($"Invalid pFiles value: {dropFiles.pFiles}");
+                    return null;
+                }
+
+                // Ensure the memory we're trying to access is within the bounds of the allocated global memory
+                int dropFilesStructSize = Marshal.SizeOf<DROPFILES>();
+                if (dropFilesStructSize + dropFiles.pFiles > globalSize)
+                {
+                    Console.WriteLine("Attempting to access memory beyond the allocated global memory");
+                    return null;
+                }
+
+                byte[] managedArray = new byte[dropFiles.pFiles];
+
+                // Now we can safely copy the memory
+                Marshal.Copy(pDropFiles, managedArray, 0, (int)dropFiles.pFiles); // Need to cast Dword to int32 because DWORD is uint32 and Marshal.Copy only takes int32 as the length parameter
 
                 // Determine if the file names are Unicode
                 bool isUnicode = dropFiles.fWide != 0;
@@ -237,6 +275,7 @@ namespace EditClipboardContents
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in CF_HDROP_RawData_FromHandle: {ex.Message}");
+                MessageBox.Show($"Error in CF_HDROP_RawData_FromHandle: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return null;
             }
             finally
