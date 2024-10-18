@@ -380,7 +380,7 @@ namespace EditClipboardContents
             guid = originalItem.UniqueID;
 
             // Get the original item's data and apply it to the edited item
-            UpdateEditedClipboardItem(guid, originalData, setPendingEdit: false, setPendingRemoval: false);
+            UpdateEditedClipboardItemRawData(guid, originalData, setPendingEdit: false, setPendingRemoval: false);
 
             // Check if any edited items still have pending changes or are pending removal, and update the pending changes label if necessary
             anyPendingChanges = editedClipboardItems.Any(i => i.HasPendingEdit || i.PendingRemoval);
@@ -556,12 +556,12 @@ namespace EditClipboardContents
             // First check if there is even an original item. If not it's probably a custom added item so just updated it
             if (originalItem == null)
             {
-                UpdateEditedClipboardItem(uniqueID, rawDataFromTextbox);
+                UpdateEditedClipboardItemRawData(uniqueID, rawDataFromTextbox);
                 anyPendingChanges = true;
             }
             else if(!originalItem.RawData.SequenceEqual(rawDataFromTextbox))
             {
-                UpdateEditedClipboardItem(uniqueID, rawDataFromTextbox);
+                UpdateEditedClipboardItemRawData(uniqueID, rawDataFromTextbox);
                 anyPendingChanges = true;
             }
             else
@@ -1065,13 +1065,58 @@ namespace EditClipboardContents
 
                 Guid uniqueID = item.UniqueID;
 
-                UpdateEditedClipboardItem(uniqueID, fileData);
+                UpdateEditedClipboardItemRawData(uniqueID, fileData);
                 anyPendingChanges = true;
 
                 DisplayClipboardData(item);
 
                 UpdateEditControlsVisibility_AndPendingGridAppearance();
             }
+        }
+
+        private void buttonIncreaseIndexNumber_Click(object sender, EventArgs e)
+        {
+            ClipboardItem? item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
+
+            if (item == null)
+                return;
+
+            int currentIndex = item.OriginalIndex;
+
+            // Check if the index is already at the top or bottom
+            if (currentIndex == 0 || currentIndex == dataGridViewClipboard.Rows.Count - 1)
+                return;
+
+            // Get the item above the current one by searching through editedClipboardItems
+            ClipboardItem? itemToSwap = editedClipboardItems.FirstOrDefault(i => i.OriginalIndex == currentIndex + 1);
+            int indexToSwap = itemToSwap.OriginalIndex;
+
+            if (itemToSwap == null)
+                return;
+
+            // Swap the indexes of the two items
+            itemToSwap.OriginalIndex = currentIndex;
+            item.OriginalIndex = indexToSwap;
+
+            UpdateEditedClipboardItemIndex(item.UniqueID, indexToSwap);
+            UpdateEditedClipboardItemIndex(itemToSwap.UniqueID, currentIndex);
+
+            //DisplayClipboardData(item);
+            //UpdateEditControlsVisibility_AndPendingGridAppearance();
+
+            // Refresh the grid view
+            dataGridViewClipboard.Refresh();
+        }
+        private void buttonDecreaseIndexNumber_Click(object sender, EventArgs e)
+        {
+            ClipboardItem? item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
+
+            if (item == null)
+            {
+                return;
+            }
+
+            int currentIndex = item.OriginalIndex;
         }
 
     } // ----------------------------- End of MainForm partial class -----------------------------

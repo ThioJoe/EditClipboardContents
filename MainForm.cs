@@ -203,6 +203,9 @@ namespace EditClipboardContents
 
             // Add event handler for scroll wheel
             dataGridViewClipboard.MouseWheel += new MouseEventHandler(dataGridViewClipboard_MouseWheel);
+
+            // Set the data soure of the clipboard grid view to the editedClipboardItems list
+            dataGridViewClipboard.DataSource = editedClipboardItems;
         }
 
         private void UpdateClipboardItemsGridView_WithEmptyCustomFormat(ClipboardItem formatItem)
@@ -1564,6 +1567,9 @@ namespace EditClipboardContents
 
             try
             {
+                // Sort the editedClipboardItems by their original index
+                editedClipboardItems = editedClipboardItems.OrderBy(item => item.OriginalIndex).ToList();
+
                 NativeMethods.EmptyClipboard();
                 foreach (var item in editedClipboardItems)
                 {
@@ -2026,7 +2032,7 @@ namespace EditClipboardContents
         }
 
         // Updates selected clipboard selectedItem in editedClipboardItems list. Does not update the actual clipboard.
-        private void UpdateEditedClipboardItem(Guid uniqueID, byte[]? rawData, bool setPendingEdit = true, bool setPendingRemoval = false)
+        private void UpdateEditedClipboardItemRawData(Guid uniqueID, byte[]? rawData, bool setPendingEdit = true, bool setPendingRemoval = false)
         {
             foreach (ClipboardItem item in editedClipboardItems)
             {
@@ -2036,6 +2042,22 @@ namespace EditClipboardContents
                     item.DataSize = (ulong)(rawData?.Length ?? 0);
                     item.HasPendingEdit = setPendingEdit;
                     item.PendingRemoval = setPendingRemoval; // If the user applies an edit, presumably they don't want to remove it anymore
+
+                    anyPendingChanges = true;
+                    return;
+                }
+            }
+        }
+        private void UpdateEditedClipboardItemIndex(Guid uniqueID, int index)
+        {
+            foreach (ClipboardItem item in editedClipboardItems)
+            {
+                if (item.UniqueID == uniqueID && index != item.OriginalIndex)
+                {
+                    item.OriginalIndex = index;
+                    item.HasPendingEdit = true;
+
+                    anyPendingChanges = true;
                     return;
                 }
             }
