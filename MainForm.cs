@@ -593,16 +593,18 @@ namespace EditClipboardContents
                 Console.WriteLine("Warning: Not all reported formats were enumerated.");
             }
 
-            // Retry any formats that failed
-            int retryCount = 1;
-            foreach (uint formatId in formatsToRetry)
+            if (formatsToRetry.Count > 0 && menuOptions_RetryMode.Checked == true)
             {
-                labelLoading.Text = $"{defaultLoadingLabelText}\n\n" + $"Retrying: {retryCount} of {formatsToRetry.Count}...";
-                this.Update();
-                RetryCopyClipboardFormat(formatId);
-                retryCount++;
+                // Retry any formats that failed
+                int retryCount = 1;
+                foreach (uint formatId in formatsToRetry)
+                {
+                    labelLoading.Text = $"{defaultLoadingLabelText}\n\n" + $"Retrying: {retryCount} of {formatsToRetry.Count}...";
+                    this.Update();
+                    RetryCopyClipboardFormat(formatId);
+                    retryCount++;
+                }
             }
-
         }
 
         private void RetryCopyClipboardFormat(uint formatId, string specifiedFormatName = "")

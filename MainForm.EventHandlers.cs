@@ -398,6 +398,7 @@ namespace EditClipboardContents
                 menuFile_ExportSelectedAsRawHex.Enabled = enabledChoice;
                 menuFile_ExportSelectedStruct.Enabled = enabledChoice;
                 menuFile_ExportSelectedAsFile.Enabled = enabledChoice;
+                menuFile_LoadBinaryDataToSelected.Enabled = enabledChoice;
             }
             // -------------------------------------------------------------
 
@@ -1029,6 +1030,47 @@ namespace EditClipboardContents
             else
             {
                 MessageBox.Show($"Error: Couldn't fetch the specified format: {input}\n\nIt might not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void menuOptions_RetryMode_Click(object sender, EventArgs e)
+        {
+            menuOptions_RetryMode.Checked = !menuOptions_RetryMode.Checked; // Toggle check
+        }
+
+        private void menuFile_LoadBinaryDataToSelected_Click(object sender, EventArgs e)
+        {
+            // Open a file chooser dialog for any file type
+            OpenFileDialog openFileDialogResult = new OpenFileDialog();
+            if (openFileDialogResult.ShowDialog() == DialogResult.OK)
+            {
+                string filePath = openFileDialogResult.FileName;
+
+                // Check the file exists
+                if (!File.Exists(filePath))
+                {
+                    MessageBox.Show("Error: The file you selected doesn't exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                byte[] fileData = File.ReadAllBytes(filePath);
+                
+                ClipboardItem? item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
+
+                if (item == null)
+                {
+                    MessageBox.Show("Error: No format seems to be selected in the data grid.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                Guid uniqueID = item.UniqueID;
+
+                UpdateEditedClipboardItem(uniqueID, fileData);
+                anyPendingChanges = true;
+
+                DisplayClipboardData(item);
+
+                UpdateEditControlsVisibility_AndPendingGridAppearance();
             }
         }
 
