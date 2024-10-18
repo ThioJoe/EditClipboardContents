@@ -17,12 +17,14 @@ using static EditClipboardContents.ClipboardFormats;
 #pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
 #pragma warning disable IDE0066 // Disable message about switch case expression
 #pragma warning disable IDE0090 // Disable messages about New expression simplification
+// Nullable reference types
+#nullable enable
 
 namespace EditClipboardContents
 {
     public static class FormatStructurePrinter
     {
-        public static string GetDataStringForTextbox(string formatName, ClipboardItem fullItem)
+        public static string GetDataStringForTextbox(string formatName, ClipboardItem? fullItem)
         {
             string displayText;
 
@@ -51,7 +53,7 @@ namespace EditClipboardContents
             }
         }
 
-        public static string CreateDataString(string formatName, ClipboardItem fullItem)
+        public static string CreateDataString(string formatName, ClipboardItem? fullItem)
         {
             bool anyFormatInfoAvailable = false;
 
@@ -74,7 +76,7 @@ namespace EditClipboardContents
                 anyFormatInfoAvailable = true;
             }
 
-            if (fullItem.DataInfoList.Count > 0 && !string.IsNullOrEmpty(fullItem.DataInfoList[0]))
+            if (fullItem?.DataInfoList.Count > 0 && !string.IsNullOrEmpty(fullItem.DataInfoList[0]))
             {
                 
                 result.AppendLine($"\nData Info:");
@@ -97,7 +99,7 @@ namespace EditClipboardContents
 
             // ----------------- If there is a full item and object data -----------------
 
-            if (fullItem.ClipDataObject != null)
+            if (fullItem?.ClipDataObject != null)
             {
                 // Documentation links for the struct and its members
                 Dictionary<string, string> structDocs = FormatInfoHardcoded.GetDocumentationUrls_ForEntireObject(fullItem.ClipDataObject.ObjectData);
@@ -119,7 +121,7 @@ namespace EditClipboardContents
 
             // -------------------- LOCAL FUNCTIONS --------------------
 
-            void RecursivePrintClipDataObject(IClipboardFormat obj, string indent, int depth = 0)
+            void RecursivePrintClipDataObject(IClipboardFormat? obj, string indent, int depth = 0)
             {
                 if (obj == null)
                 {
@@ -159,8 +161,11 @@ namespace EditClipboardContents
                     }
                     else if (propertyType.IsArray)
                     {
-                        var array = obj.GetType().GetProperty(propertyName).GetValue(obj) as Array;
-                        RecursivePrintArray(array, indent + originalIndent, depth: depth + 1);
+                        Array? array = obj.GetType().GetProperty(propertyName).GetValue(obj) as Array;
+                        if (array != null && array.Length > 0 )
+                        {
+                            RecursivePrintArray(array, indent + originalIndent, depth: depth + 1);
+                        }
                     }
                     else
                     {

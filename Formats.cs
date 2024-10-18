@@ -17,6 +17,8 @@ using System.Text;
 #pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about inputArray initialization
 #pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
 #pragma warning disable IDE0066 // Disable message about switch case expression
+// Nullable reference types
+#nullable enable
 
 
 // Notes:
@@ -51,13 +53,13 @@ namespace EditClipboardContents
     {
         public interface IClipboardFormat
         {
-            string GetDocumentationUrl();
+            string? GetDocumentationUrl();
             string StructName();
             Dictionary<string, string> DataDisplayReplacements();
             List<string> PropertiesNoProcess();
             void SetCacheStructObjectDisplayInfo(string structInfo);
             string GetCacheStructObjectDisplayInfo();
-            IEnumerable<(string Name, object Value, Type Type, int? ArraySize)> EnumerateProperties(bool getValues = false);
+            IEnumerable<(string Name, object? Value, Type Type, int? ArraySize)> EnumerateProperties(bool getValues = false);
             bool FillEmptyArrayWithRemainingBytes();
             int MaxStringLength();
         }
@@ -74,13 +76,13 @@ namespace EditClipboardContents
             public virtual int MaxStringLength() => 0;
 
             // Private field to store the cached struct display info
-            private string _cachedStructDisplayInfo;
+            private string? _cachedStructDisplayInfo;
 
             // Default implementation for FillEmptyArrayWithRemainingBytes - If the last array should be filled with bytes. Defaults to false
             public virtual bool FillEmptyArrayWithRemainingBytes() => false;
 
             // Common methods apply to all classes of the type
-            public virtual string GetDocumentationUrl()
+            public virtual string? GetDocumentationUrl()
             {
                 string structName = StructName();
                 if (structName == null || !FormatInfoHardcoded.StructDocsLinks.ContainsKey(structName))
@@ -111,13 +113,13 @@ namespace EditClipboardContents
                 return _cachedStructDisplayInfo ?? string.Empty;
             }
 
-            public virtual IEnumerable<(string Name, object Value, Type Type, int? ArraySize)> EnumerateProperties(bool getValues = false)
+            public virtual IEnumerable<(string Name, object? Value, Type Type, int? ArraySize)> EnumerateProperties(bool getValues = false)
             {
                 var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
                 foreach (var property in properties)
                 {
                     var type = property.PropertyType;
-                    object value = null;
+                    object? value = null;
                     int? arraySize = null;
 
                     if (getValues || typeof(ICollection).IsAssignableFrom(type) || type.IsArray)
@@ -151,7 +153,7 @@ namespace EditClipboardContents
         }
 
         // Static helper methods to be able to object info without creating an object
-        public static string GetDocumentationUrl<T>() where T : IClipboardFormat, new()
+        public static string? GetDocumentationUrl<T>() where T : IClipboardFormat, new()
         {
             return new T().GetDocumentationUrl();
         }
@@ -211,8 +213,8 @@ namespace EditClipboardContents
             public DWORD bV5GreenMask { get; set; }
             public DWORD bV5BlueMask { get; set; }
             public DWORD bV5AlphaMask { get; set; }
-            public LOGCOLORSPACEW_OBJ bV5CSType { get; set; }
-            public CIEXYZTRIPLE_OBJ bV5Endpoints { get; set; }
+            public LOGCOLORSPACEW_OBJ bV5CSType { get; set; } = new LOGCOLORSPACEW_OBJ();
+            public CIEXYZTRIPLE_OBJ bV5Endpoints { get; set; } = new CIEXYZTRIPLE_OBJ();
             public DWORD bV5GammaRed { get; set; }
             public DWORD bV5GammaGreen { get; set; }
             public DWORD bV5GammaBlue { get; set; }
@@ -254,8 +256,8 @@ namespace EditClipboardContents
 
         public class BITMAPINFO_OBJ : ClipboardFormatBase
         {
-            public BITMAPINFOHEADER_OBJ bmiHeader { get; set; }
-            public List<RGBQUAD_OBJ> bmiColors { get; set; }
+            public BITMAPINFOHEADER_OBJ bmiHeader { get; set; } = new BITMAPINFOHEADER_OBJ();
+            public List<RGBQUAD_OBJ> bmiColors { get; set; } = [];
 
             protected override string GetStructName() => "BITMAPINFO";
 
@@ -269,7 +271,7 @@ namespace EditClipboardContents
 
             public override List<string> PropertiesNoProcess()
             {
-                return new List<string> { "bmiColors" };
+                return ["bmiColors"];
             }
         }
 
@@ -278,7 +280,7 @@ namespace EditClipboardContents
             public LONG mm { get; set; }
             public LONG xExt { get; set; }
             public LONG yExt { get; set; }
-            public byte[] hMF { get; set; } = new byte[0]; // Handle to metafile. Will process as METAFILE_OBJ later separately
+            public byte[] hMF { get; set; } = []; // Handle to metafile. Will process as METAFILE_OBJ later separately
 
             protected override string GetStructName() => "METAFILEPICT";
 
@@ -303,9 +305,9 @@ namespace EditClipboardContents
 
         public class CIEXYZTRIPLE_OBJ : ClipboardFormatBase
         {
-            public CIEXYZ_OBJ ciexyzRed { get; set; }
-            public CIEXYZ_OBJ ciexyzGreen { get; set; }
-            public CIEXYZ_OBJ ciexyzBlue { get; set; }
+            public CIEXYZ_OBJ ciexyzRed { get; set; } = new CIEXYZ_OBJ();
+            public CIEXYZ_OBJ ciexyzGreen { get; set; } = new CIEXYZ_OBJ();
+            public CIEXYZ_OBJ ciexyzBlue { get; set; } = new CIEXYZ_OBJ();
 
             protected override string GetStructName() => "CIEXYZTRIPLE";
         }
@@ -313,7 +315,7 @@ namespace EditClipboardContents
         public class DROPFILES_OBJ : ClipboardFormatBase
         {
             public DWORD pFiles { get; set; }
-            public POINT_OBJ pt { get; set; }
+            public POINT_OBJ pt { get; set; } = new POINT_OBJ();
             public BOOL fNC { get; set; }
             public BOOL fWide { get; set; }
 
@@ -357,7 +359,7 @@ namespace EditClipboardContents
         {
             public WORD palVersion { get; set; }
             public WORD palNumEntries { get; set; }
-            public List<PALETTEENTRY_OBJ> palPalEntry { get; set; }
+            public List<PALETTEENTRY_OBJ> palPalEntry { get; set; } = [];
 
             protected override string GetStructName() => "LOGPALETTE";
 
@@ -377,11 +379,11 @@ namespace EditClipboardContents
             public DWORD lcsSize { get; set; }
             public LCSCSTYPE lcsCSType { get; set; }
             public LCSGAMUTMATCH lcsIntent { get; set; }
-            public CIEXYZTRIPLE_OBJ lcsEndpoints { get; set; }
+            public CIEXYZTRIPLE_OBJ lcsEndpoints { get; set; } = new CIEXYZTRIPLE_OBJ();
             public DWORD lcsGammaRed { get; set; }
             public DWORD lcsGammaGreen { get; set; }
             public DWORD lcsGammaBlue { get; set; }
-            public string lcsFilename { get; set; }
+            public string lcsFilename { get; set; } = string.Empty;
 
             protected override string GetStructName() => "LOGCOLORSPACEW";
             public override int MaxStringLength() => MAX_PATH;
@@ -392,7 +394,7 @@ namespace EditClipboardContents
         public class FILEGROUPDESCRIPTORW_OBJ : ClipboardFormatBase
         {
             public DWORD cItems { get; set; }
-            public List<FILEDESCRIPTOR_OBJ> fgd { get; set; }
+            public List<FILEDESCRIPTOR_OBJ> fgd { get; set; } = [];
 
             protected override string GetStructName() => "FILEGROUPDESCRIPTORW";
         }
@@ -400,16 +402,16 @@ namespace EditClipboardContents
         public class FILEDESCRIPTOR_OBJ : ClipboardFormatBase
         {
             public DWORD dwFlags { get; set; }
-            public CLSID_OBJ clsid { get; set; }
-            public SIZEL_OBJ sizel { get; set; }
-            public POINTL_OBJ point { get; set; }
+            public CLSID_OBJ clsid { get; set; } = new CLSID_OBJ();
+            public SIZEL_OBJ sizel { get; set; } = new SIZEL_OBJ();
+            public POINTL_OBJ point { get; set; } = new POINTL_OBJ();
             public DWORD dwFileAttributes { get; set; }
-            public FILETIME_OBJ ftCreationTime { get; set; }
-            public FILETIME_OBJ ftLastAccessTime { get; set; }
-            public FILETIME_OBJ ftLastWriteTime { get; set; }
+            public FILETIME_OBJ ftCreationTime { get; set; } = new FILETIME_OBJ();
+            public FILETIME_OBJ ftLastAccessTime { get; set; } = new FILETIME_OBJ();
+            public FILETIME_OBJ ftLastWriteTime { get; set; } = new FILETIME_OBJ();
             public DWORD nFileSizeHigh { get; set; }
             public DWORD nFileSizeLow { get; set; }
-            public string cFileName { get; set; }
+            public string cFileName { get; set; } = string.Empty;
 
             public static int MetaDataOnlySize()
             {
@@ -464,8 +466,8 @@ namespace EditClipboardContents
         public class CIDA_OBJ : ClipboardFormatBase
         {
             private uint _cidl;
-            private uint[] _aoffset;
-            private ITEMIDLIST_OBJ[] _ITEMIDLIST;
+            private uint[] _aoffset = [];
+            private ITEMIDLIST_OBJ[] _ITEMIDLIST = [];
 
             // Automatically updates the size of aoffset when cidl is set because it is dependent on it
             public uint cidl
@@ -475,7 +477,7 @@ namespace EditClipboardContents
                 {
                     _cidl = value;
                     _aoffset = new uint[_cidl + 1];
-                    _ITEMIDLIST = new ITEMIDLIST_OBJ[0]; // Initialize to empty array since we are manually going to fill it later with separate processing
+                    _ITEMIDLIST = []; // Initialize to empty array since we are manually going to fill it later with separate processing
                 }
             }
             // Still allow setting aoffset directly so we can put values into it
@@ -515,7 +517,7 @@ namespace EditClipboardContents
 
         public class ITEMIDLIST_OBJ : ClipboardFormatBase
         {
-            public SHITEMID_OBJ mkid { get; set; }
+            public SHITEMID_OBJ mkid { get; set; } = new SHITEMID_OBJ();
 
             protected override string GetStructName() => "ITEMIDLIST";
         }
@@ -523,7 +525,7 @@ namespace EditClipboardContents
         public class SHITEMID_OBJ : ClipboardFormatBase
         {
             private USHORT _cb; // Size of the structure in bytes, including the cb field itself
-            private byte[] _abID; // The actual data
+            private byte[] _abID = []; // The actual data
 
             public uint cb
             {
@@ -560,8 +562,8 @@ namespace EditClipboardContents
 
         public class METAFILE_OBJ : ClipboardFormatBase
         {
-            public METAHEADER_OBJ METAHEADER { get; set; }
-            private METARECORD_OBJ[] _METARECORD { get; set; } = new METARECORD_OBJ[0]; // Last record must be a META_EOF which is 0x0000
+            public METAHEADER_OBJ METAHEADER { get; set; } = new METAHEADER_OBJ();
+            private METARECORD_OBJ[] _METARECORD { get; set; } = []; // Last record must be a META_EOF which is 0x0000
             //private byte[] _rawRecordsData { get; set; } = new byte[0]; // Raw data of all records
 
             public override bool FillEmptyArrayWithRemainingBytes() => false;
@@ -600,7 +602,7 @@ namespace EditClipboardContents
         public class METARECORD_OBJ : ClipboardFormatBase
         {
             private DWORD _rdSize;
-            private WORD[] _rdParm;
+            private WORD[] _rdParm = [];
 
             public DWORD rdSize
             {
@@ -663,8 +665,8 @@ namespace EditClipboardContents
 
         public class ENHMETAFILE_OBJ : ClipboardFormatBase
         {
-            public ENHMETAHEADER_OBJ ENHMETAHEADER { get; set; }
-            public ENHMETARECORD_OBJ[] ENHMETARECORD { get; set; } = new ENHMETARECORD_OBJ[0];
+            public ENHMETAHEADER_OBJ ENHMETAHEADER { get; set; } = new ENHMETAHEADER_OBJ();
+            public ENHMETARECORD_OBJ[] ENHMETARECORD { get; set; } = [];
             // Last record must be a EMR_EOF which is 0x0000
             protected override string GetStructName() => "MS-EMF";
 
@@ -684,8 +686,8 @@ namespace EditClipboardContents
         {
             public EMF_RecordType iType { get; set; } // Aka RecordType
             public DWORD nSize { get; set; }
-            public RECTL_OBJ rclBounds { get; set; }
-            public RECTL_OBJ rclFrame { get; set; }
+            public RECTL_OBJ rclBounds { get; set; } = new RECTL_OBJ();
+            public RECTL_OBJ rclFrame { get; set; } = new RECTL_OBJ();
             public DWORD dSignature { get; set; }
             public DWORD nVersion { get; set; }
             public DWORD nBytes { get; set; }
@@ -695,12 +697,12 @@ namespace EditClipboardContents
             public DWORD nDescription { get; set; }
             public DWORD offDescription { get; set; }
             public DWORD nPalEntries { get; set; }
-            public SIZEL_OBJ szlDevice { get; set; }
-            public SIZEL_OBJ szlMillimeters { get; set; }
+            public SIZEL_OBJ szlDevice { get; set; } = new SIZEL_OBJ();
+            public SIZEL_OBJ szlMillimeters { get; set; } = new SIZEL_OBJ();
             public DWORD cbPixelFormat { get; set; }
             public DWORD offPixelFormat { get; set; }
             public DWORD bOpenGL { get; set; }
-            public SIZEL_OBJ szlMicrometers { get; set; }
+            public SIZEL_OBJ szlMicrometers { get; set; } = new SIZEL_OBJ();
 
             protected override string GetStructName() => "ENHMETAHEADER";
         }
@@ -737,7 +739,7 @@ namespace EditClipboardContents
                     _dParm = new DWORD[DWORDcount];
                 }
             }
-            public DWORD[] _dParm { get; set; }
+            public DWORD[] _dParm { get; set; } = [];
 
             protected override string GetStructName() => "ENHMETARECORD";
         }
@@ -756,7 +758,7 @@ namespace EditClipboardContents
         {
             public UINT32 Key { get; set; }
             public INT16 Hmf { get; set; } // Handle to metafile
-            public PWMFRect16_OBJ BoundingBox { get; set; }
+            public PWMFRect16_OBJ BoundingBox { get; set; } = new PWMFRect16_OBJ();
             public INT16 Inch { get; set; }
             public UINT32 Reserved { get; set; }
             public INT16 Checksum { get; set; }
@@ -1187,7 +1189,7 @@ namespace EditClipboardContents
             return (T)ReadValue(typeof(T), data, ref offset);
         }
 
-        private static object ReadValue(Type type, byte[] data, ref int offset, Type callingClass = null, int collectionSize = -1)
+        private static object ReadValue(Type type, byte[] data, ref int offset, Type? callingClass = null, int collectionSize = -1)
         {
             int remainingBytes = data.Length - offset;
 

@@ -19,12 +19,14 @@ using System.Windows.Forms;
 #pragma warning disable IDE0090 // Disable messages about New expression simplification
 #pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
 #pragma warning disable IDE0066 // Disable message about switch case expression
+// Nullable reference types
+#nullable enable
 
 namespace EditClipboardContents
 {
     public static partial class FormatConverters
     {
-        public static IntPtr AllocateGeneralHandle_FromRawData(byte[] data)
+        public static IntPtr AllocateGeneralHandle_FromRawData(byte[]? data)
         {
             if (data == null || data.Length == 0)
             {
@@ -113,7 +115,7 @@ namespace EditClipboardContents
             return hGlobal;
         }
 
-        public static byte[] EnhMetafile_RawData_FromHandle(IntPtr hEnhMetaFile)
+        public static byte[]? EnhMetafile_RawData_FromHandle(IntPtr hEnhMetaFile)
         {
             uint size = NativeMethods.GetEnhMetaFileBits(hEnhMetaFile, 0, null);
             if (size > 0)
@@ -127,7 +129,7 @@ namespace EditClipboardContents
             return null;
         }
 
-        public static byte[] MetafilePict_RawData_FromHandle(IntPtr hMetafilePict)
+        public static byte[]? MetafilePict_RawData_FromHandle(IntPtr hMetafilePict)
         {
             IntPtr pMetafilePict = NativeMethods.GlobalLock(hMetafilePict);
             if (pMetafilePict != IntPtr.Zero)
@@ -156,7 +158,7 @@ namespace EditClipboardContents
             return null;
         }
 
-        public static byte[] CF_HDROP_RawData_FromHandle(IntPtr hDrop)
+        public static byte[]? CF_HDROP_RawData_FromHandle(IntPtr hDrop)
         {
             // Lock the global memory object to access the data
             IntPtr pDropFiles = NativeMethods.GlobalLock(hDrop);
@@ -246,8 +248,13 @@ namespace EditClipboardContents
 
 
 
-        public static IntPtr CF_HDROP_Handle_FromRawData(byte[] rawData)
+        public static IntPtr CF_HDROP_Handle_FromRawData(byte[]? rawData)
         {
+            if (rawData == null || rawData.Length < Marshal.SizeOf(typeof(DROPFILES)))
+            {
+                return IntPtr.Zero;
+            }
+
             // Lock rawData for pinning in memory
             GCHandle handle = GCHandle.Alloc(rawData, GCHandleType.Pinned);
             try
@@ -299,7 +306,7 @@ namespace EditClipboardContents
 
 
 
-        public static IntPtr MetafilePict_Handle_FromRawData(byte[] rawData)
+        public static IntPtr MetafilePict_Handle_FromRawData(byte[]? rawData)
         {
             IntPtr hGlobal = AllocateGeneralHandle_FromRawData(rawData);
             if (hGlobal != IntPtr.Zero)
@@ -328,8 +335,12 @@ namespace EditClipboardContents
             return IntPtr.Zero;
         }
 
-        public static IntPtr EnhMetafile_Handle_FromRawData(byte[] rawData)
+        public static IntPtr EnhMetafile_Handle_FromRawData(byte[]? rawData)
         {
+            if (rawData == null || rawData.Length == 0)
+            {
+                return IntPtr.Zero;
+            }
             using (MemoryStream ms = new MemoryStream(rawData))
             {
                 IntPtr hemf = NativeMethods.SetEnhMetaFileBits((uint)rawData.Length, rawData);
@@ -474,7 +485,7 @@ namespace EditClipboardContents
             }
         }
 
-        public static byte[] DIBits_From_HBitmap(IntPtr hBitmap)
+        public static byte[]? DIBits_From_HBitmap(IntPtr hBitmap)
         {
             BITMAPINFO bmi = new BITMAPINFO();
             bmi.bmiHeader.biSize = (uint)Marshal.SizeOf(typeof(BITMAPINFOHEADER));
@@ -506,7 +517,7 @@ namespace EditClipboardContents
             }
         }
 
-        public static byte[] CF_PALETTE_RawData_FromHandle(IntPtr hPalette)
+        public static byte[]? CF_PALETTE_RawData_FromHandle(IntPtr hPalette)
         {
             if (hPalette == IntPtr.Zero)
             {
@@ -535,7 +546,7 @@ namespace EditClipboardContents
             }
         }
 
-        public static IntPtr CF_PALETTE_Handle_FromRawData(byte[] rawData)
+        public static IntPtr CF_PALETTE_Handle_FromRawData(byte[]? rawData)
         {
             if (rawData == null || rawData.Length < Marshal.SizeOf<LOGPALETTE>())
             {
@@ -581,7 +592,7 @@ namespace EditClipboardContents
             return IntPtr.Zero;
         }
 
-        public static string ConvertHtmlFormat(string htmlFormatText)
+        public static string? ConvertHtmlFormat(string htmlFormatText)
         {
             try
             {

@@ -10,6 +10,8 @@ using System.Text;
 #pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
 #pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
 #pragma warning disable IDE0066 // Disable message about switch case expression
+// Nullable reference types
+#nullable enable
 
 // My classes
 using EditClipboardContents;
@@ -61,7 +63,7 @@ namespace EditClipboardContents
         public static extern void CopyMemory(IntPtr dest, IntPtr src, UIntPtr count);
 
         [DllImport("shell32.dll", CharSet = CharSet.Auto)]
-        public static extern uint DragQueryFile(IntPtr hDrop, uint iFile, StringBuilder lpszFile, uint cch);
+        public static extern uint DragQueryFile(IntPtr hDrop, uint iFile, StringBuilder? lpszFile, uint cch);
 
         [DllImport("gdi32.dll")]
         public static extern int GetObject(IntPtr hObject, int nCount, ref ClipboardFormats.BITMAP lpObject);
@@ -88,12 +90,12 @@ namespace EditClipboardContents
         public static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
 
         [DllImport("gdi32.dll")]
-        public static extern IntPtr CopyEnhMetaFile(IntPtr hemfSrc, string lpszFile);
+        public static extern IntPtr CopyEnhMetaFile(IntPtr hemfSrc, string? lpszFile);
         [DllImport("user32.dll", SetLastError = true)]
         public static extern int CountClipboardFormats();
 
         [DllImport("gdi32.dll")]
-        public static extern IntPtr CopyMetaFile(IntPtr hMF, string lpFileName);
+        public static extern IntPtr CopyMetaFile(IntPtr hMF, string? lpFileName);
 
         [DllImport("gdi32.dll")]
         public static extern bool DeleteMetaFile(IntPtr hMF);
@@ -105,10 +107,10 @@ namespace EditClipboardContents
         public static extern bool DeleteEnhMetaFile(IntPtr hemf);
 
         [DllImport("gdi32.dll")]
-        public static extern int GetMetaFileBitsEx(IntPtr hmf, int nSize, [In, Out] byte[] lpvData);
+        public static extern int GetMetaFileBitsEx(IntPtr hmf, int nSize, [In, Out] byte[]? lpvData);
 
         [DllImport("gdi32.dll")]
-        public static extern uint GetEnhMetaFileBits(IntPtr hemf, uint cbBuffer, [In, Out] byte[] lpbBuffer);
+        public static extern uint GetEnhMetaFileBits(IntPtr hemf, uint cbBuffer, [In, Out] byte[]? lpbBuffer);
 
         [DllImport("shell32.dll", CharSet = CharSet.Ansi)]
         public static extern uint DragQueryFileA(IntPtr hDrop, uint iFile, [Out] StringBuilder lpszFile, uint cch);
@@ -117,8 +119,7 @@ namespace EditClipboardContents
         public static extern IntPtr CreatePalette([In] ref ClipboardFormats.LOGPALETTE lplgpl);
 
         [DllImport("gdi32.dll")]
-        public static extern int GetDIBits(IntPtr hdc, IntPtr hbmp, uint uStartScan, uint cScanLines,
-        [Out] byte[] lpvBits, ref BITMAPINFO lpbi, uint uUsage);
+        public static extern int GetDIBits(IntPtr hdc, IntPtr hbmp, uint uStartScan, uint cScanLines, [Out] byte[]? lpvBits, ref BITMAPINFO lpbi, uint uUsage);
 
         // ------------------------- Related to Diagnostics ---------------------------
         [DllImport("user32.dll", SetLastError = true)]

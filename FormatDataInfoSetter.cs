@@ -23,17 +23,19 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 #pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
 #pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
 #pragma warning disable IDE0066 // Disable message about switch case expression
+// Nullable reference types
+#nullable enable
 
 namespace EditClipboardContents
 {
     public partial class MainForm : Form
     {
         // -------------------------------------- Set Data Info ---------------------------------------------------
-        private static (List<string>, byte[], ClipDataObject) SetDataInfo(string formatName, byte[] rawData)
+        private static (List<string>, byte[], ClipDataObject?) SetDataInfo(string formatName, byte[] rawData)
         {
             List<string> dataInfoList = new List<string>();
             byte[] processedData = rawData;
-            ClipDataObject processedObject = null;
+            ClipDataObject? processedObject = null;
 
             switch (formatName) // Process based on format name because format ID can be different for non-standard (registered) formats
             {

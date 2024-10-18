@@ -19,6 +19,8 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 #pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
 #pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
 #pragma warning disable IDE0066 // Disable message about switch case expression
+// Nullable reference types
+#nullable enable
 
 namespace EditClipboardContents
 {
@@ -356,8 +358,8 @@ namespace EditClipboardContents
         private void buttonResetEdit_Click(object sender, EventArgs e)
         {
             Guid guid;
-            byte[] originalData;
-            ClipboardItem originalItem = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
+            byte[]? originalData;
+            ClipboardItem? originalItem = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
 
             if (originalItem != null)
             {
@@ -428,7 +430,7 @@ namespace EditClipboardContents
             if (checkBoxAutoViewMode.Checked)
             {
                 // Get the selectedItem object
-                ClipboardItem item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
+                ClipboardItem? item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
 
                 // If there is a text preview, show text mode
                 if (!string.IsNullOrEmpty(GetSelectedDataFromDataGridView("TextPreview")))
@@ -458,7 +460,7 @@ namespace EditClipboardContents
         private void menuEdit_CopyHexAsText_Click(object sender, EventArgs e)
         {
             // Get the clipboard selectedItem and its info
-            ClipboardItem itemToCopy = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
+            ClipboardItem? itemToCopy = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
             if (itemToCopy == null)
             {
                 return;
@@ -473,7 +475,7 @@ namespace EditClipboardContents
         private void menuEdit_CopyObjectInfoAsText_Click(object sender, EventArgs e)
         {
             // Get the clipboard selectedItem and its info
-            ClipboardItem itemToCopy = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
+            ClipboardItem? itemToCopy = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
             if (itemToCopy == null)
             {
                 return;
@@ -486,7 +488,7 @@ namespace EditClipboardContents
         private void menuEdit_CopyEditedHexAsText_Click(object sender, EventArgs e)
         {
             // Get the edited clipboard selectedItem and its info
-            ClipboardItem itemToCopy = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
+            ClipboardItem? itemToCopy = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
             if (itemToCopy == null)
             {
                 return;
@@ -538,17 +540,25 @@ namespace EditClipboardContents
                 .Where(x => x % 2 == 0)
                 .Select(x => Convert.ToByte(hexString.Substring(x, 2), 16))
                 .ToArray();
+
             // Get the format ID of the selected clipboard selectedItem
-            Guid uniqueID = GetSelectedClipboardItemObject(returnEditedItemVersion: true).UniqueID;
+            Guid uniqueID = GetSelectedClipboardItemObject(returnEditedItemVersion: true)?.UniqueID ?? Guid.Empty;
+
+            if (uniqueID == Guid.Empty)
+            {
+                return;
+            }
+
+            ClipboardItem? originalItem = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
 
             // Check if the edited data is actually different from the original data, apply the change and set anyPendingChanges accordingly
             // First check if there is even an original item. If not it's probably a custom added item so just updated it
-            if (GetSelectedClipboardItemObject(returnEditedItemVersion: false) == null)
+            if (originalItem == null)
             {
                 UpdateEditedClipboardItem(uniqueID, rawDataFromTextbox);
                 anyPendingChanges = true;
             }
-            else if(!GetSelectedClipboardItemObject(returnEditedItemVersion: false).RawData.SequenceEqual(rawDataFromTextbox))
+            else if(!originalItem.RawData.SequenceEqual(rawDataFromTextbox))
             {
                 UpdateEditedClipboardItem(uniqueID, rawDataFromTextbox);
                 anyPendingChanges = true;
@@ -578,7 +588,7 @@ namespace EditClipboardContents
 
         private void menuFile_ExportSelectedAsRawHex_Click(object sender, EventArgs e)
         {
-            ClipboardItem itemToExport = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
+            ClipboardItem? itemToExport = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
             if (itemToExport == null)
             {
                 return;
@@ -598,7 +608,7 @@ namespace EditClipboardContents
         private void menuFile_ExportSelectedStruct_Click(object sender, EventArgs e)
         {
             // Get the clipboard selectedItem and its info
-            ClipboardItem itemToExport = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
+            ClipboardItem? itemToExport = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
             if (itemToExport == null)
             {
                 return;
@@ -631,7 +641,7 @@ namespace EditClipboardContents
             int selectedFormatId = -1;
             // New scope, only need item for this operation
             {
-                ClipboardItem item = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
+                ClipboardItem? item = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
                 if (item != null)
                 {
                     selectedFormatId = (int)item.FormatId;
@@ -722,7 +732,7 @@ namespace EditClipboardContents
                 richTextBoxContents.DetectUrls = false;
             }
 
-            ClipboardItem item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
+            ClipboardItem? item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
             if (item == null)
             {
                 return;
@@ -806,7 +816,7 @@ namespace EditClipboardContents
             }
 
             // Create a new boilerplate clipboard item
-            ClipboardItem newItem = new ClipboardItem()
+            ClipboardItem? newItem = new ClipboardItem()
             {
                 FormatId = 0,
                 FormatName = customName,
@@ -851,7 +861,7 @@ namespace EditClipboardContents
             dataGridViewClipboard[e.ColumnIndex, e.RowIndex].ReadOnly = false;
 
             // Only allow editing for custom added formats
-            ClipboardItem item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
+            ClipboardItem? item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
             if (item != null && item.PendingCustomAddition == true)
             {
                 int rowIndex = e.RowIndex;
@@ -889,13 +899,13 @@ namespace EditClipboardContents
         private void dataGridViewClipboard_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
         {
             itemBeforeCellEditClone = null;
-            itemBeforeCellEditClone = (ClipboardItem)GetSelectedClipboardItemObject(returnEditedItemVersion: true).Clone();
+            itemBeforeCellEditClone = (ClipboardItem?)GetSelectedClipboardItemObject(returnEditedItemVersion: true)?.Clone();
         }
 
         private void dataGridViewClipboard_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             // Get the item before the cell was edited
-            ClipboardItem itemBeforeEdit = itemBeforeCellEditClone;
+            ClipboardItem? itemBeforeEdit = itemBeforeCellEditClone;
             if (itemBeforeEdit == null)
             {
                 MessageBox.Show("Error: Couldn't find the clipboard object from before the edit.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -924,7 +934,7 @@ namespace EditClipboardContents
             // Will need to add a validation function here later
 
             // Update the edited item
-            ClipboardItem editedItem = editedClipboardItems.FirstOrDefault(i => i.UniqueID == uniqueID);
+            ClipboardItem? editedItem = editedClipboardItems.FirstOrDefault(i => i.UniqueID == uniqueID);
             if (editedItem != null)
             {
                 editedItem.FormatId = formatId;
@@ -938,7 +948,7 @@ namespace EditClipboardContents
         }
         private void menuItemFile_ExportRegisteredFormats_Click(object sender, EventArgs e)
         {
-            Dictionary<uint,string> formatPairs = Utils.GetAllPossibleRegisteredFormatNames();
+            Dictionary<uint,string>? formatPairs = Utils.GetAllPossibleRegisteredFormatNames();
 
             if (formatPairs == null)
             {

@@ -7,6 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+// Nullable reference types
+#nullable enable
+
 namespace EditClipboardContents
 {
     public static class Utils
@@ -32,7 +35,7 @@ namespace EditClipboardContents
             return true;
         }
         
-        public static Dictionary<uint,string> GetAllPossibleRegisteredFormatNames()
+        public static Dictionary<uint,string>? GetAllPossibleRegisteredFormatNames()
         {
             try
             {
@@ -60,13 +63,13 @@ namespace EditClipboardContents
         {
             uint formatId = 0;
             // Get map where key is the ID and value is the name
-            Dictionary<uint, string> nameIDMap = Utils.GetAllPossibleRegisteredFormatNames();
+            Dictionary<uint, string>? nameIDMap = Utils.GetAllPossibleRegisteredFormatNames();
 
-            if (nameIDMap.ContainsValue(formatName)) // Prefer exact match
+            if (nameIDMap != null && nameIDMap.ContainsValue(formatName)) // Prefer exact match
             {
                 formatId = nameIDMap.FirstOrDefault(x => x.Value == formatName).Key;
             }
-            else if (!caseSensitive) // If case insensitive, try fallback to case insensitive match if specified
+            else if (nameIDMap != null && !caseSensitive) // If case insensitive, try fallback to case insensitive match if specified
             {
                 formatId = nameIDMap.FirstOrDefault(x => x.Value.ToLower() == formatName.ToLower()).Key;
             }

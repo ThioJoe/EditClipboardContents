@@ -4,6 +4,8 @@ using System.Collections.Specialized;
 using System.Windows.Forms;
 using System.Configuration;
 
+#nullable enable
+
 namespace EditClipboardContents
 {
     static class Program

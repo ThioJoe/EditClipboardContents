@@ -16,6 +16,8 @@ using static System.Net.WebRequestMethods;
 #pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
 #pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
 #pragma warning disable IDE0066 // Disable message about switch case expression
+// Nullable reference types
+#nullable enable
 
 namespace EditClipboardContents
 {
@@ -122,7 +124,7 @@ namespace EditClipboardContents
 
         };
 
-        public static object CheckIfProblematicValue(PropertyInfo property, object obj)
+        public static object? CheckIfProblematicValue(PropertyInfo property, object obj)
         {
             try
             {
@@ -149,7 +151,7 @@ namespace EditClipboardContents
 
         // Helper function to get documentation URLs for a class and it's sub-classes using DocumentationUrl() method of each
         // Iterates them and puts them into list. Parameter is the object itself. Recursive.
-        public static Dictionary<string, string> GetDocumentationUrls_ForEntireObject(IClipboardFormat obj)
+        public static Dictionary<string, string> GetDocumentationUrls_ForEntireObject(IClipboardFormat? obj)
         {
             Dictionary<string, string> results = new Dictionary<string, string>();
 
@@ -158,9 +160,9 @@ namespace EditClipboardContents
 
             // Get documentation URL for the current outer object
             string structName = obj.StructName();
-            string currentObjDocUrl = obj.GetDocumentationUrl();
+            string? currentObjDocUrl = obj.GetDocumentationUrl();
 
-            if (!string.IsNullOrEmpty(currentObjDocUrl))
+            if (currentObjDocUrl != null && !string.IsNullOrEmpty(currentObjDocUrl)) // Compiler was giving warning when just using IsNullOrEmpty so added null check
             {
                 results[structName] = currentObjDocUrl;
             }
@@ -169,7 +171,7 @@ namespace EditClipboardContents
             foreach (var property in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
                 // ----------------------------- Local Function ---------------------------------------
-                static object CheckIfProblematicValue(PropertyInfo property, object obj)
+                static object? CheckIfProblematicValue(PropertyInfo property, object obj)
                 {
                     try
                     {
@@ -194,7 +196,7 @@ namespace EditClipboardContents
                 }
                 // ------------------------------------------------------------------------------------
 
-                object value = CheckIfProblematicValue(property, obj);
+                object? value = CheckIfProblematicValue(property, obj);
 
                 if (value == null)
                     continue;

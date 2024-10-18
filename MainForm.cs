@@ -22,6 +22,8 @@ using System.Text.RegularExpressions;
 #pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
 #pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
 #pragma warning disable IDE0066 // Disable message about switch case expression
+// Nullable reference types
+#nullable enable
 
 // My classes
 using EditClipboardContents;
@@ -42,7 +44,7 @@ namespace EditClipboardContents
         // Other globals
         public static bool anyPendingChanges = false;
         public static bool enableSplitHexView = false;
-        public ClipboardItem itemBeforeCellEditClone = null;
+        public ClipboardItem? itemBeforeCellEditClone = null;
 
         // Global constants
         public const int maxRawSizeDefault = 50000;
@@ -227,7 +229,7 @@ namespace EditClipboardContents
         private void UpdateClipboardItemsGridViewWith_AdditionalItem(ClipboardItem formatItem)
         {
             // Get needed data from the item
-            byte[] rawData = formatItem.RawData;
+            byte[]? rawData = formatItem.RawData;
             string formatName = formatItem.FormatName;
             string formatType = formatItem.FormatType;
             string formatID = formatItem.FormatId.ToString();
@@ -319,7 +321,7 @@ namespace EditClipboardContents
         }
 
         // Function to try and parse the raw data for text if it is text
-        private string TryParseText(byte[] rawData, int maxLength = 150, bool prefixEncodingType = false)
+        private string TryParseText(byte[]? rawData, int maxLength = 150, bool prefixEncodingType = false)
         {
             if (rawData == null || rawData.Length == 0)
             {
@@ -603,7 +605,7 @@ namespace EditClipboardContents
 
         }
 
-        private void RetryCopyClipboardFormat(uint formatId, string specifiedFormatName = null)
+        private void RetryCopyClipboardFormat(uint formatId, string specifiedFormatName = "")
         {
             bool successResult = false;
             // First open the clipboard
@@ -624,10 +626,18 @@ namespace EditClipboardContents
 
                 // If the clipboard item is still null, it might be delayed render. Send request to the application to render the data
                 item = clipboardItems.FirstOrDefault(item => item.FormatId == formatId);
-                if (item == null || item.RawData == null)
+                if (item != null && item.RawData == null)
                 {
+                    IntPtr windowHandle;
                     // Send a delayed rendering request to the application. The window handle should be available in the diagnostics report
-                    IntPtr windowHandle = item.ErrorDiagnosisReport.OwnerWindowHandle;
+                    if (item.ErrorDiagnosisReport != null && item.ErrorDiagnosisReport.OwnerWindowHandle != null)
+                    {
+                        windowHandle = item.ErrorDiagnosisReport.OwnerWindowHandle;
+                    }
+                    else
+                    {
+                        windowHandle = IntPtr.Zero;
+                    }
 
                     bool result = RequestDelayedRendering(windowHandle, formatId);
 
@@ -648,7 +658,7 @@ namespace EditClipboardContents
             }
         }
 
-        private (bool,bool) ManuallyCopySpecifiedClipboardFormat(uint formatId = 0, string formatName = null, bool silent = false)
+        private (bool,bool) ManuallyCopySpecifiedClipboardFormat(uint formatId = 0, string? formatName = null, bool silent = false)
         {
             bool successResult = false;
             bool existingItem = false;
@@ -736,10 +746,10 @@ namespace EditClipboardContents
         {
             string formatName = Utils.GetClipboardFormatName(formatId);
             ulong dataSize = 0;
-            byte[] rawData = null;
+            byte[]? rawData = null;
             int? error; // Initializes as null anyway
-            string errorString = null;
-            DiagnosticsInfo diagnosisReport = null;
+            string? errorString = null;
+            DiagnosticsInfo? diagnosisReport = null;
             int originalIndex = loadedFormatCount - 1; // Stored for reference of clipboard order. If loadCount is -1, it means it's a retry
             bool copySuccess = true;
 
@@ -951,24 +961,24 @@ namespace EditClipboardContents
 
             foreach (var item in clipboardItems)
             {
-                byte[] processedData = null;
-                ClipDataObject processedObject = null;
+                byte[]? processedData = null;
+                ClipDataObject? processedObject = null;
 
                 // Data info list contains metadata about the data. First item will show in the data info column, all will show in the text box in object/struct view mode
                 List<string> dataInfoList = new List<string>();
 
                 // If there is data, process it and get the data info
-                if (item.RawData != null && item.RawData.Length > 0)
+                if (item?.RawData != null && item.RawData.Length > 0)
                 {
                     (dataInfoList, processedData, processedObject) = SetDataInfo(formatName: item.FormatName, rawData: item.RawData);
                 }
                 // If there is no data, and there is an error message
-                else if (!string.IsNullOrEmpty(item.ErrorReason))
+                else if (item != null && !string.IsNullOrEmpty(item.ErrorReason))
                 {
-                    dataInfoList.Add(item.ErrorReason);
+                    dataInfoList.Add(item.ErrorReason ?? string.Empty);
                 }
                 // If the data is null
-                else if (item.RawData == null)
+                else if (item?.RawData == null)
                 {
                     dataInfoList.Add("[null]");
                 }
@@ -976,6 +986,11 @@ namespace EditClipboardContents
                 else if (item.RawData.Length == 0)
                 {
                     dataInfoList.Add("[Empty]");
+                }
+
+                if (item == null) // It should never be null here, but just in case of side effects or something
+                {
+                    continue;
                 }
 
                 item.ProcessedData = processedData; // Update the processed data in the selectedItem
@@ -1007,6 +1022,11 @@ namespace EditClipboardContents
                 else
                 {
                     formatType = "Unknown";
+                }
+
+                if (item == null) // It should never be null here, but just in case of side effects or something
+                {
+                    continue;
                 }
 
                 // All synthesized formats are standard so just override the type if so
@@ -1275,14 +1295,14 @@ namespace EditClipboardContents
         }
 
 
-        private void DisplayClipboardData(ClipboardItem item)
+        private void DisplayClipboardData(ClipboardItem? item)
         {
             if (item == null || item.RawData == null)
             {
                 richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
                 richTextBoxContents.Text = "Data not available";
                 richTextBoxContents.ForeColor = Color.Red;
-                if (item.ErrorDiagnosisReport != null && item.ErrorDiagnosisReport.ReportString != null)
+                if (item?.ErrorDiagnosisReport != null && item.ErrorDiagnosisReport.ReportString != null)
                 {
                     richTextBoxContents.Text += "\n\n" + "   Info about error retrieving clipboard item:" + "\n" + item.ErrorDiagnosisReport.ReportString;
                     richTextBoxContents.ForeColor = Color.DarkRed;
@@ -1377,7 +1397,7 @@ namespace EditClipboardContents
         }
 
         // Get data in the datagridview of the selected item for a particular column
-        private string GetSelectedDataFromDataGridView(string columnName)
+        private string? GetSelectedDataFromDataGridView(string columnName)
         {
             if (dataGridViewClipboard.SelectedRows.Count > 0)
             {
@@ -1711,7 +1731,7 @@ namespace EditClipboardContents
             splitContainerMain.SplitterDistance = newSize;
         }
 
-        private void UpdateEditControlsVisibility_AndPendingGridAppearance(ClipboardItem selectedItem = null, ClipboardItem selectedEditedItem = null)
+        private void UpdateEditControlsVisibility_AndPendingGridAppearance(ClipboardItem? selectedItem = null, ClipboardItem? selectedEditedItem = null)
         {
             //if (selectedItem == null)
             //{
@@ -1960,7 +1980,7 @@ namespace EditClipboardContents
             return saveFileDialog;
         }
 
-        private ClipboardItem GetSelectedClipboardItemObject(bool returnEditedItemVersion)
+        private ClipboardItem? GetSelectedClipboardItemObject(bool returnEditedItemVersion)
         {
             if (dataGridViewClipboard.SelectedRows.Count > 0)
             {
@@ -1982,14 +2002,14 @@ namespace EditClipboardContents
         }
 
         // Updates selected clipboard selectedItem in editedClipboardItems list. Does not update the actual clipboard.
-        private void UpdateEditedClipboardItem(Guid uniqueID, byte[] rawData, bool setPendingEdit = true, bool setPendingRemoval = false)
+        private void UpdateEditedClipboardItem(Guid uniqueID, byte[]? rawData, bool setPendingEdit = true, bool setPendingRemoval = false)
         {
             foreach (ClipboardItem item in editedClipboardItems)
             {
                 if (item.UniqueID == uniqueID)
                 {
                     item.RawData = rawData;
-                    item.DataSize = (ulong)rawData.Length;
+                    item.DataSize = (ulong)(rawData?.Length ?? 0);
                     item.HasPendingEdit = setPendingEdit;
                     item.PendingRemoval = setPendingRemoval; // If the user applies an edit, presumably they don't want to remove it anymore
                     return;
@@ -2171,7 +2191,7 @@ namespace EditClipboardContents
             // Uncheck all other options and make sure the newly checked option is checked (this also handles if it was already checked)
 
             // Find the Options menu item
-            MenuItem optionsMenuItem = null;
+            MenuItem? optionsMenuItem = null;
             foreach (MenuItem menuItem in mainMenu1.MenuItems)
             {
                 if (menuItem.Text == "Options")
@@ -2184,10 +2204,10 @@ namespace EditClipboardContents
             if (optionsMenuItem != null)
             {
                 // Find the "Table Copying Mode" sub-menu
-                MenuItem tableCopyingModeMenuItem = null;
+                MenuItem? tableCopyingModeMenuItem = null;
                 foreach (MenuItem subMenuItem in optionsMenuItem.MenuItems)
                 {
-                    if (subMenuItem.Text == "Table Copying Mode")
+                    if (subMenuItem?.Text == "Table Copying Mode")
                     {
                         tableCopyingModeMenuItem = subMenuItem;
                         break;
@@ -2424,10 +2444,11 @@ namespace EditClipboardContents
         private void SaveBinaryFile()
         {
             // Get the clipboard selectedItem and its info
-            ClipboardItem itemToExport = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
+            ClipboardItem? itemToExport = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
 
-            if (itemToExport == null)
+            if (itemToExport == null || itemToExport.RawData == null || itemToExport.RawData.Length == 0)
             {
+                MessageBox.Show("Format item contains no data to save.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             string nameStem = itemToExport.FormatName;
@@ -2474,7 +2495,7 @@ namespace EditClipboardContents
             else if (itemToExport.FormatName == "HTML Format")
             {
                 string inputString = Encoding.UTF8.GetString(itemToExport.RawData);
-                string outputString = FormatConverters.ConvertHtmlFormat(inputString);
+                string? outputString = FormatConverters.ConvertHtmlFormat(inputString);
 
                 if (outputString == null)
                 {
@@ -2728,36 +2749,36 @@ namespace EditClipboardContents
     public class DiagnosticsInfo
     {
         // Clipboard owner
-        public string Owner { get; set; }
-        public string OwnerProcessName { get; set; }
+        public string Owner { get; set; } = "";
+        public string OwnerProcessName { get; set; } = "";
         public uint OwnerProcessID { get; set; }
-        public string OwnerProcessPath { get; set; }
+        public string OwnerProcessPath { get; set; } = "";
         public uint ClipboardSequenceNumber { get; set; }
         public IntPtr OwnerHandle { get; set; }
         public IntPtr OwnerWindowHandle { get; set; }
         public bool IsFormatAvailable { get; set; }
-        public string WindowText { get; set; }
-        public string WindowClass { get; set; }
-        public string ReportString { get; set; }
+        public string WindowText { get; set; } = "";
+        public string WindowClass { get; set; } = "";
+        public string ReportString { get; set; } = "";
 
     }
 
-        public class ClipDataObject
+    public class ClipDataObject
     {
-        private IClipboardFormat _objectData = null;
-        public IClipboardFormat ObjectData
+        private IClipboardFormat? _objectData = null;
+        public IClipboardFormat? ObjectData
         {
             get => _objectData;
             set
             {
                 _objectData = value;
-                _structName = ObjectData.StructName();
+                _structName = ObjectData?.StructName();
             }
         }
 
         // Struct name will be gotten automatically via class method if possible and it wasn't set manually
-        private string _structName = null;
-        public string StructName
+        private string? _structName = null;
+        public string? StructName
         {
             get => _structName;
             set
@@ -2770,7 +2791,7 @@ namespace EditClipboardContents
             }
         }
 
-        public IEnumerable<string> PropertyNames
+        public IEnumerable<string>? PropertyNames
         {
             get
             {
@@ -2791,7 +2812,7 @@ namespace EditClipboardContents
             }
         }
 
-        public object GetPropertyValue(string propertyName)
+        public object? GetPropertyValue(string propertyName)
         {
             if (ObjectData == null)
                 return null;
@@ -2822,6 +2843,10 @@ namespace EditClipboardContents
 
         private void BuildString(StringBuilder sb, string indent)
         {
+            if (PropertyNames == null)
+            {
+                return;
+            }
             foreach (var propertyName in PropertyNames)
             {
                 var propertyValue = GetPropertyValue(propertyName);
@@ -2853,25 +2878,25 @@ namespace EditClipboardContents
     {
         // Using a unique ID for each object instance just in case it's needed for tracking
         // Like an edited item where the ID or name might change
-        public Guid UniqueID { get; init; } = Guid.NewGuid(); 
+        public Guid UniqueID { get; init; } = Guid.NewGuid();
 
-        public string FormatName { get; set; }
+        public string FormatName { get; set; } = "";
         public uint FormatId { get; set; }
         public IntPtr Handle { get; set; }
         public ulong DataSize { get; set; }
-        public byte[] ProcessedData { get; set; }
-        public byte[] RawData { get; set; }
+        public byte[]? ProcessedData { get; set; }
+        public byte[]? RawData { get; set; }
         public bool AssumedSynthesized { get; set; }
-        public List<string> DataInfoList { get; set; }
+        public List<string> DataInfoList { get; set; } = new List<string>();
         public string DataInfoLinesString => string.Join("\n", DataInfoList ?? new List<string>());
         public bool HasPendingEdit { get; set; } = false;
         public bool PendingRemoval { get; set; } = false;
         public bool PendingCustomAddition { get; set; } = false;
         public string FormatType { get; set; } = "Unknown";
-        public string ErrorReason { get; set; } = null;
-        public DiagnosticsInfo ErrorDiagnosisReport { get; set; }
+        public string? ErrorReason { get; set; } = null;
+        public DiagnosticsInfo? ErrorDiagnosisReport { get; set; }
         public int OriginalIndex { get; set; } = -1;
-        public ClipDataObject ClipDataObject { get; set; } = null ;
+        public ClipDataObject? ClipDataObject { get; set; } = null ;
         
 
         public object Clone()
@@ -2882,8 +2907,8 @@ namespace EditClipboardContents
                 FormatId = this.FormatId,
                 Handle = this.Handle,
                 DataSize = this.DataSize,
-                ProcessedData = (byte[])this.ProcessedData?.Clone(),
-                RawData = (byte[])this.RawData?.Clone(),
+                ProcessedData = (byte[]?)this.ProcessedData?.Clone(),
+                RawData = (byte[]?)this.RawData?.Clone(),
                 AssumedSynthesized = this.AssumedSynthesized,
                 DataInfoList = new List<string>(this.DataInfoList ?? new List<string>()),
                 HasPendingEdit = false,
