@@ -63,6 +63,8 @@
             this.richTextBoxContents = new System.Windows.Forms.RichTextBox();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
             this.labelLoading = new System.Windows.Forms.Label();
+            this.buttonIncreaseIndexNumber = new System.Windows.Forms.Button();
+            this.buttonDecreaseIndexNumber = new System.Windows.Forms.Button();
             this.labelCustomFormatNameID = new System.Windows.Forms.Label();
             this.checkBoxAutoViewMode = new System.Windows.Forms.CheckBox();
             this.splitterContainer_InnerTextBoxes = new System.Windows.Forms.SplitContainer();
@@ -78,8 +80,8 @@
             this.labelPendingChanges = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.labelVersion = new System.Windows.Forms.Label();
-            this.buttonDecreaseIndexNumber = new System.Windows.Forms.Button();
-            this.buttonIncreaseIndexNumber = new System.Windows.Forms.Button();
+            this.menuItem2 = new System.Windows.Forms.MenuItem();
+            this.menuEdit_RefreshDataTable = new System.Windows.Forms.MenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.contextMenuStrip_dataGridView.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -237,7 +239,9 @@
             this.menuEdit_CopyEditedHexAsText,
             this.menuItem3,
             this.menuEdit_CopyEntireTable,
-            this.menuEdit_CopySelectedRows});
+            this.menuEdit_CopySelectedRows,
+            this.menuItem2,
+            this.menuEdit_RefreshDataTable});
             this.menuMainEdit.Text = "Edit";
             // 
             // menuEdit_CopyObjectInfoAsText
@@ -498,6 +502,30 @@
     " for why)";
             this.labelLoading.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // buttonIncreaseIndexNumber
+            // 
+            this.buttonIncreaseIndexNumber.Location = new System.Drawing.Point(1224, 5);
+            this.buttonIncreaseIndexNumber.Name = "buttonIncreaseIndexNumber";
+            this.buttonIncreaseIndexNumber.Size = new System.Drawing.Size(42, 35);
+            this.buttonIncreaseIndexNumber.TabIndex = 16;
+            this.buttonIncreaseIndexNumber.Text = "▼";
+            this.toolTip1.SetToolTip(this.buttonIncreaseIndexNumber, "Increase order index (decrease priority)");
+            this.buttonIncreaseIndexNumber.UseCompatibleTextRendering = true;
+            this.buttonIncreaseIndexNumber.UseVisualStyleBackColor = true;
+            this.buttonIncreaseIndexNumber.Click += new System.EventHandler(this.buttonIncreaseIndexNumber_Click);
+            // 
+            // buttonDecreaseIndexNumber
+            // 
+            this.buttonDecreaseIndexNumber.Location = new System.Drawing.Point(1177, 5);
+            this.buttonDecreaseIndexNumber.Name = "buttonDecreaseIndexNumber";
+            this.buttonDecreaseIndexNumber.Size = new System.Drawing.Size(41, 35);
+            this.buttonDecreaseIndexNumber.TabIndex = 16;
+            this.buttonDecreaseIndexNumber.Text = "▲";
+            this.toolTip1.SetToolTip(this.buttonDecreaseIndexNumber, "Decrease order index (increase priority)");
+            this.buttonDecreaseIndexNumber.UseCompatibleTextRendering = true;
+            this.buttonDecreaseIndexNumber.UseVisualStyleBackColor = true;
+            this.buttonDecreaseIndexNumber.Click += new System.EventHandler(this.buttonDecreaseIndexNumber_Click);
+            // 
             // labelCustomFormatNameID
             // 
             this.labelCustomFormatNameID.AutoSize = true;
@@ -550,7 +578,7 @@
             // 
             this.checkBoxPlainTextEditing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxPlainTextEditing.AutoSize = true;
-            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(-37, 395);
+            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(-43, 395);
             this.checkBoxPlainTextEditing.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.checkBoxPlainTextEditing.Name = "checkBoxPlainTextEditing";
             this.checkBoxPlainTextEditing.Size = new System.Drawing.Size(148, 24);
@@ -573,7 +601,7 @@
             "UTF-32 BE",
             "Codepage 1252",
             "System Default"});
-            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(215, 391);
+            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(209, 391);
             this.dropdownHexToTextEncoding.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dropdownHexToTextEncoding.Name = "dropdownHexToTextEncoding";
             this.dropdownHexToTextEncoding.Size = new System.Drawing.Size(217, 28);
@@ -584,7 +612,7 @@
             // 
             this.labelHexToPlaintextEncoding.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelHexToPlaintextEncoding.AutoSize = true;
-            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(128, 397);
+            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(122, 397);
             this.labelHexToPlaintextEncoding.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelHexToPlaintextEncoding.Name = "labelHexToPlaintextEncoding";
             this.labelHexToPlaintextEncoding.Size = new System.Drawing.Size(80, 20);
@@ -701,29 +729,16 @@
             this.labelVersion.TabIndex = 13;
             this.labelVersion.Text = "Version:";
             // 
-            // buttonDecreaseIndexNumber
+            // menuItem2
             // 
-            this.buttonDecreaseIndexNumber.Location = new System.Drawing.Point(1177, 5);
-            this.buttonDecreaseIndexNumber.Name = "buttonDecreaseIndexNumber";
-            this.buttonDecreaseIndexNumber.Size = new System.Drawing.Size(41, 35);
-            this.buttonDecreaseIndexNumber.TabIndex = 16;
-            this.buttonDecreaseIndexNumber.Text = "▲";
-            this.toolTip1.SetToolTip(this.buttonDecreaseIndexNumber, "Decrease order index (increase priority)");
-            this.buttonDecreaseIndexNumber.UseCompatibleTextRendering = true;
-            this.buttonDecreaseIndexNumber.UseVisualStyleBackColor = true;
-            this.buttonDecreaseIndexNumber.Click += new System.EventHandler(this.buttonDecreaseIndexNumber_Click);
+            this.menuItem2.Index = 6;
+            this.menuItem2.Text = "-";
             // 
-            // buttonIncreaseIndexNumber
+            // menuEdit_RefreshDataTable
             // 
-            this.buttonIncreaseIndexNumber.Location = new System.Drawing.Point(1224, 5);
-            this.buttonIncreaseIndexNumber.Name = "buttonIncreaseIndexNumber";
-            this.buttonIncreaseIndexNumber.Size = new System.Drawing.Size(42, 35);
-            this.buttonIncreaseIndexNumber.TabIndex = 16;
-            this.buttonIncreaseIndexNumber.Text = "▼";
-            this.toolTip1.SetToolTip(this.buttonIncreaseIndexNumber, "Increase order index (decrease priority)");
-            this.buttonIncreaseIndexNumber.UseCompatibleTextRendering = true;
-            this.buttonIncreaseIndexNumber.UseVisualStyleBackColor = true;
-            this.buttonIncreaseIndexNumber.Click += new System.EventHandler(this.buttonIncreaseIndexNumber_Click);
+            this.menuEdit_RefreshDataTable.Index = 7;
+            this.menuEdit_RefreshDataTable.Text = "Refresh Data Table";
+            this.menuEdit_RefreshDataTable.Click += new System.EventHandler(this.menuEdit_RefreshDataTable_Click);
             // 
             // MainForm
             // 
@@ -823,5 +838,7 @@
         private System.Windows.Forms.MenuItem menuFile_LoadBinaryDataToSelected;
         private System.Windows.Forms.Button buttonDecreaseIndexNumber;
         private System.Windows.Forms.Button buttonIncreaseIndexNumber;
+        private System.Windows.Forms.MenuItem menuItem2;
+        private System.Windows.Forms.MenuItem menuEdit_RefreshDataTable;
     }
 }

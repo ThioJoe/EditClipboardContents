@@ -32,6 +32,7 @@ using static EditClipboardContents.ClipboardFormats;
 using System.Threading.Tasks;
 using System.Data.Common;
 using System.Windows.Forms.Automation;
+using System.ComponentModel;
 
 
 namespace EditClipboardContents
@@ -39,7 +40,12 @@ namespace EditClipboardContents
     public partial class MainForm : Form
     {
         private readonly List<ClipboardItem> clipboardItems = new List<ClipboardItem>();
-        private List<ClipboardItem> editedClipboardItems = new List<ClipboardItem>(); // Add this line
+        //private List<ClipboardItem> editedClipboardItems = new List<ClipboardItem>();
+        private BindingList<ClipboardItem> editedClipboardItems = new BindingList<ClipboardItem>();
+        //private BindingList<ClipboardItem> dataGridViewDisplayItems = new BindingList<ClipboardItem>();
+        //private Microsoft.SqlServer.Management.Controls.SortableBindingList<ClipboardItem> sortableBindingList = [];
+
+        private List<ClipboardItem> test = [];
 
         // Other globals
         public static bool anyPendingChanges = false;
@@ -119,6 +125,9 @@ namespace EditClipboardContents
             labelVersion.Text = $"Version {versionString}";
 
             previousWindowHeight = this.Height;
+
+            editedClipboardItems.ListChanged += EditedClipboardItems_ListChanged;
+            //dataGridViewDisplayItems.ListChanged += DataGridViewDisplayItems_ListChanged;
         }
 
         public int CompensateDPI(int originalValue)
@@ -155,17 +164,16 @@ namespace EditClipboardContents
 
         private void InitializeDataGridView()
         {
-            // If addng a new column, don't forget to add it to the UpdateClipboardItemsGridViewWith_AdditionalItem function on the line where rows are added
-            
-            dataGridViewClipboard.Columns.Add(colName.Index, "");
-            dataGridViewClipboard.Columns.Add(colName.UniqueID, ""); // This will be invisible but don't put it first or last to avoid default selection behavior. For IDing custom formats that may have same id or name
-            dataGridViewClipboard.Columns.Add(colName.FormatName, "Format Name");
-            dataGridViewClipboard.Columns.Add(colName.FormatId, "Format ID");
-            dataGridViewClipboard.Columns.Add(colName.HandleType, "Format Type");
-            dataGridViewClipboard.Columns.Add(colName.DataSize, "Data Size");
-            dataGridViewClipboard.Columns.Add(colName.DataInfo, "Data Info");
-            dataGridViewClipboard.Columns.Add(colName.TextPreview, "Text Preview");
-            
+            dataGridViewClipboard.AutoGenerateColumns = false;
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "OriginalIndex", Name = colName.Index, HeaderText = "" });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "UniqueID", Name = colName.UniqueID, HeaderText = "", Visible = false });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "FormatName", Name = colName.FormatName, HeaderText = "Format Name" });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "FormatId", Name = colName.FormatId, HeaderText = "Format ID" });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "FormatType", Name = colName.HandleType, HeaderText = "Format Type" });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "DataSize", Name = colName.DataSize, HeaderText = "Data Size" });
+            //dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "DataInfoLinesString", Name = colName.DataInfo, HeaderText = "Data Info" });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { Name = colName.DataInfo, HeaderText = "Data Info" });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { Name = colName.TextPreview, HeaderText = "Text Preview" });
 
             // Set autosize for all columns to none so we can control individually later
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
@@ -174,7 +182,7 @@ namespace EditClipboardContents
             }
 
             // Set unique id column to be invisible
-            dataGridViewClipboard.Columns[colName.UniqueID].Visible = false;
+            //dataGridViewClipboard.Columns[colName.UniqueID].Visible = false;
 
             // Set default AutoSizeMode
             //dataGridViewClipboard.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
@@ -206,6 +214,81 @@ namespace EditClipboardContents
 
             // Set the data soure of the clipboard grid view to the editedClipboardItems list
             dataGridViewClipboard.DataSource = editedClipboardItems;
+        }
+
+        private void RefreshDataGridViewContents()
+        {
+            dataGridViewClipboard.DataSource = editedClipboardItems;
+
+            // Update the data where necessary
+            foreach (ClipboardItem formatItem in editedClipboardItems)
+            {
+                List<string> dataInfo = formatItem.DataInfoList;
+                Guid uniqueID = formatItem.UniqueID;
+
+                // Preprocess certain info
+                string textPreview = TryParseText(formatItem.RawData, maxLength: 200, prefixEncodingType: false);
+
+                // The first item will have selected important info, to ensure it's not too long. The rest will show in data box in object/struct view mode
+                string dataInfoString;
+                if (dataInfo.Count <= 0 || string.IsNullOrEmpty(dataInfo[0]))
+                    dataInfoString = MyStrings.DataNotApplicable;
+                else
+                    dataInfoString = dataInfo[0];
+
+                // Manually handle certain known formats
+                if (formatItem.FormatName == "CF_LOCALE")
+                    textPreview = "";
+
+                // Set certain values in the grid view that need processing first
+                int rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().Where(r => r.Cells[colName.UniqueID].Value.ToString() == uniqueID.ToString()).First().Index;
+                dataGridViewClipboard.Rows[rowIndex].Cells[colName.TextPreview].Value = textPreview;
+                dataGridViewClipboard.Rows[rowIndex].Cells[colName.DataInfo].Value = dataInfoString;
+            }
+
+            // Set default forecolor of the index column to gray
+            dataGridViewClipboard.Columns[colName.Index].DefaultCellStyle.ForeColor = Color.Gray;
+
+            // Temporarily set AutoSizeMode to calculate proper widths
+            foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
+            {
+                // Manually set width to minimal number to be resized auto later. Apparently autosize will only make columns larger, not smaller
+                column.Width = CompensateDPI(5);
+
+                // Set index column text color to gray
+                //dataGridViewClipboard.Rows[dataGridViewClipboard.Rows.Count - 1].Cells[colName.Index].Style.ForeColor = Color.Gray; // Throws errors if rows is 0 because of the -1
+
+                // Set autosize most for most columns. Next we'll disable it again so they can be resized but start at a good size
+                if (column.Name != colName.TextPreview)
+                {
+                    // Use all cells instead of displayed cells, otherwise those scrolled out of view won't count
+                    column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+                }
+
+                // Disable the autosizing again so they can be resized by user
+                if (!(column.Name == colName.TextPreview))
+                {
+                    int originalWidth = column.Width;
+                    column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+                    column.Resizable = DataGridViewTriState.True;
+
+                    if (column.Name == colName.FormatName)
+                        column.Width = originalWidth + 20; // Add some padding
+                    else
+                        column.Width = originalWidth + 0; // For some reason this is necessary after setting resizable and autosize modes
+                }
+            }
+
+            // Ensure TextPreview fills remaining space
+            dataGridViewClipboard.Columns[colName.TextPreview].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            dataGridViewClipboard.Columns[colName.TextPreview].Resizable = DataGridViewTriState.True;
+
+            // If DataInfo is too long, manually set a max width
+            if (dataGridViewClipboard.Columns[colName.DataInfo].Width > CompensateDPI(200))
+            {
+                dataGridViewClipboard.Columns[colName.DataInfo].Width = CompensateDPI(200);
+            }
+
         }
 
         private void UpdateClipboardItemsGridView_WithEmptyCustomFormat(ClipboardItem formatItem)
@@ -539,9 +622,11 @@ namespace EditClipboardContents
 
             DetermineSynthesizedFormats();
             ProcessClipboardData();
-            editedClipboardItems = clipboardItems.Select(item => (ClipboardItem)item.Clone()).ToList(); // Clone clipboardItems to editedClipboardItems
+            editedClipboardItems = new BindingList<ClipboardItem>(clipboardItems.Select(item => (ClipboardItem)item.Clone()).ToList());
 
             ShowLoadingIndicator(false);
+
+            RefreshDataGridViewContents();
             UpdateSplitterPosition_FitDataGrid();
 
             UpdateEditControlsVisibility_AndPendingGridAppearance();
@@ -1043,8 +1128,9 @@ namespace EditClipboardContents
                 item.FormatType = formatType; // Update the format type in the selectedItem
                 item.ClipDataObject = processedObject; // Update the clipDataObject in the selectedItem, even if it's null
 
-                UpdateClipboardItemsGridViewWith_AdditionalItem(formatItem: item);
-            }
+                //UpdateClipboardItemsGridViewWith_AdditionalItem(formatItem: item);
+            } // End of the loop
+            RefreshDataGridViewContents();
         }
 
         public static DiagnosticsInfo DiagnoseClipboardState(uint format, string formatName = "")
@@ -1265,9 +1351,9 @@ namespace EditClipboardContents
 
                 DataGridViewRow selectedRow = dataGridViewClipboard.Rows[rowIndex];
                 // Updates the text box with data for the selected row's format
-                if (uint.TryParse(selectedRow.Cells["FormatId"].Value.ToString(), out uint formatId))
+                if (Guid.TryParse(selectedRow.Cells[colName.UniqueID].Value.ToString(), out Guid uniqueID))
                 {
-                    ClipboardItem item = editedClipboardItems.Find(i => i.FormatId == formatId); // Use editedClipboardItems
+                    ClipboardItem item = editedClipboardItems.SingleOrDefault(i => i.UniqueID == uniqueID); // Use editedClipboardItems
 
                     if (item == null)
                     {
@@ -1407,7 +1493,11 @@ namespace EditClipboardContents
             if (dataGridViewClipboard.SelectedRows.Count > 0)
             {
                 int selectedRowIndex = dataGridViewClipboard.SelectedRows[0].Index; // Just get the first selected row even if there are multiple
-                return dataGridViewClipboard.Rows[selectedRowIndex].Cells[columnName].Value.ToString();
+                var value = dataGridViewClipboard.Rows[selectedRowIndex].Cells[columnName].Value;
+                if (value != null)
+                {
+                    return value.ToString();
+                }
             }
             return null;
         }
@@ -1568,7 +1658,7 @@ namespace EditClipboardContents
             try
             {
                 // Sort the editedClipboardItems by their original index
-                editedClipboardItems = editedClipboardItems.OrderBy(item => item.OriginalIndex).ToList();
+                editedClipboardItems = (BindingList<ClipboardItem>)editedClipboardItems.OrderBy(item => item.OriginalIndex);
 
                 NativeMethods.EmptyClipboard();
                 foreach (var item in editedClipboardItems)
@@ -2019,7 +2109,7 @@ namespace EditClipboardContents
                 {
                     if (returnEditedItemVersion)
                     {
-                        return editedClipboardItems.Find(i => i.UniqueID == uniqueID);
+                        return editedClipboardItems.SingleOrDefault(i => i.UniqueID == uniqueID);
                     }
                     else
                     {

@@ -1,6 +1,7 @@
 ﻿using EditClipboardContents;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -42,11 +43,13 @@ namespace EditClipboardContents
         private void MainForm_Shown(object sender, EventArgs e)
         {
             // Use BeginInvoke to ensure the form is fully rendered
+            // Don't put anything outside of BeginInvoke that requires the form to be fully rendered, it will actually run first
             this.BeginInvoke(new Action(() =>
             {
                 //ShowLoadingIndicator(true);
                 RefreshClipboardItems();
                 //ShowLoadingIndicator(false);
+                UpdateSplitterPosition_FitDataGrid();
             }));
         }
 
@@ -823,14 +826,15 @@ namespace EditClipboardContents
                 FormatName = customName,
                 RawData = new byte[0],
                 ClipDataObject = null,
-                DataInfoList = new List<string>(),
+                DataInfoList = [ MyStrings.CustomPendingData ],
                 OriginalIndex = itemIndex,
                 FormatType = "Custom",
                 PendingCustomAddition = true,
             };
 
-            UpdateClipboardItemsGridView_WithEmptyCustomFormat(newItem);
+            //UpdateClipboardItemsGridView_WithEmptyCustomFormat(newItem);
             editedClipboardItems.Add(newItem);
+            RefreshDataGridViewContents();
             UpdateSplitterPosition_FitDataGrid();
 
             anyPendingChanges = true;
@@ -1107,6 +1111,7 @@ namespace EditClipboardContents
             // Refresh the grid view
             dataGridViewClipboard.Refresh();
         }
+
         private void buttonDecreaseIndexNumber_Click(object sender, EventArgs e)
         {
             ClipboardItem? item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
@@ -1117,6 +1122,21 @@ namespace EditClipboardContents
             }
 
             int currentIndex = item.OriginalIndex;
+        }
+
+        private void menuEdit_RefreshDataTable_Click(object sender, EventArgs e)
+        {
+            RefreshDataGridViewContents();
+        }
+
+        private void EditedClipboardItems_ListChanged(object sender, ListChangedEventArgs e)
+        {
+
+        }
+
+        private void DataGridViewDisplayItems_ListChanged(object sender, ListChangedEventArgs e)
+        {
+
         }
 
     } // ----------------------------- End of MainForm partial class -----------------------------
