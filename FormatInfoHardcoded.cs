@@ -125,7 +125,8 @@ namespace EditClipboardContents
             { "html format", "html" },
             { "CF_DIBV5", "bmp" },
             { "CF_DIB", "bmp" },
-            { "CF_BITMAP", "bmp" }
+            { "CF_BITMAP", "bmp" },
+            { "image/x-xcf", "xcf" }
         };
 
         public static object? CheckIfProblematicValue(PropertyInfo property, object obj)

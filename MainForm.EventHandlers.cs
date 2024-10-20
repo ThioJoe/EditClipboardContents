@@ -1236,16 +1236,6 @@ namespace EditClipboardContents
             }
         }
 
-        // ------------------------------------------------------------------------------------------------------------------------------------
-
-        // Using for testing random things during development via a button
-        private void buttonTest_Click(object sender, EventArgs e)
-        {
-            // Local function to use nameof a specified ClipboardItem property as string
-            //string GetPropertyName<T>(T item, string propertyName) => item.GetType().GetProperty(propertyName)?.Name ?? "";
-            //Console.WriteLine("");
-        }
-
         private void menuFile_ImportBackupFolder_Click(object sender, EventArgs e)
         {
             // Show a folder browser dialog
@@ -1291,6 +1281,19 @@ namespace EditClipboardContents
             RefreshClipboardItems();
             UpdateAnyPendingChangesFlag();
             UpdateEditControlsVisibility_AndPendingGridAppearance();
+        }
+
+
+
+
+        // --------------------------------------------- TEST BUTTON --------------------------------------------------------
+
+        // Using for testing random things during development via a button
+        private void buttonTest_Click(object sender, EventArgs e)
+        {
+            // Local function to use nameof a specified ClipboardItem property as string
+            //string GetPropertyName<T>(T item, string propertyName) => item.GetType().GetProperty(propertyName)?.Name ?? "";
+            //Console.WriteLine("");
         }
 
 

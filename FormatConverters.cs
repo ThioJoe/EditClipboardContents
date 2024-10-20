@@ -410,6 +410,10 @@ namespace EditClipboardContents
 
                 switch (bmi.bV5BitCount)
                 {
+                    case 1:
+                        pixelFormat = PixelFormat.Format1bppIndexed;
+                        paletteSize = 2 * Marshal.SizeOf(typeof(RGBQUAD));
+                        break;
                     case 8:
                         pixelFormat = PixelFormat.Format8bppIndexed;
                         paletteSize = 256 * Marshal.SizeOf(typeof(RGBQUAD));
