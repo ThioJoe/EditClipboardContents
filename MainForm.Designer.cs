@@ -229,7 +229,7 @@
             // menuItemFile_ExportRegisteredFormats
             // 
             this.menuItemFile_ExportRegisteredFormats.Index = 6;
-            this.menuItemFile_ExportRegisteredFormats.Text = "Export All Registered Formats";
+            this.menuItemFile_ExportRegisteredFormats.Text = "Export List Of All Registered Formats";
             this.menuItemFile_ExportRegisteredFormats.Click += new System.EventHandler(this.menuItemFile_ExportRegisteredFormats_Click);
             // 
             // menuMainEdit
@@ -609,7 +609,7 @@
             // 
             this.checkBoxPlainTextEditing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxPlainTextEditing.AutoSize = true;
-            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(38, 397);
+            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(32, 397);
             this.checkBoxPlainTextEditing.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.checkBoxPlainTextEditing.Name = "checkBoxPlainTextEditing";
             this.checkBoxPlainTextEditing.Size = new System.Drawing.Size(148, 24);
@@ -632,7 +632,7 @@
             "UTF-32 BE",
             "Codepage 1252",
             "System Default"});
-            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(304, 391);
+            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(298, 391);
             this.dropdownHexToTextEncoding.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dropdownHexToTextEncoding.Name = "dropdownHexToTextEncoding";
             this.dropdownHexToTextEncoding.Size = new System.Drawing.Size(217, 28);
@@ -643,7 +643,7 @@
             // 
             this.labelHexToPlaintextEncoding.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelHexToPlaintextEncoding.AutoSize = true;
-            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(217, 397);
+            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(211, 397);
             this.labelHexToPlaintextEncoding.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelHexToPlaintextEncoding.Name = "labelHexToPlaintextEncoding";
             this.labelHexToPlaintextEncoding.Size = new System.Drawing.Size(80, 20);

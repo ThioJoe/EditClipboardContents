@@ -412,22 +412,27 @@ namespace EditClipboardContents
 
         private void dataGridViewClipboard_SelectionChanged(object sender, EventArgs e)
         {
-            void setButtonStatus(bool enabledChoice)
+            void buttonStatus_RequireSelection(bool enabledChoice, bool onlyCustomIncompatible = false)
             {
+                // Custom incompatible
                 menuEdit_CopySelectedRows.Enabled = enabledChoice;
                 menuFile_ExportSelectedAsRawHex.Enabled = enabledChoice;
                 menuFile_ExportSelectedStruct.Enabled = enabledChoice;
                 menuFile_ExportSelectedAsFile.Enabled = enabledChoice;
-                menuFile_LoadBinaryDataToSelected.Enabled = enabledChoice;
+
+                if (!onlyCustomIncompatible)
+                {
+                    // Able to be used with custom formats
+                    menuFile_LoadBinaryDataToSelected.Enabled = enabledChoice;
+                }
             }
             // -------------------------------------------------------------
 
             if (dataGridViewClipboard.SelectedRows.Count == 0)
             {
                 richTextBoxContents.Clear();
-
                 // Disable menu buttons that require a selectedItem
-                setButtonStatus(enabledChoice: false);
+                buttonStatus_RequireSelection(enabledChoice: false);
                 return;
             }
 
@@ -435,7 +440,7 @@ namespace EditClipboardContents
             if (GetSelectedDataFromDataGridView(colName.FormatType) == FormatTypeNames.Custom)
             {
                 ChangeCellFocusAndDisplayCorrespondingData(dataGridViewClipboard.SelectedRows[0].Index);
-                setButtonStatus(enabledChoice: false);
+                buttonStatus_RequireSelection(enabledChoice: false, onlyCustomIncompatible: true);
                 dropdownContentsViewMode.SelectedIndex = 2; // Hex (Editable)
                 checkBoxPlainTextEditing.Checked = true;
                 return;
@@ -445,7 +450,7 @@ namespace EditClipboardContents
             ChangeCellFocusAndDisplayCorrespondingData(dataGridViewClipboard.SelectedRows[0].Index);
 
             // Enable menu buttons that require a selectedItem
-            setButtonStatus(enabledChoice: true);
+            buttonStatus_RequireSelection(enabledChoice: true);
 
             // If the auto selection checkbox is checked, decide which view mode to use based on item data
             if (checkBoxAutoViewMode.Checked)

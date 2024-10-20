@@ -2330,6 +2330,13 @@ namespace EditClipboardContents
 
         private void SyncHexToPlaintext()
         {
+            // Return early if empty text to avoid errors from calculations later
+            if (richTextBoxContents.Text.Length == 0)
+            {
+                richTextBoxContents.Text = "";
+                return;
+            }
+
             bool editMode = checkBoxPlainTextEditing.Checked;
 
             int hexStart = richTextBoxContents.SelectionStart;
@@ -2344,6 +2351,13 @@ namespace EditClipboardContents
 
         private void SyncPlaintextToHex()
         {
+            // Return early if empty text to avoid errors from calculations later
+            if (richTextBox_HexPlaintext.Text.Length == 0 && richTextBoxContents.Text.Length == 0)
+            {
+                richTextBoxContents.Text = "";
+                return;
+            }
+
             bool editMode = checkBoxPlainTextEditing.Checked;
 
             int plaintextStart = richTextBox_HexPlaintext.SelectionStart;
