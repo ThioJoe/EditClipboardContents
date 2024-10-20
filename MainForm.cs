@@ -35,6 +35,7 @@ using System.Data.Common;
 using System.Windows.Forms.Automation;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.IO.Compression;
 
 
 namespace EditClipboardContents
@@ -2091,6 +2092,32 @@ namespace EditClipboardContents
             return null;
         }
 
+        private List<ClipboardItem>? GetSelectedClipboardItemObjectList(bool returnEditedItemVersion)
+        {
+            List<ClipboardItem> selectedItems = new List<ClipboardItem>();
+
+            if (dataGridViewClipboard.SelectedRows.Count == 0 || clipboardItems.Count == 0 || editedClipboardItems.Count == 0)
+            {
+                return null;
+            }
+
+            foreach (DataGridViewRow row in dataGridViewClipboard.SelectedRows)
+            {
+                if (Guid.TryParse(row.Cells[colName.UniqueID].Value.ToString(), out Guid uniqueID))
+                {
+                    if (returnEditedItemVersion)
+                    {
+                        selectedItems.Add(editedClipboardItems.SingleOrDefault(i => i.UniqueID == uniqueID));
+                    }
+                    else
+                    {
+                        selectedItems.Add(clipboardItems.Find(i => i.UniqueID == uniqueID));
+                    }
+                }
+            }
+            return selectedItems;
+        }
+
         // Updates selected clipboard selectedItem in editedClipboardItems list. Does not update the actual clipboard.
         private void UpdateEditedClipboardItemRawData(Guid uniqueID, byte[]? rawData, bool setPendingEdit = true, bool setPendingRemoval = false)
         {
@@ -2556,16 +2583,20 @@ namespace EditClipboardContents
             return plaintextLength / 2; 
         }
 
-        private void SaveBinaryFile()
+        private void SaveBinaryFile(ClipboardItem itemToExport)
         {
-            // Get the clipboard selectedItem and its info
-            ClipboardItem? itemToExport = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
-
-            if (itemToExport == null || itemToExport.RawData == null || itemToExport.RawData.Length == 0)
+            if (itemToExport == null)
             {
-                MessageBox.Show("Format item contains no data to save.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Format item contains no data to save.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+
+            if (itemToExport.RawData == null || itemToExport.RawData.Length == 0)
+            {
+                MessageBox.Show($"Format item {itemToExport.FormatName} contains no data to save.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             string nameStem = itemToExport.FormatName;
 
             // If it's a DIBV5 format, convert it to a bitmap
@@ -2819,7 +2850,72 @@ namespace EditClipboardContents
             return okToProceed;
         }
 
-        
+        private void ExportBackupFolder(List<ClipboardItem> itemsToExport, string path, bool zip)
+        {
+            // Local function to prepare the data for each item
+            (byte[] data, string fileName, StringBuilder exportTxt) PrepareItemData(ClipboardItem item, StringBuilder exportTxt)
+            {
+                byte[] rawData = item.RawData ?? new byte[0];
+                string name = item.FormatName;
+                string index = item.OriginalIndex.ToString();
+
+                // Sanitize the name stem with regex to remove invalid characters
+                name = Utils.SanitizeFilename(name);
+                string fileName = $"{index}_{name}.dat";
+
+                // Add the item to the export text
+                exportTxt.AppendLine("Index=" + index);
+                exportTxt.AppendLine("FormatName=" + name);
+                exportTxt.AppendLine("FileName=" + fileName);
+
+                return (rawData, fileName, exportTxt);
+            }
+            // -------------------------------------------------------------------
+
+            // String builder containing original index, format name, and corresponding filename saved
+            StringBuilder exportTxtContents = new StringBuilder();
+            exportTxtContents.AppendLine("// This file is required to be able to import the data back into the program.");
+
+            if (zip)
+            {
+                using (FileStream zipStream = new FileStream(path, FileMode.Create))
+                using (ZipArchive archive = new ZipArchive(zipStream, ZipArchiveMode.Create))
+                {
+                    foreach (ClipboardItem item in itemsToExport)
+                    {
+                        (byte[] data, string fileName, exportTxtContents) = PrepareItemData(item, exportTxtContents);
+                        ZipArchiveEntry entry = archive.CreateEntry(fileName);
+                        using (Stream entryStream = entry.Open())
+                        {
+                            entryStream.Write(data, 0, data.Length);
+                        }
+                    }
+
+                    // Output the finished text file
+                    ZipArchiveEntry txtEntry = archive.CreateEntry("ExportedItems.txt");
+                    using (Stream txtStream = txtEntry.Open())
+                    {
+                        byte[] txtData = Encoding.UTF8.GetBytes(exportTxtContents.ToString());
+                        txtStream.Write(txtData, 0, txtData.Length);
+                    }
+                }
+            }
+            else
+            {
+                foreach (ClipboardItem item in itemsToExport)
+                {
+                    (byte[] data, string fileName, exportTxtContents) = PrepareItemData(item, exportTxtContents);
+                    string filePath = Path.Combine(path, fileName);
+                    File.WriteAllBytes(filePath, data);
+                }
+                // Output the finished text file
+                string txtFilePath = Path.Combine(path, "ExportedItems.txt");
+                File.WriteAllText(txtFilePath, exportTxtContents.ToString());
+            }
+        }
+
+       
+
     } // ---------------------------------------------------------------------------------------------------
     // --------------------------------------- End of MainForm Class ---------------------------------------
     // -----------------------------------------------------------------------------------------------------

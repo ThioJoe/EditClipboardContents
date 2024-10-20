@@ -654,12 +654,34 @@ namespace EditClipboardContents
 
         private void menuFile_ExportSelectedAsFile_Click(object sender, EventArgs e)
         {
-            SaveBinaryFile();
+
+            List<ClipboardItem>? selectedItems = GetSelectedClipboardItemObjectList(returnEditedItemVersion: false);
+
+            if (selectedItems == null || selectedItems.Count == 0)
+            {
+                return;
+            }
+
+            foreach (ClipboardItem item in selectedItems)
+            {
+                SaveBinaryFile(item);
+            }
+            
         }
 
         private void toolStripButtonExportSelected_Click(object sender, EventArgs e)
         {
-            SaveBinaryFile();
+            List<ClipboardItem>? selectedItems = GetSelectedClipboardItemObjectList(returnEditedItemVersion: false);
+
+            if (selectedItems == null || selectedItems.Count == 0)
+            {
+                return;
+            }
+
+            foreach (ClipboardItem item in selectedItems)
+            {
+                SaveBinaryFile(item);
+            }
         }
 
         private void toolStripButtonRefresh_Click(object sender, EventArgs e)
@@ -1177,6 +1199,42 @@ namespace EditClipboardContents
             RefreshDataGridViewContents();
         }
 
+        private void menuFile_ExportAllFolder_Click(object sender, EventArgs e)
+        {
+            //List<ClipboardItem>? itemsToExport = GetSelectedClipboardItemObjectList(returnEditedItemVersion: false);
+
+            if (clipboardItems.Count == 0)
+                return;
+
+            // Show a folder browser dialog
+            FolderPicker folderOpenDialogue = new FolderPicker();
+            folderOpenDialogue.InputPath = Directory.GetCurrentDirectory();
+            string chosenPath;
+
+            // Show the actual dialogue based on input path derived from stuff above
+            if (folderOpenDialogue.ShowDialog(this.Handle, throwOnError: false) == true)
+            {
+                // Store the selected folder path to use next time
+                chosenPath = folderOpenDialogue.ResultPath;
+                ExportBackupFolder(itemsToExport: clipboardItems, path: chosenPath, zip: false);
+            }
+        }
+
+        private void menuFile_ExportAllZip_Click(object sender, EventArgs e)
+        {
+            //List<ClipboardItem>? itemsToExport = GetSelectedClipboardItemObjectList(returnEditedItemVersion: false);
+
+            if (clipboardItems.Count == 0)
+                return;
+
+            // Show save file dialog for zip file
+            SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "zip", defaultFileNameStem: "Clipboard");
+            if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
+            {
+                string filePath = saveFileDialogResult.FileName;
+                ExportBackupFolder(itemsToExport: clipboardItems, path: filePath, zip: true);
+            }
+        }
 
         // ------------------------------------------------------------------------------------------------------------------------------------
 

@@ -31,6 +31,10 @@
             this.menuFile_ExportSelectedAsRawHex = new System.Windows.Forms.MenuItem();
             this.menuFile_ExportSelectedAsFile = new System.Windows.Forms.MenuItem();
             this.menuFile_ExportSelectedStruct = new System.Windows.Forms.MenuItem();
+            this.menuItem6 = new System.Windows.Forms.MenuItem();
+            this.menuItem5 = new System.Windows.Forms.MenuItem();
+            this.menuFile_ExportAllFolder = new System.Windows.Forms.MenuItem();
+            this.menuFile_ExportAllZip = new System.Windows.Forms.MenuItem();
             this.menuItem4 = new System.Windows.Forms.MenuItem();
             this.menuFile_LoadBinaryDataToSelected = new System.Windows.Forms.MenuItem();
             this.menuItem1 = new System.Windows.Forms.MenuItem();
@@ -186,6 +190,8 @@
             this.menuFile_ExportSelectedAsRawHex,
             this.menuFile_ExportSelectedAsFile,
             this.menuFile_ExportSelectedStruct,
+            this.menuItem6,
+            this.menuItem5,
             this.menuItem4,
             this.menuFile_LoadBinaryDataToSelected,
             this.menuItem1,
@@ -210,25 +216,50 @@
             this.menuFile_ExportSelectedStruct.Text = "Export Selected Object Info";
             this.menuFile_ExportSelectedStruct.Click += new System.EventHandler(this.menuFile_ExportSelectedStruct_Click);
             // 
+            // menuItem6
+            // 
+            this.menuItem6.Index = 3;
+            this.menuItem6.Text = "-";
+            // 
+            // menuItem5
+            // 
+            this.menuItem5.Index = 4;
+            this.menuItem5.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuFile_ExportAllFolder,
+            this.menuFile_ExportAllZip});
+            this.menuItem5.Text = "Backup All...";
+            // 
+            // menuFile_ExportAllFolder
+            // 
+            this.menuFile_ExportAllFolder.Index = 0;
+            this.menuFile_ExportAllFolder.Text = "To Folder";
+            this.menuFile_ExportAllFolder.Click += new System.EventHandler(this.menuFile_ExportAllFolder_Click);
+            // 
+            // menuFile_ExportAllZip
+            // 
+            this.menuFile_ExportAllZip.Index = 1;
+            this.menuFile_ExportAllZip.Text = "As Zip";
+            this.menuFile_ExportAllZip.Click += new System.EventHandler(this.menuFile_ExportAllZip_Click);
+            // 
             // menuItem4
             // 
-            this.menuItem4.Index = 3;
+            this.menuItem4.Index = 5;
             this.menuItem4.Text = "-";
             // 
             // menuFile_LoadBinaryDataToSelected
             // 
-            this.menuFile_LoadBinaryDataToSelected.Index = 4;
+            this.menuFile_LoadBinaryDataToSelected.Index = 6;
             this.menuFile_LoadBinaryDataToSelected.Text = "Import File As Binary Data For Selected";
             this.menuFile_LoadBinaryDataToSelected.Click += new System.EventHandler(this.menuFile_LoadBinaryDataToSelected_Click);
             // 
             // menuItem1
             // 
-            this.menuItem1.Index = 5;
+            this.menuItem1.Index = 7;
             this.menuItem1.Text = "-";
             // 
             // menuItemFile_ExportRegisteredFormats
             // 
-            this.menuItemFile_ExportRegisteredFormats.Index = 6;
+            this.menuItemFile_ExportRegisteredFormats.Index = 8;
             this.menuItemFile_ExportRegisteredFormats.Text = "Export List Of All Registered Formats";
             this.menuItemFile_ExportRegisteredFormats.Click += new System.EventHandler(this.menuItemFile_ExportRegisteredFormats_Click);
             // 
@@ -609,7 +640,7 @@
             // 
             this.checkBoxPlainTextEditing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxPlainTextEditing.AutoSize = true;
-            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(32, 397);
+            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(20, 397);
             this.checkBoxPlainTextEditing.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.checkBoxPlainTextEditing.Name = "checkBoxPlainTextEditing";
             this.checkBoxPlainTextEditing.Size = new System.Drawing.Size(148, 24);
@@ -632,7 +663,7 @@
             "UTF-32 BE",
             "Codepage 1252",
             "System Default"});
-            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(298, 391);
+            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(286, 391);
             this.dropdownHexToTextEncoding.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dropdownHexToTextEncoding.Name = "dropdownHexToTextEncoding";
             this.dropdownHexToTextEncoding.Size = new System.Drawing.Size(217, 28);
@@ -643,7 +674,7 @@
             // 
             this.labelHexToPlaintextEncoding.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelHexToPlaintextEncoding.AutoSize = true;
-            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(211, 397);
+            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(199, 397);
             this.labelHexToPlaintextEncoding.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelHexToPlaintextEncoding.Name = "labelHexToPlaintextEncoding";
             this.labelHexToPlaintextEncoding.Size = new System.Drawing.Size(80, 20);
@@ -875,5 +906,9 @@
         private System.Windows.Forms.MenuItem menuEdit_RefreshDataTable;
         private System.Windows.Forms.Button buttonTest;
         private System.Windows.Forms.Button buttonResetOrder;
+        private System.Windows.Forms.MenuItem menuItem6;
+        private System.Windows.Forms.MenuItem menuItem5;
+        private System.Windows.Forms.MenuItem menuFile_ExportAllFolder;
+        private System.Windows.Forms.MenuItem menuFile_ExportAllZip;
     }
 }

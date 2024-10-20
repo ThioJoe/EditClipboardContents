@@ -395,6 +395,9 @@ namespace EditClipboardContents
 
         public static Bitmap BitmapFile_From_CF_DIBV5_RawData(byte[] data)
         {
+            if (data == null)
+                throw new ArgumentNullException(nameof(data));
+
             GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
             try
             {

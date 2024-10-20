@@ -3,9 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Runtime.Remoting;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -291,5 +293,19 @@ namespace EditClipboardContents
             return result;
         }
 
-    } // ----------------- End of class -----------------
+        public static string SanitizeFilename(string filename)
+        {
+            // Remove invalid characters
+            string invalidChars = Regex.Escape(new string(Path.GetInvalidFileNameChars()));
+            string invalidReStr = string.Format(@"[{0}]", invalidChars);
+            filename = Regex.Replace(filename, invalidReStr, "");
+
+            // Truncate filename if it's too long
+            if (filename.Length > 255)
+                filename = filename.Substring(0, 255);
+
+            return filename;
+        }
+
+} // ----------------- End of class -----------------
 } // ----------------- End of namespace -----------------
