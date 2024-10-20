@@ -341,7 +341,7 @@ namespace EditClipboardContents
             // Use pattern matchin to get the text of the clicked item and pass it in to the function automatically
             if (sender is MenuItem clickedItem)
             {
-                setCopyModeChecks(clickedItem.Text);
+                setCopyModeChecks(clickedItem);
             }
         }
 
@@ -349,7 +349,7 @@ namespace EditClipboardContents
         {
             if (sender is MenuItem clickedItem)
             {
-                setCopyModeChecks(clickedItem.Text);
+                setCopyModeChecks(clickedItem);
             }
         }
 
@@ -357,7 +357,7 @@ namespace EditClipboardContents
         {
             if (sender is MenuItem clickedItem)
             {
-                setCopyModeChecks(clickedItem.Text);
+                setCopyModeChecks(clickedItem);
             }
         }
 
@@ -432,7 +432,7 @@ namespace EditClipboardContents
             }
 
             // If it's a custom format, disable the buttons and always go to the edit view
-            if (GetSelectedDataFromDataGridView(colName.HandleType) == "Custom")
+            if (GetSelectedDataFromDataGridView(colName.FormatType) == FormatTypeNames.Custom)
             {
                 ChangeCellFocusAndDisplayCorrespondingData(dataGridViewClipboard.SelectedRows[0].Index);
                 setButtonStatus(enabledChoice: false);
@@ -454,7 +454,7 @@ namespace EditClipboardContents
                 ClipboardItem? item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
 
                 // If there is a text preview, show text mode
-                if (!string.IsNullOrEmpty(GetSelectedDataFromDataGridView("TextPreview")))
+                if (!string.IsNullOrEmpty(GetSelectedDataFromDataGridView(colName.TextPreview)))
                 {
                     dropdownContentsViewMode.SelectedIndex = 0; // Text
                 }
@@ -677,7 +677,7 @@ namespace EditClipboardContents
             if (selectedFormatId > 0 && clipboardItems != null && clipboardItems.Any(ci => ci.FormatId == selectedFormatId))
             {
                 // If format id is still in the new clipboard, select it
-                int rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells["FormatId"].Value.ToString() == selectedFormatId.ToString());
+                int rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells[colName.FormatId].Value.ToString() == selectedFormatId.ToString());
                 if (rowIndex >= 0)
                 {
                     dataGridViewClipboard.ClearSelection();
@@ -773,7 +773,7 @@ namespace EditClipboardContents
         private void dataGridViewClipboard_SortCompare(object sender, DataGridViewSortCompareEventArgs e)
         {
             // If it's the format ID column or another numerical column, sort them numerically instead of alphabetically
-            if (e.Column.Name == "FormatId" || e.Column.Name == "Index")
+            if (e.Column.Name == colName.FormatId || e.Column.Name == colName.Index)
             {
                 // Try to parse the values as numbers
                 if (int.TryParse(e.CellValue1?.ToString(), out int value1) &&
@@ -788,16 +788,16 @@ namespace EditClipboardContents
 
         private void dataGridViewClipboard_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            if (e.ColumnIndex == dataGridViewClipboard.Columns["Index"].Index)
+            if (e.ColumnIndex == dataGridViewClipboard.Columns[colName.Index].Index)
             {
                 // Suspend layout updates
                 dataGridViewClipboard.SuspendLayout();
 
                 // Sort the Index column
-                dataGridViewClipboard.Sort(dataGridViewClipboard.Columns["Index"], System.ComponentModel.ListSortDirection.Ascending);
+                dataGridViewClipboard.Sort(dataGridViewClipboard.Columns[colName.Index], System.ComponentModel.ListSortDirection.Ascending);
 
                 // Hide the sort indicator
-                dataGridViewClipboard.Columns["Index"].HeaderCell.SortGlyphDirection = SortOrder.None;
+                dataGridViewClipboard.Columns[colName.Index].HeaderCell.SortGlyphDirection = SortOrder.None;
 
                 // Resume layout updates
                 dataGridViewClipboard.ResumeLayout();
@@ -847,7 +847,7 @@ namespace EditClipboardContents
                 ClipDataObject = null,
                 DataInfoList = [ MyStrings.CustomPendingData ],
                 OriginalIndex = itemIndex,
-                FormatType = "Custom",
+                FormatType = FormatTypeNames.Custom,
                 PendingCustomAddition = true,
             };
 
@@ -897,8 +897,8 @@ namespace EditClipboardContents
                 // Dictionary with reasons not allowed to edit specific columns
                 Dictionary<string, string> notAllowedToEditColumns = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                 {
-                    //{ "FormatId", "Cannot Edit Format ID: This number is set automatically by windows." },
-                    { colName.HandleType, "Cannot Edit Format Type: This column is informational only derived from other properties, it is not an actual value." },
+                    //{ colName.FormatId, "Cannot Edit Format ID: This number is set automatically by windows." },
+                    { colName.FormatType, "Cannot Edit Format Type: This column is informational only derived from other properties, it is not an actual value." },
                     { colName.Index, "Index cannot currently be changed." },
                 };
 
@@ -1179,8 +1179,8 @@ namespace EditClipboardContents
         private void buttonTest_Click(object sender, EventArgs e)
         {
             // Local function to use nameof a specified ClipboardItem property as string
-            string GetPropertyName<T>(T item, string propertyName) => item.GetType().GetProperty(propertyName)?.Name ?? "";
-            Console.WriteLine("");
+            //string GetPropertyName<T>(T item, string propertyName) => item.GetType().GetProperty(propertyName)?.Name ?? "";
+            //Console.WriteLine("");
         }
 
     } // ----------------------------- End of MainForm partial class -----------------------------

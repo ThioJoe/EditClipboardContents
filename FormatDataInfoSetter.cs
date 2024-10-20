@@ -420,7 +420,7 @@ namespace EditClipboardContents
 
                     if (rawData == null)
                     {
-                        dataInfoList.Add("[null]");
+                        dataInfoList.Add(MyStrings.DataNull);
                     }
                     else
                     {

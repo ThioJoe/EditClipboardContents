@@ -175,7 +175,7 @@ namespace EditClipboardContents
             dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { Name = colName.Known, HeaderText = "💾" });
             dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.FormatName), Name = colName.FormatName, HeaderText = "Format Name" });
             dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.FormatId), Name = colName.FormatId, HeaderText = "Format ID" });
-            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.FormatType), Name = colName.HandleType, HeaderText = "Format Type" });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.FormatType), Name = colName.FormatType, HeaderText = "Format Type" });
             dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.DataSize), Name = colName.DataSize, HeaderText = "Data Size" });
             //dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "DataInfoLinesString", Name = colName.DataInfo, HeaderText = "Data Info" });
             dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { Name = colName.DataInfo, HeaderText = "Data Info" });
@@ -196,12 +196,12 @@ namespace EditClipboardContents
 
             // Add padding to the text preview column
             // Get the current padding for text preview column
-            Padding textPreviewPadding = dataGridViewClipboard.Columns["TextPreview"].DefaultCellStyle.Padding;
+            Padding textPreviewPadding = dataGridViewClipboard.Columns[colName.TextPreview].DefaultCellStyle.Padding;
             textPreviewPadding.Left = 3;
-            dataGridViewClipboard.Columns["TextPreview"].DefaultCellStyle.Padding = textPreviewPadding;
-            Padding formatNamePadding = dataGridViewClipboard.Columns["FormatName"].DefaultCellStyle.Padding;
+            dataGridViewClipboard.Columns[colName.TextPreview].DefaultCellStyle.Padding = textPreviewPadding;
+            Padding formatNamePadding = dataGridViewClipboard.Columns[colName.FormatName].DefaultCellStyle.Padding;
             formatNamePadding.Left = 3;
-            dataGridViewClipboard.Columns["FormatName"].DefaultCellStyle.Padding = formatNamePadding;
+            dataGridViewClipboard.Columns[colName.FormatName].DefaultCellStyle.Padding = formatNamePadding;
 
             //// Add a tooltip to display on the Known column
             //ToolTip toolTipKnown = new ToolTip();
@@ -212,8 +212,8 @@ namespace EditClipboardContents
             dataGridViewClipboard.RowHeadersVisible = false;
 
             // Set miscellaensous properties for specific columns
-            dataGridViewClipboard.Columns["Index"].DefaultCellStyle.ForeColor = Color.Gray;
-            dataGridViewClipboard.Columns["Index"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewClipboard.Columns[colName.Index].DefaultCellStyle.ForeColor = Color.Gray;
+            dataGridViewClipboard.Columns[colName.Index].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             dataGridViewClipboard.Columns[colName.Known].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             dataGridViewClipboard.Columns[colName.Known].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
@@ -997,12 +997,12 @@ namespace EditClipboardContents
                 // If the data is null
                 else if (item?.RawData == null)
                 {
-                    dataInfoList.Add("[null]");
+                    dataInfoList.Add(MyStrings.DataNull);
                 }
                 // If the data isn't null but still empty
                 else if (item.RawData.Length == 0)
                 {
-                    dataInfoList.Add("[Empty]");
+                    dataInfoList.Add(MyStrings.DataEmpty);
                 }
 
                 if (item == null) // It should never be null here, but just in case of side effects or something
@@ -1018,27 +1018,28 @@ namespace EditClipboardContents
                 string formatType;
                 if (item.FormatId == 0x0082 || item.FormatId == 0x008E || item.FormatId == 0x0083 || item.FormatId == 0x0081)
                 {
-                    formatType = "Standard / Display";
+                    formatType = FormatTypeNames.Display;
                 }
                 else if (item.FormatId >= 0x0200 && item.FormatId <= 0x02FF) // 512 - 767
                 {
-                    formatType = "Private";
+                    formatType = FormatTypeNames.Private;
                 }
                 else if (item.FormatId >= 0x0300 && item.FormatId <= 0x03FF) // 768 - 1023
                 {
-                    formatType = "Global GDI Object";
+                    formatType = FormatTypeNames.GlobalGDI;
                 }
                 else if (item.FormatId >= 0xC000 && item.FormatId <= 0xFFFF) // 49152 - 65535
                 {
-                    formatType = "Registered";
+                    formatType = FormatTypeNames.Registered;
                 }
                 else if (item.FormatId < 0xC000) // Otherwise under 49152
                 {
-                    formatType = "Standard";
+                    formatType = FormatTypeNames.Standard;
                 }
                 else
                 {
-                    formatType = "Unknown";
+                    //formatType = "Unknown";
+                    formatType = FormatTypeNames.Unknown;
                 }
 
                 if (item == null) // It should never be null here, but just in case of side effects or something
@@ -1049,13 +1050,12 @@ namespace EditClipboardContents
                 // All synthesized formats are standard so just override the type if so
                 if (item.AssumedSynthesized)
                 {
-                    formatType = "Synthesized";
+                    formatType = FormatTypeNames.Synthesized;
                 }
 
                 item.FormatType = formatType; // Update the format type in the selectedItem
                 item.ClipDataObject = processedObject; // Update the clipDataObject in the selectedItem, even if it's null
 
-                //UpdateClipboardItemsGridViewWith_AdditionalItem(formatItem: item);
             } // End of the loop
             RefreshDataGridViewContents();
         }
@@ -1301,7 +1301,7 @@ namespace EditClipboardContents
                     }
                 }
 
-                if (selectedRow.Cells[colName.HandleType].Value.ToString() == "Custom")
+                if (selectedRow.Cells[colName.FormatType].Value.ToString() == FormatTypeNames.Custom)
                 {
                     labelCustomFormatNameID.Visible = true;
                 }
@@ -1366,7 +1366,7 @@ namespace EditClipboardContents
                 if (!menuOptions_ShowLargeHex.Checked)
                 {
                     richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged; // Don't trigger update event handler so it doesn't try to parse it as hex
-                    richTextBoxContents.Text = "Data is too large to display preview.\nThis can be changed in the options menu, but the program may freeze for large amounts of data.";
+                    richTextBoxContents.Text = MyStrings.DataTooLarge;
                     richTextBoxContents.ForeColor = Color.Red;
                     richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
 
@@ -1614,7 +1614,7 @@ namespace EditClipboardContents
             try
             {
                 // Sort the editedClipboardItems by their original index
-                editedClipboardItems = Utils.SortSortableBindingList(editedClipboardItems, "OriginalIndex", ListSortDirection.Ascending);
+                editedClipboardItems = Utils.SortSortableBindingList(editedClipboardItems, nameof(ClipboardItem.OriginalIndex), ListSortDirection.Ascending);
 
                 NativeMethods.EmptyClipboard();
                 foreach (var item in editedClipboardItems)
@@ -2174,7 +2174,7 @@ namespace EditClipboardContents
                 foreach (DataGridViewColumn col in dataGridViewClipboard.Columns)
                 {
                     // Ignore the dummy column
-                    if (col.Name != "Index")
+                    if (col.Name != colName.Index)
                     {
                         headerRow.Add(col.HeaderText);
                     }
@@ -2228,7 +2228,7 @@ namespace EditClipboardContents
                 foreach (DataGridViewCell cell in row.Cells)
                 {
                     // Ignore the dummy column
-                    if (cell.OwningColumn.Name != "Index")
+                    if (cell.OwningColumn.Name != colName.Index)
                     {
                         rowCells.Add(cell.Value.ToString());
                     }
@@ -2314,46 +2314,18 @@ namespace EditClipboardContents
             Clipboard.SetText(finalCombinedString);
         }
 
-        private void setCopyModeChecks(string newlyCheckedOption)
+        private void setCopyModeChecks(MenuItem newlyCheckedOption)
         {
-            // Newly checked option is the text of the menu item that was just checked
-            // Uncheck all other options and make sure the newly checked option is checked (this also handles if it was already checked)
-
-            // Find the Options menu item
-            MenuItem? optionsMenuItem = null;
-            foreach (MenuItem menuItem in mainMenu1.MenuItems)
+            // Assuming menuItemOptions and menuOptions_TableModeMenu are class-level fields
+            if (menuItemOptions != null && menuOptions_TableModeMenu != null)
             {
-                if (menuItem.Text == "Options")
+                // Iterate through the items in the "Table Copying Mode" sub-menu
+                foreach (MenuItem item in menuOptions_TableModeMenu.MenuItems)
                 {
-                    optionsMenuItem = menuItem;
-                    break;
+                    // Uncheck all items except the newly checked one
+                    item.Checked = (item == newlyCheckedOption);
                 }
             }
-
-            if (optionsMenuItem != null)
-            {
-                // Find the "Table Copying Mode" sub-menu
-                MenuItem? tableCopyingModeMenuItem = null;
-                foreach (MenuItem subMenuItem in optionsMenuItem.MenuItems)
-                {
-                    if (subMenuItem?.Text == "Table Copying Mode")
-                    {
-                        tableCopyingModeMenuItem = subMenuItem;
-                        break;
-                    }
-                }
-
-                if (tableCopyingModeMenuItem != null)
-                {
-                    // Iterate through the items in the "Table Copying Mode" sub-menu
-                    foreach (MenuItem item in tableCopyingModeMenuItem.MenuItems)
-                    {
-                        // Uncheck all items except the newly checked one. And ensure the clicked one is checked.
-                        item.Checked = (item.Text == newlyCheckedOption);
-                    }
-                }
-            }
-
         }
 
         private void SyncHexToPlaintext()
@@ -2583,11 +2555,11 @@ namespace EditClipboardContents
             string nameStem = itemToExport.FormatName;
 
             // If it's a DIBV5 format, convert it to a bitmap
-            if (itemToExport.FormatId == 17)
+            if (itemToExport.FormatName == "CF_DIBV5")
             {
+                string extension = FormatInfoHardcoded.KnownBinaryExtensionAssociations[itemToExport.FormatName];
                 Bitmap bitmap = FormatConverters.BitmapFile_From_CF_DIBV5_RawData(itemToExport.RawData);
-
-                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
+                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: extension, defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
                     bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
@@ -2595,19 +2567,21 @@ namespace EditClipboardContents
                 }
                 return;
             }
-            else if (itemToExport.FormatId == 8) // CF_DIB
+            else if (itemToExport.FormatName == "CF_DIB") // CF_DIB
             {
+                string extension = FormatInfoHardcoded.KnownBinaryExtensionAssociations[itemToExport.FormatName];
                 Bitmap bitmap = FormatConverters.BitmapFile_From_CF_DIB_RawData(itemToExport.RawData);
-                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
+                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: extension, defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
                     bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
                 }
                 return;
             }
-            else if (itemToExport.FormatId == 2) // CF_BITMAP
+            else if (itemToExport.FormatName == "CF_BITMAP") // CF_BITMAP
             {
-                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "bmp", defaultFileNameStem: nameStem);
+                string extension = FormatInfoHardcoded.KnownBinaryExtensionAssociations[itemToExport.FormatName];
+                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: extension, defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
                     using (MemoryStream ms = new MemoryStream(itemToExport.RawData))
@@ -2623,6 +2597,7 @@ namespace EditClipboardContents
             }
             else if (itemToExport.FormatName == "HTML Format")
             {
+                string extension = FormatInfoHardcoded.KnownBinaryExtensionAssociations[itemToExport.FormatName];
                 string inputString = Encoding.UTF8.GetString(itemToExport.RawData);
                 string? outputString = FormatConverters.ConvertHtmlFormat(inputString);
 
@@ -2631,7 +2606,7 @@ namespace EditClipboardContents
                     return; // Error message box will be shown in the function itself with error
                 }
 
-                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: "html", defaultFileNameStem: nameStem);
+                SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: extension, defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
                     File.WriteAllText(saveFileDialogResult.FileName, outputString);
@@ -2679,7 +2654,7 @@ namespace EditClipboardContents
             foreach (ClipboardItem item in editedClipboardItems)
             {
                 bool validRange = false;
-                if (item.FormatType == MyStrings.DefaultCustomFormatType) 
+                if (item.FormatType == FormatTypeNames.Custom) 
                 {
                     if (item.FormatId == 0
                         || (item.FormatId >= MyVals.RegisteredFormatMinID && item.FormatId <= MyVals.RegisteredFormatMaxID)
@@ -2714,8 +2689,8 @@ namespace EditClipboardContents
             // Check if any custom formats match a non-custom format's name
             bool noConflictingCustomNames = true;
             bool noConflictingCustomIDs = true;
-            List<ClipboardItem> customItems = editedClipboardItems.Where(i => i.FormatType == MyStrings.DefaultCustomFormatType).ToList();
-            List<ClipboardItem> regularItems = editedClipboardItems.Where(i => i.FormatType != MyStrings.DefaultCustomFormatType).ToList();
+            List<ClipboardItem> customItems = editedClipboardItems.Where(i => i.FormatType == FormatTypeNames.Custom).ToList();
+            List<ClipboardItem> regularItems = editedClipboardItems.Where(i => i.FormatType != FormatTypeNames.Custom).ToList();
 
             foreach (ClipboardItem customItem in customItems)
             {
@@ -2850,7 +2825,7 @@ namespace EditClipboardContents
         public const string Known = "Known";
         public const string FormatName = "FormatName";
         public const string FormatId = "FormatId";
-        public const string HandleType = "HandleType";
+        public const string FormatType = "FormatType";
         public const string DataSize = "DataSize";
         public const string DataInfo = "DataInfo";
         public const string TextPreview = "TextPreview";
@@ -2861,10 +2836,23 @@ namespace EditClipboardContents
         public const string DefaultCustomFormatName = "Custom Format";
         public const string CustomPendingData = "[Pending: Added By You]";
         public const string DefaultCustomFormatID = "0";
-        public const string DefaultCustomFormatType = "Custom";
         public const string DataNotApplicable = "N/A";
         public const string DataNull = "[null]";
+        public const string DataEmpty = "[Empty]";
         public const string KnownFileTooltip = "Can be properly exported as known file type.";
+        public const string DataTooLarge = "Data is too large to display preview.\nThis can be changed in the options menu, but the program may freeze for large amounts of data.";
+    }
+    
+    public static class FormatTypeNames // Chosen as display names for the format types
+    {
+        public const string Registered = "Registered";       // 0xC000 -- 0xFFFF (49152 - 65535)
+        public const string Standard = "Standard";           // 0 -- 0xC000
+        public const string Private = "Private";             // 0x0200 -- 0x02FF (512 - 767)
+        public const string GlobalGDI = "Global GDI Object"; // 0x0300 -- 0x03FF (768 - 1023)
+        public const string Display = "Standard / Display";  // 0x0081 (CF_DSPTEXT), 0x0082 (CF_DSPBITMAP), 0x0083 (CF_DSPMETAFILEPICT), 0x008E (CF_DSPENHMETAFILE)
+        public const string Custom = "Custom";
+        public const string Unknown = "Unknown";
+        public const string Synthesized = "Synthesized";
     }
 
     public static class MyVals
