@@ -1601,8 +1601,23 @@ namespace EditClipboardContents
         }
 
 
-        private bool SaveClipboardData()
+        private bool SaveClipboardData(bool importing = false)
         {
+            SortableBindingList<ClipboardItem> itemList = Utils.SortSortableBindingList(editedClipboardItems, nameof(ClipboardItem.OriginalIndex), ListSortDirection.Ascending);
+
+            // Register any formats if necessary, it will return the format ID to use
+            foreach (ClipboardItem item in itemList)
+            {
+                if (item.FormatId == 0)
+                {
+                    uint result = NativeMethods.RegisterClipboardFormat(item.FormatName);
+                    if (result != 0)
+                    {
+                        item.FormatId = result;
+                    }
+                }
+            }
+
             if (!NativeMethods.OpenClipboard(this.Handle))
             {
                 Console.WriteLine("Failed to open clipboard.");
@@ -1614,11 +1629,8 @@ namespace EditClipboardContents
 
             try
             {
-                // Sort the editedClipboardItems by their original index
-                editedClipboardItems = Utils.SortSortableBindingList(editedClipboardItems, nameof(ClipboardItem.OriginalIndex), ListSortDirection.Ascending);
-
                 NativeMethods.EmptyClipboard();
-                foreach (var item in editedClipboardItems)
+                foreach (var item in itemList)
                 {
                     if (item.PendingRemoval == true)
                     {
@@ -1726,7 +1738,8 @@ namespace EditClipboardContents
                 }
                 else
                 {
-                    MessageBox.Show("Clipboard data saved.");
+                    if (importing == false)
+                        MessageBox.Show("Clipboard data saved.");
                 }
 
                 return true;
@@ -2864,15 +2877,15 @@ namespace EditClipboardContents
                 string fileName = $"{index}_{name}.dat";
 
                 // Add the item to the export text
-                exportTxt.AppendLine("Index=" + index);
-                exportTxt.AppendLine("FormatName=" + name);
-                exportTxt.AppendLine("FileName=" + fileName);
+                exportTxt.AppendLine($"FormatName{index}=" + name);
+                exportTxt.AppendLine($"FileName{index}=" + fileName);
 
                 return (rawData, fileName, exportTxt);
             }
             // -------------------------------------------------------------------
 
             // String builder containing original index, format name, and corresponding filename saved
+            // This is necessary because the file names have restricions on characters, so we need to save the original index and format name
             StringBuilder exportTxtContents = new StringBuilder();
             exportTxtContents.AppendLine("// This file is required to be able to import the data back into the program.");
 
@@ -2914,7 +2927,150 @@ namespace EditClipboardContents
             }
         }
 
-       
+        public List<ClipboardItem> LoadItemsFromBackup(string path)
+        {
+            List<ClipboardItem> importedItems = new List<ClipboardItem>();
+            Dictionary<string, Dictionary<string, string>> itemInfo = new Dictionary<string, Dictionary<string, string>>();
+
+            // Local function to process the ExportedItems.txt file
+            void ProcessExportedItemsTxt(Stream stream)
+            {
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    string line;
+                    Regex regex = new Regex(@"^(FormatName|FileName)(\d+)=(.*)$");
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        Match match = regex.Match(line);
+                        if (match.Success)
+                        {
+                            string key = match.Groups[1].Value;
+                            string index = match.Groups[2].Value;
+                            string value = match.Groups[3].Value;
+
+                            if (!itemInfo.ContainsKey(index))
+                            {
+                                itemInfo[index] = new Dictionary<string, string>();
+                            }
+                            itemInfo[index][key] = value;
+                        }
+                    }
+                }
+            }
+
+            // Local function to create a ClipboardItem from file data and info
+            ClipboardItem CreateClipboardItem(byte[] data, string index, Dictionary<string, string> info)
+            {
+                return new ClipboardItem
+                {
+                    FormatName = info["FormatName"],
+                    RawData = data,
+                    DataSize = (ulong)data.Length,
+                    OriginalIndex = int.Parse(index)
+                };
+            }
+
+            if (File.Exists(path) && Path.GetExtension(path).ToLower() == ".zip")
+            {
+                using (ZipArchive archive = ZipFile.OpenRead(path))
+                {
+                    var txtEntry = archive.GetEntry("ExportedItems.txt");
+                    if (txtEntry != null)
+                    {
+                        using (Stream stream = txtEntry.Open())
+                        {
+                            ProcessExportedItemsTxt(stream);
+                        }
+                    }
+
+                    foreach (var entry in archive.Entries.Where(e => e.Name.EndsWith(".dat")))
+                    {
+                        using (Stream stream = entry.Open())
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            stream.CopyTo(ms);
+                            byte[] data = ms.ToArray();
+                            string fileName = entry.Name;
+                            var matchingItem = itemInfo.FirstOrDefault(kvp => kvp.Value["FileName"] == fileName);
+                            if (!string.IsNullOrEmpty(matchingItem.Key))
+                            {
+                                importedItems.Add(CreateClipboardItem(data, matchingItem.Key, matchingItem.Value));
+                            }
+                        }
+                    }
+                }
+            }
+            else if (Directory.Exists(path))
+            {
+                string txtFilePath = Path.Combine(path, "ExportedItems.txt");
+                if (File.Exists(txtFilePath))
+                {
+                    using (FileStream stream = File.OpenRead(txtFilePath))
+                    {
+                        ProcessExportedItemsTxt(stream);
+                    }
+                }
+
+                foreach (var filePath in Directory.GetFiles(path, "*.dat"))
+                {
+                    byte[] data = File.ReadAllBytes(filePath);
+                    string fileName = Path.GetFileName(filePath);
+                    var matchingItem = itemInfo.FirstOrDefault(kvp => kvp.Value["FileName"] == fileName);
+                    if (!string.IsNullOrEmpty(matchingItem.Key))
+                    {
+                        importedItems.Add(CreateClipboardItem(data, matchingItem.Key, matchingItem.Value));
+                    }
+                }
+            }
+            else
+            {
+                throw new ArgumentException("The specified path is neither a valid zip file nor a directory.");
+            }
+
+            return importedItems.OrderBy(item => item.OriginalIndex).ToList();
+        }
+
+        private void ProcessImportedItems(List<ClipboardItem> importedItems)
+        {
+            clipboardItems.Clear();
+            editedClipboardItems.Clear();
+
+            // Get the format Ids of the imported items, either looking up standard formats or registering others
+            foreach (ClipboardItem item in importedItems)
+            {
+                if (item.FormatId == 0)
+                {
+                    uint resultId = Utils.GetClipboardFormatIdFromName(item.FormatName);
+                    if (resultId != 0)
+                    {
+                        item.FormatId = resultId;
+                    }
+                    else
+                    {
+                        // Register the custom format
+                        uint formatIDToUse = NativeMethods.RegisterClipboardFormat(item.FormatName);
+                        if (formatIDToUse == 0)
+                        {
+                            MessageBox.Show($"Failed to register format '{item.FormatName}'.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        item.FormatId = formatIDToUse;
+                    }
+                }
+
+                clipboardItems.Add(item);
+
+            } // End of foreach loop
+
+            ProcessClipboardData();
+            editedClipboardItems = new SortableBindingList<ClipboardItem>(clipboardItems.Select(item => (ClipboardItem)item.Clone()).ToList());
+            editedClipboardItems.ListChanged += EditedClipboardItems_ListChanged;
+
+            SaveClipboardData(importing: true);
+            RefreshClipboardItems();
+            anyPendingChanges = false;
+            UpdateEditControlsVisibility_AndPendingGridAppearance();
+        }
+
 
     } // ---------------------------------------------------------------------------------------------------
     // --------------------------------------- End of MainForm Class ---------------------------------------

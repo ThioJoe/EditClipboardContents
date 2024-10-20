@@ -1246,5 +1246,44 @@ namespace EditClipboardContents
             //Console.WriteLine("");
         }
 
+        private void menuFile_ImportBackupFolder_Click(object sender, EventArgs e)
+        {
+            // Show a folder browser dialog
+            FolderPicker folderOpenDialogue = new FolderPicker();
+            folderOpenDialogue.InputPath = Directory.GetCurrentDirectory();
+            string chosenPath;
+
+            // Show the actual dialogue based on input path derived from stuff above
+            if (folderOpenDialogue.ShowDialog(this.Handle, throwOnError: false) == true)
+            {
+                // Store the selected folder path to use next time
+                chosenPath = folderOpenDialogue.ResultPath;
+                List<ClipboardItem> importedItems = LoadItemsFromBackup(chosenPath);
+
+                if (importedItems.Count > 0)
+                {
+                    ProcessImportedItems(importedItems);
+                }
+            }
+        }
+
+        private void menuFile_ImportBackupZip_Click(object sender, EventArgs e)
+        {
+            // File selection dialogue for zip file
+            OpenFileDialog openFileDialogResult = new OpenFileDialog();
+            openFileDialogResult.Filter = "Zip Files|*.zip";
+            if (openFileDialogResult.ShowDialog() == DialogResult.OK)
+            {
+                string filePath = openFileDialogResult.FileName;
+                List<ClipboardItem> importedItems = LoadItemsFromBackup(filePath);
+
+                if (importedItems.Count > 0)
+                {
+                    ProcessImportedItems(importedItems);
+                }
+            }
+        }
+
+
     } // ----------------------------- End of MainForm partial class -----------------------------
 }

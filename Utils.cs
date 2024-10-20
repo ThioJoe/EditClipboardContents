@@ -65,7 +65,13 @@ namespace EditClipboardContents
 
         public static uint GetClipboardFormatIdFromName(string formatName, bool caseSensitive = true)
         {
-            uint formatId = 0;
+            uint formatId = GetStandardFormatIdFromName(formatName);
+
+            if (formatId != 0) // If it's a standard format, return it
+            {
+                return formatId;
+            }
+
             // Get map where key is the ID and value is the name
             Dictionary<uint, string>? nameIDMap = Utils.GetAllPossibleRegisteredFormatNames();
 
@@ -76,12 +82,6 @@ namespace EditClipboardContents
             else if (nameIDMap != null && !caseSensitive) // If case insensitive, try fallback to case insensitive match if specified
             {
                 formatId = nameIDMap.FirstOrDefault(x => x.Value.ToLower() == formatName.ToLower()).Key;
-            }
-
-            // If it's still zero, try the standard formats
-            if (formatId == 0)
-            {
-                formatId = GetStandardFormatIdFromName(formatName);
             }
 
             return formatId;
