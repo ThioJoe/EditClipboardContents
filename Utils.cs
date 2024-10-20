@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.SqlServer.Management.HadrData;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.Remoting;
@@ -83,7 +85,7 @@ namespace EditClipboardContents
             return formatId;
         }
 
-        public static string GetClipboardFormatName(uint format)
+        public static string GetClipboardFormatNameFromId(uint format)
         {
             // Ensure the format ID is within the range of registered clipboard formats.  The windows api method does not work on standard formats, it will just return 0.
             // See:https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerclipboardformata
@@ -184,6 +186,23 @@ namespace EditClipboardContents
                 return Convert.ToUInt32(formatName.Substring(1, 4), 16);
             }
             return 0;
+        }
+
+        public static SortableBindingList<ClipboardItem> SortSortableBindingList(SortableBindingList<ClipboardItem> inputList, string propertyName, ListSortDirection direction)
+        {
+            PropertyDescriptor prop = TypeDescriptor.GetProperties(typeof(ClipboardItem))[propertyName];
+
+            if (prop != null)
+            {
+                ((IBindingList)inputList).ApplySort(prop, ListSortDirection.Ascending);
+            }
+            else
+            {
+                Console.WriteLine("Property not found: " + propertyName);
+                throw new Exception("Property not found: " + propertyName);
+            }
+
+            return inputList; // TESTING - CHANGE THIS
         }
 
         public static DialogResult ShowInputDialog(Form owner, ref string input, string instructions, float scale = 1.0f)

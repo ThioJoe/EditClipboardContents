@@ -1,4 +1,20 @@
-﻿using System;
+﻿// My imported classes
+using EditClipboardContents;
+using static EditClipboardContents.ClipboardFormats;
+using Microsoft.SqlServer.Management.HadrData;
+
+// Disable IDE warnings that showed up after going from C# 7 to C# 9
+#pragma warning disable IDE0079 // Disable message about unnecessary suppression
+#pragma warning disable IDE1006 // Disable messages about capitalization of control names
+#pragma warning disable IDE0063 // Disable messages about Using expression simplification
+#pragma warning disable IDE0090 // Disable messages about New expression simplification
+#pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
+#pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
+#pragma warning disable IDE0066 // Disable message about switch case expression
+// Nullable reference types
+#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -13,26 +29,12 @@ using System.Reflection;
 using System.Globalization;
 using System.Drawing.Text;
 using System.Text.RegularExpressions;
-
-// Disable IDE warnings that showed up after going from C# 7 to C# 9
-#pragma warning disable IDE0079 // Disable message about unnecessary suppression
-#pragma warning disable IDE1006 // Disable messages about capitalization of control names
-#pragma warning disable IDE0063 // Disable messages about Using expression simplification
-#pragma warning disable IDE0090 // Disable messages about New expression simplification
-#pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
-#pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
-#pragma warning disable IDE0066 // Disable message about switch case expression
-// Nullable reference types
-#nullable enable
-
-// My classes
-using EditClipboardContents;
 using System.Collections;
-using static EditClipboardContents.ClipboardFormats;
 using System.Threading.Tasks;
 using System.Data.Common;
 using System.Windows.Forms.Automation;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 
 namespace EditClipboardContents
@@ -41,11 +43,7 @@ namespace EditClipboardContents
     {
         private readonly List<ClipboardItem> clipboardItems = new List<ClipboardItem>();
         //private List<ClipboardItem> editedClipboardItems = new List<ClipboardItem>();
-        private BindingList<ClipboardItem> editedClipboardItems = new BindingList<ClipboardItem>();
-        //private BindingList<ClipboardItem> dataGridViewDisplayItems = new BindingList<ClipboardItem>();
-        //private Microsoft.SqlServer.Management.Controls.SortableBindingList<ClipboardItem> sortableBindingList = [];
-
-        private List<ClipboardItem> test = [];
+        private SortableBindingList<ClipboardItem> editedClipboardItems = new SortableBindingList<ClipboardItem>();
 
         // Other globals
         public static bool anyPendingChanges = false;
@@ -101,6 +99,11 @@ namespace EditClipboardContents
         public MainForm()
         {
             InitializeComponent();
+            editedClipboardItems.ListChanged += EditedClipboardItems_ListChanged;
+
+            #if DEBUG
+            buttonTest.Visible = true;
+            #endif
 
             // Set init only GUI state variables
             hexTextBoxTopBuffer = richTextBoxContents.Height - richTextBox_HexPlaintext.Height;
@@ -126,8 +129,7 @@ namespace EditClipboardContents
 
             previousWindowHeight = this.Height;
 
-            editedClipboardItems.ListChanged += EditedClipboardItems_ListChanged;
-            //dataGridViewDisplayItems.ListChanged += DataGridViewDisplayItems_ListChanged;
+            
         }
 
         public int CompensateDPI(int originalValue)
@@ -218,7 +220,24 @@ namespace EditClipboardContents
 
         private void RefreshDataGridViewContents()
         {
+            // Get current conditions so we can restore them after if necessary
+            Guid? selectedItemGUID = GetSelectedUniqueIDFromDataGridView();
+            DataGridViewColumn? currentSortColumn = dataGridViewClipboard.SortedColumn;
+            if (currentSortColumn != null && dataGridViewClipboard.SortOrder != SortOrder.None)
+            {
+                ListSortDirection currentSortDirection = dataGridViewClipboard.SortOrder == SortOrder.Ascending ? ListSortDirection.Ascending : ListSortDirection.Descending;
+                dataGridViewClipboard.Sort(currentSortColumn, currentSortDirection);
+            }
+
+            // Apply new data and sort
             dataGridViewClipboard.DataSource = editedClipboardItems;
+            dataGridViewClipboard.Sort(dataGridViewClipboard.Columns[colName.Index], ListSortDirection.Ascending);
+
+            // Restore the selected item if there was one
+            if (selectedItemGUID != null)
+            {
+                SelectRowByUniqueID(selectedItemGUID.Value);
+            }
 
             // Update the data where necessary
             foreach (ClipboardItem formatItem in editedClipboardItems)
@@ -240,10 +259,14 @@ namespace EditClipboardContents
                 if (formatItem.FormatName == "CF_LOCALE")
                     textPreview = "";
 
-                // Set certain values in the grid view that need processing first
-                int rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().Where(r => r.Cells[colName.UniqueID].Value.ToString() == uniqueID.ToString()).First().Index;
-                dataGridViewClipboard.Rows[rowIndex].Cells[colName.TextPreview].Value = textPreview;
-                dataGridViewClipboard.Rows[rowIndex].Cells[colName.DataInfo].Value = dataInfoString;
+                DataGridViewRow? matchingRow = dataGridViewClipboard.Rows.Cast<DataGridViewRow?>().FirstOrDefault(r => r?.Cells[colName.UniqueID].Value.ToString() == uniqueID.ToString());
+
+                if (matchingRow != null)
+                {
+                    int rowIndex = matchingRow.Index;
+                    dataGridViewClipboard.Rows[rowIndex].Cells[colName.TextPreview].Value = textPreview;
+                    dataGridViewClipboard.Rows[rowIndex].Cells[colName.DataInfo].Value = dataInfoString;
+                }
             }
 
             // Set default forecolor of the index column to gray
@@ -289,121 +312,8 @@ namespace EditClipboardContents
                 dataGridViewClipboard.Columns[colName.DataInfo].Width = CompensateDPI(200);
             }
 
-        }
-
-        private void UpdateClipboardItemsGridView_WithEmptyCustomFormat(ClipboardItem formatItem)
-        {
-            // Get needed data from the item
-            //byte[] rawData = formatItem.RawData;
-            string formatName = formatItem.FormatName;
-            Guid uniqueID = formatItem.UniqueID;
-            string formatType = formatItem.FormatType;
-            string formatID = formatItem.FormatId.ToString();
-            //List<string> dataInfo = formatItem.DataInfoList;
-            string dataSize = formatItem.DataSize.ToString();
-            int index = formatItem.OriginalIndex;
-            
-            string dataInfoString = MyStrings.CustomPendingData;
-            string textPreview = "";
-
-            dataGridViewClipboard.SelectionChanged -= dataGridViewClipboard_SelectionChanged;
-            dataGridViewClipboard.Rows.Add(index, uniqueID, formatName, formatID, formatType, dataSize, dataInfoString, textPreview);
-            dataGridViewClipboard.SelectionChanged += dataGridViewClipboard_SelectionChanged;
-        }
-
-        // Update processedData grid view with clipboard contents during refresh
-        private void UpdateClipboardItemsGridViewWith_AdditionalItem(ClipboardItem formatItem)
-        {
-            // Get needed data from the item
-            byte[]? rawData = formatItem.RawData;
-            string formatName = formatItem.FormatName;
-            string formatType = formatItem.FormatType;
-            string formatID = formatItem.FormatId.ToString();
-            List<string> dataInfo = formatItem.DataInfoList;
-            string dataSize = formatItem.DataSize.ToString();
-            int index = formatItem.OriginalIndex;
-            Guid uniqueID = formatItem.UniqueID;
-
-            // Preprocess certain info
-            string textPreview = TryParseText(rawData, maxLength: 200, prefixEncodingType: false);
-
-            // The first item will have selected important info, to ensure it's not too long. The rest will show in data box in object/struct view mode
-            string dataInfoString;
-            if (dataInfo.Count <= 0 || string.IsNullOrEmpty(dataInfo[0]))
-            {
-                dataInfoString = MyStrings.DataNotApplicable;
-            }
-            else
-            {
-                dataInfoString = dataInfo[0];
-            }
-
-            // Manually handle certain known formats
-            if (formatName == "CF_LOCALE")
-            {
-                textPreview = "";
-            }
-
-            // Add info to the grid view, then will be resized
-            // Disable selected index changed event to prevent it from firing
-            dataGridViewClipboard.SelectionChanged -= dataGridViewClipboard_SelectionChanged;
-            dataGridViewClipboard.Rows.Add(index, uniqueID, formatName, formatID, formatType, dataSize, dataInfoString, textPreview);
-            dataGridViewClipboard.SelectionChanged += dataGridViewClipboard_SelectionChanged;
-
-            // Temporarily set AutoSizeMode to calculate proper widths
-            foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
-            {
-                // Manually set width to minimal number to be resized auto later. Apparently autosize will only make columns larger, not smaller
-                column.Width = CompensateDPI(22);
-
-                if (column.Name != colName.TextPreview && column.Name != colName.Index)
-                {
-                    // Use all cells instead of displayed cells, otherwise those scrolled out of view won't count
-                    column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-                }
-            }
-
-            // Miscelaneous operations to always apply
-            // Set index column text color to gray
-            dataGridViewClipboard.Rows[dataGridViewClipboard.Rows.Count - 1].Cells[colName.Index].Style.ForeColor = Color.Gray;
-
-            // Allow layout to update
             dataGridViewClipboard.PerformLayout();
-
-            // Set final column properties
-            foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
-            {
-                // Keep the autosize mode for certain columns
-                if (column.Name == colName.TextPreview || column.Name == colName.Index || column.Name == colName.UniqueID)
-                {
-                    continue;
-                }
-                int originalWidth = column.Width;
-                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-                column.Resizable = DataGridViewTriState.True;
-
-                if (column.Name == colName.FormatName)
-                {
-                    column.Width = originalWidth + 20; // Add some padding
-                } 
-                else
-                {
-                    column.Width = originalWidth + 0; // For some reason this is necessary after setting resizable and autosize modes
-                }
-            }
-
-            // Ensure TextPreview fills remaining space
-            dataGridViewClipboard.Columns[colName.TextPreview].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            dataGridViewClipboard.Columns[colName.TextPreview].Resizable = DataGridViewTriState.True;
-
-            // If DataInfo is too long, manually set a max width
-            if (dataGridViewClipboard.Columns[colName.DataInfo].Width > CompensateDPI(200))
-            {
-                dataGridViewClipboard.Columns[colName.DataInfo].Width = CompensateDPI(200);
-            }
-
-            // Reset selection to none
-            dataGridViewClipboard.ClearSelection();
+            UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
         // Function to try and parse the raw data for text if it is text
@@ -622,7 +532,8 @@ namespace EditClipboardContents
 
             DetermineSynthesizedFormats();
             ProcessClipboardData();
-            editedClipboardItems = new BindingList<ClipboardItem>(clipboardItems.Select(item => (ClipboardItem)item.Clone()).ToList());
+            editedClipboardItems = new SortableBindingList<ClipboardItem>(clipboardItems.Select(item => (ClipboardItem)item.Clone()).ToList());
+            editedClipboardItems.ListChanged += EditedClipboardItems_ListChanged;
 
             ShowLoadingIndicator(false);
 
@@ -834,7 +745,7 @@ namespace EditClipboardContents
 
         private bool CopyIndividualClipboardFormat(uint formatId, int loadedFormatCount = -1, bool retryMode = false)
         {
-            string formatName = Utils.GetClipboardFormatName(formatId);
+            string formatName = Utils.GetClipboardFormatNameFromId(formatId);
             ulong dataSize = 0;
             byte[]? rawData = null;
             int? error; // Initializes as null anyway
@@ -1047,7 +958,7 @@ namespace EditClipboardContents
 
         private void ProcessClipboardData()
         {
-            dataGridViewClipboard.Rows.Clear();
+            //dataGridViewClipboard.Rows.Clear();
 
             foreach (var item in clipboardItems)
             {
@@ -1339,7 +1250,7 @@ namespace EditClipboardContents
             public IntPtr Data { get; set; }
         }
 
-        private void ChangeCellFocus(int rowIndex, int cellIndex = -1)
+        private void ChangeCellFocusAndDisplayCorrespondingData(int rowIndex, int cellIndex = -1)
         {
             if (rowIndex >= 0)
             {
@@ -1361,7 +1272,7 @@ namespace EditClipboardContents
                     }
 
                     richTextBoxContents.Clear();
-                    DisplayClipboardData(item);
+                    DisplayClipboardDataInTextBoxes(item);
 
                     // Check if it's a synthesized name in SynthesizedFormatNames and show a warning
                     if (SynthesizedFormatNames.Contains(item.FormatName))
@@ -1385,8 +1296,27 @@ namespace EditClipboardContents
             }
         }
 
+        private void SelectRowByUniqueID(Guid uniqueID)
+        {
+            //dataGridViewClipboard.ClearSelection();
+            int rowIndex = -1;
 
-        private void DisplayClipboardData(ClipboardItem? item)
+            for (int i = 0; i < dataGridViewClipboard.Rows.Count; i++)
+            {
+                if (Guid.TryParse(dataGridViewClipboard.Rows[i].Cells[colName.UniqueID].Value?.ToString(), out Guid id) && id == uniqueID)
+                {
+                    rowIndex = i;
+                    break;
+                }
+            }
+
+            if (rowIndex != -1)
+            {
+                SelectRowByRowIndex(rowIndex);
+            }
+        }
+
+        private void DisplayClipboardDataInTextBoxes(ClipboardItem? item)
         {
             if (item == null || item.RawData == null)
             {
@@ -1474,7 +1404,7 @@ namespace EditClipboardContents
                     break;
                 case 3: // Object / Struct View
                     richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
-                    richTextBoxContents.Text = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatName(item.FormatId), fullItem: item);
+                    richTextBoxContents.Text = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatNameFromId(item.FormatId), fullItem: item);
                     richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
                     richTextBoxContents.BackColor = SystemColors.ControlLight;
 
@@ -1498,6 +1428,16 @@ namespace EditClipboardContents
                 {
                     return value.ToString();
                 }
+            }
+            return null;
+        }
+
+        private Guid? GetSelectedUniqueIDFromDataGridView()
+        {
+            string? guidString = GetSelectedDataFromDataGridView(colName.UniqueID);
+            if (guidString != null && Guid.TryParse(guidString, out Guid uniqueID))
+            {
+                return uniqueID;
             }
             return null;
         }
@@ -1658,7 +1598,7 @@ namespace EditClipboardContents
             try
             {
                 // Sort the editedClipboardItems by their original index
-                editedClipboardItems = (BindingList<ClipboardItem>)editedClipboardItems.OrderBy(item => item.OriginalIndex);
+                editedClipboardItems = Utils.SortSortableBindingList(editedClipboardItems, "OriginalIndex", ListSortDirection.Ascending);
 
                 NativeMethods.EmptyClipboard();
                 foreach (var item in editedClipboardItems)
@@ -1853,10 +1793,6 @@ namespace EditClipboardContents
 
         private void UpdateEditControlsVisibility_AndPendingGridAppearance(ClipboardItem? selectedItem = null, ClipboardItem? selectedEditedItem = null)
         {
-            //if (selectedItem == null)
-            //{
-            //    selectedItem = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
-            //}
             if (selectedEditedItem == null)
             {
                 selectedEditedItem = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
@@ -1902,7 +1838,15 @@ namespace EditClipboardContents
                 checkBoxPlainTextEditing.Checked = false;
                 checkBoxPlainTextEditing.Visible = false;
             }
-
+            
+            if (editedClipboardItems.Any(i => i.PendingReOrder))
+            {
+                buttonResetOrder.Enabled = true;
+            }
+            else
+            {
+                buttonResetOrder.Enabled = false;
+            }
 
             // --------------- CONDITIONAL CELL COLORING AND STYLING ---------------
 
@@ -1914,6 +1858,7 @@ namespace EditClipboardContents
                     string columnName = dataGridViewClipboard.Columns[cell.ColumnIndex].Name;
                     object cellValue = cell.Value;
                     string cellValueString = cellValue?.ToString() ?? string.Empty;
+                    Guid rowUniqueID = Guid.Parse(row.Cells[colName.UniqueID].Value.ToString());
 
                     // Reset the cell style to inherit from the row
                     cell.Style = new DataGridViewCellStyle();
@@ -1934,9 +1879,18 @@ namespace EditClipboardContents
                         }
                     }
 
+                    // Color index column gray except in certain cases like pending ReOrder
                     if (columnName == colName.Index) // Index column
                     {
-                        cell.Style.ForeColor = Color.Gray;
+                        ClipboardItem item = editedClipboardItems.SingleOrDefault(i => i.UniqueID == rowUniqueID);
+                        if (item.PendingReOrder == true)
+                        {
+                            cell.Style.ForeColor = Color.Red;
+                        }
+                        else
+                        {
+                            cell.Style.ForeColor = Color.Gray;
+                        }
                     }
                 }
             }
@@ -2133,24 +2087,47 @@ namespace EditClipboardContents
                     item.HasPendingEdit = setPendingEdit;
                     item.PendingRemoval = setPendingRemoval; // If the user applies an edit, presumably they don't want to remove it anymore
 
-                    anyPendingChanges = true;
+                    UpdateAnyPendingChangesFlag();
                     return;
                 }
             }
         }
-        private void UpdateEditedClipboardItemIndex(Guid uniqueID, int index)
+        private void UpdateEditedClipboardItemIndex(Guid uniqueID, int newIndex)
         {
             foreach (ClipboardItem item in editedClipboardItems)
             {
-                if (item.UniqueID == uniqueID && index != item.OriginalIndex)
+                if (item.UniqueID == uniqueID && newIndex != item.OriginalIndex)
                 {
-                    item.OriginalIndex = index;
-                    item.HasPendingEdit = true;
+                    int trueOriginalIndex = clipboardItems.Find(i => i.UniqueID == uniqueID).OriginalIndex;
+                    item.OriginalIndex = newIndex;
 
-                    anyPendingChanges = true;
-                    return;
+                    if (trueOriginalIndex != newIndex)
+                        item.PendingReOrder = true;
+                    else
+                        item.PendingReOrder = false;
+                    break;
                 }
             }
+            UpdateAnyPendingChangesFlag();
+        }
+
+        private void ResetOrderIndexes()
+        {
+            foreach (ClipboardItem item in editedClipboardItems)
+            {
+                Guid uniqueID = item.UniqueID;
+                int index = item.OriginalIndex;
+                int trueOriginalIndex = clipboardItems.Find(i => i.UniqueID == uniqueID).OriginalIndex;
+                item.OriginalIndex = trueOriginalIndex;
+                item.PendingReOrder = false;
+            }
+            UpdateAnyPendingChangesFlag();
+            buttonResetOrder.Enabled = false;
+        }
+
+        private void UpdateAnyPendingChangesFlag()
+        {
+            anyPendingChanges = editedClipboardItems.Any(i => i.HasPendingEdit || i.PendingRemoval || i.PendingReOrder || i.PendingCustomAddition);
         }
 
         private void MarkIndividualClipboardItemForRemoval(Guid uniqueID)
@@ -3010,8 +2987,10 @@ namespace EditClipboardContents
 
     } // ------ End of ClipDataObject class definition
 
-    public class ClipboardItem : ICloneable
+    public class ClipboardItem : ICloneable, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler? PropertyChanged;
+
         // Using a unique ID for each object instance just in case it's needed for tracking
         // Like an edited item where the ID or name might change
         public Guid UniqueID { get; init; } = Guid.NewGuid();
@@ -3027,13 +3006,18 @@ namespace EditClipboardContents
         public string DataInfoLinesString => string.Join("\n", DataInfoList ?? new List<string>());
         public bool HasPendingEdit { get; set; } = false;
         public bool PendingRemoval { get; set; } = false;
+        public bool PendingReOrder { get; set; } = false;
         public bool PendingCustomAddition { get; set; } = false;
         public string FormatType { get; set; } = "Unknown";
         public string? ErrorReason { get; set; } = null;
         public DiagnosticsInfo? ErrorDiagnosisReport { get; set; }
         public int OriginalIndex { get; set; } = -1;
         public ClipDataObject? ClipDataObject { get; set; } = null ;
-        
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
         public object Clone()
         {
@@ -3049,6 +3033,7 @@ namespace EditClipboardContents
                 DataInfoList = new List<string>(this.DataInfoList ?? new List<string>()),
                 HasPendingEdit = false,
                 PendingRemoval = this.PendingRemoval,
+                PendingReOrder = this.PendingReOrder,
                 PendingCustomAddition = this.PendingCustomAddition,
                 FormatType = this.FormatType,
                 ErrorReason = this.ErrorReason,

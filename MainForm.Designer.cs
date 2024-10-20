@@ -42,6 +42,8 @@
             this.menuItem3 = new System.Windows.Forms.MenuItem();
             this.menuEdit_CopyEntireTable = new System.Windows.Forms.MenuItem();
             this.menuEdit_CopySelectedRows = new System.Windows.Forms.MenuItem();
+            this.menuItem2 = new System.Windows.Forms.MenuItem();
+            this.menuEdit_RefreshDataTable = new System.Windows.Forms.MenuItem();
             this.menuItemOptions = new System.Windows.Forms.MenuItem();
             this.menuOptions_ShowLargeHex = new System.Windows.Forms.MenuItem();
             this.menuOptions_IncludeRowHeaders = new System.Windows.Forms.MenuItem();
@@ -63,6 +65,7 @@
             this.richTextBoxContents = new System.Windows.Forms.RichTextBox();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
             this.labelLoading = new System.Windows.Forms.Label();
+            this.buttonResetOrder = new System.Windows.Forms.Button();
             this.buttonIncreaseIndexNumber = new System.Windows.Forms.Button();
             this.buttonDecreaseIndexNumber = new System.Windows.Forms.Button();
             this.labelCustomFormatNameID = new System.Windows.Forms.Label();
@@ -80,8 +83,7 @@
             this.labelPendingChanges = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.labelVersion = new System.Windows.Forms.Label();
-            this.menuItem2 = new System.Windows.Forms.MenuItem();
-            this.menuEdit_RefreshDataTable = new System.Windows.Forms.MenuItem();
+            this.buttonTest = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.contextMenuStrip_dataGridView.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -280,6 +282,19 @@
             this.menuEdit_CopySelectedRows.Text = "Copy Selected Table Rows";
             this.menuEdit_CopySelectedRows.Click += new System.EventHandler(this.menuEdit_CopySelectedRows_Click);
             // 
+            // menuItem2
+            // 
+            this.menuItem2.Index = 6;
+            this.menuItem2.Text = "-";
+            this.menuItem2.Visible = false;
+            // 
+            // menuEdit_RefreshDataTable
+            // 
+            this.menuEdit_RefreshDataTable.Index = 7;
+            this.menuEdit_RefreshDataTable.Text = "Refresh Data Table";
+            this.menuEdit_RefreshDataTable.Visible = false;
+            this.menuEdit_RefreshDataTable.Click += new System.EventHandler(this.menuEdit_RefreshDataTable_Click);
+            // 
             // menuItemOptions
             // 
             this.menuItemOptions.Index = 2;
@@ -470,6 +485,7 @@
             // 
             // splitContainerMain.Panel2
             // 
+            this.splitContainerMain.Panel2.Controls.Add(this.buttonResetOrder);
             this.splitContainerMain.Panel2.Controls.Add(this.buttonIncreaseIndexNumber);
             this.splitContainerMain.Panel2.Controls.Add(this.buttonDecreaseIndexNumber);
             this.splitContainerMain.Panel2.Controls.Add(this.labelCustomFormatNameID);
@@ -502,9 +518,23 @@
     " for why)";
             this.labelLoading.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // buttonResetOrder
+            // 
+            this.buttonResetOrder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonResetOrder.Location = new System.Drawing.Point(1515, 2);
+            this.buttonResetOrder.Name = "buttonResetOrder";
+            this.buttonResetOrder.Size = new System.Drawing.Size(27, 35);
+            this.buttonResetOrder.TabIndex = 17;
+            this.buttonResetOrder.Text = "R";
+            this.toolTip1.SetToolTip(this.buttonResetOrder, "Reset ordering");
+            this.buttonResetOrder.UseCompatibleTextRendering = true;
+            this.buttonResetOrder.UseVisualStyleBackColor = true;
+            this.buttonResetOrder.Click += new System.EventHandler(this.buttonResetOrder_Click);
+            // 
             // buttonIncreaseIndexNumber
             // 
-            this.buttonIncreaseIndexNumber.Location = new System.Drawing.Point(1224, 5);
+            this.buttonIncreaseIndexNumber.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonIncreaseIndexNumber.Location = new System.Drawing.Point(1467, 2);
             this.buttonIncreaseIndexNumber.Name = "buttonIncreaseIndexNumber";
             this.buttonIncreaseIndexNumber.Size = new System.Drawing.Size(42, 35);
             this.buttonIncreaseIndexNumber.TabIndex = 16;
@@ -516,9 +546,10 @@
             // 
             // buttonDecreaseIndexNumber
             // 
-            this.buttonDecreaseIndexNumber.Location = new System.Drawing.Point(1177, 5);
+            this.buttonDecreaseIndexNumber.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonDecreaseIndexNumber.Location = new System.Drawing.Point(1420, 2);
             this.buttonDecreaseIndexNumber.Name = "buttonDecreaseIndexNumber";
-            this.buttonDecreaseIndexNumber.Size = new System.Drawing.Size(41, 35);
+            this.buttonDecreaseIndexNumber.Size = new System.Drawing.Size(42, 35);
             this.buttonDecreaseIndexNumber.TabIndex = 16;
             this.buttonDecreaseIndexNumber.Text = "▲";
             this.toolTip1.SetToolTip(this.buttonDecreaseIndexNumber, "Decrease order index (increase priority)");
@@ -578,7 +609,7 @@
             // 
             this.checkBoxPlainTextEditing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxPlainTextEditing.AutoSize = true;
-            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(-43, 395);
+            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(38, 397);
             this.checkBoxPlainTextEditing.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.checkBoxPlainTextEditing.Name = "checkBoxPlainTextEditing";
             this.checkBoxPlainTextEditing.Size = new System.Drawing.Size(148, 24);
@@ -601,7 +632,7 @@
             "UTF-32 BE",
             "Codepage 1252",
             "System Default"});
-            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(209, 391);
+            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(304, 391);
             this.dropdownHexToTextEncoding.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dropdownHexToTextEncoding.Name = "dropdownHexToTextEncoding";
             this.dropdownHexToTextEncoding.Size = new System.Drawing.Size(217, 28);
@@ -612,7 +643,7 @@
             // 
             this.labelHexToPlaintextEncoding.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelHexToPlaintextEncoding.AutoSize = true;
-            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(122, 397);
+            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(217, 397);
             this.labelHexToPlaintextEncoding.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelHexToPlaintextEncoding.Name = "labelHexToPlaintextEncoding";
             this.labelHexToPlaintextEncoding.Size = new System.Drawing.Size(80, 20);
@@ -651,7 +682,7 @@
             // 
             this.buttonResetEdit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonResetEdit.Enabled = false;
-            this.buttonResetEdit.Location = new System.Drawing.Point(1417, 2);
+            this.buttonResetEdit.Location = new System.Drawing.Point(1272, 2);
             this.buttonResetEdit.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.buttonResetEdit.Name = "buttonResetEdit";
             this.buttonResetEdit.Size = new System.Drawing.Size(124, 35);
@@ -664,7 +695,7 @@
             // 
             this.buttonApplyEdit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonApplyEdit.Enabled = false;
-            this.buttonApplyEdit.Location = new System.Drawing.Point(1296, 2);
+            this.buttonApplyEdit.Location = new System.Drawing.Point(1151, 2);
             this.buttonApplyEdit.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.buttonApplyEdit.Name = "buttonApplyEdit";
             this.buttonApplyEdit.Size = new System.Drawing.Size(112, 35);
@@ -708,11 +739,12 @@
             this.labelPendingChanges.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.labelPendingChanges.AutoSize = true;
             this.labelPendingChanges.BackColor = System.Drawing.Color.Transparent;
+            this.labelPendingChanges.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelPendingChanges.ForeColor = System.Drawing.Color.Firebrick;
-            this.labelPendingChanges.Location = new System.Drawing.Point(989, 18);
+            this.labelPendingChanges.Location = new System.Drawing.Point(931, 16);
             this.labelPendingChanges.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelPendingChanges.Name = "labelPendingChanges";
-            this.labelPendingChanges.Size = new System.Drawing.Size(407, 20);
+            this.labelPendingChanges.Size = new System.Drawing.Size(465, 22);
             this.labelPendingChanges.TabIndex = 12;
             this.labelPendingChanges.Text = "*Pending Changes - Click Save Icon to apply to clipboard";
             this.labelPendingChanges.Visible = false;
@@ -729,22 +761,23 @@
             this.labelVersion.TabIndex = 13;
             this.labelVersion.Text = "Version:";
             // 
-            // menuItem2
+            // buttonTest
             // 
-            this.menuItem2.Index = 6;
-            this.menuItem2.Text = "-";
-            // 
-            // menuEdit_RefreshDataTable
-            // 
-            this.menuEdit_RefreshDataTable.Index = 7;
-            this.menuEdit_RefreshDataTable.Text = "Refresh Data Table";
-            this.menuEdit_RefreshDataTable.Click += new System.EventHandler(this.menuEdit_RefreshDataTable_Click);
+            this.buttonTest.Location = new System.Drawing.Point(817, 12);
+            this.buttonTest.Name = "buttonTest";
+            this.buttonTest.Size = new System.Drawing.Size(82, 31);
+            this.buttonTest.TabIndex = 14;
+            this.buttonTest.Text = "Test";
+            this.buttonTest.UseVisualStyleBackColor = true;
+            this.buttonTest.Visible = false;
+            this.buttonTest.Click += new System.EventHandler(this.buttonTest_Click);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1573, 968);
+            this.Controls.Add(this.buttonTest);
             this.Controls.Add(this.labelVersion);
             this.Controls.Add(this.splitContainerMain);
             this.Controls.Add(this.labelPendingChanges);
@@ -840,5 +873,7 @@
         private System.Windows.Forms.Button buttonIncreaseIndexNumber;
         private System.Windows.Forms.MenuItem menuItem2;
         private System.Windows.Forms.MenuItem menuEdit_RefreshDataTable;
+        private System.Windows.Forms.Button buttonTest;
+        private System.Windows.Forms.Button buttonResetOrder;
     }
 }

@@ -129,24 +129,39 @@ namespace EditClipboardContents
                 // If the index has changed, update selection
                 if (newIndex != currentIndex)
                 {
-                    dataGridViewClipboard.ClearSelection();
-                    dataGridViewClipboard.Rows[newIndex].Selected = true;
-                    dataGridViewClipboard.CurrentCell = dataGridViewClipboard.Rows[newIndex].Cells[0];
-
-                    // Scroll to the new index, but only if it's not already visible
-                    if (newIndex < dataGridViewClipboard.FirstDisplayedScrollingRowIndex ||
-                        newIndex >= dataGridViewClipboard.FirstDisplayedScrollingRowIndex + dataGridViewClipboard.DisplayedRowCount(false))
-                    {
-                        dataGridViewClipboard.FirstDisplayedScrollingRowIndex = newIndex;
-                    }
+                    SelectRowByRowIndex(newIndex);
                 }
-
-                ChangeCellFocus(newIndex);
-
             }
 
             // Mark as handled because the event might get fired multiple times per scroll
             ((HandledMouseEventArgs)e).Handled = true;
+        }
+
+        private void SelectRowByRowIndex(int newIndex, int focusedCellIndex = -1)
+        {
+            if (newIndex >= dataGridViewClipboard.Rows.Count)
+            {
+                return;
+            }
+
+            // Use the currently focused cell index if none is provided, or default to zero if there is no focused cell
+            if (focusedCellIndex == -1)
+            {
+                focusedCellIndex = dataGridViewClipboard.CurrentCell?.ColumnIndex ?? 0;
+            }
+
+            dataGridViewClipboard.ClearSelection();
+            dataGridViewClipboard.Rows[newIndex].Selected = true;
+            dataGridViewClipboard.CurrentCell = dataGridViewClipboard.Rows[newIndex].Cells[focusedCellIndex];
+
+            // Scroll to the new index, but only if it's not already visible
+            if (newIndex < dataGridViewClipboard.FirstDisplayedScrollingRowIndex
+                || newIndex >= dataGridViewClipboard.FirstDisplayedScrollingRowIndex + dataGridViewClipboard.DisplayedRowCount(false))
+            {
+                dataGridViewClipboard.FirstDisplayedScrollingRowIndex = newIndex;
+            }
+
+            ChangeCellFocusAndDisplayCorrespondingData(newIndex, focusedCellIndex);
         }
 
         private void menuHelp_About_Click(object sender, EventArgs e)
@@ -231,12 +246,12 @@ namespace EditClipboardContents
                     dataGridViewClipboard.ClearSelection();
                     dataGridViewClipboard.Rows[e.RowIndex].Cells[e.ColumnIndex].Selected = true;
                     // Change the cell focus
-                    ChangeCellFocus(rowIndex: e.RowIndex, cellIndex: e.ColumnIndex);
+                    ChangeCellFocusAndDisplayCorrespondingData(rowIndex: e.RowIndex, cellIndex: e.ColumnIndex);
                 }
                 // If only one row is selected, change the cell focus
                 else if (isClickedRowSelected && dataGridViewClipboard.SelectedRows.Count == 1)
                 {
-                    ChangeCellFocus(rowIndex: e.RowIndex, cellIndex: e.ColumnIndex);
+                    ChangeCellFocusAndDisplayCorrespondingData(rowIndex: e.RowIndex, cellIndex: e.ColumnIndex);
                 }
             }
         }
@@ -385,11 +400,13 @@ namespace EditClipboardContents
             // Get the original item's data and apply it to the edited item
             UpdateEditedClipboardItemRawData(guid, originalData, setPendingEdit: false, setPendingRemoval: false);
 
+            ResetOrderIndexes();
+
             // Check if any edited items still have pending changes or are pending removal, and update the pending changes label if necessary
-            anyPendingChanges = editedClipboardItems.Any(i => i.HasPendingEdit || i.PendingRemoval);
+            UpdateAnyPendingChangesFlag();
 
             // Update the view. Edited version should be the same as the original version now
-            DisplayClipboardData(GetSelectedClipboardItemObject(returnEditedItemVersion: true));
+            DisplayClipboardDataInTextBoxes(GetSelectedClipboardItemObject(returnEditedItemVersion: true));
             UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
@@ -417,7 +434,7 @@ namespace EditClipboardContents
             // If it's a custom format, disable the buttons and always go to the edit view
             if (GetSelectedDataFromDataGridView(colName.HandleType) == "Custom")
             {
-                ChangeCellFocus(dataGridViewClipboard.SelectedRows[0].Index);
+                ChangeCellFocusAndDisplayCorrespondingData(dataGridViewClipboard.SelectedRows[0].Index);
                 setButtonStatus(enabledChoice: false);
                 dropdownContentsViewMode.SelectedIndex = 2; // Hex (Editable)
                 checkBoxPlainTextEditing.Checked = true;
@@ -425,7 +442,7 @@ namespace EditClipboardContents
             }
 
             // Assume focus of the first selected row if multiple are selected
-            ChangeCellFocus(dataGridViewClipboard.SelectedRows[0].Index);
+            ChangeCellFocusAndDisplayCorrespondingData(dataGridViewClipboard.SelectedRows[0].Index);
 
             // Enable menu buttons that require a selectedItem
             setButtonStatus(enabledChoice: true);
@@ -485,7 +502,7 @@ namespace EditClipboardContents
                 return;
             }
             // Get the struct / object info that would be displayed in object view of rich text box and copy it to clipboard
-            string data = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatName(itemToCopy.FormatId), fullItem: itemToCopy);
+            string data = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatNameFromId(itemToCopy.FormatId), fullItem: itemToCopy);
             Clipboard.SetText(data);
         }
 
@@ -622,7 +639,7 @@ namespace EditClipboardContents
             if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
             {
                 // Get the hex information
-                string data = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatName(itemToExport.FormatId), fullItem: itemToExport);
+                string data = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatNameFromId(itemToExport.FormatId), fullItem: itemToExport);
                 // TO DO - Export details of each object in the struct
 
                 // Save the data to a file
@@ -656,12 +673,14 @@ namespace EditClipboardContents
             anyPendingChanges = false;
 
             // If the new clipboard data contains the same format as the previously selected item, re-select it
+            // Need to go by format ID because the object and unique IDs will be new after refreshing the items
             if (selectedFormatId > 0 && clipboardItems != null && clipboardItems.Any(ci => ci.FormatId == selectedFormatId))
             {
                 // If format id is still in the new clipboard, select it
                 int rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells["FormatId"].Value.ToString() == selectedFormatId.ToString());
                 if (rowIndex >= 0)
                 {
+                    dataGridViewClipboard.ClearSelection();
                     dataGridViewClipboard.Rows[rowIndex].Selected = true;
                     dataGridViewClipboard.FirstDisplayedScrollingRowIndex = rowIndex;
                 }
@@ -742,12 +761,12 @@ namespace EditClipboardContents
                 return;
             }
 
-            DisplayClipboardData(item);
+            DisplayClipboardDataInTextBoxes(item);
         }
 
         private void dataGridViewClipboard_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            ChangeCellFocus(e.RowIndex);
+            ChangeCellFocusAndDisplayCorrespondingData(e.RowIndex);
             UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
@@ -1072,8 +1091,7 @@ namespace EditClipboardContents
                 UpdateEditedClipboardItemRawData(uniqueID, fileData);
                 anyPendingChanges = true;
 
-                DisplayClipboardData(item);
-
+                DisplayClipboardDataInTextBoxes(item);
                 UpdateEditControlsVisibility_AndPendingGridAppearance();
             }
         }
@@ -1087,8 +1105,8 @@ namespace EditClipboardContents
 
             int currentIndex = item.OriginalIndex;
 
-            // Check if the index is already at the top or bottom
-            if (currentIndex == 0 || currentIndex == dataGridViewClipboard.Rows.Count - 1)
+            // Check if the index is already the highest index
+            if (currentIndex == dataGridViewClipboard.Rows.Count - 1)
                 return;
 
             // Get the item above the current one by searching through editedClipboardItems
@@ -1098,18 +1116,12 @@ namespace EditClipboardContents
             if (itemToSwap == null)
                 return;
 
-            // Swap the indexes of the two items
-            itemToSwap.OriginalIndex = currentIndex;
-            item.OriginalIndex = indexToSwap;
-
             UpdateEditedClipboardItemIndex(item.UniqueID, indexToSwap);
             UpdateEditedClipboardItemIndex(itemToSwap.UniqueID, currentIndex);
 
-            //DisplayClipboardData(item);
+            RefreshDataGridViewContents();
+            DisplayClipboardDataInTextBoxes(item);
             //UpdateEditControlsVisibility_AndPendingGridAppearance();
-
-            // Refresh the grid view
-            dataGridViewClipboard.Refresh();
         }
 
         private void buttonDecreaseIndexNumber_Click(object sender, EventArgs e)
@@ -1117,11 +1129,27 @@ namespace EditClipboardContents
             ClipboardItem? item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
 
             if (item == null)
-            {
                 return;
-            }
 
             int currentIndex = item.OriginalIndex;
+
+            // Check if the index is already the lowest
+            if (currentIndex == 0)
+                return;
+
+            // Get the item above the current one by searching through editedClipboardItems
+            ClipboardItem? itemToSwap = editedClipboardItems.FirstOrDefault(i => i.OriginalIndex == currentIndex - 1);
+            int indexToSwap = itemToSwap.OriginalIndex;
+
+            if (itemToSwap == null)
+                return;
+
+            UpdateEditedClipboardItemIndex(item.UniqueID, indexToSwap);
+            UpdateEditedClipboardItemIndex(itemToSwap.UniqueID, currentIndex);
+
+            RefreshDataGridViewContents();
+            DisplayClipboardDataInTextBoxes(item);
+            //UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
         private void menuEdit_RefreshDataTable_Click(object sender, EventArgs e)
@@ -1131,12 +1159,39 @@ namespace EditClipboardContents
 
         private void EditedClipboardItems_ListChanged(object sender, ListChangedEventArgs e)
         {
-
+            if (editedClipboardItems != null && editedClipboardItems.Count > 0)
+            {
+                // Resort the editedClipboardItems list if the list has been changed
+                RefreshDataGridViewContents();
+            }
         }
 
-        private void DataGridViewDisplayItems_ListChanged(object sender, ListChangedEventArgs e)
+        private void buttonResetOrder_Click(object sender, EventArgs e)
         {
+            ResetOrderIndexes();
+            RefreshDataGridViewContents();
+        }
 
+
+        // ------------------------------------------------------------------------------------------------------------------------------------
+
+        // Using for testing random things during development via a button
+        private void buttonTest_Click(object sender, EventArgs e)
+        {
+            //Utils.SortSortableBindingList(editedClipboardItems, "FormatId", ListSortDirection.Ascending);
+            // Add test item to editedClipboardItems
+            ClipboardItem testItem = new ClipboardItem()
+            {
+                FormatId = 0,
+                FormatName = "Test",
+                RawData = new byte[0],
+                ClipDataObject = null,
+                DataInfoList = [MyStrings.CustomPendingData],
+                OriginalIndex = 0,
+                FormatType = "Custom",
+                PendingCustomAddition = true,
+            };
+            editedClipboardItems.Add(testItem);
         }
 
     } // ----------------------------- End of MainForm partial class -----------------------------
