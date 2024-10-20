@@ -3071,6 +3071,28 @@ namespace EditClipboardContents
             UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
+        static void ClearClipboard()
+        {
+            if (NativeMethods.OpenClipboard(IntPtr.Zero))
+            {
+                try
+                {
+                    if (!NativeMethods.EmptyClipboard())
+                    {
+                        MessageBox.Show("Failed to empty the clipboard.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error while copying clipboard: " + ex);
+                }
+                finally
+                {
+                    NativeMethods.CloseClipboard();
+                }
+            }
+        }
+
 
     } // ---------------------------------------------------------------------------------------------------
     // --------------------------------------- End of MainForm Class ---------------------------------------

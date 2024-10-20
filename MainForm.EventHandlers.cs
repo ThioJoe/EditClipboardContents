@@ -1284,6 +1284,15 @@ namespace EditClipboardContents
             }
         }
 
+        private void menuEdit_ClearClipboard_Click(object sender, EventArgs e)
+        {
+            ClearClipboard();
+
+            RefreshClipboardItems();
+            UpdateAnyPendingChangesFlag();
+            UpdateEditControlsVisibility_AndPendingGridAppearance();
+        }
+
 
     } // ----------------------------- End of MainForm partial class -----------------------------
 }
