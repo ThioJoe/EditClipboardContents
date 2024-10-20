@@ -1178,20 +1178,9 @@ namespace EditClipboardContents
         // Using for testing random things during development via a button
         private void buttonTest_Click(object sender, EventArgs e)
         {
-            //Utils.SortSortableBindingList(editedClipboardItems, "FormatId", ListSortDirection.Ascending);
-            // Add test item to editedClipboardItems
-            ClipboardItem testItem = new ClipboardItem()
-            {
-                FormatId = 0,
-                FormatName = "Test",
-                RawData = new byte[0],
-                ClipDataObject = null,
-                DataInfoList = [MyStrings.CustomPendingData],
-                OriginalIndex = 0,
-                FormatType = "Custom",
-                PendingCustomAddition = true,
-            };
-            editedClipboardItems.Add(testItem);
+            // Local function to use nameof a specified ClipboardItem property as string
+            string GetPropertyName<T>(T item, string propertyName) => item.GetType().GetProperty(propertyName)?.Name ?? "";
+            Console.WriteLine("");
         }
 
     } // ----------------------------- End of MainForm partial class -----------------------------

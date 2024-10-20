@@ -118,10 +118,14 @@ namespace EditClipboardContents
             { "text", "txt" },
             { "gif", "gif" },
             { "image/svg+xml", "svg" },
+            { "image/png", "png" },
             { "cf_dif", "dif" },
             { "xml spreadsheet", "xml" },
-            { "text/html", "html" }
-
+            { "text/html", "html" },
+            { "html format", "html" },
+            { "CF_DIBV5", "bmp" },
+            { "CF_DIB", "bmp" },
+            { "CF_BITMAP", "bmp" }
         };
 
         public static object? CheckIfProblematicValue(PropertyInfo property, object obj)

@@ -103,6 +103,7 @@ namespace EditClipboardContents
 
             #if DEBUG
             buttonTest.Visible = true;
+            menuEdit_RefreshDataTable.Visible = true;
             #endif
 
             // Set init only GUI state variables
@@ -166,13 +167,16 @@ namespace EditClipboardContents
 
         private void InitializeDataGridView()
         {
+
+
             dataGridViewClipboard.AutoGenerateColumns = false;
-            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "OriginalIndex", Name = colName.Index, HeaderText = "" });
-            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "UniqueID", Name = colName.UniqueID, HeaderText = "", Visible = false });
-            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "FormatName", Name = colName.FormatName, HeaderText = "Format Name" });
-            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "FormatId", Name = colName.FormatId, HeaderText = "Format ID" });
-            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "FormatType", Name = colName.HandleType, HeaderText = "Format Type" });
-            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "DataSize", Name = colName.DataSize, HeaderText = "Data Size" });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.OriginalIndex), Name = colName.Index, HeaderText = "" });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.UniqueID), Name = colName.UniqueID, HeaderText = "", Visible = false });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { Name = colName.Known, HeaderText = "💾" });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.FormatName), Name = colName.FormatName, HeaderText = "Format Name" });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.FormatId), Name = colName.FormatId, HeaderText = "Format ID" });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.FormatType), Name = colName.HandleType, HeaderText = "Format Type" });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.DataSize), Name = colName.DataSize, HeaderText = "Data Size" });
             //dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "DataInfoLinesString", Name = colName.DataInfo, HeaderText = "Data Info" });
             dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { Name = colName.DataInfo, HeaderText = "Data Info" });
             dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { Name = colName.TextPreview, HeaderText = "Text Preview" });
@@ -190,19 +194,19 @@ namespace EditClipboardContents
             //dataGridViewClipboard.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewClipboard.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
 
-            // Set Resizable
-            dataGridViewClipboard.Columns["FormatName"].Resizable = DataGridViewTriState.True;
-            dataGridViewClipboard.Columns["TextPreview"].Resizable = DataGridViewTriState.True;
-            dataGridViewClipboard.Columns["DataInfo"].Resizable = DataGridViewTriState.True;
-
             // Add padding to the text preview column
             // Get the current padding for text preview column
             Padding textPreviewPadding = dataGridViewClipboard.Columns["TextPreview"].DefaultCellStyle.Padding;
             textPreviewPadding.Left = 3;
             dataGridViewClipboard.Columns["TextPreview"].DefaultCellStyle.Padding = textPreviewPadding;
-            Padding formatNamePadding = dataGridViewClipboard.Columns["TextPreview"].DefaultCellStyle.Padding;
+            Padding formatNamePadding = dataGridViewClipboard.Columns["FormatName"].DefaultCellStyle.Padding;
             formatNamePadding.Left = 3;
             dataGridViewClipboard.Columns["FormatName"].DefaultCellStyle.Padding = formatNamePadding;
+
+            //// Add a tooltip to display on the Known column
+            //ToolTip toolTipKnown = new ToolTip();
+            //toolTipKnown.SetToolTip(dataGridViewClipboard.Columns[colName.Known], "This format can be saved as a known binary file.");
+            dataGridViewClipboard.Columns[colName.Known].ToolTipText = MyStrings.KnownFileTooltip;
 
             // Hide the row headers (the leftmost column)
             dataGridViewClipboard.RowHeadersVisible = false;
@@ -210,6 +214,8 @@ namespace EditClipboardContents
             // Set miscellaensous properties for specific columns
             dataGridViewClipboard.Columns["Index"].DefaultCellStyle.ForeColor = Color.Gray;
             dataGridViewClipboard.Columns["Index"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewClipboard.Columns[colName.Known].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewClipboard.Columns[colName.Known].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
             // Add event handler for scroll wheel
             dataGridViewClipboard.MouseWheel += new MouseEventHandler(dataGridViewClipboard_MouseWheel);
@@ -239,47 +245,55 @@ namespace EditClipboardContents
                 SelectRowByUniqueID(selectedItemGUID.Value);
             }
 
-            // Update the data where necessary
+            // Update cell values for columns that don't draw directly from the data source
             foreach (ClipboardItem formatItem in editedClipboardItems)
             {
                 List<string> dataInfo = formatItem.DataInfoList;
                 Guid uniqueID = formatItem.UniqueID;
 
-                // Preprocess certain info
                 string textPreview = TryParseText(formatItem.RawData, maxLength: 200, prefixEncodingType: false);
 
-                // The first item will have selected important info, to ensure it's not too long. The rest will show in data box in object/struct view mode
+                // The first item in DataInfo will have selected important info, to ensure it's not too long. The rest will show in data box in object/struct view mode
                 string dataInfoString;
                 if (dataInfo.Count <= 0 || string.IsNullOrEmpty(dataInfo[0]))
                     dataInfoString = MyStrings.DataNotApplicable;
                 else
                     dataInfoString = dataInfo[0];
 
-                // Manually handle certain known formats
+                // Manually set text preview for certain formats
                 if (formatItem.FormatName == "CF_LOCALE")
                     textPreview = "";
 
-                DataGridViewRow? matchingRow = dataGridViewClipboard.Rows.Cast<DataGridViewRow?>().FirstOrDefault(r => r?.Cells[colName.UniqueID].Value.ToString() == uniqueID.ToString());
+                // "Known" Column - Display icon if the format can be exported as known binary file
+                string knownIcon = "";
+                string knownFileTooltip = "";
+                if (FormatInfoHardcoded.KnownBinaryExtensionAssociations.ContainsKey(formatItem.FormatName))
+                {
+                    knownIcon = "✔️";
+                    knownFileTooltip = MyStrings.KnownFileTooltip;
+                }
 
+                // --- Actually sets the values in the grid ---
+                DataGridViewRow? matchingRow = dataGridViewClipboard.Rows.Cast<DataGridViewRow?>().FirstOrDefault(r => r?.Cells[colName.UniqueID].Value.ToString() == uniqueID.ToString());
                 if (matchingRow != null)
                 {
                     int rowIndex = matchingRow.Index;
                     dataGridViewClipboard.Rows[rowIndex].Cells[colName.TextPreview].Value = textPreview;
                     dataGridViewClipboard.Rows[rowIndex].Cells[colName.DataInfo].Value = dataInfoString;
+                    dataGridViewClipboard.Rows[rowIndex].Cells[colName.Known].Value = knownIcon;
+                    dataGridViewClipboard.Rows[rowIndex].Cells[colName.Known].ToolTipText = knownFileTooltip;
                 }
+                // ---------------------------------------------
             }
 
             // Set default forecolor of the index column to gray
             dataGridViewClipboard.Columns[colName.Index].DefaultCellStyle.ForeColor = Color.Gray;
 
-            // Temporarily set AutoSizeMode to calculate proper widths
+            // Set sizes of columns
             foreach (DataGridViewColumn column in dataGridViewClipboard.Columns)
             {
                 // Manually set width to minimal number to be resized auto later. Apparently autosize will only make columns larger, not smaller
                 column.Width = CompensateDPI(5);
-
-                // Set index column text color to gray
-                //dataGridViewClipboard.Rows[dataGridViewClipboard.Rows.Count - 1].Cells[colName.Index].Style.ForeColor = Color.Gray; // Throws errors if rows is 0 because of the -1
 
                 // Set autosize most for most columns. Next we'll disable it again so they can be resized but start at a good size
                 if (column.Name != colName.TextPreview)
@@ -297,6 +311,8 @@ namespace EditClipboardContents
 
                     if (column.Name == colName.FormatName)
                         column.Width = originalWidth + 20; // Add some padding
+                    else if (column.Name == colName.Known)
+                        column.Width = originalWidth / 2; // Make it a bit smaller
                     else
                         column.Width = originalWidth + 0; // For some reason this is necessary after setting resizable and autosize modes
                 }
@@ -1850,7 +1866,7 @@ namespace EditClipboardContents
 
             // --------------- CONDITIONAL CELL COLORING AND STYLING ---------------
 
-            // Color based on fixed values. Only for non-custom formats, because that will be handled later using the editedClipboardItems list
+            // Individual cell appearance based on fixed values. Only for non-custom formats, because that will be handled later using the editedClipboardItems list
             foreach (DataGridViewRow row in dataGridViewClipboard.Rows)
             {
                 foreach (DataGridViewCell cell in row.Cells)
@@ -1895,7 +1911,7 @@ namespace EditClipboardContents
                 }
             }
 
-            // For any items in editedClipboardItems that has pending changes, set the default row color
+            // Row color and appearance for pending operations - Such as: Strikethrough for removal, Green for custom addition, Red for pending edit
             foreach (var editedItem in editedClipboardItems)
             {
                 int rowIndex;
@@ -2831,6 +2847,7 @@ namespace EditClipboardContents
     {
         public const string UniqueID = "UniqueID";
         public const string Index = "Index";
+        public const string Known = "Known";
         public const string FormatName = "FormatName";
         public const string FormatId = "FormatId";
         public const string HandleType = "HandleType";
@@ -2847,6 +2864,7 @@ namespace EditClipboardContents
         public const string DefaultCustomFormatType = "Custom";
         public const string DataNotApplicable = "N/A";
         public const string DataNull = "[null]";
+        public const string KnownFileTooltip = "Can be properly exported as known file type.";
     }
 
     public static class MyVals
