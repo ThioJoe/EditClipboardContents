@@ -1802,6 +1802,7 @@ namespace EditClipboardContents
             // Row height doesn't include cell borders so add 1 pixel each to the height
             int newSize = dgv.Rows.GetRowsHeight(DataGridViewElementStates.Visible) + dgv.ColumnHeadersHeight + dgv.Rows.GetRowCount(DataGridViewElementStates.Visible);
 
+            int minSize = CompensateDPI(100);
             int idealMaxSize = (int)Math.Round((decimal)splitContainerMain.Height * (decimal)0.6);
             int trueMaxSize = splitContainerMain.Height - CompensateDPI(75);
             newSize += CompensateDPI(2); // Add a little extra space
@@ -1816,6 +1817,11 @@ namespace EditClipboardContents
                 {
                     newSize = trueMaxSize;
                 }
+            }
+
+            if (newSize < minSize)
+            {
+                newSize = minSize;
             }
 
             splitContainerMain.SplitterDistance = newSize;
