@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Numerics;
 
 // Nullable reference types
 #nullable enable
@@ -313,25 +314,38 @@ namespace EditClipboardContents
         {
             Type type = integerValue.GetType();
 
-            if (type == typeof(byte) || type == typeof(sbyte))
-                return $"0x{Convert.ToByte(integerValue):X2}";
-
-            if (type == typeof(short) || type == typeof(ushort))
-                return $"0x{Convert.ToUInt16(integerValue):X4}";
-
-            if (type == typeof(int) || type == typeof(uint))
-                return $"0x{Convert.ToUInt32(integerValue):X8}";
-
-            if (type == typeof(long) || type == typeof(ulong))
-                return $"0x{Convert.ToUInt64(integerValue):X16}";
-
-            if (type == typeof(IntPtr) || type == typeof(UIntPtr))
+            if (integerValue is UIntPtr uintPtr)
+            {
+                if (UIntPtr.Size == 4)
+                    return $"0x{uintPtr.ToUInt32():X8}";
+                if (UIntPtr.Size == 8)
+                    return $"0x{uintPtr.ToUInt64():X16}";
+            }
+            if (integerValue is IntPtr intPtr)
             {
                 if (IntPtr.Size == 4)
-                    return $"0x{Convert.ToUInt32(integerValue):X8}";
+                    return $"0x{(uint)intPtr.ToInt32():X8}";
                 if (IntPtr.Size == 8)
-                    return $"0x{Convert.ToUInt64(integerValue):X16}";
+                    return $"0x{(ulong)intPtr.ToInt64():X16}";
             }
+
+            // Check if the integer is not zero and return it as a hex string
+            if (type == typeof(byte) && (byte)integerValue != 0)
+                return $"0x{(byte)integerValue:X2}";
+            if (type == typeof(sbyte) && (sbyte)integerValue != 0)
+                return $"0x{((byte)((sbyte)integerValue)):X2}";
+            if (type == typeof(ushort) && (ushort)integerValue != 0)
+                return $"0x{(ushort)integerValue:X4}";
+            if (type == typeof(short) && (short)integerValue != 0)
+                return $"0x{(ushort)(short)integerValue:X4}";
+            if (type == typeof(uint) && (uint)integerValue != 0)
+                return $"0x{(uint)integerValue:X8}";
+            if (type == typeof(int) && (int)integerValue != 0)
+                return $"0x{(uint)(int)integerValue:X8}";
+            if (type == typeof(ulong) && (ulong)integerValue != 0)
+                return $"0x{(ulong)integerValue:X16}";
+            if (type == typeof(long) && (long)integerValue != 0)
+                return $"0x{(ulong)(long)integerValue:X16}";
 
             return "";
         }

@@ -60,30 +60,30 @@ namespace EditClipboardContents
             string indent = "   ";
             string originalIndent = indent; // Save the original indent for later, otherwise it will keep doubling in recursive functions
 
-            StringBuilder result = new StringBuilder();
-            result.AppendLine($"Format: {formatName}");
+            StringBuilder dataInfoString = new StringBuilder();
+            dataInfoString.AppendLine($"Format: {formatName}");
 
             if (FormatInfoHardcoded.FormatDescriptions.TryGetValue(formatName, out string formatDescription))
             {
-                result.AppendLine($"Description: {formatDescription}");
+                dataInfoString.AppendLine($"Description: {formatDescription}");
                 anyFormatInfoAvailable = true;
             }
 
             // Add URL Link if it exists by dictionary lookup
             if (FormatInfoHardcoded.FormatDocsLinks.TryGetValue(formatName, out string docURL))
             {
-                result.AppendLine($"Details: " + FormatInfoHardcoded.FormatDocsLinks[formatName]);
+                dataInfoString.AppendLine($"Details: " + FormatInfoHardcoded.FormatDocsLinks[formatName]);
                 anyFormatInfoAvailable = true;
             }
 
             if (fullItem?.DataInfoList.Count > 0 && !string.IsNullOrEmpty(fullItem.DataInfoList[0]))
             {
-                
-                result.AppendLine($"\nData Info:");
+
+                dataInfoString.AppendLine($"\nData Info:");
                 // Add each selectedItem in DataInfoList to the result indented
                 foreach (string dataInfoItem in fullItem.DataInfoList)
                 {
-                    result.AppendLine($"{indent}{dataInfoItem}");
+                    dataInfoString.AppendLine($"{indent}{dataInfoItem}");
                 }
                 anyFormatInfoAvailable = true;
             }
@@ -99,24 +99,34 @@ namespace EditClipboardContents
 
             // ----------------- If there is a full item and object data -----------------
 
+            StringBuilder structInfoString = new StringBuilder();
+
             if (fullItem?.ClipDataObject != null)
             {
                 // Documentation links for the struct and its members
                 Dictionary<string, string> structDocs = FormatInfoHardcoded.GetDocumentationUrls_ForEntireObject(fullItem.ClipDataObject.ObjectData);
                 if (structDocs.Count > 0)
                 {
-                    result.AppendLine($"\nStruct Documentation:");
+                    dataInfoString.AppendLine($"\nStruct Documentation:");
                     foreach (var doc in structDocs)
                     {
-                        result.AppendLine($"{indent}{doc.Key}: {doc.Value}");
+                        dataInfoString.AppendLine($"{indent}{doc.Key}: {doc.Value}");
                     }
                 }
 
-                result.AppendLine($"\nStruct Info:");
+                structInfoString.AppendLine($"\nStruct Info:");
                 RecursivePrintClipDataObject(fullItem.ClipDataObject.ObjectData, indent);
             }
 
-            return result.ToString();
+            // Final result
+            StringBuilder alignedStructInfo = TabAligner(structInfoString);
+
+            // Add together datainfostring and alignedstructinfo
+            StringBuilder finalResult = new StringBuilder();
+            finalResult.AppendLine(dataInfoString.ToString());
+            finalResult.AppendLine(alignedStructInfo.ToString());
+
+            return finalResult.ToString();
 
 
             // -------------------- LOCAL FUNCTIONS --------------------
@@ -125,12 +135,12 @@ namespace EditClipboardContents
             {
                 if (obj == null)
                 {
-                    result.AppendLine($"{indent}Max depth reached or object is null");
+                    structInfoString.AppendLine($"{indent}Max depth reached or object is null");
                     return;
                 }
                 if (depth > 100)
                 {
-                    result.AppendLine($"{indent}Max depth of 100 reached");
+                    structInfoString.AppendLine($"{indent}Max depth of 100 reached");
                     return;
                 }
 
@@ -142,7 +152,7 @@ namespace EditClipboardContents
                     // Print replacement data if it is given
                     if (replacements.TryGetValue(propertyName, out string replacementValue))
                     {
-                        result.AppendLine($"{indent}{propertyName}: {replacementValue}");
+                        structInfoString.AppendLine($"{indent}{propertyName}: {replacementValue}");
                         continue;
                     }
 
@@ -159,7 +169,7 @@ namespace EditClipboardContents
                     }
                     else if (propertyType.IsEnum)
                     {
-                        result.AppendLine($"{indent}{propertyName}: {obj.GetType().GetProperty(propertyName).GetValue(obj)}");
+                        structInfoString.AppendLine($"{indent}{propertyName}: {obj.GetType().GetProperty(propertyName).GetValue(obj)}");
                     }
                     else if (propertyType.IsArray)
                     {
@@ -176,7 +186,7 @@ namespace EditClipboardContents
                         // For non-collection types, we might still want to get the value
                         var value = obj.GetType().GetProperty(propertyName).GetValue(obj);
                         string valueToDisplay = GetValueString(value);
-                        result.AppendLine($"{indent}{propertyName}: {valueToDisplay}");
+                        structInfoString.AppendLine($"{indent}{propertyName}: {valueToDisplay}");
                     }
                 }
             }
@@ -191,7 +201,7 @@ namespace EditClipboardContents
                     {
                         if (item is IClipboardFormat formatObject)
                         {
-                            result.AppendLine($"{indent}{index}:");
+                            structInfoString.AppendLine($"{indent}{index}:");
                             RecursivePrintClipDataObject(formatObject, indent + originalIndent, depth: depth + 1);
                         }
                         else if(item is IEnumerable nestedEnumerable)
@@ -204,9 +214,9 @@ namespace EditClipboardContents
                         }
                         else
                         {
-                            result.AppendLine($"{indent}{item}");
+                            structInfoString.AppendLine($"{indent}{item}");
                         }
-                        result.AppendLine("");
+                        structInfoString.AppendLine("");
                         index++;
                     }
                 }
@@ -220,7 +230,7 @@ namespace EditClipboardContents
                     object item = array.GetValue(i);
                     if (item is IClipboardFormat formatObject)
                     {
-                        result.AppendLine($"{indent}{i}:");
+                        structInfoString.AppendLine($"{indent}{i}:");
                         RecursivePrintClipDataObject(formatObject, indent + originalIndent, depth: depth + 1);
                     }
                     else if (item is IEnumerable nestedEnumerable)
@@ -233,9 +243,9 @@ namespace EditClipboardContents
                     }
                     else
                     {
-                        result.AppendLine($"{indent}{item}");
+                        structInfoString.AppendLine($"{indent}{item}");
                     }
-                    result.AppendLine("");
+                    structInfoString.AppendLine("");
                 }
             }
 
@@ -290,16 +300,161 @@ namespace EditClipboardContents
             return finalString;
         }
 
-        // Attemps to add additional tabs where necessary so items at the same level are aligned
+        //// Attemps to add additional tabs where necessary so items at the same level are aligned
+        //private static StringBuilder TabAligner(StringBuilder inputString)
+        //{
+        //    // For the inputted string builder, we can get the length of the text between the starting whitespace and the first tab which comes before the hex value we want to align
+        //    // We'll do this for each line until the number of preceding spaces changes, then we know we're at a new level
+        //    // When we have all the items in a group, we'll find the longest length and add tabs to the other lines such that the hex values all aign with that longest value's tabbed hex value
+        //}
+
         private static StringBuilder TabAligner(StringBuilder inputString)
         {
-            // For the inputted string builder, we can get the length of the text between the starting whitespace and the first tab which comes before the hex value we want to align
-            // We'll do this for each line until the number of preceding spaces changes, then we know we're at a new level
-            // When we have all the items in a group, we'll find the longest length and add tabs to the other lines such that the hex values all aign with that longest value's tabbed hex value
+            // Replace tabs with single spaces and trim endspace
+            string input = inputString.ToString().Replace("\t", " ");
+            input = input.TrimEnd();
 
-           
+            // Split input into lines
+            var lines = input.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
 
+            // List to store groups
+            var groups = new List<Group>();
+
+            int? currentIndentLevel = null;
+            Group currentGroup = null;
+
+            foreach (var line in lines)
+            {
+                int leadingSpacesCount = line.TakeWhile(char.IsWhiteSpace).Count();
+                string leadingSpaces = line.Substring(0, leadingSpacesCount);
+
+                // Check if indentation level changes
+                if (currentIndentLevel != leadingSpacesCount)
+                {
+                    currentIndentLevel = leadingSpacesCount;
+                    currentGroup = new Group
+                    {
+                        Lines = new List<string>(),
+                        IndentLevel = leadingSpacesCount,
+                        MaxPropertyNameLength = 0,
+                        MaxDecimalValueLength = 0
+                    };
+                    groups.Add(currentGroup);
+                }
+
+                currentGroup.Lines.Add(line);
+            }
+
+            // Now, for each group, find max lengths
+            foreach (var group in groups)
+            {
+                foreach (var line in group.Lines)
+                {
+                    string trimmedLine = line.TrimStart();
+
+                    // Skip empty lines
+                    if (string.IsNullOrWhiteSpace(trimmedLine))
+                        continue;
+
+                    int colonIndex = trimmedLine.IndexOf(':');
+
+                    if (colonIndex == -1)
+                    {
+                        // Line doesn't have a colon, skip it
+                        continue;
+                    }
+
+                    // Parse property name and rest of line
+                    string propertyName = trimmedLine.Substring(0, colonIndex);
+                    string rest = trimmedLine.Substring(colonIndex + 1).Trim();
+
+                    // For value, split on '(' to separate decimal value and hex value
+                    string decimalValue = rest;
+                    int parenIndex = rest.IndexOf('(');
+                    // If there's no hex value, we don't care about the length of the decimal value, so only do this if there is a hex value
+                    if (parenIndex != -1)
+                    {
+                        decimalValue = rest.Substring(0, parenIndex).Trim();
+
+                        if (decimalValue.Length > group.MaxDecimalValueLength)
+                        {
+                            group.MaxDecimalValueLength = decimalValue.Length;
+                        }
+                    }
+
+                    // Update max lengths
+                    if (propertyName.Length > group.MaxPropertyNameLength)
+                    {
+                        group.MaxPropertyNameLength = propertyName.Length;
+                    }
+
+                }
+            }
+
+            // Now, build the output
+            var outputStringBuilder = new StringBuilder();
+
+            foreach (var group in groups)
+            {
+                foreach (var line in group.Lines)
+                {
+                    string trimmedLine = line.TrimStart();
+                    string leadingSpaces = line.Substring(0, line.Length - trimmedLine.Length);
+
+                    // Skip empty lines
+                    if (string.IsNullOrWhiteSpace(trimmedLine))
+                    {
+                        outputStringBuilder.AppendLine(line);
+                        continue;
+                    }
+
+                    int colonIndex = trimmedLine.IndexOf(':');
+
+                    if (colonIndex == -1)
+                    {
+                        // Line doesn't have a colon, output as is
+                        outputStringBuilder.AppendLine(line);
+                        continue;
+                    }
+
+                    // Parse property name and rest of line
+                    string propertyName = trimmedLine.Substring(0, colonIndex);
+                    string rest = trimmedLine.Substring(colonIndex + 1).Trim();
+
+                    // For value, split on '(' to separate decimal value and hex value
+                    string decimalValue = rest;
+                    string hexValue = "";
+
+                    int parenIndex = rest.IndexOf('(');
+                    if (parenIndex != -1)
+                    {
+                        decimalValue = rest.Substring(0, parenIndex).Trim();
+                        hexValue = rest.Substring(parenIndex).Trim();
+                    }
+
+                    // Format the line
+                    string formattedLine = $"{leadingSpaces}{propertyName.PadRight(group.MaxPropertyNameLength)}: {decimalValue.PadRight(group.MaxDecimalValueLength)}";
+
+                    if (!string.IsNullOrEmpty(hexValue))
+                    {
+                        formattedLine += $" {hexValue}";
+                    }
+
+                    outputStringBuilder.AppendLine(formattedLine);
+                }
+            }
+
+            return outputStringBuilder;
         }
+
+        class Group
+        {
+            public int IndentLevel { get; set; }
+            public List<string> Lines { get; set; }
+            public int MaxPropertyNameLength { get; set; }
+            public int MaxDecimalValueLength { get; set; }
+        }
+
 
     } // ----------------- END OF FormatStructurePrinter -----------------
 }
