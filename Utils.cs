@@ -1,5 +1,6 @@
 ﻿using Microsoft.SqlServer.Management.HadrData;
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -307,5 +308,33 @@ namespace EditClipboardContents
             return filename;
         }
 
-} // ----------------- End of class -----------------
+        // Take in any kind of integer and return it as a proper length hex string
+        public static string AsHexString(this object integerValue)
+        {
+            Type type = integerValue.GetType();
+
+            if (type == typeof(byte) || type == typeof(sbyte))
+                return $"0x{Convert.ToByte(integerValue):X2}";
+
+            if (type == typeof(short) || type == typeof(ushort))
+                return $"0x{Convert.ToUInt16(integerValue):X4}";
+
+            if (type == typeof(int) || type == typeof(uint))
+                return $"0x{Convert.ToUInt32(integerValue):X8}";
+
+            if (type == typeof(long) || type == typeof(ulong))
+                return $"0x{Convert.ToUInt64(integerValue):X16}";
+
+            if (type == typeof(IntPtr) || type == typeof(UIntPtr))
+            {
+                if (IntPtr.Size == 4)
+                    return $"0x{Convert.ToUInt32(integerValue):X8}";
+                if (IntPtr.Size == 8)
+                    return $"0x{Convert.ToUInt64(integerValue):X16}";
+            }
+
+            return "";
+        }
+
+    } // ----------------- End of class -----------------
 } // ----------------- End of namespace -----------------

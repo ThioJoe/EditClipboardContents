@@ -137,11 +137,8 @@ namespace EditClipboardContents
                 case "CF_PALETTE": // 9 - CF_PALETTE
                     LOGPALETTE_OBJ paletteProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.LOGPALETTE_OBJ>(rawData);
                     int paletteEntries = paletteProcessed.palNumEntries;
-                    dataInfoList.Add($"{paletteEntries} Entries");
-                    dataInfoList.Add($"Version: {paletteProcessed.palVersion}");
-                    dataInfoList.Add($"Flags: {paletteProcessed.palPalEntry}");
-                    dataInfoList.Add($"Color Count: {paletteEntries}");
-
+                    dataInfoList.Add($"{paletteEntries} Palette Entries");
+                    dataInfoList.Add($"Version: {Utils.AsHexString(paletteProcessed.palVersion)}");
                     processedObject = new ClipDataObject
                     {
                         ObjectData = paletteProcessed

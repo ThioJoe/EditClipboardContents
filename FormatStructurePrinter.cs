@@ -139,12 +139,14 @@ namespace EditClipboardContents
                 foreach (var (propertyName, _, propertyType, arraySize) in obj.EnumerateProperties(getValues: false))
 
                 {
+                    // Print replacement data if it is given
                     if (replacements.TryGetValue(propertyName, out string replacementValue))
                     {
                         result.AppendLine($"{indent}{propertyName}: {replacementValue}");
                         continue;
                     }
 
+                    // All of these first ones are for nested objects and collections and just recurse without printing the property name (except enums)
                     if (typeof(IClipboardFormat).IsAssignableFrom(propertyType))
                     {
                         var nestedObj = obj.GetType().GetProperty(propertyName).GetValue(obj) as IClipboardFormat;
@@ -167,6 +169,8 @@ namespace EditClipboardContents
                             RecursivePrintArray(array, indent + originalIndent, depth: depth + 1);
                         }
                     }
+
+                    // This finally ends up printing the property name and value for non-nested objects
                     else
                     {
                         // For non-collection types, we might still want to get the value
@@ -238,24 +242,27 @@ namespace EditClipboardContents
 
         } // ----------------- END OF CreateDataString -----------------
 
-        private static string GetValueString(object value, bool asHex = false)
+        private static string GetValueString(object value, bool hexOnly = false, bool decimalOnly = false)
         {
             if (value == null)
                 return "null";
 
-            if (value is IntPtr ptr)
+            Type valueType = value.GetType();
+
+            // For pointers never print the decimal version
+            if (valueType == typeof(IntPtr) || valueType == typeof(UIntPtr))
             {
-                return $"0x{ptr.ToInt64():X}";
+                return Utils.AsHexString(value);
             }
 
-            Type valueType = value.GetType();
+            // For nested structs, we'll return a placeholder
             if (valueType.IsValueType && !valueType.IsPrimitive && valueType != typeof(IntPtr))
             {
-                // For nested structs, we'll return a placeholder
+                
                 return $"[{valueType.Name}]";
             }
 
-            if (asHex)
+            if (hexOnly)
             {
                 if (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(short) || valueType == typeof(byte))
                 {
@@ -267,9 +274,32 @@ namespace EditClipboardContents
                     return "";
                 }
             }
+            else if (decimalOnly)
+            {
+                return value.ToString();
+            }
+            
+            // Default to both
+            string finalString = value.ToString();
+            string hexString = Utils.AsHexString(value);
 
-            return value.ToString();
+            if (!string.IsNullOrEmpty(hexString))
+            {
+                finalString = $"{finalString}\t({hexString})";
+            }
+            return finalString;
         }
 
-    }
+        // Attemps to add additional tabs where necessary so items at the same level are aligned
+        private static StringBuilder TabAligner(StringBuilder inputString)
+        {
+            // For the inputted string builder, we can get the length of the text between the starting whitespace and the first tab which comes before the hex value we want to align
+            // We'll do this for each line until the number of preceding spaces changes, then we know we're at a new level
+            // When we have all the items in a group, we'll find the longest length and add tabs to the other lines such that the hex values all aign with that longest value's tabbed hex value
+
+           
+
+        }
+
+    } // ----------------- END OF FormatStructurePrinter -----------------
 }

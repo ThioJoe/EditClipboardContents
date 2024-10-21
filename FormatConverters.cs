@@ -563,6 +563,8 @@ namespace EditClipboardContents
             }
         }
 
+        
+
         public static byte[]? CF_PALETTE_RawData_FromHandle(IntPtr hPalette)
         {
             if (hPalette == IntPtr.Zero)
@@ -570,25 +572,64 @@ namespace EditClipboardContents
                 return null;
             }
 
-            IntPtr pLogPalette = NativeMethods.GlobalLock(hPalette);
-            if (pLogPalette == IntPtr.Zero)
-            {
-                return null;
-            }
-
             try
             {
-                LOGPALETTE logPalette = Marshal.PtrToStructure<LOGPALETTE>(pLogPalette);
-                int totalSize = Marshal.SizeOf<LOGPALETTE>() + (logPalette.palNumEntries - 1) * Marshal.SizeOf<PALETTEENTRY>();
+                // GetObject always returns a WORD for HPALETTE so we need to allocate 2 bytes
+                IntPtr paletteEntryCountHandle = Marshal.AllocHGlobal(2);
+                // Call GetObject - It will return the number of bytes written to the buffer, but we need to separately check the buffer
+                int result = NativeMethods.GetObject(hPalette, 2, paletteEntryCountHandle);
+                if (result != 2)
+                {
+                    Marshal.FreeHGlobal(paletteEntryCountHandle);
+                    return null;
+                }
 
-                byte[] rawData = new byte[totalSize];
-                Marshal.Copy(pLogPalette, rawData, 0, totalSize);
+                try
+                {
+                    // The count of entries is now stored in the buffer by GetObject so we can read it
+                    ushort entryCount = (ushort)Marshal.ReadInt16(paletteEntryCountHandle);
+                    IntPtr pEntries = Marshal.AllocHGlobal(Marshal.SizeOf<PALETTEENTRY>() * entryCount);
+                    byte[] rawEntriesData = new byte[Marshal.SizeOf<PALETTEENTRY>() * entryCount];
+                    Marshal.Copy(pEntries, rawEntriesData, 0, rawEntriesData.Length);
 
-                return rawData;
+                    // Reconstruct the data of the LOGPALETTE header which wasn't included in the original data
+                    LOGPALETTE logPalette = new LOGPALETTE
+                    {
+                        palVersion = 0x300,
+                        palNumEntries = entryCount
+                    };
+
+                    // Prepend the LOGPALETTE header to the raw data
+                    byte[] logPaletteBytes = new byte[4];
+                    byte[] rawData = new byte[ 4 + (entryCount*4) ];
+                    // palVersion is 2 bytes, apparently always equals 0x300
+                    logPaletteBytes[0] = 0x00;
+                    logPaletteBytes[1] = 0x03;
+                    // palNumEntries is 2 bytes. Convert entryCount to 2 byte array first
+                    byte[] entryCountBytes = BitConverter.GetBytes((ushort)entryCount);
+                    // Little-endian adding to the array
+                    logPaletteBytes[2] = entryCountBytes[0];
+                    logPaletteBytes[3] = entryCountBytes[1];
+
+                    // Combine to rawData
+                    Buffer.BlockCopy(logPaletteBytes, 0, rawData, 0, 4);
+                    Buffer.BlockCopy(rawEntriesData, 0, rawData, 4, rawEntriesData.Length);
+
+                    return rawData;
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine($"Error in CF_PALETTE_RawData_FromHandle: {ex.Message}");
+                    return null;
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(paletteEntryCountHandle);
+                }
             }
-            finally
+            catch
             {
-                NativeMethods.GlobalUnlock(hPalette);
+                return null;
             }
         }
 

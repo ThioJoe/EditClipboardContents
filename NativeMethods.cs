@@ -170,6 +170,12 @@ namespace EditClipboardContents
         [DllImport("user32.dll", SetLastError = true)]
         public static extern uint RegisterClipboardFormat(string lpszFormat);
 
+        [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
+        public static extern int GetObject(IntPtr hObject, int nCount, IntPtr lpObject);
+
+        [DllImport("gdi32.dll")]
+        public static extern UInt32 GetPaletteEntries(IntPtr hPalette, UInt32 iStartIndex, UInt32 nEntries, [Out] IntPtr lppe);
+
 
         // Constants
         public const uint GMEM_MOVEABLE = 0x0002;

@@ -357,9 +357,34 @@ namespace EditClipboardContents
 
         public class LOGPALETTE_OBJ : ClipboardFormatBase
         {
-            public WORD palVersion { get; set; }
-            public WORD palNumEntries { get; set; }
-            public List<PALETTEENTRY_OBJ> palPalEntry { get; set; } = [];
+            private WORD _palVersion { get; set; }
+            private WORD _palNumEntries { get; set; }
+            //private List<PALETTEENTRY_OBJ> _palPalEntry { get; set; } = [];
+            private PALETTEENTRY_OBJ[] _palPalEntry { get; set; } = [];
+
+            public WORD palVersion
+            {
+                get => _palVersion;
+                set => _palVersion = value;
+            }
+
+            public WORD palNumEntries
+            {
+                get => _palNumEntries;
+                set
+                {
+                    _palNumEntries = value;
+                    //_palPalEntry = new List<PALETTEENTRY_OBJ>(_palNumEntries);
+                    _palPalEntry = new PALETTEENTRY_OBJ[_palNumEntries];
+                }
+            }
+
+            //public List<PALETTEENTRY_OBJ> palPalEntry
+            public PALETTEENTRY_OBJ[] palPalEntry
+            {
+                get => _palPalEntry;
+                set => _palPalEntry = value;
+            }
 
             protected override string GetStructName() => "LOGPALETTE";
 
@@ -1154,7 +1179,7 @@ namespace EditClipboardContents
         {
             public WORD palVersion;
             public WORD palNumEntries;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)] // Don't forget to subtract this size from the total size if you change the array size
             public PALETTEENTRY[] palPalEntry;
         }
 
