@@ -115,8 +115,11 @@ namespace EditClipboardContents
         [DllImport("shell32.dll", CharSet = CharSet.Ansi)]
         public static extern uint DragQueryFileA(IntPtr hDrop, uint iFile, [Out] StringBuilder lpszFile, uint cch);
 
-        [DllImport("gdi32.dll")]
-        public static extern IntPtr CreatePalette([In] ref ClipboardFormats.LOGPALETTE lplgpl);
+        //[DllImport("gdi32.dll")]
+        //public static extern IntPtr CreatePalette([In] ref ClipboardFormats.LOGPALETTE lplgpl); // Version of the method that takes a ref
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        public static extern IntPtr CreatePalette(IntPtr lplgpl); // Version of the method that takes a pointer
 
         [DllImport("gdi32.dll")]
         public static extern int GetDIBits(IntPtr hdc, IntPtr hbmp, uint uStartScan, uint cScanLines, [Out] byte[]? lpvBits, ref BITMAPINFO lpbi, uint uUsage);

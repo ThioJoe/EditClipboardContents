@@ -563,7 +563,7 @@ namespace EditClipboardContents
             }
         }
 
-        
+
 
         public static byte[]? CF_PALETTE_RawData_FromHandle(IntPtr hPalette)
         {
@@ -574,48 +574,41 @@ namespace EditClipboardContents
 
             try
             {
-                // GetObject always returns a WORD for HPALETTE so we need to allocate 2 bytes
                 IntPtr paletteEntryCountHandle = Marshal.AllocHGlobal(2);
-                // Call GetObject - It will return the number of bytes written to the buffer, but we need to separately check the buffer
-                int result = NativeMethods.GetObject(hPalette, 2, paletteEntryCountHandle);
-                if (result != 2)
-                {
-                    Marshal.FreeHGlobal(paletteEntryCountHandle);
-                    return null;
-                }
-
                 try
                 {
-                    // The count of entries is now stored in the buffer by GetObject so we can read it
-                    ushort entryCount = (ushort)Marshal.ReadInt16(paletteEntryCountHandle);
-                    IntPtr pEntries = Marshal.AllocHGlobal(Marshal.SizeOf<PALETTEENTRY>() * entryCount);
-                    byte[] rawEntriesData = new byte[Marshal.SizeOf<PALETTEENTRY>() * entryCount];
-                    Marshal.Copy(pEntries, rawEntriesData, 0, rawEntriesData.Length);
-
-                    // Reconstruct the data of the LOGPALETTE header which wasn't included in the original data
-                    LOGPALETTE logPalette = new LOGPALETTE
+                    int result = NativeMethods.GetObject(hPalette, 2, paletteEntryCountHandle);
+                    if (result != 2)
                     {
-                        palVersion = 0x300,
-                        palNumEntries = entryCount
-                    };
+                        return null;
+                    }
 
-                    // Prepend the LOGPALETTE header to the raw data
-                    byte[] logPaletteBytes = new byte[4];
-                    byte[] rawData = new byte[ 4 + (entryCount*4) ];
-                    // palVersion is 2 bytes, apparently always equals 0x300
-                    logPaletteBytes[0] = 0x00;
-                    logPaletteBytes[1] = 0x03;
-                    // palNumEntries is 2 bytes. Convert entryCount to 2 byte array first
-                    byte[] entryCountBytes = BitConverter.GetBytes((ushort)entryCount);
-                    // Little-endian adding to the array
-                    logPaletteBytes[2] = entryCountBytes[0];
-                    logPaletteBytes[3] = entryCountBytes[1];
+                    ushort entryCount = (ushort)Marshal.ReadInt16(paletteEntryCountHandle);
+                    int logPaletteHeaderSize = 4; // Size of palVersion and palNumEntries, doesn't change
 
-                    // Combine to rawData
-                    Buffer.BlockCopy(logPaletteBytes, 0, rawData, 0, 4);
-                    Buffer.BlockCopy(rawEntriesData, 0, rawData, 4, rawEntriesData.Length);
+                    int logPaletteSize = logPaletteHeaderSize + (Marshal.SizeOf<PALETTEENTRY>() * entryCount); // Subtract 1 because the standard LOGPALETTE struct already has one PALETTEENTRY
+                    IntPtr pLogPalette = Marshal.AllocHGlobal(logPaletteSize);
+                    try
+                    {
+                        Marshal.WriteInt16(pLogPalette, 0, 0x300);  // palVersion
+                        Marshal.WriteInt16(pLogPalette, 2, (short)entryCount);  // palNumEntries
 
-                    return rawData;
+                        // For the last argument of GetPaletteEntries, point it to the start of the PALETTEENTRY array, not the entire handle
+                        uint entriesRetrieved = NativeMethods.GetPaletteEntries(hPalette, 0, (uint)entryCount, pLogPalette + 4); 
+                        if (entriesRetrieved != entryCount)
+                        {
+                            return null;
+                        }
+
+                        byte[] rawData = new byte[logPaletteSize];
+                        Marshal.Copy(pLogPalette, rawData, 0, logPaletteSize);
+
+                        return rawData;
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(pLogPalette);
+                    }
                 }
                 catch(Exception ex)
                 {
@@ -627,55 +620,88 @@ namespace EditClipboardContents
                     Marshal.FreeHGlobal(paletteEntryCountHandle);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error in CF_PALETTE_RawData_FromHandle: {ex.Message}");
                 return null;
             }
         }
 
         public static IntPtr CF_PALETTE_Handle_FromRawData(byte[]? rawData)
         {
-            if (rawData == null || rawData.Length < Marshal.SizeOf<LOGPALETTE>())
+            if (rawData == null || rawData.Length < 4) // Ensure it's at least the size of the LOGPALETTE header info before the PALETTEENTRY array
             {
                 return IntPtr.Zero;
             }
 
-            IntPtr hGlobal = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, (UIntPtr)rawData.Length);
-            if (hGlobal == IntPtr.Zero)
+            // Determine the number of entries in the palette
+            ushort numEntries = BitConverter.ToUInt16(rawData, 2);
+            int logPaletteSize = 4 + (Marshal.SizeOf<PALETTEENTRY>() * numEntries);
+            LOGPALETTE logPalette = new LOGPALETTE((ushort)numEntries);
+            int rawByteIndex = 4; // Skip the first 4 bytes, which are the palVersion and palNumEntries
+            for (int i = 0; i < numEntries; i++)
             {
-                return IntPtr.Zero;
+                byte b1 = rawData[rawByteIndex];
+                byte b2 = rawData[rawByteIndex + 1];
+                byte b3 = rawData[rawByteIndex + 2];
+                byte b4 = rawData[rawByteIndex + 3];
+                rawByteIndex += 4;
+
+                logPalette.palPalEntry[i] = new PALETTEENTRY
+                {
+                    peRed = b1,
+                    peGreen = b2,
+                    peBlue = b3,
+                    peFlags = b4
+                };
             }
 
-            IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
-            if (pGlobal == IntPtr.Zero)
-            {
-                NativeMethods.GlobalFree(hGlobal);
-                return IntPtr.Zero;
-            }
+            // Marshal the LOGPALETTE struct to a handle
+            int structSize = 4; // Size of palVersion and palNumEntries
+            int entrySize = Marshal.SizeOf<PALETTEENTRY>();
+            int totalSize = structSize + (entrySize * logPalette.palNumEntries);
+
+            IntPtr logPalettePtr = Marshal.AllocHGlobal(totalSize);
 
             try
             {
-                Marshal.Copy(rawData, 0, pGlobal, rawData.Length);
+                // Write palVersion and palNumEntries
+                Marshal.WriteInt16(logPalettePtr, 0, (short)logPalette.palVersion);
+                Marshal.WriteInt16(logPalettePtr, 2, (short)logPalette.palNumEntries);
 
-                // Create a palette from the raw data
-                LOGPALETTE logPalette = Marshal.PtrToStructure<LOGPALETTE>(pGlobal);
-                IntPtr hPalette = NativeMethods.CreatePalette(ref logPalette);
+                // Write palette entries
+                for (int i = 0; i < logPalette.palNumEntries; i++)
+                {
+                    IntPtr entryPtr = logPalettePtr + structSize + (i * entrySize);
+                    Marshal.StructureToPtr(logPalette.palPalEntry[i], entryPtr, false);
+                }
+            }
+            catch
+            {
+                Marshal.FreeHGlobal(logPalettePtr);
+                return IntPtr.Zero;
+            }
 
+            if (logPalettePtr == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Now we have a handle to LOGPALETTE we can use to create the HPALLETE handle
+            try
+            {
+                IntPtr hPalette = NativeMethods.CreatePalette(logPalettePtr);
                 if (hPalette != IntPtr.Zero)
                 {
-                    // If palette creation was successful, we can free the global memory
-                    NativeMethods.GlobalUnlock(hGlobal);
-                    NativeMethods.GlobalFree(hGlobal);
                     return hPalette;
                 }
             }
             finally
             {
-                NativeMethods.GlobalUnlock(hGlobal);
+                Marshal.FreeHGlobal(logPalettePtr);
             }
 
             // If we reach here, something went wrong
-            NativeMethods.GlobalFree(hGlobal);
             return IntPtr.Zero;
         }
 
