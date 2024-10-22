@@ -280,17 +280,18 @@ namespace EditClipboardContents
             public LONG mm { get; set; }
             public LONG xExt { get; set; }
             public LONG yExt { get; set; }
-            public byte[] hMF { get; set; } = []; // Handle to metafile. Will process as METAFILE_OBJ later separately
+            //public byte[] hMF { get; set; } = []; // Handle to metafile. Will process as METAFILE_OBJ later separately
+            public METAFILE_OBJ hMF { get; set; } = new METAFILE_OBJ();
 
             protected override string GetStructName() => "METAFILEPICT";
 
-            public override Dictionary<string, string> DataDisplayReplacements()
-            {
-                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    { "hMF", "[Handle to metafile]" }
-                };
-            }
+            //public override Dictionary<string, string> DataDisplayReplacements()
+            //{
+            //    return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            //    {
+            //        { "hMF", "[Handle to metafile]" }
+            //    };
+            //}
 
             public override bool FillEmptyArrayWithRemainingBytes() => true;
         }
@@ -598,18 +599,42 @@ namespace EditClipboardContents
                 get => _METARECORD;
                 set => _METARECORD = value;
             }
+            protected override string GetStructName() => "MS-WMF";
+        }
 
+        public class METARECORD_OBJ: ClipboardFormatBase
+        {
+            public DWORD rdSize { get; set; }
+            public WMF_RecordType rdFunction { get; set; }
+            public WORD[] rdParm { get; set; } = [];
+            // ----------------------------------------------------------
+            public METARECORD_OBJ(UInt32 rdSizeInput, byte[] rawBytes)
+            {
+                rdSize = rdSizeInput;
+                rdFunction = GetFunctionValue(rawBytes);
+                rdParm = new WORD[rdSizeInput];
+            }
+            // ----------------------------------------------------------
+            private WMF_RecordType GetFunctionValue(byte[] rawBytes)
+            {
+                // Get the two bytes that are after the first DWORD
+                byte[] functionBytes = new byte[2];
+                Array.Copy(rawBytes, 4, functionBytes, 0, 2);
+                WORD function = BitConverter.ToUInt16(functionBytes, 0);
+                return (WMF_RecordType)function;
+            }
+
+            protected override string GetStructName() => "METARECORD";
             public override Dictionary<string, string> DataDisplayReplacements()
             {
                 return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                 {
-                    { "METARECORD", "[Metafile Record Data]" }
+                    { "rdParm", $"[Parameter Data]" }
                 };
             }
-
-            protected override string GetStructName() => "MS-WMF";
         }
 
+        
         public class METAHEADER_OBJ : ClipboardFormatBase
         {
             public MetaFileType mtType { get; set; }
@@ -621,71 +646,6 @@ namespace EditClipboardContents
             public WORD mtNoParameters { get; set; }
 
             protected override string GetStructName() => "METAHEADER";
-        }
-
-        // Broken don't use
-        public class METARECORD_OBJ : ClipboardFormatBase
-        {
-            private DWORD _rdSize;
-            private WORD[] _rdParm = [];
-
-            public DWORD rdSize
-            {
-                get => _rdSize;
-                set
-                {
-                    _rdSize = value;
-                    // rdSize is the size of the record in words, first convert it to int
-                    int untrimmedCount = (int)value;
-                    // Then subtract the size of the function type and the size of the size field itself
-                    int paramWORDCount;
-                    // If we subtract when it's negative, it will wrap around to a large number, so we set it to 0
-                    if (untrimmedCount < 0)
-                    {
-                        paramWORDCount = 0;
-                    }
-                    else
-                    {
-                        paramWORDCount = untrimmedCount - 2;
-                    }
-                    _rdParm = new WORD[paramWORDCount];
-                }
-            }
-
-            public WMF_RecordType rdFunction { get; set; } // WORD type, 2 bytes
-
-            // An array of words containing the function parameters, in reverse of the order they are passed to the function.
-            public WORD[] rdParm
-            {
-                get => _rdParm;
-                set => _rdParm = value;
-            }
-
-
-            protected override string GetStructName() => "METARECORD";
-
-            public byte UpperByte()
-            {
-                return (byte)(((WORD)rdFunction >> 8) & 0xFF);
-            }
-
-            public byte LowerByte()
-            {
-                return (byte)((WORD)rdFunction & 0xFF);
-            }
-
-            public WMF_RecordType GetRecordType()
-            {
-                byte lowerByte = LowerByte();
-                foreach (WMF_RecordType recordType in Enum.GetValues(typeof(WMF_RecordType)))
-                {
-                    if ((byte)recordType == lowerByte)
-                    {
-                        return recordType;
-                    }
-                }
-                throw new InvalidOperationException($"Unknown record type: 0x{lowerByte:X2}");
-            }
         }
 
         public class ENHMETAFILE_OBJ : ClipboardFormatBase
@@ -1045,6 +1005,7 @@ namespace EditClipboardContents
             DIB_PAL_INDICES = 0x0002
         }
 
+
         // --------------------------------------------------------------------------------------------------------------------------
         // --------------------------------------------------- Struct definitions ---------------------------------------------------
         // --------------------------------------------------------------------------------------------------------------------------
@@ -1123,6 +1084,13 @@ namespace EditClipboardContents
             public RGBQUAD[] bmiColors;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _MetaFilePictHeader
+        {
+            public LONG mm;
+            public LONG xExt;
+            public LONG yExt;
+        }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct METAFILEPICT
@@ -1131,6 +1099,34 @@ namespace EditClipboardContents
             public LONG xExt;
             public LONG yExt;
             public HMETAFILE hMF;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct METAHEADER
+        {
+            public MetaFileType mtType;
+            public WORD mtHeaderSize;
+            public WORD mtVersion;
+            public DWORD mtSize;
+            public WORD mtNoObjects;
+            public DWORD mtMaxRecord;
+            public WORD mtNoParameters;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _MetaFile
+        {
+            public METAHEADER mtHeader;
+            public METARECORD mtRecords;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct METARECORD
+        {
+            public DWORD rdSize;
+            public WORD rdFunction;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
+            public WORD[] rdParm;
         }
 
         [StructLayout(LayoutKind.Sequential)]

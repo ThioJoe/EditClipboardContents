@@ -61,7 +61,9 @@ namespace EditClipboardContents
             { "PWMFRect16", "https://learn.microsoft.com/en-us/windows/win32/api/gdiplusmetaheader/ns-gdiplusmetaheader-pwmfrect16" },
             { "MS-WMF", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/ba5458c6-e885-41e6-b5d7-d54ef9e1065f" },
             { "MS-EMF" , "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/daaf9447-0c47-446e-b72e-ac6bd7a2e8f1"},
-            { "MetafileType", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/2d09c51e-062b-4d9b-94c4-6ffd0e12dfb6" }
+            { "MetafileType", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/2d09c51e-062b-4d9b-94c4-6ffd0e12dfb6" },
+            { "RecordType (WMF)", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/77db8158-96df-4656-a36c-3066de3d5f59" },
+            { "RecordType (EMF)", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/1eec80ba-799b-4784-a9ac-91597d590ae1" }
         };
 
         // Dictionary for docs to non-standard registered formats other than structs

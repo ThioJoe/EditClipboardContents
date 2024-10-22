@@ -14,6 +14,7 @@ using System.Drawing;
 using System.ComponentModel;
 using static EditClipboardContents.ClipboardFormats;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
+using System.Drawing.Imaging;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -88,17 +89,51 @@ namespace EditClipboardContents
                 case "CF_METAFILEPICT": // 3
                     METAFILEPICT_OBJ metafilePictProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.METAFILEPICT_OBJ>(rawData);
 
-                    //byte[] rawDataMetafile = metafilePictProcessed.hMF;
+                    ////METARECORD_OBJ metaRecords = ClipboardFormats.BytesToObject<ClipboardFormats.METARECORD_OBJ>(rawDataMetafile);
 
-                    //METAFILE_OBJ metaFile = ClipboardFormats.BytesToObject<ClipboardFormats.METAFILE_OBJ>(rawDataMetafile);
-                    //METAHEADER_OBJ metaHeader = metaFile.METAHEADER;
+                    int metaFilePictOffset = Marshal.OffsetOf<METAFILEPICT>(nameof(METAFILEPICT.hMF)).ToInt32();
+                    byte[] justMetaFileData = new byte[rawData.Length - metaFilePictOffset];
+                    Array.Copy(rawData, metaFilePictOffset, justMetaFileData, 0, justMetaFileData.Length);
+                    METAFILE_OBJ metaFile = ClipboardFormats.BytesToObject<ClipboardFormats.METAFILE_OBJ>(justMetaFileData);
 
-                    //int numBytesInHeader = metaHeader.mtHeaderSize * 2; // mtHeaderSize is in WORDs, so multiply by 2 to get bytes
-                    //// Create new byte array for the recordsBytes starting after the header
-                    //byte[] recordsBytes = new byte[rawDataMetafile.Length - numBytesInHeader];
-                    //Array.Copy(rawDataMetafile, numBytesInHeader, recordsBytes, 0, recordsBytes.Length);
+                    // Get the offset where METARECORDS starts in the Metafile. (After the METAHEADER)
+                    int metaRecordOffsetInMetaFile =
+                        sizeof(UInt16) +  // mtType (enum is stored as WORD/UInt16)
+                        sizeof(UInt16) +  // mtHeaderSize (WORD)
+                        sizeof(UInt16) +  // mtVersion (WORD)
+                        sizeof(UInt32) +  // mtSize (DWORD)
+                        sizeof(UInt16) +  // mtNoObjects (WORD)
+                        sizeof(UInt32) +  // mtMaxRecord (DWORD)
+                        sizeof(UInt16);   // mtNoParameters (WORD)
 
-                    //METARECORD_OBJ metaRecords = ClipboardFormats.BytesToObject<ClipboardFormats.METARECORD_OBJ>(rawDataMetafile);
+                    byte[] justMetaRecordsData = new byte[justMetaFileData.Length - metaRecordOffsetInMetaFile];
+                    Array.Copy(justMetaFileData, metaRecordOffsetInMetaFile, justMetaRecordsData, 0, justMetaRecordsData.Length);
+
+                    // Now will use justMetaRecordsData to get the meta records. Will need to loop through and get the first DWORD to get the size then create the metarecord object
+                    List<METARECORD_OBJ> allMetaRecords = [];
+                    int recordOffset = 0;
+                    while (recordOffset < justMetaRecordsData.Length)
+                    {
+                        // Get the DWORD of the record size at the offset
+                        byte[] recordSizeBytesValueHolder = new byte[4];
+                        Array.Copy(justMetaRecordsData, recordOffset, recordSizeBytesValueHolder, 0, 4);
+                        UInt32 recordSizeInWords = BitConverter.ToUInt32(recordSizeBytesValueHolder, 0); // Size is in words, so multiply by 2 to get bytes
+                        uint recordSizeInBytes = recordSizeInWords * 2;
+                        byte[] currentRecord = new byte[recordSizeInBytes];
+                        Array.Copy(justMetaRecordsData, recordOffset, currentRecord, 0, recordSizeInBytes);
+
+                        METARECORD_OBJ recordObj = new ClipboardFormats.METARECORD_OBJ((UInt32)recordSizeInBytes, currentRecord);
+                        allMetaRecords.Add(recordObj);
+                        recordOffset += (int)recordSizeInBytes;
+                    }
+
+                    // Convert the list to an array
+                    METARECORD_OBJ[] allMetaRecordsArray = allMetaRecords.ToArray();
+
+                    // Put in the processed nested objects
+                    //metaFile.METARECORD = allMetaRecords;
+                    metaFile.METARECORD = allMetaRecordsArray;
+                    metafilePictProcessed.hMF = metaFile;
 
                     dataInfoList.Add($"Mode: {metafilePictProcessed.mm}");
 
