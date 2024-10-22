@@ -646,7 +646,7 @@ namespace EditClipboardContents
                     }
 
                     ushort entryCount = (ushort)Marshal.ReadInt16(paletteEntryCountHandle);
-                    int logPaletteHeaderSize = 4; // Size of palVersion and palNumEntries, doesn't change
+                    int logPaletteHeaderSize = Marshal.SizeOf(typeof(_LogPaletteHeader)); // Size of palVersion and palNumEntries, doesn't change
 
                     int logPaletteSize = logPaletteHeaderSize + (Marshal.SizeOf<PALETTEENTRY>() * entryCount); // Subtract 1 because the standard LOGPALETTE struct already has one PALETTEENTRY
                     IntPtr pLogPalette = Marshal.AllocHGlobal(logPaletteSize);

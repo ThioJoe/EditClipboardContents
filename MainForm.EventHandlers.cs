@@ -50,7 +50,7 @@ namespace EditClipboardContents
                 //ShowLoadingIndicator(true);
                 RefreshClipboardItems();
                 //ShowLoadingIndicator(false);
-                UpdateSplitterPosition_FitDataGrid();
+                //UpdateSplitterPosition_FitDataGrid(); // Occurs in RefreshClipboardItems
             }));
         }
 
@@ -608,9 +608,9 @@ namespace EditClipboardContents
                 return;
             }
             SaveClipboardData();
-            RefreshClipboardItems();
             anyPendingChanges = false;
-            UpdateEditControlsVisibility_AndPendingGridAppearance();
+            RefreshClipboardItems();
+            //UpdateEditControlsVisibility_AndPendingGridAppearance(); // Occurs in RefreshClipboardItems
         }
 
         private void menuFile_ExportSelectedAsRawHex_Click(object sender, EventArgs e)
@@ -688,6 +688,7 @@ namespace EditClipboardContents
         private void toolStripButtonRefresh_Click(object sender, EventArgs e)
         {
             int selectedFormatId = -1;
+            int selectedViewMode = dropdownContentsViewMode.SelectedIndex;
             // New scope, only need item for this operation
             {
                 ClipboardItem? item = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
@@ -711,6 +712,8 @@ namespace EditClipboardContents
                     dataGridViewClipboard.ClearSelection();
                     dataGridViewClipboard.Rows[rowIndex].Selected = true;
                     dataGridViewClipboard.FirstDisplayedScrollingRowIndex = rowIndex;
+                    // Also update the view mode to the previously selected view mode
+                    dropdownContentsViewMode.SelectedIndex = selectedViewMode;
                 }
             }
             //UpdateEditControlsVisibility_AndPendingGridAppearance();
@@ -881,11 +884,11 @@ namespace EditClipboardContents
 
             //UpdateClipboardItemsGridView_WithEmptyCustomFormat(newItem);
             editedClipboardItems.Add(newItem);
+            anyPendingChanges = true;
             RefreshDataGridViewContents();
             UpdateSplitterPosition_FitDataGrid();
 
-            anyPendingChanges = true;
-            UpdateEditControlsVisibility_AndPendingGridAppearance();
+            //UpdateEditControlsVisibility_AndPendingGridAppearance(); // Occurs in RefreshDataGridViewContents
 
             // Set selected rows to just the new row
             dataGridViewClipboard.SelectionChanged -= dataGridViewClipboard_SelectionChanged;
@@ -1281,7 +1284,7 @@ namespace EditClipboardContents
 
             RefreshClipboardItems();
             UpdateAnyPendingChangesFlag();
-            UpdateEditControlsVisibility_AndPendingGridAppearance();
+            //UpdateEditControlsVisibility_AndPendingGridAppearance(); // Occurs in RefreshClipboardItems > RefreshDataGridViewContents
         }
 
 

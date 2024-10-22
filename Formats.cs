@@ -37,7 +37,7 @@ namespace EditClipboardContents
     using DWORD = System.UInt32;        // 4 Bytes, aka uint, uint32
     using WORD = System.UInt16;         // 2 Bytes
     using BYTE = System.Byte;           // 1 Byte
-    using FXPT2DOT30 = System.Int32;    // 4 Bytes
+    using FXPT2DOT30 = System.Int32;    // 4 Bytes , aka LONG
     using LPVOID = System.IntPtr;       // Handle to any type
     using HMETAFILE = System.IntPtr;    // Handle to metafile
     using CHAR = System.Byte;           // 1 Byte

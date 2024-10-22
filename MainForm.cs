@@ -506,6 +506,10 @@ namespace EditClipboardContents
 
         private void RefreshClipboardItems()
         {
+            // Clear the text boxes
+            richTextBoxContents.Clear();
+            richTextBox_HexPlaintext.Clear();
+
             ShowLoadingIndicator(true);
 
             // Attempt to open the clipboard, retrying up to 10 times with a 10ms delay
@@ -557,7 +561,7 @@ namespace EditClipboardContents
             RefreshDataGridViewContents();
             UpdateSplitterPosition_FitDataGrid();
 
-            UpdateEditControlsVisibility_AndPendingGridAppearance();
+            //UpdateEditControlsVisibility_AndPendingGridAppearance(); // Occurrs in RefreshDataGridViewContents
         }
 
         private void CopyClipboardData()
@@ -1025,7 +1029,7 @@ namespace EditClipboardContents
                 item.ClipDataObject = processedObject; // Update the clipDataObject in the selectedItem, even if it's null
 
             } // End of the loop
-            RefreshDataGridViewContents();
+            //RefreshDataGridViewContents();
         }
 
         public static DiagnosticsInfo DiagnoseClipboardState(uint format, string formatName = "")
@@ -3034,14 +3038,15 @@ namespace EditClipboardContents
 
             } // End of foreach loop
 
+            // Because saving clipboard data comes from editedClipboardContents, we first need to process clipboardContents list, then clone to editedClipboardContents
             ProcessClipboardData();
             editedClipboardItems = new SortableBindingList<ClipboardItem>(clipboardItems.Select(item => (ClipboardItem)item.Clone()).ToList());
             editedClipboardItems.ListChanged += EditedClipboardItems_ListChanged;
 
             SaveClipboardData(importing: true);
-            RefreshClipboardItems();
+            RefreshClipboardItems(); // This occurs in ProcessClipboardData but we do it again after Saving the clipboard
             anyPendingChanges = false;
-            UpdateEditControlsVisibility_AndPendingGridAppearance();
+            // UpdateEditControlsVisibility_AndPendingGridAppearance(); Occurs in RefreshClipboardItems > RefreshDataGridViewContents
         }
 
         static void ClearClipboard()
