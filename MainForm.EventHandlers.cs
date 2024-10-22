@@ -1292,6 +1292,7 @@ namespace EditClipboardContents
         // Using for testing random things during development via a button
         private void buttonTest_Click(object sender, EventArgs e)
         {
+            Console.WriteLine(e.ToString());
             // Local function to use nameof a specified ClipboardItem property as string
             //string GetPropertyName<T>(T item, string propertyName) => item.GetType().GetProperty(propertyName)?.Name ?? "";
             //Console.WriteLine("");

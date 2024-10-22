@@ -151,15 +151,16 @@ namespace EditClipboardContents
                 try
                 {
                     METAFILEPICT mfp = (METAFILEPICT)Marshal.PtrToStructure(pMetafilePict, typeof(METAFILEPICT));
-                    int metafileSize = NativeMethods.GetMetaFileBitsEx(mfp.hMF, 0, null);
+                    uint metafileSize = NativeMethods.GetMetaFileBitsEx(mfp.hMF, 0, null);
                     if (metafileSize > 0)
                     {
                         byte[] metafileData = new byte[metafileSize];
                         if (NativeMethods.GetMetaFileBitsEx(mfp.hMF, metafileSize, metafileData) == metafileSize)
                         {
-                            byte[] fullData = new byte[Marshal.SizeOf(typeof(METAFILEPICT)) + metafileSize];
-                            Marshal.Copy(pMetafilePict, fullData, 0, Marshal.SizeOf(typeof(METAFILEPICT)));
-                            Buffer.BlockCopy(metafileData, 0, fullData, Marshal.SizeOf(typeof(METAFILEPICT)), metafileSize);
+                            int metaFilePictHeaderSize = Marshal.SizeOf(typeof(METAFILEPICT)) - IntPtr.Size; // Subtract IntPtr.Size we'll replace with the actual metafile data
+                            byte[] fullData = new byte[metaFilePictHeaderSize + metafileSize];
+                            Marshal.Copy(pMetafilePict, fullData, 0, metaFilePictHeaderSize);
+                            Buffer.BlockCopy(metafileData, 0, fullData, metaFilePictHeaderSize, (int)metafileSize);
                             return fullData;
                         }
                     }
@@ -343,35 +344,96 @@ namespace EditClipboardContents
             }
         }
 
-
+        public const uint GMEM_MOVEABLE = 0x0002; // Delete this later
 
         public static IntPtr MetafilePict_Handle_FromRawData(byte[]? rawData)
         {
-            IntPtr hGlobal = AllocateGeneralHandle_FromRawData(rawData);
-            if (hGlobal != IntPtr.Zero)
+            if (rawData == null || rawData.Length <= Marshal.SizeOf<METAFILEPICT>())
+                return IntPtr.Zero;
+
+            IntPtr hGlobalMetafilePict = IntPtr.Zero;
+            IntPtr hMetafile = IntPtr.Zero;
+            IntPtr pMetafile = IntPtr.Zero;
+            IntPtr pMetafilePict = IntPtr.Zero;
+            IntPtr hActualMetafile = IntPtr.Zero;
+
+            try
             {
-                IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
-                if (pGlobal != IntPtr.Zero)
+                // First allocate and create the metafile
+                int headerSize = Marshal.SizeOf<METAFILEPICT>() - IntPtr.Size;
+                int metafileDataSize = rawData.Length - headerSize;
+                byte[] metaFileData = new byte[metafileDataSize];
+
+                // Copy the metafile data portion
+                Array.Copy(rawData, headerSize, metaFileData, 0, metafileDataSize);
+
+                // Allocate memory for the metafile bits
+                hMetafile = NativeMethods.GlobalAlloc(GMEM_MOVEABLE, (UIntPtr)metafileDataSize);
+                if (hMetafile == IntPtr.Zero)
+                    throw new OutOfMemoryException("Failed to allocate memory for metafile.");
+
+                // Lock and copy the metafile bits
+                pMetafile = NativeMethods.GlobalLock(hMetafile);
+                if (pMetafile == IntPtr.Zero)
+                    throw new InvalidOperationException("Failed to lock metafile memory.");
+
+                Marshal.Copy(metaFileData, 0, pMetafile, metafileDataSize);
+
+                // Create the actual metafile while memory is still locked
+                hActualMetafile = NativeMethods.SetMetaFileBitsEx((uint)metafileDataSize, pMetafile);
+                if (hActualMetafile == IntPtr.Zero)
                 {
-                    try
-                    {
-                        METAFILEPICT mfp = (METAFILEPICT)Marshal.PtrToStructure(pGlobal, typeof(METAFILEPICT));
-                        IntPtr hMetafileCopy = NativeMethods.CopyMetaFile(mfp.hMF, null);
-                        if (hMetafileCopy != IntPtr.Zero)
-                        {
-                            mfp.hMF = hMetafileCopy;
-                            Marshal.StructureToPtr(mfp, pGlobal, false);
-                            return hGlobal;
-                        }
-                    }
-                    finally
-                    {
-                        NativeMethods.GlobalUnlock(hGlobal);
-                    }
+                    int error = Marshal.GetLastWin32Error();
+                    string errorMessage = Utils.GetWin32ErrorMessage(error);
+                    throw new InvalidOperationException($"Failed to create metafile from bits. Error {error} - {errorMessage}");
                 }
-                NativeMethods.GlobalFree(hGlobal);
+
+                // Now create the METAFILEPICT structure
+                hGlobalMetafilePict = NativeMethods.GlobalAlloc(GMEM_MOVEABLE, (UIntPtr)Marshal.SizeOf<METAFILEPICT>());
+                if (hGlobalMetafilePict == IntPtr.Zero)
+                    throw new OutOfMemoryException("Failed to allocate memory for METAFILEPICT.");
+
+                pMetafilePict = NativeMethods.GlobalLock(hGlobalMetafilePict);
+                if (pMetafilePict == IntPtr.Zero)
+                    throw new InvalidOperationException("Failed to lock METAFILEPICT memory.");
+
+                // Create and copy the METAFILEPICT structure
+                METAFILEPICT mfp = new METAFILEPICT
+                {
+                    mm = BitConverter.ToInt32(rawData, Marshal.OffsetOf<METAFILEPICT>(nameof(METAFILEPICT.mm)).ToInt32()),
+                    xExt = BitConverter.ToInt32(rawData, Marshal.OffsetOf<METAFILEPICT>(nameof(METAFILEPICT.xExt)).ToInt32()),
+                    yExt = BitConverter.ToInt32(rawData, Marshal.OffsetOf<METAFILEPICT>(nameof(METAFILEPICT.yExt)).ToInt32()),
+                    hMF = hActualMetafile
+                };
+
+                Marshal.StructureToPtr(mfp, pMetafilePict, false);
+
+                // Transfer ownership of hActualMetafile to the METAFILEPICT structure
+                hActualMetafile = IntPtr.Zero;
+
+                return hGlobalMetafilePict;
             }
-            return IntPtr.Zero;
+            catch (Exception ex)
+            {
+                // Clean up on failure
+                if (hActualMetafile != IntPtr.Zero)
+                    NativeMethods.DeleteMetaFile(hActualMetafile);
+                if (hGlobalMetafilePict != IntPtr.Zero)
+                    NativeMethods.GlobalFree(hGlobalMetafilePict);
+                throw;
+            }
+            finally
+            {
+                // Clean up temporary resources
+                if (pMetafilePict != IntPtr.Zero)
+                    NativeMethods.GlobalUnlock(hGlobalMetafilePict);
+
+                if (pMetafile != IntPtr.Zero)
+                    NativeMethods.GlobalUnlock(hMetafile);
+
+                if (hMetafile != IntPtr.Zero)
+                    NativeMethods.GlobalFree(hMetafile);
+            }
         }
 
         public static IntPtr EnhMetafile_Handle_FromRawData(byte[]? rawData)

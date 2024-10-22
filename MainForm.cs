@@ -778,7 +778,7 @@ namespace EditClipboardContents
             {
                 copySuccess = false;
                 error = Marshal.GetLastWin32Error();
-                string errorMessage = GetWin32ErrorMessage(error);
+                string errorMessage = Utils.GetWin32ErrorMessage(error);
 
                 Console.WriteLine($"GetClipboardData returned null for format {formatId}. Error: {error} | Message: {errorMessage}");
 
@@ -834,7 +834,7 @@ namespace EditClipboardContents
                         rawData = FormatConverters.MetafilePict_RawData_FromHandle(hData);
                         dataSize = (ulong)(rawData?.Length ?? 0);
                         break;
-                    case 9: // CF_PALETTE -- NOT YET HANDLED
+                    case 9: // CF_PALETTE
                         rawData = FormatConverters.CF_PALETTE_RawData_FromHandle(hData);
                         dataSize = (ulong)(rawData?.Length ?? 0);
                         break;
@@ -938,40 +938,7 @@ namespace EditClipboardContents
             return true;
         }
 
-        public static string GetWin32ErrorMessage(int? inputError)
-        {
-
-            int errorCode;
-            if (inputError == null)
-            {
-                return "[Unknown Error]";
-            }
-            else
-            {
-                errorCode = (int)inputError;
-            }
-
-            const int FORMAT_MESSAGE_FROM_SYSTEM = 0x1000;
-            const int FORMAT_MESSAGE_IGNORE_INSERTS = 0x200;
-
-            StringBuilder sb = new StringBuilder(256);
-            int length = NativeMethods.FormatMessage(
-                FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                IntPtr.Zero,
-                errorCode,
-                0, // Use system's current language
-                sb,
-                sb.Capacity,
-                IntPtr.Zero
-            );
-
-            if (length == 0)
-            {
-                return $"Unknown error (0x{errorCode:X})";
-            }
-
-            return sb.ToString().Trim();
-        }
+        
 
         private void ProcessClipboardData()
         {
@@ -1089,7 +1056,7 @@ namespace EditClipboardContents
             // Set alias for NativeMethods.FormatMessage
             static string ErrMsg(int errorCode)
             {
-                return GetWin32ErrorMessage(errorCode);
+                return Utils.GetWin32ErrorMessage(errorCode);
             }
 
             try

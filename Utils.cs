@@ -350,5 +350,40 @@ namespace EditClipboardContents
             return "";
         }
 
+        public static string GetWin32ErrorMessage(int? inputError)
+        {
+
+            int errorCode;
+            if (inputError == null)
+            {
+                return "[Unknown Error]";
+            }
+            else
+            {
+                errorCode = (int)inputError;
+            }
+
+            const int FORMAT_MESSAGE_FROM_SYSTEM = 0x1000;
+            const int FORMAT_MESSAGE_IGNORE_INSERTS = 0x200;
+
+            StringBuilder sb = new StringBuilder(256);
+            int length = NativeMethods.FormatMessage(
+                FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                IntPtr.Zero,
+                errorCode,
+                0, // Use system's current language
+                sb,
+                sb.Capacity,
+                IntPtr.Zero
+            );
+
+            if (length == 0)
+            {
+                return $"Unknown error (0x{errorCode:X})";
+            }
+
+            return sb.ToString().Trim();
+        }
+
     } // ----------------- End of class -----------------
 } // ----------------- End of namespace -----------------

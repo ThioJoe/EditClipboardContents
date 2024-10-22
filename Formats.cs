@@ -1174,15 +1174,6 @@ namespace EditClipboardContents
             public BYTE peFlags;
         }
 
-        //[StructLayout(LayoutKind.Sequential)]
-        //public struct LOGPALETTE
-        //{
-        //    public WORD palVersion;
-        //    public WORD palNumEntries;
-        //    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)] // Don't forget to subtract this size from the total size if you change the array size
-        //    public PALETTEENTRY[] palPalEntry;
-        //}
-
         // Using class instead of struct because of the array size
         public class LOGPALETTE
         {

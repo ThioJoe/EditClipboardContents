@@ -107,7 +107,7 @@ namespace EditClipboardContents
         public static extern bool DeleteEnhMetaFile(IntPtr hemf);
 
         [DllImport("gdi32.dll")]
-        public static extern int GetMetaFileBitsEx(IntPtr hmf, int nSize, [In, Out] byte[]? lpvData);
+        public static extern uint GetMetaFileBitsEx(IntPtr hmf, uint nSize, [In, Out] byte[]? lpvData);
 
         [DllImport("gdi32.dll")]
         public static extern uint GetEnhMetaFileBits(IntPtr hemf, uint cbBuffer, [In, Out] byte[]? lpbBuffer);
@@ -178,6 +178,8 @@ namespace EditClipboardContents
 
         [DllImport("gdi32.dll")]
         public static extern UInt32 GetPaletteEntries(IntPtr hPalette, UInt32 iStartIndex, UInt32 nEntries, [Out] IntPtr lppe);
+        [DllImport("gdi32.dll")]
+        public static extern IntPtr SetMetaFileBitsEx(uint cbBuffer, IntPtr lpData);
 
 
         // Constants
