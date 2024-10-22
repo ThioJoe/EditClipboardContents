@@ -175,7 +175,8 @@ namespace EditClipboardContents
             dataGridViewClipboard.AutoGenerateColumns = false;
             dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.OriginalIndex), Name = colName.Index, HeaderText = "" });
             dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.UniqueID), Name = colName.UniqueID, HeaderText = "", Visible = false });
-            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { Name = colName.Known, HeaderText = "💾" });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { Name = colName.KnownBinary, HeaderText = "💾" });
+            dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { Name = colName.KnownStruct, HeaderText = "ℹ️" });
             dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.FormatName), Name = colName.FormatName, HeaderText = "Format Name" });
             dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.FormatId), Name = colName.FormatId, HeaderText = "Format ID" });
             dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.FormatType), Name = colName.FormatType, HeaderText = "Format Type" });
@@ -207,9 +208,9 @@ namespace EditClipboardContents
             dataGridViewClipboard.Columns[colName.FormatName].DefaultCellStyle.Padding = formatNamePadding;
 
             //// Add a tooltip to display on the Known column
-            //ToolTip toolTipKnown = new ToolTip();
-            //toolTipKnown.SetToolTip(dataGridViewClipboard.Columns[colName.Known], "This format can be saved as a known binary file.");
-            dataGridViewClipboard.Columns[colName.Known].ToolTipText = MyStrings.KnownFileTooltip;
+            dataGridViewClipboard.Columns[colName.KnownBinary].ToolTipText = MyStrings.KnownFileTooltip;
+            dataGridViewClipboard.Columns[colName.KnownStruct].ToolTipText = MyStrings.KnownStructTooltip;
+
 
             // Hide the row headers (the leftmost column)
             dataGridViewClipboard.RowHeadersVisible = false;
@@ -217,8 +218,11 @@ namespace EditClipboardContents
             // Set miscellaensous properties for specific columns
             dataGridViewClipboard.Columns[colName.Index].DefaultCellStyle.ForeColor = Color.Gray;
             dataGridViewClipboard.Columns[colName.Index].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewClipboard.Columns[colName.Known].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewClipboard.Columns[colName.Known].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewClipboard.Columns[colName.KnownBinary].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewClipboard.Columns[colName.KnownBinary].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewClipboard.Columns[colName.KnownStruct].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewClipboard.Columns[colName.KnownStruct].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
 
             // Add event handler for scroll wheel
             dataGridViewClipboard.MouseWheel += new MouseEventHandler(dataGridViewClipboard_MouseWheel);
@@ -272,8 +276,16 @@ namespace EditClipboardContents
                 string knownFileTooltip = "";
                 if (FormatInfoHardcoded.KnownBinaryExtensionAssociations.ContainsKey(formatItem.FormatName))
                 {
-                    knownIcon = "✔️";
+                    knownIcon = "✓"; //Could also use emoji: ✔️
                     knownFileTooltip = MyStrings.KnownFileTooltip;
+                }
+                
+                string knownStructIcon = "";
+                string knownStructTooltip = "";
+                if (formatItem.ClipDataObject != null)
+                {
+                    knownStructIcon = "✓";
+                    knownStructTooltip = MyStrings.KnownStructTooltip;
                 }
 
                 // --- Actually sets the values in the grid ---
@@ -281,10 +293,13 @@ namespace EditClipboardContents
                 if (matchingRow != null)
                 {
                     int rowIndex = matchingRow.Index;
+                    // Take the value variables set within the loop above and finally put them in the grid
                     dataGridViewClipboard.Rows[rowIndex].Cells[colName.TextPreview].Value = textPreview;
                     dataGridViewClipboard.Rows[rowIndex].Cells[colName.DataInfo].Value = dataInfoString;
-                    dataGridViewClipboard.Rows[rowIndex].Cells[colName.Known].Value = knownIcon;
-                    dataGridViewClipboard.Rows[rowIndex].Cells[colName.Known].ToolTipText = knownFileTooltip;
+                    dataGridViewClipboard.Rows[rowIndex].Cells[colName.KnownBinary].Value = knownIcon;
+                    dataGridViewClipboard.Rows[rowIndex].Cells[colName.KnownBinary].ToolTipText = knownFileTooltip;
+                    dataGridViewClipboard.Rows[rowIndex].Cells[colName.KnownStruct].Value = knownStructIcon;
+                    dataGridViewClipboard.Rows[rowIndex].Cells[colName.KnownStruct].ToolTipText = knownStructTooltip;
                 }
                 // ---------------------------------------------
             }
@@ -314,7 +329,7 @@ namespace EditClipboardContents
 
                     if (column.Name == colName.FormatName)
                         column.Width = originalWidth + 20; // Add some padding
-                    else if (column.Name == colName.Known)
+                    else if (column.Name == colName.KnownBinary | column.Name == colName.KnownStruct)
                         column.Width = originalWidth / 2; // Make it a bit smaller
                     else
                         column.Width = originalWidth + 0; // For some reason this is necessary after setting resizable and autosize modes
@@ -3130,7 +3145,8 @@ namespace EditClipboardContents
     {
         public const string UniqueID = "UniqueID";
         public const string Index = "Index";
-        public const string Known = "Known";
+        public const string KnownBinary = "KnownFileType";
+        public const string KnownStruct = "KnownStructInfo";
         public const string FormatName = "FormatName";
         public const string FormatId = "FormatId";
         public const string FormatType = "FormatType";
@@ -3148,6 +3164,7 @@ namespace EditClipboardContents
         public const string DataNull = "[null]";
         public const string DataEmpty = "[Empty]";
         public const string KnownFileTooltip = "Can be properly exported as known file type.";
+        public const string KnownStructTooltip = "Details about underlying object/struct available.";
         public const string DataTooLarge = "Data is too large to display preview.\nThis can be changed in the options menu, but the program may freeze for large amounts of data.";
     }
     
