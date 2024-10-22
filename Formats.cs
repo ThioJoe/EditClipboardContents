@@ -612,7 +612,7 @@ namespace EditClipboardContents
             {
                 rdSize = rdSizeInput;
                 rdFunction = GetFunctionValue(rawBytes);
-                rdParm = new WORD[rdSizeInput];
+                rdParm = new WORD[rdSizeInput - sizeof(DWORD) - sizeof(WORD)]; // Assign the remaining bytes to rdParm
             }
             // ----------------------------------------------------------
             private WMF_RecordType GetFunctionValue(byte[] rawBytes)
@@ -657,21 +657,21 @@ namespace EditClipboardContents
 
             public override bool FillEmptyArrayWithRemainingBytes() => false;
 
-            public override Dictionary<string, string> DataDisplayReplacements()
-            {
-                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    { "ENHMETARECORD", "[Enhanced Metafile Record Data]" }
-                };
-            }
+            //public override Dictionary<string, string> DataDisplayReplacements()
+            //{
+            //    return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            //    {
+            //        { "ENHMETARECORD", "[Enhanced Metafile Record Data]" }
+            //    };
+            //}
         }
 
 
         public class ENHMETAHEADER_OBJ : ClipboardFormatBase
         {
-            public EMF_RecordType iType { get; set; } // Aka RecordType
+            public EMF_RecordType iType { get; set; } // Aka RecordType, 4 bytes DWORD
             public DWORD nSize { get; set; }
-            public RECTL_OBJ rclBounds { get; set; } = new RECTL_OBJ();
+            public RECTL_OBJ rclBounds { get; set; } = new RECTL_OBJ(); // 16 Bytes
             public RECTL_OBJ rclFrame { get; set; } = new RECTL_OBJ();
             public DWORD dSignature { get; set; }
             public DWORD nVersion { get; set; }
@@ -692,44 +692,50 @@ namespace EditClipboardContents
             protected override string GetStructName() => "ENHMETAHEADER";
         }
 
-        
-        // Broken don't use
+
         public class ENHMETARECORD_OBJ : ClipboardFormatBase
         {
-            public DWORD iType { get; set; }
-            private DWORD _nSize { get; set; } // Size of the record in bytes
-            
-
-            public DWORD nSize
+            public EMF_RecordType iType { get; set; } // DWORD
+            public DWORD nSize { get; set; }
+            public DWORD[] dParm { get; set; } = [];
+            // ----------------------------------------------------------
+            public ENHMETARECORD_OBJ(UInt32 nSizeInput, byte[] rawBytes)
             {
-                get => _nSize;
-                set
-                {
-                    // Subtract the size of the size field itself
-                    int untrimmedByteConut = (int)value;
-                    int byteCount;
-
-                    if (untrimmedByteConut - 4 < 0)
-                    {
-                        byteCount = 0;
-                    }
-                    else
-                    {
-                        byteCount = untrimmedByteConut - 4;
-                    }
-                    // Divide by 4 to get the number of DWORDs
-                    int DWORDcount = byteCount / 4;
-
-                    _nSize = value;
-                    _dParm = new DWORD[DWORDcount];
-                }
+                iType = GetFunctionValue(rawBytes);
+                //nSize = GetnSize(rawBytes);
+                nSize = nSizeInput;
+                dParm = new DWORD[nSizeInput - (sizeof(DWORD)*2)];
             }
-            public DWORD[] _dParm { get; set; } = [];
+            // ----------------------------------------------------------
+            private EMF_RecordType GetFunctionValue(byte[] rawBytes)
+            {
+                // Get the first DWORD
+                byte[] functionBytes = new byte[sizeof(DWORD)];
+                Array.Copy(sourceArray: rawBytes, sourceIndex: 0, destinationArray: functionBytes, destinationIndex: 0, length: sizeof(DWORD));
+                DWORD function = BitConverter.ToUInt32(functionBytes, 0);
+                return (EMF_RecordType)function;
+            }
+
+            private DWORD GetnSize(byte[] rawBytes)
+            {
+                // Get the DWORD after the first DWORD
+                byte[] sizeCountBytes = new byte[sizeof(DWORD)];
+                Array.Copy(sourceArray: rawBytes, sourceIndex: sizeof(DWORD), destinationArray: sizeCountBytes, destinationIndex: 0, length: sizeof(DWORD));
+                DWORD size = BitConverter.ToUInt32(sizeCountBytes, 0);
+                return size;
+            }
 
             protected override string GetStructName() => "ENHMETARECORD";
+            public override Dictionary<string, string> DataDisplayReplacements()
+            {
+                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "dParm", $"[Parameter Data]" }
+                };
+            }
         }
 
-        public class RECTL_OBJ : ClipboardFormatBase
+        public class RECTL_OBJ : ClipboardFormatBase // 16 bytes
         {
             public LONG left { get; set; }
             public LONG top { get; set; }
@@ -875,7 +881,7 @@ namespace EditClipboardContents
             META_CREATEREGION = 0x06FF
         }
 
-        public enum EMF_RecordType: DWORD
+        public enum EMF_RecordType: DWORD // 4 bytes
         {
             EMR_HEADER = 0x00000001,
             EMR_POLYBEZIER = 0x00000002,

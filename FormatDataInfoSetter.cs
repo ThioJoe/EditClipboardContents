@@ -115,8 +115,8 @@ namespace EditClipboardContents
                     while (recordOffset < justMetaRecordsData.Length)
                     {
                         // Get the DWORD of the record size at the offset
-                        byte[] recordSizeBytesValueHolder = new byte[4];
-                        Array.Copy(justMetaRecordsData, recordOffset, recordSizeBytesValueHolder, 0, 4);
+                        byte[] recordSizeBytesValueHolder = new byte[sizeof(UInt32)];
+                        Array.Copy(justMetaRecordsData, recordOffset, recordSizeBytesValueHolder, 0, sizeof(UInt32));
                         UInt32 recordSizeInWords = BitConverter.ToUInt32(recordSizeBytesValueHolder, 0); // Size is in words, so multiply by 2 to get bytes
                         uint recordSizeInBytes = recordSizeInWords * 2;
                         byte[] currentRecord = new byte[recordSizeInBytes];
@@ -206,8 +206,57 @@ namespace EditClipboardContents
                 case "CF_ENHMETAFILE": // 14
                     ClipboardFormats.ENHMETAFILE_OBJ enhMetafile = ClipboardFormats.BytesToObject<ClipboardFormats.ENHMETAFILE_OBJ>(rawData);
 
+                    int enhMetaRecordOffset =
+                        sizeof(UInt32) +     // iType (EMF_RecordType enum as DWORD)
+                        sizeof(UInt32) +     // nSize (DWORD)
+                        4 * sizeof(Int32) +  // rclBounds (RECTL_OBJ - 16 bytes)
+                        4 * sizeof(Int32) +  // rclFrame (RECTL_OBJ - 16 bytes)
+                        sizeof(UInt32) +     // dSignature (DWORD)
+                        sizeof(UInt32) +     // nVersion (DWORD)
+                        sizeof(UInt32) +     // nBytes (DWORD)
+                        sizeof(UInt32) +     // nRecords (DWORD)
+                        sizeof(UInt16) +     // nHandles (WORD)
+                        sizeof(UInt16) +     // sReserved (WORD)
+                        sizeof(UInt32) +     // nDescription (DWORD)
+                        sizeof(UInt32) +     // offDescription (DWORD)
+                        sizeof(UInt32) +     // nPalEntries (DWORD)
+                        2 * sizeof(Int32) + // szlDevice (SIZEL_OBJ - 8 bytes)
+                        2 * sizeof(Int32) + // szlMillimeters (SIZEL_OBJ - 8 bytes)
+                        sizeof(UInt32) +     // cbPixelFormat (DWORD)
+                        sizeof(UInt32) +     // offPixelFormat (DWORD)
+                        sizeof(UInt32) +     // bOpenGL (DWORD)
+                        2 * sizeof(Int32);  // szlMicrometers (SIZEL_OBJ - 8 bytes)
+
                     //byte[] rawDataEnhMetafile = enhMetafile.ENHMETARECORD;
                     //ENHMETARECORD_OBJ enhMetaRecord = ClipboardFormats.BytesToObject<ClipboardFormats.ENHMETARECORD_OBJ>(rawDataEnhMetafile);
+
+                    byte[] justEnhMetaFileData = rawData;
+                    byte[] justEnhRecordsData = new byte[justEnhMetaFileData.Length - enhMetaRecordOffset];
+                    Array.Copy(justEnhMetaFileData, enhMetaRecordOffset, justEnhRecordsData, 0, justEnhRecordsData.Length);
+
+                    // Now will use justEnhRecordsData to get the records. Will need to loop through and get the 2nd DWORD to get the size then create the record object
+                    List<ENHMETARECORD_OBJ> allEnhMetaRecords = [];
+                    int enhRecordOffset = 0;
+                    while (enhRecordOffset < justEnhRecordsData.Length)
+                    {
+                        // Get the DWORD of the record size at the offset
+                        byte[] recordSizeBytesValueHolder = new byte[sizeof(UInt32)];
+                        int localOffsetOfSize = sizeof(UInt32);
+                        Array.Copy(justEnhRecordsData, (enhRecordOffset + localOffsetOfSize), recordSizeBytesValueHolder, 0, sizeof(UInt32));
+
+                        UInt32 recordSizeInBytes = BitConverter.ToUInt32(recordSizeBytesValueHolder, 0); // For enhanced metafile, size is in bytes (not words)
+                        byte[] currentRecord = new byte[recordSizeInBytes];
+                        Array.Copy(justEnhRecordsData, enhRecordOffset, currentRecord, 0, recordSizeInBytes);
+
+                        ENHMETARECORD_OBJ recordObj = new ClipboardFormats.ENHMETARECORD_OBJ(recordSizeInBytes, currentRecord);
+                        allEnhMetaRecords.Add(recordObj);
+
+                        enhRecordOffset += (int)recordSizeInBytes;
+                    }
+
+                    // Convert the list to an array
+                    ENHMETARECORD_OBJ[] allEnhMetaRecordsArray = allEnhMetaRecords.ToArray();
+                    enhMetafile.ENHMETARECORD = allEnhMetaRecordsArray;
 
                     processedObject = new ClipDataObject
                     {
