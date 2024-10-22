@@ -32,11 +32,11 @@ namespace EditClipboardContents
     public partial class MainForm : Form
     {
         // -------------------------------------- Set Data Info ---------------------------------------------------
-        private static (List<string>, ViewMode, byte[], ClipDataObject?) SetDataInfo(string formatName, byte[] rawData)
+        private static (List<string>, ViewMode, byte[], IClipboardFormat?) SetDataInfo(string formatName, byte[] rawData)
         {
             List<string> dataInfoList = new List<string>();
             byte[] processedData = rawData;
-            ClipDataObject? processedObject = null;
+            IClipboardFormat? processedObject = null;
             ViewMode preferredDisplayMode = ViewMode.None;
 
             switch (formatName) // Process based on format name because format ID can be different for non-standard (registered) formats
@@ -80,10 +80,7 @@ namespace EditClipboardContents
                             };
                         }
 
-                        processedObject = new ClipDataObject
-                        {
-                            ObjectData = CF_bitmapProcessed
-                        };
+                        processedObject = CF_bitmapProcessed;
 
                     }
                     preferredDisplayMode = ViewMode.Object;
@@ -140,10 +137,7 @@ namespace EditClipboardContents
 
                     dataInfoList.Add($"Mode: {metafilePictProcessed.mm}");
 
-                    processedObject = new ClipDataObject
-                    {
-                        ObjectData = metafilePictProcessed
-                    };
+                    processedObject = metafilePictProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
 
@@ -166,10 +160,7 @@ namespace EditClipboardContents
                     int bitCount = bitmapProcessed.bmiHeader.biBitCount;
                     dataInfoList.Add($"{width}x{height}, {bitCount} bpp");
 
-                    processedObject = new ClipDataObject
-                    {
-                        ObjectData = bitmapProcessed
-                    };
+                    processedObject = bitmapProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
 
@@ -178,10 +169,8 @@ namespace EditClipboardContents
                     int paletteEntries = paletteProcessed.palNumEntries;
                     dataInfoList.Add($"{paletteEntries} Palette Entries");
                     dataInfoList.Add($"Version: {Utils.AsHexString(paletteProcessed.palVersion)}");
-                    processedObject = new ClipDataObject
-                    {
-                        ObjectData = paletteProcessed
-                    };
+
+                    processedObject = paletteProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
 
@@ -266,10 +255,7 @@ namespace EditClipboardContents
                     ENHMETARECORD_OBJ[] allEnhMetaRecordsArray = allEnhMetaRecords.ToArray();
                     enhMetafile.ENHMETARECORD = allEnhMetaRecordsArray;
 
-                    processedObject = new ClipDataObject
-                    {
-                        ObjectData = enhMetafile
-                    };
+                    processedObject = enhMetafile;
                     preferredDisplayMode = ViewMode.Object;
 
                     break;
@@ -325,10 +311,8 @@ namespace EditClipboardContents
                         }
 
                         DROPFILES_OBJ dropFilesProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.DROPFILES_OBJ>(rawData);
-                        processedObject = new ClipDataObject
-                        {
-                            ObjectData = dropFilesProcessed
-                        };
+
+                        processedObject = dropFilesProcessed;
                         preferredDisplayMode = ViewMode.Object;
 
                         break;
@@ -365,10 +349,7 @@ namespace EditClipboardContents
                     BITMAPV5HEADER_OBJ bitmapInfoV5Processed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPV5HEADER_OBJ>(rawData);
                     dataInfoList.Add($"{bitmapInfoV5Processed.bV5Width}x{bitmapInfoV5Processed.bV5Height}, {bitmapInfoV5Processed.bV5BitCount} bpp");
 
-                    processedObject = new ClipDataObject
-                    {
-                        ObjectData = bitmapInfoV5Processed
-                    };
+                    processedObject = bitmapInfoV5Processed;
                     preferredDisplayMode = ViewMode.Object;
 
                     break;
@@ -380,10 +361,7 @@ namespace EditClipboardContents
                     int fileCount = (int)fileGroupDescriptorWProcessed.cItems;
                     dataInfoList.Add($"File Count: {fileCount}");
 
-                    processedObject = new ClipDataObject
-                    {
-                        ObjectData = fileGroupDescriptorWProcessed
-                    };
+                    processedObject = fileGroupDescriptorWProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
 
@@ -423,10 +401,7 @@ namespace EditClipboardContents
                     // Add property to cidaProcessed called ITEMIDLIST with the list of ITEMIDLIST_OBJ objects
                     cidaProcessed.ITEMIDLIST = pidlList;
 
-                    processedObject = new ClipDataObject
-                    {
-                        ObjectData = cidaProcessed
-                    };
+                    processedObject = cidaProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
 
@@ -434,21 +409,21 @@ namespace EditClipboardContents
                     POINT_OBJ ShellObjOffsetProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.POINT_OBJ>(rawData);
                     dataInfoList.Add($"X: {ShellObjOffsetProcessed.x}, Y: {ShellObjOffsetProcessed.y}");
 
-                    processedObject = new ClipDataObject
-                    {
-                        ObjectData = ShellObjOffsetProcessed
-                    };
+                    processedObject = ShellObjOffsetProcessed;
                     preferredDisplayMode = ViewMode.Object;
+                    break;
+
+                case "AsyncFlag":
+                    WINDOWS_BOOL boolVal = ClipboardFormats.BytesToObject<ClipboardFormats.WINDOWS_BOOL>(rawData);
+                    dataInfoList.Add($"Boolean: {boolVal}");
+                    dataInfoList.Add("Possibly has to do with telling Explorer whether to paste in the background.");
                     break;
 
                 case "DataObjectAttributes":
                 case "DataObjectAttributesRequiringElevation":
                     DataObjectAttributes_Obj dataObjectAttributesProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.DataObjectAttributes_Obj>(rawData);
 
-                    processedObject = new ClipDataObject
-                    {
-                        ObjectData = dataObjectAttributesProcessed
-                    };
+                    processedObject = dataObjectAttributesProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
 

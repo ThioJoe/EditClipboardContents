@@ -968,7 +968,7 @@ namespace EditClipboardContents
             foreach (var item in clipboardItems)
             {
                 byte[]? processedData = null;
-                ClipDataObject? processedObject = null;
+                IClipboardFormat? processedObject = null;
                 ViewMode preferredDisplayMode = ViewMode.None;
 
                 // Data info list contains metadata about the data. First item will show in the data info column, all will show in the text box in object/struct view mode
@@ -3219,117 +3219,6 @@ namespace EditClipboardContents
 
     }
 
-    public class ClipDataObject
-    {
-        private IClipboardFormat? _objectData = null;
-        public IClipboardFormat? ObjectData
-        {
-            get => _objectData;
-            set
-            {
-                _objectData = value;
-                _structName = ObjectData?.StructName();
-            }
-        }
-
-        // Struct name will be gotten automatically via class method if possible and it wasn't set manually
-        private string? _structName = null;
-        public string? StructName
-        {
-            get => _structName;
-            set
-            {
-                _structName = value;
-                if (_structName == null && ObjectData != null)
-                {
-                    _structName = ObjectData.StructName();
-                }
-            }
-        }
-
-        public IEnumerable<string>? PropertyNames
-        {
-            get
-            {
-                if (ObjectData == null)
-                {
-                    return null;
-                }
-
-                // If it's a collection and therefore no actual property names
-                if (ObjectData is IEnumerable enumerable)
-                {
-                    return []; // Same as:  Enumerable.Empty<string>()
-                }
-                else
-                {
-                    return ObjectData.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => p.Name);
-                }
-            }
-        }
-
-        public object? GetPropertyValue(string propertyName)
-        {
-            if (ObjectData == null)
-                return null;
-
-            // Check if it's an enum first, because it will otherwise get treated as a nested object
-            // If enumerable, return the object itself, not a string, so we can further process it
-            if (ObjectData.GetType().GetProperty(propertyName)?.PropertyType.IsEnum == true)
-            {
-                return ObjectData.GetType().GetProperty(propertyName).GetValue(ObjectData);
-            }
-
-            // Check for display replacements. If there is one, use that instead of the actual value
-            if (ObjectData.DataDisplayReplacements()?.TryGetValue(propertyName, out string replacementValue) == true)
-            {
-                return replacementValue;
-            }
-
-            PropertyInfo propInfo = ObjectData.GetType().GetProperty(propertyName);
-            try
-            {
-                return propInfo?.GetValue(ObjectData);
-            }
-            catch (TargetParameterCountException)
-            {
-                return null;
-            }
-        }
-
-        private void BuildString(StringBuilder sb, string indent)
-        {
-            if (PropertyNames == null)
-            {
-                return;
-            }
-            foreach (var propertyName in PropertyNames)
-            {
-                var propertyValue = GetPropertyValue(propertyName);
-                if (propertyValue is ClipDataObject nestedObject)
-                {
-                    sb.AppendLine($"{indent}{propertyName}:");
-                    nestedObject.BuildString(sb, indent + "    ");
-                }
-                else if (propertyValue is IList<ClipDataObject> nestedList)
-                {
-                    sb.AppendLine($"{indent}{propertyName}:");
-                    foreach (var item in nestedList)
-                    {
-                        sb.AppendLine($"{indent}    - ");
-                        item.BuildString(sb, indent + "        ");
-                    }
-                }
-                else
-                {
-                    sb.AppendLine($"{indent}{propertyName}: {propertyValue}");
-                }
-            }
-        }
-
-
-    } // ------ End of ClipDataObject class definition
-
     public class ClipboardItem : ICloneable, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -3356,7 +3245,7 @@ namespace EditClipboardContents
         public DiagnosticsInfo? ErrorDiagnosisReport { get; set; }
         public int OriginalIndex { get; set; } = -1;
         public ViewMode PreferredViewMode { get; set; } = ViewMode.None;
-        public ClipDataObject? ClipDataObject { get; set; } = null ;
+        public IClipboardFormat? ClipDataObject { get; set; } = null ;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
@@ -3384,13 +3273,7 @@ namespace EditClipboardContents
                 ErrorDiagnosisReport = this.ErrorDiagnosisReport,
                 OriginalIndex = this.OriginalIndex,
                 PreferredViewMode = this.PreferredViewMode,
-                ClipDataObject = this.ClipDataObject != null
-                ? new ClipDataObject // If it 's not null, clone it
-                {
-                    StructName = this.ClipDataObject.StructName,
-                    ObjectData = this.ClipDataObject.ObjectData
-                }
-                : null // If it's null, set to null
+                ClipDataObject = this.ClipDataObject // If it's null, set to null, otherwise clone
             };
 
             // Manually set the UniqueID to match the original

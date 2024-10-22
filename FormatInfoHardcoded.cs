@@ -77,7 +77,7 @@ namespace EditClipboardContents
 
         public static readonly Dictionary<string, string> FormatDescriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            {"CF_BITMAP", "HBITMAP"},
+            {"CF_BITMAP", "Handle to HBITMAP"},
             {"CF_DIB", "BITMAPINFO followed by bitmap bits"},
             {"CF_DIBV5", "BITMAPV5HEADER followed by color space info and bitmap bits"},
             {"CF_DIF", "Software Arts' Data Interchange Format"},
@@ -93,7 +93,7 @@ namespace EditClipboardContents
             {"CF_METAFILEPICT", "METAFILEPICT"},
             {"CF_OEMTEXT", "Text in OEM character set"},
             {"CF_OWNERDISPLAY", "Owner-display format data"},
-            {"CF_PALETTE", "HPALETTE"},
+            {"CF_PALETTE", "Handle to HPALETTE"},
             {"CF_PENDATA", "Data for the pen extensions to the Microsoft Windows for Pen Computing."},
             {"CF_PRIVATEFIRST", "Start of range of integers for private clipboard formats"},
             {"CF_PRIVATELAST", "End of range of integers for private clipboard formats"},

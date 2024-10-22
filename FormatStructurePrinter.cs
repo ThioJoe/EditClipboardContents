@@ -28,9 +28,9 @@ namespace EditClipboardContents
         {
             string displayText;
 
-            if (fullItem != null && fullItem.ClipDataObject != null && fullItem.ClipDataObject.ObjectData != null)
+            if (fullItem != null && fullItem.ClipDataObject != null)
             {
-                displayText = fullItem.ClipDataObject.ObjectData.GetCacheStructObjectDisplayInfo();
+                displayText = fullItem.ClipDataObject.GetCacheStructObjectDisplayInfo();
             }
             else
             {
@@ -48,7 +48,7 @@ namespace EditClipboardContents
             {
                 displayText = CreateDataString(formatName, fullItem);
 
-                fullItem.ClipDataObject.ObjectData.SetCacheStructObjectDisplayInfo(displayText);
+                fullItem.ClipDataObject.SetCacheStructObjectDisplayInfo(displayText);
                 return displayText;
             }
         }
@@ -89,7 +89,7 @@ namespace EditClipboardContents
             }
 
             // If there's no full item or object data, we'll still check if there is any data info
-            if (fullItem == null || fullItem.ClipDataObject == null || fullItem.ClipDataObject.ObjectData == null)
+            if (fullItem == null || fullItem.ClipDataObject == null)
             {
                 if (!anyFormatInfoAvailable)
                 {
@@ -104,7 +104,7 @@ namespace EditClipboardContents
             if (fullItem?.ClipDataObject != null)
             {
                 // Documentation links for the struct and its members
-                Dictionary<string, string> structDocs = FormatInfoHardcoded.GetDocumentationUrls_ForEntireObject(fullItem.ClipDataObject.ObjectData);
+                Dictionary<string, string> structDocs = FormatInfoHardcoded.GetDocumentationUrls_ForEntireObject(fullItem.ClipDataObject);
                 if (structDocs.Count > 0)
                 {
                     dataInfoString.AppendLine($"\nStruct Documentation:");
@@ -115,7 +115,7 @@ namespace EditClipboardContents
                 }
 
                 structInfoString.AppendLine($"\nStruct Info:");
-                RecursivePrintClipDataObject(fullItem.ClipDataObject.ObjectData, indent);
+                RecursivePrintClipDataObject(fullItem.ClipDataObject, indent);
             }
 
             // Final result
