@@ -62,7 +62,7 @@ namespace EditClipboardContents
                     break;              
 
                 case "CF_BITMAP": // 2 - CF_BITMAP
-                    BITMAP_OBJ CF_bitmapProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAP_OBJ>(rawData);
+                    BITMAP_OBJ CF_bitmapProcessed = BytesToObject<BITMAP_OBJ>(rawData);
                     
                     //dataInfoList.Add($"{CF_bitmapProcessed.bmWidth}x{CF_bitmapProcessed.bmHeight}, {CF_bitmapProcessed.bmBitsPixel} bpp");
                     using (MemoryStream ms = new MemoryStream(rawData))
@@ -87,14 +87,12 @@ namespace EditClipboardContents
                     break;
 
                 case "CF_METAFILEPICT": // 3
-                    METAFILEPICT_OBJ metafilePictProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.METAFILEPICT_OBJ>(rawData);
-
-                    ////METARECORD_OBJ metaRecords = ClipboardFormats.BytesToObject<ClipboardFormats.METARECORD_OBJ>(rawDataMetafile);
+                    METAFILEPICT_OBJ metafilePictProcessed = BytesToObject<METAFILEPICT_OBJ>(rawData);
 
                     int metaFilePictOffset = Marshal.OffsetOf<METAFILEPICT>(nameof(METAFILEPICT.hMF)).ToInt32();
                     byte[] justMetaFileData = new byte[rawData.Length - metaFilePictOffset];
                     Array.Copy(rawData, metaFilePictOffset, justMetaFileData, 0, justMetaFileData.Length);
-                    METAFILE_OBJ metaFile = ClipboardFormats.BytesToObject<ClipboardFormats.METAFILE_OBJ>(justMetaFileData);
+                    METAFILE_OBJ metaFile = BytesToObject<METAFILE_OBJ>(justMetaFileData);
 
                     // Get the offset where METARECORDS starts in the Metafile. (After the METAHEADER)
                     int metaRecordOffsetInMetaFile =
@@ -122,7 +120,7 @@ namespace EditClipboardContents
                         byte[] currentRecord = new byte[recordSizeInBytes];
                         Array.Copy(justMetaRecordsData, recordOffset, currentRecord, 0, recordSizeInBytes);
 
-                        METARECORD_OBJ recordObj = new ClipboardFormats.METARECORD_OBJ((UInt32)recordSizeInBytes, currentRecord);
+                        METARECORD_OBJ recordObj = new METARECORD_OBJ((UInt32)recordSizeInBytes, currentRecord);
                         allMetaRecords.Add(recordObj);
                         recordOffset += (int)recordSizeInBytes;
                     }
@@ -154,7 +152,7 @@ namespace EditClipboardContents
                     break;
 
                 case "CF_DIB":   // 8  - CF_DIB
-                    BITMAPINFO_OBJ bitmapProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPINFO_OBJ>(rawData);
+                    BITMAPINFO_OBJ bitmapProcessed = BytesToObject<BITMAPINFO_OBJ>(rawData);
                     int width = bitmapProcessed.bmiHeader.biWidth;
                     int height = bitmapProcessed.bmiHeader.biHeight;
                     int bitCount = bitmapProcessed.bmiHeader.biBitCount;
@@ -165,7 +163,7 @@ namespace EditClipboardContents
                     break;
 
                 case "CF_PALETTE": // 9 - CF_PALETTE
-                    LOGPALETTE_OBJ paletteProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.LOGPALETTE_OBJ>(rawData);
+                    LOGPALETTE_OBJ paletteProcessed = BytesToObject<LOGPALETTE_OBJ>(rawData);
                     int paletteEntries = paletteProcessed.palNumEntries;
                     dataInfoList.Add($"{paletteEntries} Palette Entries");
                     dataInfoList.Add($"Version: {Utils.AsHexString(paletteProcessed.palVersion)}");
@@ -201,7 +199,7 @@ namespace EditClipboardContents
                     break;
 
                 case "CF_ENHMETAFILE": // 14
-                    ClipboardFormats.ENHMETAFILE_OBJ enhMetafile = ClipboardFormats.BytesToObject<ClipboardFormats.ENHMETAFILE_OBJ>(rawData);
+                    ENHMETAFILE_OBJ enhMetafile = BytesToObject<ENHMETAFILE_OBJ>(rawData);
 
                     int enhMetaRecordOffset =
                         sizeof(UInt32) +     // iType (EMF_RecordType enum as DWORD)
@@ -224,9 +222,6 @@ namespace EditClipboardContents
                         sizeof(UInt32) +     // bOpenGL (DWORD)
                         2 * sizeof(Int32);  // szlMicrometers (SIZEL_OBJ - 8 bytes)
 
-                    //byte[] rawDataEnhMetafile = enhMetafile.ENHMETARECORD;
-                    //ENHMETARECORD_OBJ enhMetaRecord = ClipboardFormats.BytesToObject<ClipboardFormats.ENHMETARECORD_OBJ>(rawDataEnhMetafile);
-
                     byte[] justEnhMetaFileData = rawData;
                     byte[] justEnhRecordsData = new byte[justEnhMetaFileData.Length - enhMetaRecordOffset];
                     Array.Copy(justEnhMetaFileData, enhMetaRecordOffset, justEnhRecordsData, 0, justEnhRecordsData.Length);
@@ -245,7 +240,7 @@ namespace EditClipboardContents
                         byte[] currentRecord = new byte[recordSizeInBytes];
                         Array.Copy(justEnhRecordsData, enhRecordOffset, currentRecord, 0, recordSizeInBytes);
 
-                        ENHMETARECORD_OBJ recordObj = new ClipboardFormats.ENHMETARECORD_OBJ(recordSizeInBytes, currentRecord);
+                        ENHMETARECORD_OBJ recordObj = new ENHMETARECORD_OBJ(recordSizeInBytes, currentRecord);
                         allEnhMetaRecords.Add(recordObj);
 
                         enhRecordOffset += (int)recordSizeInBytes;
@@ -268,7 +263,7 @@ namespace EditClipboardContents
                             IntPtr pData = handle.AddrOfPinnedObject();
 
                             // Read the DROPFILES_OBJ structure
-                            ClipboardFormats.DROPFILES dropFiles = Marshal.PtrToStructure<ClipboardFormats.DROPFILES>(pData);
+                            DROPFILES dropFiles = Marshal.PtrToStructure<DROPFILES>(pData);
 
                             // Determine if file names are Unicode
                             bool isUnicode = dropFiles.fWide != 0;
@@ -310,7 +305,7 @@ namespace EditClipboardContents
                             handle.Free();
                         }
 
-                        DROPFILES_OBJ dropFilesProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.DROPFILES_OBJ>(rawData);
+                        DROPFILES_OBJ dropFilesProcessed = BytesToObject<DROPFILES_OBJ>(rawData);
 
                         processedObject = dropFilesProcessed;
                         preferredDisplayMode = ViewMode.Object;
@@ -346,7 +341,7 @@ namespace EditClipboardContents
                     break;
 
                 case "CF_DIBV5": // 17 - CF_DIBV5
-                    BITMAPV5HEADER_OBJ bitmapInfoV5Processed = ClipboardFormats.BytesToObject<ClipboardFormats.BITMAPV5HEADER_OBJ>(rawData);
+                    BITMAPV5HEADER_OBJ bitmapInfoV5Processed = BytesToObject<BITMAPV5HEADER_OBJ>(rawData);
                     dataInfoList.Add($"{bitmapInfoV5Processed.bV5Width}x{bitmapInfoV5Processed.bV5Height}, {bitmapInfoV5Processed.bV5BitCount} bpp");
 
                     processedObject = bitmapInfoV5Processed;
@@ -357,7 +352,7 @@ namespace EditClipboardContents
                 // ------------------- Non-Standard Clipboard Formats -------------------
 
                 case "FileGroupDescriptorW": 
-                    FILEGROUPDESCRIPTORW_OBJ fileGroupDescriptorWProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.FILEGROUPDESCRIPTORW_OBJ>(rawData);
+                    FILEGROUPDESCRIPTORW_OBJ fileGroupDescriptorWProcessed = BytesToObject<FILEGROUPDESCRIPTORW_OBJ>(rawData);
                     int fileCount = (int)fileGroupDescriptorWProcessed.cItems;
                     dataInfoList.Add($"File Count: {fileCount}");
 
@@ -366,7 +361,7 @@ namespace EditClipboardContents
                     break;
 
                 case "Shell IDList Array":
-                    CIDA_OBJ cidaProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.CIDA_OBJ>(rawData);
+                    CIDA_OBJ cidaProcessed = BytesToObject<CIDA_OBJ>(rawData);
                     int itemCount = (int)cidaProcessed.cidl;
                     dataInfoList.Add($"Item Count: {itemCount}");
 
@@ -392,7 +387,7 @@ namespace EditClipboardContents
                             byte[] individualPIDLBytes = new byte[length];
                             //Array.Copy(rawData, individualPIDLBytes, length);
                             Array.Copy(rawData, offset, individualPIDLBytes, 0, length);
-                            ITEMIDLIST_OBJ itemIDProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.ITEMIDLIST_OBJ>(individualPIDLBytes);
+                            ITEMIDLIST_OBJ itemIDProcessed = BytesToObject<ITEMIDLIST_OBJ>(individualPIDLBytes);
                             pidlList[i] = itemIDProcessed;
 
                         }
@@ -406,23 +401,21 @@ namespace EditClipboardContents
                     break;
 
                 case "Shell Object Offsets":
-                    POINT_OBJ ShellObjOffsetProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.POINT_OBJ>(rawData);
+                    POINT_OBJ ShellObjOffsetProcessed = BytesToObject<POINT_OBJ>(rawData);
                     dataInfoList.Add($"X: {ShellObjOffsetProcessed.x}, Y: {ShellObjOffsetProcessed.y}");
-
                     processedObject = ShellObjOffsetProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
 
                 case "AsyncFlag":
-                    WINDOWS_BOOL boolVal = ClipboardFormats.BytesToObject<ClipboardFormats.WINDOWS_BOOL>(rawData);
+                    WINDOWS_BOOL boolVal = BytesToObject<WINDOWS_BOOL>(rawData);
                     dataInfoList.Add($"Boolean: {boolVal}");
                     dataInfoList.Add("Possibly has to do with telling Explorer whether to paste in the background.");
                     break;
 
                 case "DataObjectAttributes":
                 case "DataObjectAttributesRequiringElevation":
-                    DataObjectAttributes_Obj dataObjectAttributesProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.DataObjectAttributes_Obj>(rawData);
-
+                    DataObjectAttributes_Obj dataObjectAttributesProcessed = BytesToObject<DataObjectAttributes_Obj>(rawData);
                     processedObject = dataObjectAttributesProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
