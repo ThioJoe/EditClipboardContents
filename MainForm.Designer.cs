@@ -23,9 +23,12 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.dataGridViewClipboard = new System.Windows.Forms.DataGridView();
             this.contextMenuStrip_dataGridView = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.copyCellToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.copyRowDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.copySelectedRowsNoHeaderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenu_copySingleCell = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenu_copySelectedCurrentColumnOnly = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenu_copySelectedRows = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenu_copySelectedRowsNoHeader = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenu_copyColumn = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenu_copyColumnNoHeader = new System.Windows.Forms.ToolStripMenuItem();
             this.mainMenu1 = new System.Windows.Forms.MainMenu(this.components);
             this.menuMainFile = new System.Windows.Forms.MenuItem();
             this.menuFile_ExportSelectedAsRawHex = new System.Windows.Forms.MenuItem();
@@ -50,6 +53,7 @@
             this.menuEdit_CopyEntireTable = new System.Windows.Forms.MenuItem();
             this.menuEdit_CopySelectedRows = new System.Windows.Forms.MenuItem();
             this.menuItem2 = new System.Windows.Forms.MenuItem();
+            this.menuEdit_ClearClipboard = new System.Windows.Forms.MenuItem();
             this.menuEdit_RefreshDataTable = new System.Windows.Forms.MenuItem();
             this.menuItemOptions = new System.Windows.Forms.MenuItem();
             this.menuOptions_ShowLargeHex = new System.Windows.Forms.MenuItem();
@@ -91,7 +95,6 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.labelVersion = new System.Windows.Forms.Label();
             this.buttonTest = new System.Windows.Forms.Button();
-            this.menuEdit_ClearClipboard = new System.Windows.Forms.MenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.contextMenuStrip_dataGridView.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -151,33 +154,63 @@
             // 
             this.contextMenuStrip_dataGridView.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuStrip_dataGridView.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.copyCellToolStripMenuItem,
-            this.copyRowDataToolStripMenuItem,
-            this.copySelectedRowsNoHeaderToolStripMenuItem});
+            this.contextMenu_copySingleCell,
+            this.contextMenu_copySelectedCurrentColumnOnly,
+            this.contextMenu_copySelectedRows,
+            this.contextMenu_copySelectedRowsNoHeader,
+            this.contextMenu_copyColumn,
+            this.contextMenu_copyColumnNoHeader});
             this.contextMenuStrip_dataGridView.Name = "contextMenuStrip_dataGridView";
-            this.contextMenuStrip_dataGridView.Size = new System.Drawing.Size(346, 100);
+            this.contextMenuStrip_dataGridView.Size = new System.Drawing.Size(346, 196);
             this.contextMenuStrip_dataGridView.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip_dataGridView_Opening);
             // 
-            // copyCellToolStripMenuItem
+            // contextMenu_copySingleCell
             // 
-            this.copyCellToolStripMenuItem.Name = "copyCellToolStripMenuItem";
-            this.copyCellToolStripMenuItem.Size = new System.Drawing.Size(345, 32);
-            this.copyCellToolStripMenuItem.Text = "Copy Single Cell";
-            this.copyCellToolStripMenuItem.Click += new System.EventHandler(this.copyCellToolStripMenuItem_Click);
+            this.contextMenu_copySingleCell.Name = "contextMenu_copySingleCell";
+            this.contextMenu_copySingleCell.Size = new System.Drawing.Size(345, 32);
+            this.contextMenu_copySingleCell.Text = "Copy Single Cell";
+            this.contextMenu_copySingleCell.Visible = false;
+            this.contextMenu_copySingleCell.Click += new System.EventHandler(this.copyCellToolStripMenuItem_Click);
             // 
-            // copyRowDataToolStripMenuItem
+            // contextMenu_copySelectedCurrentColumnOnly
             // 
-            this.copyRowDataToolStripMenuItem.Name = "copyRowDataToolStripMenuItem";
-            this.copyRowDataToolStripMenuItem.Size = new System.Drawing.Size(345, 32);
-            this.copyRowDataToolStripMenuItem.Text = "Copy Selected Rows";
-            this.copyRowDataToolStripMenuItem.Click += new System.EventHandler(this.copyRowDataToolStripMenuItem_Click);
+            this.contextMenu_copySelectedCurrentColumnOnly.Name = "contextMenu_copySelectedCurrentColumnOnly";
+            this.contextMenu_copySelectedCurrentColumnOnly.Size = new System.Drawing.Size(345, 32);
+            this.contextMenu_copySelectedCurrentColumnOnly.Text = "Copy Selected - Single Column";
+            this.contextMenu_copySelectedCurrentColumnOnly.Visible = false;
+            this.contextMenu_copySelectedCurrentColumnOnly.Click += new System.EventHandler(this.contextMenu_copySelectedCurrentColumnOnly_Click);
             // 
-            // copySelectedRowsNoHeaderToolStripMenuItem
+            // contextMenu_copySelectedRows
             // 
-            this.copySelectedRowsNoHeaderToolStripMenuItem.Name = "copySelectedRowsNoHeaderToolStripMenuItem";
-            this.copySelectedRowsNoHeaderToolStripMenuItem.Size = new System.Drawing.Size(345, 32);
-            this.copySelectedRowsNoHeaderToolStripMenuItem.Text = "Copy Selected Rows (No Header)";
-            this.copySelectedRowsNoHeaderToolStripMenuItem.Click += new System.EventHandler(this.copySelectedRowsNoHeaderToolStripMenuItem_Click);
+            this.contextMenu_copySelectedRows.Name = "contextMenu_copySelectedRows";
+            this.contextMenu_copySelectedRows.Size = new System.Drawing.Size(345, 32);
+            this.contextMenu_copySelectedRows.Text = "Copy Selected Rows";
+            this.contextMenu_copySelectedRows.Visible = false;
+            this.contextMenu_copySelectedRows.Click += new System.EventHandler(this.copyRowDataToolStripMenuItem_Click);
+            // 
+            // contextMenu_copySelectedRowsNoHeader
+            // 
+            this.contextMenu_copySelectedRowsNoHeader.Name = "contextMenu_copySelectedRowsNoHeader";
+            this.contextMenu_copySelectedRowsNoHeader.Size = new System.Drawing.Size(345, 32);
+            this.contextMenu_copySelectedRowsNoHeader.Text = "Copy Selected Rows (No Header)";
+            this.contextMenu_copySelectedRowsNoHeader.Visible = false;
+            this.contextMenu_copySelectedRowsNoHeader.Click += new System.EventHandler(this.copySelectedRowsNoHeaderToolStripMenuItem_Click);
+            // 
+            // contextMenu_copyColumn
+            // 
+            this.contextMenu_copyColumn.Name = "contextMenu_copyColumn";
+            this.contextMenu_copyColumn.Size = new System.Drawing.Size(345, 32);
+            this.contextMenu_copyColumn.Text = "Copy Entire Column";
+            this.contextMenu_copyColumn.Visible = false;
+            this.contextMenu_copyColumn.Click += new System.EventHandler(this.contextMenu_copyColumn_Click);
+            // 
+            // contextMenu_copyColumnNoHeader
+            // 
+            this.contextMenu_copyColumnNoHeader.Name = "contextMenu_copyColumnNoHeader";
+            this.contextMenu_copyColumnNoHeader.Size = new System.Drawing.Size(345, 32);
+            this.contextMenu_copyColumnNoHeader.Text = "Copy Entire Column (No Header)";
+            this.contextMenu_copyColumnNoHeader.Visible = false;
+            this.contextMenu_copyColumnNoHeader.Click += new System.EventHandler(this.contextMenu_copyColumnNoHeader_Click);
             // 
             // mainMenu1
             // 
@@ -343,6 +376,12 @@
             // 
             this.menuItem2.Index = 6;
             this.menuItem2.Text = "-";
+            // 
+            // menuEdit_ClearClipboard
+            // 
+            this.menuEdit_ClearClipboard.Index = 7;
+            this.menuEdit_ClearClipboard.Text = "Clear Clipboard";
+            this.menuEdit_ClearClipboard.Click += new System.EventHandler(this.menuEdit_ClearClipboard_Click);
             // 
             // menuEdit_RefreshDataTable
             // 
@@ -665,7 +704,7 @@
             // 
             this.checkBoxPlainTextEditing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxPlainTextEditing.AutoSize = true;
-            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(8, 397);
+            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(-10, 397);
             this.checkBoxPlainTextEditing.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.checkBoxPlainTextEditing.Name = "checkBoxPlainTextEditing";
             this.checkBoxPlainTextEditing.Size = new System.Drawing.Size(148, 24);
@@ -688,7 +727,7 @@
             "UTF-32 BE",
             "Codepage 1252",
             "System Default"});
-            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(274, 391);
+            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(256, 391);
             this.dropdownHexToTextEncoding.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dropdownHexToTextEncoding.Name = "dropdownHexToTextEncoding";
             this.dropdownHexToTextEncoding.Size = new System.Drawing.Size(217, 28);
@@ -699,7 +738,7 @@
             // 
             this.labelHexToPlaintextEncoding.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelHexToPlaintextEncoding.AutoSize = true;
-            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(187, 397);
+            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(169, 397);
             this.labelHexToPlaintextEncoding.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelHexToPlaintextEncoding.Name = "labelHexToPlaintextEncoding";
             this.labelHexToPlaintextEncoding.Size = new System.Drawing.Size(80, 20);
@@ -828,12 +867,6 @@
             this.buttonTest.Visible = false;
             this.buttonTest.Click += new System.EventHandler(this.buttonTest_Click);
             // 
-            // menuEdit_ClearClipboard
-            // 
-            this.menuEdit_ClearClipboard.Index = 7;
-            this.menuEdit_ClearClipboard.Text = "Clear Clipboard";
-            this.menuEdit_ClearClipboard.Click += new System.EventHandler(this.menuEdit_ClearClipboard_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -909,9 +942,9 @@
         private System.Windows.Forms.MenuItem menuOptions_PreFormatted;
         private System.Windows.Forms.MenuItem menuEdit_CopyEntireTable;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip_dataGridView;
-        private System.Windows.Forms.ToolStripMenuItem copyCellToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem copyRowDataToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem copySelectedRowsNoHeaderToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem contextMenu_copySingleCell;
+        private System.Windows.Forms.ToolStripMenuItem contextMenu_copySelectedRows;
+        private System.Windows.Forms.ToolStripMenuItem contextMenu_copySelectedRowsNoHeader;
         private System.Windows.Forms.SplitContainer splitterContainer_InnerTextBoxes;
         private System.Windows.Forms.RichTextBox richTextBox_HexPlaintext;
         private System.Windows.Forms.ComboBox dropdownHexToTextEncoding;
@@ -945,5 +978,8 @@
         private System.Windows.Forms.MenuItem menuFile_ImportBackupFolder;
         private System.Windows.Forms.MenuItem menuFile_ImportBackupZip;
         private System.Windows.Forms.MenuItem menuEdit_ClearClipboard;
+        private System.Windows.Forms.ToolStripMenuItem contextMenu_copySelectedCurrentColumnOnly;
+        private System.Windows.Forms.ToolStripMenuItem contextMenu_copyColumn;
+        private System.Windows.Forms.ToolStripMenuItem contextMenu_copyColumnNoHeader;
     }
 }

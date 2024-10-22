@@ -203,13 +203,13 @@ namespace EditClipboardContents
             if (e.Control && e.KeyCode == Keys.C)
             {
                 e.Handled = true;  // Prevents the default copy operation
-                copyTableRows(copyEntireTable: null); // Null means entire table will be copied if no rows are selected, otherwise just selected rows
+                copyTableRows(copyAllRows: null); // Null means entire table will be copied if no rows are selected, otherwise just selected rows
             }
         }
 
         private void copyRowDataToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            copyTableRows(copyEntireTable: false);
+            copyTableRows(copyAllRows: false);
         }
 
         private void copyCellToolStripMenuItem_Click(object sender, EventArgs e)
@@ -222,16 +222,34 @@ namespace EditClipboardContents
 
         private void copySelectedRowsNoHeaderToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            copyTableRows(copyEntireTable: false, forceNoHeader: true);
+            copyTableRows(copyAllRows: false, forceNoHeader: true);
         }
 
+        // Used for Right Click Context Menu
         private void dataGridViewClipboard_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Right && e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            void headerOptionsVisibility(bool visible)
             {
-                bool isClickedRowSelected = false;
+                contextMenu_copyColumn.Visible = visible;
+                contextMenu_copyColumnNoHeader.Visible = visible;
+            }
+            void cellOptionsVisibility(bool visible)
+            {
+                contextMenu_copySingleCell.Visible = visible;
+                contextMenu_copySelectedCurrentColumnOnly.Visible = visible;
+                contextMenu_copySelectedRows.Visible = visible;
+                contextMenu_copySelectedRowsNoHeader.Visible = visible;
+            }
+            // -----------------------------------------------------------------------------------
+
+            if (e.Button == MouseButtons.Right)
+            {
+                // Note cell row and column that was right clicked
+                recentRightClickedCell.RowIndex = e.RowIndex;
+                recentRightClickedCell.ColumnIndex = e.ColumnIndex;
 
                 // Check if the clicked row is part of the current selection
+                bool isClickedRowSelected = false;
                 foreach (DataGridViewRow row in dataGridViewClipboard.SelectedRows)
                 {
                     if (row.Index == e.RowIndex)
@@ -241,20 +259,64 @@ namespace EditClipboardContents
                     }
                 }
 
-                // If the clicked row is not part of the current selection, clear the selection and re-set the clicked row as the only selected row
-                if (!isClickedRowSelected)
+                // If right click target is a header, show specific options
+                if (e.RowIndex == -1)
                 {
-                    dataGridViewClipboard.ClearSelection();
-                    dataGridViewClipboard.Rows[e.RowIndex].Cells[e.ColumnIndex].Selected = true;
-                    // Change the cell focus
-                    ChangeCellFocusAndDisplayCorrespondingData(rowIndex: e.RowIndex, cellIndex: e.ColumnIndex);
+                    headerOptionsVisibility(visible: true);
+                    cellOptionsVisibility(visible: false);
                 }
-                // If only one row is selected, change the cell focus
-                else if (isClickedRowSelected && dataGridViewClipboard.SelectedRows.Count == 1)
+                else
                 {
-                    ChangeCellFocusAndDisplayCorrespondingData(rowIndex: e.RowIndex, cellIndex: e.ColumnIndex);
+                    // Baseline visibility, adjust specifics next
+                    headerOptionsVisibility(visible: false);
+                    cellOptionsVisibility(visible: true);
+
+                    // If more than one row is selected, hide the "Copy Single Cell" option and display the Copy Column button, and vice versa
+                    if (dataGridViewClipboard.SelectedRows.Count > 1)
+                    {
+                        contextMenu_copySingleCell.Visible = false;
+                        contextMenu_copySelectedCurrentColumnOnly.Visible = true;
+                    }
+                    else
+                    {
+                        contextMenu_copySingleCell.Visible = true;
+                        contextMenu_copySelectedCurrentColumnOnly.Visible = false;
+                    }
+
+                    // If the clicked row is not part of the current selection, clear the selection and re-set the clicked row as the only selected row
+                    if (!isClickedRowSelected)
+                    {
+                        dataGridViewClipboard.ClearSelection();
+                        dataGridViewClipboard.Rows[e.RowIndex].Cells[e.ColumnIndex].Selected = true;
+                        // Change the cell focus
+                        ChangeCellFocusAndDisplayCorrespondingData(rowIndex: e.RowIndex, cellIndex: e.ColumnIndex);
+                    }
+                    // If only one row is selected, change the cell focus
+                    else if (isClickedRowSelected && dataGridViewClipboard.SelectedRows.Count == 1)
+                    {
+                        ChangeCellFocusAndDisplayCorrespondingData(rowIndex: e.RowIndex, cellIndex: e.ColumnIndex);
+                    }
                 }
+
             }
+        }
+
+        private void contextMenu_copyColumn_Click(object sender, EventArgs e)
+        {
+            int columnIndex = recentRightClickedCell?.ColumnIndex ?? -1;
+            copyTableRows(copyAllRows: true, forceNoHeader: false, onlyColumnIndex: columnIndex);
+        }
+
+        private void contextMenu_copyColumnNoHeader_Click(object sender, EventArgs e)
+        {
+            int columnIndex = recentRightClickedCell?.ColumnIndex ?? -1;
+            copyTableRows(copyAllRows: true, forceNoHeader: true, onlyColumnIndex: columnIndex);
+        }
+
+        private void contextMenu_copySelectedCurrentColumnOnly_Click(object sender, EventArgs e)
+        {
+            int columnIndex = recentRightClickedCell?.ColumnIndex ?? -1;
+            copyTableRows(copyAllRows: false, forceNoHeader: true, onlyColumnIndex: columnIndex);
         }
 
         private void contextMenuStrip_dataGridView_Opening(object sender, System.ComponentModel.CancelEventArgs e)
@@ -533,12 +595,12 @@ namespace EditClipboardContents
             {
                 return;
             }
-            copyTableRows(copyEntireTable: false);
+            copyTableRows(copyAllRows: false);
         }
 
         private void menuEdit_CopyEntireTable_Click(object sender, EventArgs e)
         {
-            copyTableRows(copyEntireTable: true);
+            copyTableRows(copyAllRows: true);
         }
 
         // Converts the hex string in the hex view to a byte array and updates the clipboard selectedItem in editedClipboardItems
@@ -795,6 +857,7 @@ namespace EditClipboardContents
             DisplayClipboardDataInTextBoxes(item);
         }
 
+        // Left Click
         private void dataGridViewClipboard_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             ChangeCellFocusAndDisplayCorrespondingData(e.RowIndex);

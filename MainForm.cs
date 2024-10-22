@@ -50,6 +50,7 @@ namespace EditClipboardContents
         public static bool anyPendingChanges = false;
         public static bool enableSplitHexView = false;
         public ClipboardItem? itemBeforeCellEditClone = null;
+        public RecentRightClickedCell? recentRightClickedCell;
 
         // Global constants
         public const int maxRawSizeDefault = 50000;
@@ -112,6 +113,9 @@ namespace EditClipboardContents
             defaultLoadingLabelText = labelLoading.Text;
             defaultCellForeColor = dataGridViewClipboard.DefaultCellStyle.ForeColor;
 
+            // Early initializations
+            recentRightClickedCell = new RecentRightClickedCell(rowIndex: -1, columnIndex: -1);
+
             InitializeDataGridView();
             UpdateToolLocations();
 
@@ -126,11 +130,9 @@ namespace EditClipboardContents
             // Set color of toolstrip manually because it doesn't set it apparently
             toolStrip1.BackColor = SystemColors.Control;
 
-            // Set the version number label
+            // Other initializations
             labelVersion.Text = $"Version {versionString}";
-
             previousWindowHeight = this.Height;
-
             
         }
 
@@ -2177,7 +2179,7 @@ namespace EditClipboardContents
         }
 
         // Copies the selected rows to the clipboard, or the entire table if chosen. Null automatically determines entire table if no rows are selected, otherwise just selected
-        private void copyTableRows(bool? copyEntireTable = false, bool forceNoHeader = false)
+        private void copyTableRows(bool? copyAllRows = false, bool forceNoHeader = false, int onlyColumnIndex=-1)
         {
             // Get the selected rows and put them in a list, each row a list of strings for the cell values
             List<List<string>> selectedRowsContents = new List<List<string>>();
@@ -2190,8 +2192,14 @@ namespace EditClipboardContents
                 List<string> headerRow = new List<string>();
                 foreach (DataGridViewColumn col in dataGridViewClipboard.Columns)
                 {
+                    // If set to only copy a specific column, skip all others
+                    if (onlyColumnIndex != -1 && col.Index != onlyColumnIndex)
+                    {
+                        continue;
+                    }
+
                     // Ignore the dummy column
-                    if (col.Name != colName.Index)
+                    if (col.Visible == true)
                     {
                         headerRow.Add(col.HeaderText);
                     }
@@ -2205,21 +2213,21 @@ namespace EditClipboardContents
             }
 
             // if copyEntire Table is null, then automatically assume entire table if no rows are selected
-            if (copyEntireTable == null)
+            if (copyAllRows == null)
             {
                 if (dataGridViewClipboard.SelectedRows.Count > 0)
                 {
-                    copyEntireTable = false;
+                    copyAllRows = false;
                 }
                 else
                 {
-                    copyEntireTable = true;
+                    copyAllRows = true;
                 }
             }
 
             // Determine which rows need to be copied. Either entire table or just selected rows based on function argument
             List<int> selectedRowIndices = new List<int>();
-            if (copyEntireTable == false)
+            if (copyAllRows == false)
             {
                 // Create a list of selected rows based on index so we can get them in the desired order, same as displayed
                 selectedRowIndices = dataGridViewClipboard.SelectedRows.Cast<DataGridViewRow>()
@@ -2244,8 +2252,14 @@ namespace EditClipboardContents
                 List<string> rowCells = new List<string>();
                 foreach (DataGridViewCell cell in row.Cells)
                 {
-                    // Ignore the dummy column
-                    if (cell.OwningColumn.Name != colName.Index)
+                    // If onlyColumnIndex is set, only copy that column
+                    if (onlyColumnIndex != -1 && cell.ColumnIndex != onlyColumnIndex)
+                    {
+                        continue;
+                    }
+
+                    // Only copy visible cells
+                    if (cell.Visible == true)
                     {
                         rowCells.Add(cell.Value.ToString());
                     }
@@ -2316,6 +2330,12 @@ namespace EditClipboardContents
                         return string.Join(" | ", paddedRow.Select((cell, i) => cell.PadRight(columnWidths[i])));
                     }
                 });
+
+                // If only one column is selected, trim whitespace from the sides first
+                if (onlyColumnIndex != -1)
+                {
+                    formattedRows = formattedRows.Select(row => row.Trim());
+                }
 
                 // Join the rows
                 finalCombinedString = string.Join(Environment.NewLine, formattedRows);
@@ -3125,6 +3145,18 @@ namespace EditClipboardContents
     {
         public const uint RegisteredFormatMinID = 0xC000;
         public const uint RegisteredFormatMaxID = 0xFFFF;
+    }
+
+    public class RecentRightClickedCell
+    {
+        public int RowIndex { get; set; }
+        public int ColumnIndex { get; set; }
+
+        public RecentRightClickedCell(int rowIndex = -1, int columnIndex = -1)
+        {
+            RowIndex = rowIndex;
+            ColumnIndex = columnIndex;
+        }
     }
 
     // ---------------------------------------------------------------------------------------------------
