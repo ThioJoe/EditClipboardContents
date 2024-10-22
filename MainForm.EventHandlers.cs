@@ -242,6 +242,11 @@ namespace EditClipboardContents
             }
             // -----------------------------------------------------------------------------------
 
+            if (recentRightClickedCell == null)
+            {
+                recentRightClickedCell = new RecentRightClickedCell();
+            }
+
             if (e.Button == MouseButtons.Right)
             {
                 // Note cell row and column that was right clicked

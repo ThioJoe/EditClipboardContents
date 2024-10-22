@@ -321,7 +321,7 @@ namespace EditClipboardContents
             var groups = new List<Group>();
 
             int? currentIndentLevel = null;
-            Group currentGroup = null;
+            Group? currentGroup = null;
 
             foreach (var line in lines)
             {
@@ -342,7 +342,7 @@ namespace EditClipboardContents
                     groups.Add(currentGroup);
                 }
 
-                currentGroup.Lines.Add(line);
+                currentGroup?.Lines.Add(line);
             }
 
             // Now, for each group, find max lengths
@@ -450,7 +450,7 @@ namespace EditClipboardContents
         class Group
         {
             public int IndentLevel { get; set; }
-            public List<string> Lines { get; set; }
+            public List<string> Lines { get; set; } = new List<string>();
             public int MaxPropertyNameLength { get; set; }
             public int MaxDecimalValueLength { get; set; }
         }

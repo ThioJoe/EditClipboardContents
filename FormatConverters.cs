@@ -420,6 +420,7 @@ namespace EditClipboardContents
                     NativeMethods.DeleteMetaFile(hActualMetafile);
                 if (hGlobalMetafilePict != IntPtr.Zero)
                     NativeMethods.GlobalFree(hGlobalMetafilePict);
+                Console.WriteLine($"Error in MetafilePict_Handle_FromRawData: {ex.Message}");
                 throw;
             }
             finally
