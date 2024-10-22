@@ -122,8 +122,8 @@ namespace EditClipboardContents
             // Initial tool settings
             dropdownContentsViewMode.SelectedIndexChanged -= dropdownContentsViewMode_SelectedIndexChanged;
             dropdownHexToTextEncoding.SelectedIndexChanged -= dropdownHexToTextEncoding_SelectedIndexChanged;
-            dropdownContentsViewMode.SelectedIndex = 0; // Default index 0 is "Text" view mode
-            dropdownHexToTextEncoding.SelectedIndex = 0; // Default index 0 is "UTF-8" encoding
+            dropdownContentsViewMode.SelectedIndex = (int)ViewMode.Text; // Default index 0 is "Text" view mode
+            dropdownHexToTextEncoding.SelectedIndex = (int)EncodingMode.UTF8; // Default index 0 is "UTF-8" encoding
             dropdownContentsViewMode.SelectedIndexChanged += dropdownContentsViewMode_SelectedIndexChanged;
             dropdownHexToTextEncoding.SelectedIndexChanged += dropdownHexToTextEncoding_SelectedIndexChanged;
 
@@ -954,6 +954,7 @@ namespace EditClipboardContents
             {
                 byte[]? processedData = null;
                 ClipDataObject? processedObject = null;
+                ViewMode preferredDisplayMode = ViewMode.None;
 
                 // Data info list contains metadata about the data. First item will show in the data info column, all will show in the text box in object/struct view mode
                 List<string> dataInfoList = new List<string>();
@@ -961,7 +962,7 @@ namespace EditClipboardContents
                 // If there is data, process it and get the data info
                 if (item?.RawData != null && item.RawData.Length > 0)
                 {
-                    (dataInfoList, processedData, processedObject) = SetDataInfo(formatName: item.FormatName, rawData: item.RawData);
+                    (dataInfoList, preferredDisplayMode, processedData, processedObject) = SetDataInfo(formatName: item.FormatName, rawData: item.RawData);
                 }
                 // If there is no data, and there is an error message
                 else if (item != null && !string.IsNullOrEmpty(item.ErrorReason))
@@ -984,8 +985,9 @@ namespace EditClipboardContents
                     continue;
                 }
 
-                item.ProcessedData = processedData; // Update the processed data in the selectedItem
-                item.DataInfoList = dataInfoList; // Update the data info in the selectedItem
+                item.ProcessedData = processedData;
+                item.DataInfoList = dataInfoList;
+                item.PreferredViewMode = preferredDisplayMode;
 
                 // Determine format type. If it's below 0xC0000 it's a standard format type.
                 // See here for details about the specific ranges: https://learn.microsoft.com/en-us/windows/win32/dataxchg/standard-clipboard-formats
@@ -1335,7 +1337,7 @@ namespace EditClipboardContents
             int modeIndex = dropdownContentsViewMode.SelectedIndex;
 
             // For data larger than 50K, display a warning and don't display the data unless the checkbox is checked
-            if (modeIndex != 3 && item.RawData.Length > maxRawSizeDefault)
+            if (modeIndex != (int)ViewMode.Object && item.RawData.Length > maxRawSizeDefault)
             {
                 if (!menuOptions_ShowLargeHex.Checked)
                 {
@@ -1436,32 +1438,32 @@ namespace EditClipboardContents
         {
             // Set encoding mode based on dropdown
             Encoding encodingToUse;
-            if (dropdownHexToTextEncoding.SelectedIndex == 0) // UTF-8
+            if (dropdownHexToTextEncoding.SelectedIndex == (int)EncodingMode.UTF8) // UTF-8
             {
                 encodingToUse = Encoding.UTF8;
             }
-            else if (dropdownHexToTextEncoding.SelectedIndex == 1) // UTF-16 LE (Unicode
+            else if (dropdownHexToTextEncoding.SelectedIndex == (int)EncodingMode.UTF16LE) // UTF-16 LE (Unicode
             {
                 encodingToUse = Encoding.Unicode;
             }
-            else if (dropdownContentsViewMode.SelectedIndex == 2) // UTF-16 BE
+            else if (dropdownContentsViewMode.SelectedIndex == (int)EncodingMode.UTF16BE) // UTF-16 BE
             {
                 encodingToUse = Encoding.BigEndianUnicode;
             }
-            else if (dropdownHexToTextEncoding.SelectedIndex == 3) // UTF-32 LE
+            else if (dropdownHexToTextEncoding.SelectedIndex == (int)EncodingMode.UTF32LE) // UTF-32 LE
             {
                 encodingToUse = Encoding.UTF32;
             }
-            else if (dropdownHexToTextEncoding.SelectedIndex == 4) // UTF-32 Big Endian
+            else if (dropdownHexToTextEncoding.SelectedIndex == (int)EncodingMode.UTF32BE) // UTF-32 Big Endian
             {
                 encodingToUse = Encoding.GetEncoding(12001);
             }
-            else if (dropdownHexToTextEncoding.SelectedIndex == 5) // Windows-1252
+            else if (dropdownHexToTextEncoding.SelectedIndex == (int)EncodingMode.CP1252) // Windows-1252
             {
                 encodingToUse = Encoding.GetEncoding(1252);
             }
             // System Default
-            else if (dropdownHexToTextEncoding.SelectedIndex == 6) // Default
+            else if (dropdownHexToTextEncoding.SelectedIndex == (int)EncodingMode.Default) // Default
             {
                 encodingToUse = Encoding.Default;
             }
@@ -1537,11 +1539,11 @@ namespace EditClipboardContents
         private void UpdateHexViewChanges()
         {
             Encoding encoding = Encoding.UTF8;
-            if (dropdownHexToTextEncoding.SelectedIndex == 0) // UTF-8
+            if (dropdownHexToTextEncoding.SelectedIndex == (int)EncodingMode.UTF8) // UTF-8
             {
                 encoding = Encoding.UTF8;
             }
-            else if (dropdownHexToTextEncoding.SelectedIndex == 1) // UTF-16
+            else if (dropdownHexToTextEncoding.SelectedIndex == (int)EncodingMode.UTF16LE) // UTF-16
             {
                 encoding = Encoding.Unicode;
             }
@@ -1825,7 +1827,7 @@ namespace EditClipboardContents
             }
 
             // If it's hex edit mode or hex view mode, enable enableSplitHexView, regardless of selection
-            if (dropdownContentsViewMode.SelectedIndex == 2 || dropdownContentsViewMode.SelectedIndex == 1)
+            if (dropdownContentsViewMode.SelectedIndex == (int)ViewMode.Hex || dropdownContentsViewMode.SelectedIndex == (int)ViewMode.HexEdit)
             {
                 enableSplitHexView = true;
                 splitterContainer_InnerTextBoxes.Panel2Collapsed = false;
@@ -1838,7 +1840,7 @@ namespace EditClipboardContents
             UpdateToolLocations(); // Ensure the text boxes in the hex view are properly sized after collapsing the hex view panel
 
             // Make the "plaintext editing" checkbox visible only in hex edit mode
-            if (dropdownContentsViewMode.SelectedIndex == 2)
+            if (dropdownContentsViewMode.SelectedIndex == (int)ViewMode.HexEdit)
             {
                 checkBoxPlainTextEditing.Visible = true;
             }
@@ -1975,7 +1977,7 @@ namespace EditClipboardContents
             }
 
             // Show apply edit button if the selectedItem is in hex edit mode
-            if (dropdownContentsViewMode.SelectedIndex == 2)
+            if (dropdownContentsViewMode.SelectedIndex == (int)ViewMode.HexEdit)
             {
                 buttonApplyEdit.Enabled = true;
                 buttonApplyEdit.Visible = true;
@@ -3103,6 +3105,26 @@ namespace EditClipboardContents
         Top
     }
 
+    public enum ViewMode: int
+    {
+        Text = 0,
+        Hex = 1,
+        HexEdit = 2,
+        Object = 3,
+        None
+    }
+
+    public enum EncodingMode: int
+    {
+        UTF8 = 0,
+        UTF16LE = 1, // Unicode
+        UTF16BE = 2,
+        UTF32LE = 3,
+        UTF32BE = 4,
+        CP1252 = 5,
+        Default = 6 // System default
+    }
+
     // ------ Will probably look for a more direct way for this later but this will do for now ------
     public static class colName
     {
@@ -3316,6 +3338,7 @@ namespace EditClipboardContents
         public string? ErrorReason { get; set; } = null;
         public DiagnosticsInfo? ErrorDiagnosisReport { get; set; }
         public int OriginalIndex { get; set; } = -1;
+        public ViewMode PreferredViewMode { get; set; } = ViewMode.None;
         public ClipDataObject? ClipDataObject { get; set; } = null ;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -3343,6 +3366,7 @@ namespace EditClipboardContents
                 ErrorReason = this.ErrorReason,
                 ErrorDiagnosisReport = this.ErrorDiagnosisReport,
                 OriginalIndex = this.OriginalIndex,
+                PreferredViewMode = this.PreferredViewMode,
                 ClipDataObject = this.ClipDataObject != null
                 ? new ClipDataObject // If it 's not null, clone it
                 {

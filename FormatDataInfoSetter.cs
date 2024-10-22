@@ -32,11 +32,12 @@ namespace EditClipboardContents
     public partial class MainForm : Form
     {
         // -------------------------------------- Set Data Info ---------------------------------------------------
-        private static (List<string>, byte[], ClipDataObject?) SetDataInfo(string formatName, byte[] rawData)
+        private static (List<string>, ViewMode, byte[], ClipDataObject?) SetDataInfo(string formatName, byte[] rawData)
         {
             List<string> dataInfoList = new List<string>();
             byte[] processedData = rawData;
             ClipDataObject? processedObject = null;
+            ViewMode preferredDisplayMode = ViewMode.None;
 
             switch (formatName) // Process based on format name because format ID can be different for non-standard (registered) formats
             {
@@ -57,6 +58,7 @@ namespace EditClipboardContents
                     dataInfoList.Add($"{ansiText.Length} Chars (ANSI)");
                     dataInfoList.Add($"Encoding: ANSI");
                     dataInfoList.Add($"Chars: {ansiText.Length}");
+                    preferredDisplayMode = ViewMode.Text;
                     break;              
 
                 case "CF_BITMAP": // 2 - CF_BITMAP
@@ -84,6 +86,7 @@ namespace EditClipboardContents
                         };
 
                     }
+                    preferredDisplayMode = ViewMode.Object;
                     break;
 
                 case "CF_METAFILEPICT": // 3
@@ -141,6 +144,7 @@ namespace EditClipboardContents
                     {
                         ObjectData = metafilePictProcessed
                     };
+                    preferredDisplayMode = ViewMode.Object;
                     break;
 
                 case "CF_SYLK": // 4 - CF_SYLK
@@ -166,7 +170,7 @@ namespace EditClipboardContents
                     {
                         ObjectData = bitmapProcessed
                     };
-
+                    preferredDisplayMode = ViewMode.Object;
                     break;
 
                 case "CF_PALETTE": // 9 - CF_PALETTE
@@ -178,6 +182,7 @@ namespace EditClipboardContents
                     {
                         ObjectData = paletteProcessed
                     };
+                    preferredDisplayMode = ViewMode.Object;
                     break;
 
                 case "CF_PENDATA": // 10 - CF_PENDATA
@@ -186,10 +191,12 @@ namespace EditClipboardContents
 
                 case "CF_RIFF": // 11 - CF_RIFF
                     dataInfoList.Add("Wave format audio");
+                    preferredDisplayMode = ViewMode.Hex;
                     break;
 
                 case "CF_WAVE": // 12 - CF_WAVE
                     dataInfoList.Add("Standard wave format audio");
+                    preferredDisplayMode = ViewMode.Hex;
                     break;
 
                 case "CF_UNICODETEXT": // 13 - CF_UNICODETEXT
@@ -201,6 +208,7 @@ namespace EditClipboardContents
                     dataInfoList.Add($"Byte Count: {rawData.Length}");
 
                     processedData = Encoding.Unicode.GetBytes(unicodeText);
+                    preferredDisplayMode = ViewMode.Text;
                     break;
 
                 case "CF_ENHMETAFILE": // 14
@@ -262,6 +270,7 @@ namespace EditClipboardContents
                     {
                         ObjectData = enhMetafile
                     };
+                    preferredDisplayMode = ViewMode.Object;
 
                     break;
 
@@ -320,6 +329,7 @@ namespace EditClipboardContents
                         {
                             ObjectData = dropFilesProcessed
                         };
+                        preferredDisplayMode = ViewMode.Object;
 
                         break;
                     }
@@ -348,6 +358,7 @@ namespace EditClipboardContents
                         }
                     }
                     dataInfoList.Add(dataInfo);
+                    preferredDisplayMode = ViewMode.Object;
                     break;
 
                 case "CF_DIBV5": // 17 - CF_DIBV5
@@ -358,6 +369,7 @@ namespace EditClipboardContents
                     {
                         ObjectData = bitmapInfoV5Processed
                     };
+                    preferredDisplayMode = ViewMode.Object;
 
                     break;
 
@@ -372,6 +384,7 @@ namespace EditClipboardContents
                     {
                         ObjectData = fileGroupDescriptorWProcessed
                     };
+                    preferredDisplayMode = ViewMode.Object;
                     break;
 
                 case "Shell IDList Array":
@@ -414,6 +427,7 @@ namespace EditClipboardContents
                     {
                         ObjectData = cidaProcessed
                     };
+                    preferredDisplayMode = ViewMode.Object;
                     break;
 
                 case "Shell Object Offsets":
@@ -424,6 +438,18 @@ namespace EditClipboardContents
                     {
                         ObjectData = ShellObjOffsetProcessed
                     };
+                    preferredDisplayMode = ViewMode.Object;
+                    break;
+
+                case "DataObjectAttributes":
+                case "DataObjectAttributesRequiringElevation":
+                    DataObjectAttributes_Obj dataObjectAttributesProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.DataObjectAttributes_Obj>(rawData);
+
+                    processedObject = new ClipDataObject
+                    {
+                        ObjectData = dataObjectAttributesProcessed
+                    };
+                    preferredDisplayMode = ViewMode.Object;
                     break;
 
                 // Excel Related Formats
@@ -441,6 +467,7 @@ namespace EditClipboardContents
 
                 case "HTML Format":
                     dataInfoList.Add("HTML Format");
+                    preferredDisplayMode = ViewMode.Text;
                     break;
 
 
@@ -449,6 +476,7 @@ namespace EditClipboardContents
                 case "ExcludeClipboardContentFromMonitorProcessing": // It says "place any data on the clipboard in this format..." -- Assuming that means it applies as long as it exists even if value is null
                     dataInfoList.Add("Disables Clipboard History & Sync");
                     dataInfoList.Add("The existance of this format in the current clipboard prevents all other formats from both being synced to the cloud or included in the clipboard history."); // (Not sure if this is accurate, but it seems likely
+                    preferredDisplayMode = ViewMode.Object;
                     break;
 
                 case "CanIncludeInClipboardHistory": // DWORD - Value of zero prevents all formats from being added to history, value of 1 explicitly requests all formats to be added to history
@@ -475,7 +503,7 @@ namespace EditClipboardContents
                         dataInfoList.Add("Unknown value");
                         dataInfoList.Add("The value of this format should be a DWORD (4 bytes), but it is not. There could be a new feature or a problem.");
                     }
-
+                    preferredDisplayMode = ViewMode.Object;
                     break;
 
                 case "CanUploadToCloudClipboard": // DWORD - Value of zero prevents all formats from being synced to other devices, value of 1 explicitly requests all formats to be synced to other devices
@@ -502,7 +530,7 @@ namespace EditClipboardContents
                         dataInfoList.Add("Unknown value");
                         dataInfoList.Add("The value of this format should be a DWORD (4 bytes), but it is not. There could be a new feature or a problem.");
                     }
-
+                    preferredDisplayMode = ViewMode.Object;
                     break;
 
                 // --------------- End Cloud Formats -----------------
@@ -521,7 +549,7 @@ namespace EditClipboardContents
 
             } // End switch (formatName)
 
-            return (dataInfoList, processedData, processedObject);
+            return (dataInfoList, preferredDisplayMode, processedData, processedObject);
 
         }
     }

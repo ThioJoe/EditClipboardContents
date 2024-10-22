@@ -337,7 +337,7 @@ namespace EditClipboardContents
         private void richTextBoxContents_TextChanged(object sender, EventArgs e)
         {
             // Only update if in edit mode
-            if (dropdownContentsViewMode.SelectedIndex == 2)
+            if (dropdownContentsViewMode.SelectedIndex == (int)ViewMode.HexEdit)
             {
                 UpdatePlaintextFromHexView();
             }
@@ -347,7 +347,7 @@ namespace EditClipboardContents
         private void richTextBox_HexPlaintext_TextChanged(object sender, EventArgs e)
         {
             // Only bother if in edit mode
-            if (dropdownContentsViewMode.SelectedIndex == 2)
+            if (dropdownContentsViewMode.SelectedIndex == (int)ViewMode.HexEdit)
             {
                 UpdateHexViewChanges();
 
@@ -369,7 +369,7 @@ namespace EditClipboardContents
                 return;
             }
 
-            if (dropdownContentsViewMode.SelectedIndex == 2 || dropdownContentsViewMode.SelectedIndex == 1)
+            if (dropdownContentsViewMode.SelectedIndex == (int)ViewMode.HexEdit || dropdownContentsViewMode.SelectedIndex == (int)ViewMode.Hex)
             {
                 //RoundSelection();
                 SyncHexToPlaintext();
@@ -386,7 +386,7 @@ namespace EditClipboardContents
                 return;
             }
 
-            if (dropdownContentsViewMode.SelectedIndex == 2 || dropdownContentsViewMode.SelectedIndex == 1)
+            if (dropdownContentsViewMode.SelectedIndex == (int)ViewMode.HexEdit || dropdownContentsViewMode.SelectedIndex == (int)ViewMode.Hex)
             {
                 SyncPlaintextToHex();
             }
@@ -504,7 +504,7 @@ namespace EditClipboardContents
             {
                 ChangeCellFocusAndDisplayCorrespondingData(dataGridViewClipboard.SelectedRows[0].Index);
                 buttonStatus_RequireSelection(enabledChoice: false, onlyCustomIncompatible: true);
-                dropdownContentsViewMode.SelectedIndex = 2; // Hex (Editable)
+                dropdownContentsViewMode.SelectedIndex = (int)ViewMode.HexEdit; // Hex (Editable)
                 checkBoxPlainTextEditing.Checked = true;
                 return;
             }
@@ -521,10 +521,22 @@ namespace EditClipboardContents
                 // Get the selectedItem object
                 ClipboardItem? item = GetSelectedClipboardItemObject(returnEditedItemVersion: true);
 
+                if (item == null)
+                {
+                    return; // If the item is null, just return
+                }
+
+                // If a preferred view mode is set, prioritize that
+                if (item.PreferredViewMode != ViewMode.None)
+                {
+                    dropdownContentsViewMode.SelectedIndex = (int)item.PreferredViewMode;
+                    return;
+                }
+
                 // If there is a text preview, show text mode
                 if (!string.IsNullOrEmpty(GetSelectedDataFromDataGridView(colName.TextPreview)))
                 {
-                    dropdownContentsViewMode.SelectedIndex = 0; // Text
+                    dropdownContentsViewMode.SelectedIndex = (int)ViewMode.Text; // Text
                 }
                 // If there is data object info, show object view mode. Also show if there are multiple data info entries or the first one isn't empty
                 else if (item != null && (
@@ -536,11 +548,11 @@ namespace EditClipboardContents
                         ))
                     ))
                 { 
-                    dropdownContentsViewMode.SelectedIndex = 3; // Object View
+                    dropdownContentsViewMode.SelectedIndex = (int)ViewMode.Object; // Object View
                 }
                 else
                 {
-                    dropdownContentsViewMode.SelectedIndex = 1; // Hex View (Non Editable)
+                    dropdownContentsViewMode.SelectedIndex = (int)ViewMode.Hex; // Hex View (Non Editable)
                 }
             }
 
@@ -839,7 +851,7 @@ namespace EditClipboardContents
             UpdateEditControlsVisibility_AndPendingGridAppearance();
 
             // For object view mode and text view mode, enable auto highlighting URLs in the text box
-            if (dropdownContentsViewMode.SelectedIndex == 0 || dropdownContentsViewMode.SelectedIndex == 3)
+            if (dropdownContentsViewMode.SelectedIndex == (int)ViewMode.Text || dropdownContentsViewMode.SelectedIndex == (int)ViewMode.Object)
             {
                 richTextBoxContents.DetectUrls = true;
             }
