@@ -1174,6 +1174,14 @@ namespace EditClipboardContents
             public BYTE peFlags;
         }
 
+        // Shouldn't make a difference since it will be size 4 anyway, but just in case will use this with marshal sizeof
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _LogPaletteHeader
+        {
+            public WORD palVersion;
+            public WORD palNumEntries;
+        }
+
         // Using class instead of struct because of the array size
         public class LOGPALETTE
         {

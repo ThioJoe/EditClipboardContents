@@ -696,9 +696,11 @@ namespace EditClipboardContents
                 return IntPtr.Zero;
             }
 
+            int headerSize = Marshal.SizeOf<_LogPaletteHeader>();
+
             // Determine the number of entries in the palette
             ushort numEntries = BitConverter.ToUInt16(rawData, 2);
-            int logPaletteSize = 4 + (Marshal.SizeOf<PALETTEENTRY>() * numEntries);
+            int logPaletteSize = headerSize + (Marshal.SizeOf<PALETTEENTRY>() * numEntries);
             LOGPALETTE logPalette = new LOGPALETTE((ushort)numEntries);
             int rawByteIndex = 4; // Skip the first 4 bytes, which are the palVersion and palNumEntries
             for (int i = 0; i < numEntries; i++)
@@ -719,9 +721,8 @@ namespace EditClipboardContents
             }
 
             // Marshal the LOGPALETTE struct to a handle
-            int structSize = 4; // Size of palVersion and palNumEntries
             int entrySize = Marshal.SizeOf<PALETTEENTRY>();
-            int totalSize = structSize + (entrySize * logPalette.palNumEntries);
+            int totalSize = headerSize + (entrySize * logPalette.palNumEntries);
 
             IntPtr logPalettePtr = Marshal.AllocHGlobal(totalSize);
 
@@ -734,7 +735,7 @@ namespace EditClipboardContents
                 // Write palette entries
                 for (int i = 0; i < logPalette.palNumEntries; i++)
                 {
-                    IntPtr entryPtr = logPalettePtr + structSize + (i * entrySize);
+                    IntPtr entryPtr = logPalettePtr + headerSize + (i * entrySize);
                     Marshal.StructureToPtr(logPalette.palPalEntry[i], entryPtr, false);
                 }
             }
