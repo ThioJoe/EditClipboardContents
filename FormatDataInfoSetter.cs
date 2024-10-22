@@ -416,6 +416,16 @@ namespace EditClipboardContents
                     };
                     break;
 
+                case "Shell Object Offsets":
+                    POINT_OBJ ShellObjOffsetProcessed = ClipboardFormats.BytesToObject<ClipboardFormats.POINT_OBJ>(rawData);
+                    dataInfoList.Add($"X: {ShellObjOffsetProcessed.x}, Y: {ShellObjOffsetProcessed.y}");
+
+                    processedObject = new ClipDataObject
+                    {
+                        ObjectData = ShellObjOffsetProcessed
+                    };
+                    break;
+
                 // Excel Related Formats
                 case "Biff5":
                     dataInfoList.Add("Excel 5.0/95 Binary File");
