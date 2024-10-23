@@ -137,6 +137,7 @@ namespace EditClipboardContents
                     break;
 
                 case "CF_DIB":   // 8  - CF_DIB
+                {
                     BITMAPINFO_OBJ bitmapProcessed = BytesToObject<BITMAPINFO_OBJ>(rawData);
                     int width = bitmapProcessed.bmiHeader.biWidth;
                     int height = bitmapProcessed.bmiHeader.biHeight;
@@ -146,8 +147,10 @@ namespace EditClipboardContents
                     processedObject = bitmapProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
+                }
 
                 case "CF_PALETTE": // 9 - CF_PALETTE
+                {
                     LOGPALETTE_OBJ paletteProcessed = BytesToObject<LOGPALETTE_OBJ>(rawData);
                     int paletteEntries = paletteProcessed.palNumEntries;
                     dataInfoList.Add($"{paletteEntries} Palette Entries");
@@ -156,6 +159,7 @@ namespace EditClipboardContents
                     processedObject = paletteProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
+                }
 
                 case "CF_PENDATA": // 10 - CF_PENDATA
                     dataInfoList.Add("Windows Pen Computing data");
@@ -172,6 +176,7 @@ namespace EditClipboardContents
                     break;
 
                 case "CF_UNICODETEXT": // 13 - CF_UNICODETEXT
+                {
                     string unicodeText = Encoding.Unicode.GetString(rawData);
                     int unicodeTextLength = unicodeText.Length;
                     dataInfoList.Add($"{unicodeTextLength} Chars (Unicode)");
@@ -181,9 +186,11 @@ namespace EditClipboardContents
 
                     processedData = Encoding.Unicode.GetBytes(unicodeText);
                     preferredDisplayMode = ViewMode.Text;
-                    break;
+                        break;
+                }   
 
                 case "CF_ENHMETAFILE": // 14
+                {
                     ENHMETAFILE_OBJ enhMetafile = BytesToObject<ENHMETAFILE_OBJ>(rawData);
 
                     int enhMetaRecordOffset =
@@ -239,66 +246,67 @@ namespace EditClipboardContents
                     preferredDisplayMode = ViewMode.Object;
 
                     break;
-
+                }
                 case "CF_HDROP": // 15 - CF_HDROP
+                {
+                    GCHandle handle = GCHandle.Alloc(rawData, GCHandleType.Pinned);
+                    try
                     {
-                        GCHandle handle = GCHandle.Alloc(rawData, GCHandleType.Pinned);
-                        try
+                        IntPtr pData = handle.AddrOfPinnedObject();
+
+                        // Read the DROPFILES_OBJ structure
+                        DROPFILES dropFiles = Marshal.PtrToStructure<DROPFILES>(pData);
+
+                        // Determine if file names are Unicode
+                        bool isUnicode = dropFiles.fWide != 0;
+                        Encoding encodingType;
+                        if (isUnicode)
                         {
-                            IntPtr pData = handle.AddrOfPinnedObject();
-
-                            // Read the DROPFILES_OBJ structure
-                            DROPFILES dropFiles = Marshal.PtrToStructure<DROPFILES>(pData);
-
-                            // Determine if file names are Unicode
-                            bool isUnicode = dropFiles.fWide != 0;
-                            Encoding encodingType;
-                            if (isUnicode)
-                            {
-                                encodingType = Encoding.Unicode;
-                            }
-                            else
-                            {
-                                encodingType = Encoding.Default;
-                            }
-
-                            // Get the offset to the file list
-                            int fileListOffset = (int)dropFiles.pFiles;
-
-                            // Read the file names from rawData starting at fileListOffset
-                            List<string> fileNames = new List<string>();
-                            if (fileListOffset < rawData.Length)
-                            {
-                                int bytesCount = rawData.Length - fileListOffset;
-                                byte[] fileListBytes = new byte[bytesCount];
-                                Array.Copy(rawData, fileListOffset, fileListBytes, 0, bytesCount);
-
-
-                                // Convert to string
-                                string fileListString = encodingType.GetString(fileListBytes);
-
-                                // Split on null character
-                                string[] files = fileListString.Split(new char[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
-                                fileNames.AddRange(files);
-                            }
-                            // Add the file count and file paths to dataInfoList
-                            dataInfoList.Add($"File Drop: {fileNames.Count} file(s)");
-                            dataInfoList.AddRange(fileNames);
+                            encodingType = Encoding.Unicode;
                         }
-                        finally
+                        else
                         {
-                            handle.Free();
+                            encodingType = Encoding.Default;
                         }
 
-                        DROPFILES_OBJ dropFilesProcessed = BytesToObject<DROPFILES_OBJ>(rawData);
+                        // Get the offset to the file list
+                        int fileListOffset = (int)dropFiles.pFiles;
 
-                        processedObject = dropFilesProcessed;
-                        preferredDisplayMode = ViewMode.Object;
+                        // Read the file names from rawData starting at fileListOffset
+                        List<string> fileNames = new List<string>();
+                        if (fileListOffset < rawData.Length)
+                        {
+                            int bytesCount = rawData.Length - fileListOffset;
+                            byte[] fileListBytes = new byte[bytesCount];
+                            Array.Copy(rawData, fileListOffset, fileListBytes, 0, bytesCount);
 
-                        break;
+
+                            // Convert to string
+                            string fileListString = encodingType.GetString(fileListBytes);
+
+                            // Split on null character
+                            string[] files = fileListString.Split(new char[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
+                            fileNames.AddRange(files);
+                        }
+                        // Add the file count and file paths to dataInfoList
+                        dataInfoList.Add($"File Drop: {fileNames.Count} file(s)");
+                        dataInfoList.AddRange(fileNames);
+                    }
+                    finally
+                    {
+                        handle.Free();
                     }
 
+                    DROPFILES_OBJ dropFilesProcessed = BytesToObject<DROPFILES_OBJ>(rawData);
+
+                    processedObject = dropFilesProcessed;
+                    preferredDisplayMode = ViewMode.Object;
+
+                    break;
+                }
+
                 case "CF_LOCALE": // 16 - CF_LOCALE
+                {
                     string dataInfo = "Invalid CF_LOCALE data"; // Default to invalid data
                     if (rawData.Length >= 4)
                     {
@@ -324,7 +332,7 @@ namespace EditClipboardContents
                     dataInfoList.Add(dataInfo);
                     preferredDisplayMode = ViewMode.Object;
                     break;
-
+                }
                 case "CF_DIBV5": // 17 - CF_DIBV5
                     BITMAPV5HEADER_OBJ bitmapInfoV5Processed = BytesToObject<BITMAPV5HEADER_OBJ>(rawData);
                     dataInfoList.Add($"{bitmapInfoV5Processed.bV5Width}x{bitmapInfoV5Processed.bV5Height}, {bitmapInfoV5Processed.bV5BitCount} bpp");
@@ -334,7 +342,7 @@ namespace EditClipboardContents
 
                     break;
 
-                // ------------------- Non-Standard Clipboard Formats -------------------
+                // ------------------- Non-Standard Windows Shell Clipboard Formats -------------------
 
                 case "FileGroupDescriptorW":
                     FILEGROUPDESCRIPTORW_OBJ fileGroupDescriptorWProcessed = BytesToObject<FILEGROUPDESCRIPTORW_OBJ>(rawData);
@@ -346,6 +354,7 @@ namespace EditClipboardContents
                     break;
 
                 case "Shell IDList Array":
+                {
                     CIDA_OBJ cidaProcessed = BytesToObject<CIDA_OBJ>(rawData);
                     int itemCount = (int)cidaProcessed.cidl;
                     dataInfoList.Add($"Item Count: {itemCount}");
@@ -377,14 +386,14 @@ namespace EditClipboardContents
 
                         }
                     }
-
+                    
                     // Add property to cidaProcessed called ITEMIDLIST with the list of ITEMIDLIST_OBJ objects
                     cidaProcessed.ITEMIDLIST = pidlList;
 
                     processedObject = cidaProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
-
+                }
                 case "Shell Object Offsets":
                     POINT_OBJ ShellObjOffsetProcessed = BytesToObject<POINT_OBJ>(rawData);
                     dataInfoList.Add($"X: {ShellObjOffsetProcessed.x}, Y: {ShellObjOffsetProcessed.y}");
@@ -478,6 +487,8 @@ namespace EditClipboardContents
 
                 //    break;
 
+                // ------------------- Other Non-Standard Clipboard Formats -------------------
+
                 // Excel Related Formats
                 case "Biff5":
                     dataInfoList.Add("Excel 5.0/95 Binary File");
@@ -491,11 +502,25 @@ namespace EditClipboardContents
                     dataInfoList.Add("Excel 2007 Binary File");
                     break;
 
+                // ---------------------
+
                 case "HTML Format":
                     dataInfoList.Add("HTML Format");
                     preferredDisplayMode = ViewMode.Text;
                     break;
 
+                case "PNG":
+                case "image/png":
+                {
+                    using (var ms = new MemoryStream(rawData))
+                    using (var img = Image.FromStream(ms))
+                    {
+                        int width = img.Width;
+                        int height = img.Height;
+                        // or img.HorizontalResolution, img.VerticalResolution, etc.
+                    }
+                    break;
+                }
 
                 // ------------------- Cloud Clipboard Formats -------------------
                 // See: See: https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats
