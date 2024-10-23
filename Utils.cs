@@ -14,6 +14,14 @@ using System.Windows.Forms;
 using System.Numerics;
 using System.Reflection;
 
+// Disable IDE warnings that showed up after going from C# 7 to C# 9
+#pragma warning disable IDE0079 // Disable message about unnecessary suppression
+#pragma warning disable IDE1006 // Disable messages about capitalization of control names
+#pragma warning disable IDE0063 // Disable messages about Using expression simplification
+#pragma warning disable IDE0090 // Disable messages about New expression simplification
+#pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about inputArray initialization
+#pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
+#pragma warning disable IDE0066 // Disable message about switch case expression
 // Nullable reference types
 #nullable enable
 
@@ -351,6 +359,13 @@ namespace EditClipboardContents
             return "";
         }
 
+        // Builds on AsHexString to add a space and the integer value in parentheses if it's not zero. Otherwise returns nothing
+        public static string AutoHexString(this object integerValue)
+        {
+            string hexValue = Utils.AsHexString(integerValue);
+            return string.IsNullOrEmpty(hexValue) ? string.Empty : $" ({hexValue})";
+        }
+
         public static string GetWin32ErrorMessage(int? inputError)
         {
             int errorCode;
@@ -385,12 +400,13 @@ namespace EditClipboardContents
             return sb.ToString().Trim();
         }
 
-        private static string GetEnumDescription(Enum value)
+        public static string GetEnumDescription(Enum value)
         {
             var field = value.GetType().GetField(value.ToString());
             var attribute = field?.GetCustomAttribute<DescriptionAttribute>();
             return attribute?.Description ?? value.ToString();
         }
+
 
     } // ----------------- End of class -----------------
 } // ----------------- End of namespace -----------------

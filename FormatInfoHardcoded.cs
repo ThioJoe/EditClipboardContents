@@ -173,10 +173,10 @@ namespace EditClipboardContents
                 return results;
 
             // Get documentation URL for the current outer object
-            string structName = obj.StructName();
+            string? structName = obj.StructName();
             string? currentObjDocUrl = obj.GetDocumentationUrl();
 
-            if (currentObjDocUrl != null && !string.IsNullOrEmpty(currentObjDocUrl)) // Compiler was giving warning when just using IsNullOrEmpty so added null check
+            if (currentObjDocUrl != null && currentObjDocUrl != "" && structName != null && structName != "") // Compiler was giving warning when just using IsNullOrEmpty so added null check
             {
                 results[structName] = currentObjDocUrl;
             }
@@ -240,15 +240,17 @@ namespace EditClipboardContents
                     propertyResults = RecurseThroughArray(value);
                 }
                 // If it's an enum, check if we added a StructNameAttribute to it, and use that
-                else if (propertyType.IsEnum) // Can add 
+                else if (value is Enum enumType) // Can add 
                 {
                     // Check if it has a StructName attribute on the enum
-                    //var structNameAttribute = propertyType.GetCustomAttribute<StructNameAttribute>();
-                    //if (structNameAttribute != null)
-                    //{
-                    //    propertyResults[propertyType.Name] = structNameAttribute.StructName;
-                    //}
-                    continue;
+                    var enumTypeStructName = enumType.GetType().GetStructName();
+                    if (enumTypeStructName != null && enumTypeStructName != "")
+                    {
+                        if (StructDocsLinks.ContainsKey(enumTypeStructName))
+                        {
+                            propertyResults[enumTypeStructName] = StructDocsLinks[enumTypeStructName];
+                        }
+                    }
                 }
 
                 // Add the results to the main dictionary. If a key already exists then don't add it

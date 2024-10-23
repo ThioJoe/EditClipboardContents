@@ -173,7 +173,7 @@ namespace EditClipboardContents
             return new T().GetDocumentationUrl();
         }
 
-        public static string StructName<T>() where T : IClipboardFormat, new()
+        public static string? StructName<T>() where T : IClipboardFormat, new()
         {
             return new T().StructName();
         }
@@ -228,7 +228,8 @@ namespace EditClipboardContents
             public DWORD bV5GreenMask { get; set; }
             public DWORD bV5BlueMask { get; set; }
             public DWORD bV5AlphaMask { get; set; }
-            public LOGCOLORSPACEW_OBJ bV5CSType { get; set; } = new LOGCOLORSPACEW_OBJ();
+            //public LOGCOLORSPACEW_OBJ bV5CSType { get; set; } = new LOGCOLORSPACEW_OBJ();
+            public LCSCSTYPE bV5CSType { get; set; }
             public CIEXYZTRIPLE_OBJ bV5Endpoints { get; set; } = new CIEXYZTRIPLE_OBJ();
             public DWORD bV5GammaRed { get; set; }
             public DWORD bV5GammaGreen { get; set; }
@@ -316,7 +317,25 @@ namespace EditClipboardContents
             public FXPT2DOT30 ciexyzX { get; set; }
             public FXPT2DOT30 ciexyzY { get; set; }
             public FXPT2DOT30 ciexyzZ { get; set; }
+
             protected override string GetStructName() => "CIEXYZ";
+            public override Dictionary<string, string> DataDisplayReplacements()
+            {
+                // Using double for better precision
+                const double FixedToFloat = 1.0 / (1 << 30); // 1/2^30
+
+                // Convert each coordinate from fixed point (2.30) to floating point
+                double x = ciexyzX * FixedToFloat;
+                double y = ciexyzY * FixedToFloat;
+                double z = ciexyzZ * FixedToFloat;
+
+                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "ciexyzX", $"{x:F6}{Utils.AutoHexString(ciexyzX)}" }, // F6 for 6 decimal places
+                    { "ciexyzY", $"{y:F6}{Utils.AutoHexString(ciexyzY)}" },
+                    { "ciexyzZ", $"{z:F6}{Utils.AutoHexString(ciexyzZ)}" },
+                };
+            }
         }
 
         public class CIEXYZTRIPLE_OBJ : ClipboardFormatBase
@@ -1139,7 +1158,7 @@ namespace EditClipboardContents
             public DWORD bV5GreenMask;
             public DWORD bV5BlueMask;
             public DWORD bV5AlphaMask;
-            public LOGCOLORSPACEW bV5CSType;
+            public DWORD bV5CSType;
             public CIEXYZTRIPLE bV5Endpoints;
             public DWORD bV5GammaRed;
             public DWORD bV5GammaGreen;

@@ -160,18 +160,20 @@ namespace EditClipboardContents
                     if (typeof(IClipboardFormat).IsAssignableFrom(propertyType))
                     {
                         var nestedObj = obj.GetType().GetProperty(propertyName).GetValue(obj) as IClipboardFormat;
+                        structInfoString.AppendLine($"{indent}{propertyName}:"); // Header label
                         RecursivePrintClipDataObject(nestedObj, indent + originalIndent, depth + 1);
                     }
-                    else if (typeof(IEnumerable).IsAssignableFrom(propertyType) && propertyType != typeof(string))
+                    else if (typeof(IEnumerable).IsAssignableFrom(propertyType) && propertyType != typeof(string)) // List
                     {
                         var nestedObj = obj.GetType().GetProperty(propertyName).GetValue(obj);
+                        structInfoString.AppendLine($"{indent}{propertyName}:"); // Header label
                         RecursivePrintCollection(nestedObj, indent + originalIndent, depth: depth+1);
                     }
                     else if (propertyType.IsEnum)
                     {
                         structInfoString.AppendLine($"{indent}{propertyName}: {obj.GetType().GetProperty(propertyName).GetValue(obj)}");
                     }
-                    else if (propertyType.IsArray)
+                    else if (propertyType.IsArray) // Array
                     {
                         Array? array = obj.GetType().GetProperty(propertyName).GetValue(obj) as Array;
                         if (array != null && array.Length > 0 )
