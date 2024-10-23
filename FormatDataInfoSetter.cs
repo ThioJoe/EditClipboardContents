@@ -32,12 +32,13 @@ namespace EditClipboardContents
     public partial class MainForm : Form
     {
         // -------------------------------------- Set Data Info ---------------------------------------------------
-        private static (List<string>, ViewMode, byte[], IClipboardFormat?) SetDataInfo(string formatName, byte[] rawData)
+        private static (List<string>, ViewMode, byte[], IClipboardFormat?, Enum?) SetDataInfo(string formatName, byte[] rawData)
         {
             List<string> dataInfoList = new List<string>();
             byte[] processedData = rawData;
             IClipboardFormat? processedObject = null;
             ViewMode preferredDisplayMode = ViewMode.None;
+            Enum usedEnum = null;
 
             switch (formatName) // Process based on format name because format ID can be different for non-standard (registered) formats
             {
@@ -411,6 +412,21 @@ namespace EditClipboardContents
                     preferredDisplayMode = ViewMode.Object;
                     break;
 
+                case "Preferred DropEffect":
+                    DROPEFFECT preferredDropEffectProcessed = BytesToObject<DROPEFFECT>(rawData);
+                    Dictionary <string,string> flagsDict = preferredDropEffectProcessed.GetFlagDescriptionDictionary();
+                    if (flagsDict.Count > 0)
+                    {
+                        dataInfoList.Add($"Drop Effect: {flagsDict.Count} Flags");
+                    }
+                    else
+                    {
+                        dataInfoList.Add("No flags set");
+                    }
+                    usedEnum = preferredDropEffectProcessed;
+                    preferredDisplayMode = ViewMode.Object;
+                    break;
+
                 // Excel Related Formats
                 case "Biff5":
                     dataInfoList.Add("Excel 5.0/95 Binary File");
@@ -508,7 +524,7 @@ namespace EditClipboardContents
 
             } // End switch (formatName)
 
-            return (dataInfoList, preferredDisplayMode, processedData, processedObject);
+            return (dataInfoList, preferredDisplayMode, processedData, processedObject, usedEnum);
 
         }
     }

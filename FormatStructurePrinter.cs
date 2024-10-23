@@ -83,13 +83,14 @@ namespace EditClipboardContents
                 // Add each selectedItem in DataInfoList to the result indented
                 foreach (string dataInfoItem in fullItem.DataInfoList)
                 {
-                    dataInfoString.AppendLine($"{indent}{dataInfoItem}");
+                    // Replace newlines with newline plus same indent
+                    dataInfoString.AppendLine($"{indent}{dataInfoItem}".Replace("\n", $"\n{indent}"));
                 }
                 anyFormatInfoAvailable = true;
             }
 
             // If there's no full item or object data, we'll still check if there is any data info
-            if (fullItem == null || fullItem.ClipDataObject == null)
+            if (fullItem == null || (fullItem.ClipDataObject == null && fullItem.ClipEnumObject == null))
             {
                 if (!anyFormatInfoAvailable)
                 {
@@ -116,6 +117,31 @@ namespace EditClipboardContents
 
                 structInfoString.AppendLine($"\nStruct Info:");
                 RecursivePrintClipDataObject(fullItem.ClipDataObject, indent);
+            }
+            else if (fullItem?.ClipEnumObject != null)
+            {
+                // Documentation links for the enum. In this case there will be only one
+                var enumTypeStructName = fullItem.ClipEnumObject.GetType().GetStructName();
+                if (enumTypeStructName != null && enumTypeStructName != "")
+                {
+                    if (FormatInfoHardcoded.StructDocsLinks.ContainsKey(enumTypeStructName))
+                    {
+                        string structDocsURL = FormatInfoHardcoded.StructDocsLinks[enumTypeStructName];
+                        dataInfoString.AppendLine($"\nStruct Documentation:");
+                        dataInfoString.AppendLine($"{indent}{enumTypeStructName}: {structDocsURL}");
+                    }
+                }
+                // Print the enum values
+                Dictionary<string, string> flagsDict = fullItem.ClipEnumObject.GetFlagDescriptionDictionary();
+                if (flagsDict.Count > 0)
+                {
+                    structInfoString.AppendLine($"\nActive Enum Values/Flags:");
+                    foreach (var flag in flagsDict)
+                    {
+                        structInfoString.AppendLine($"{indent}{flag.Key}: {flag.Value}");
+                    }
+                }
+
             }
 
             // Final result

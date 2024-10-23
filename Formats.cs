@@ -1595,7 +1595,7 @@ namespace EditClipboardContents
                         Type typeToUse = propertyType;
                         int collectionSizeToPassIn = -1;
 
-                        if (arraySize.HasValue)
+                        if (typeToUse.IsArray && arraySize.HasValue) // Not sure if this was meant only for arrays or also lists but EnumerateProperties is only working for arrays
                         {
                             if (arraySize.Value > 0)
                             {

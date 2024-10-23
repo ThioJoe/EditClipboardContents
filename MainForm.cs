@@ -36,6 +36,7 @@ using System.Windows.Forms.Automation;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.IO.Compression;
+using System.CodeDom.Compiler;
 
 
 namespace EditClipboardContents
@@ -959,6 +960,7 @@ namespace EditClipboardContents
             {
                 byte[]? processedData = null;
                 IClipboardFormat? processedObject = null;
+                Enum? usedEnum = null;
                 ViewMode preferredDisplayMode = ViewMode.None;
 
                 // Data info list contains metadata about the data. First item will show in the data info column, all will show in the text box in object/struct view mode
@@ -967,7 +969,7 @@ namespace EditClipboardContents
                 // If there is data, process it and get the data info
                 if (item?.RawData != null && item.RawData.Length > 0)
                 {
-                    (dataInfoList, preferredDisplayMode, processedData, processedObject) = SetDataInfo(formatName: item.FormatName, rawData: item.RawData);
+                    (dataInfoList, preferredDisplayMode, processedData, processedObject, usedEnum) = SetDataInfo(formatName: item.FormatName, rawData: item.RawData);
                 }
                 // If there is no data, and there is an error message
                 else if (item != null && !string.IsNullOrEmpty(item.ErrorReason))
@@ -993,6 +995,7 @@ namespace EditClipboardContents
                 item.ProcessedData = processedData;
                 item.DataInfoList = dataInfoList;
                 item.PreferredViewMode = preferredDisplayMode;
+                item.ClipEnumObject = usedEnum;
 
                 // Determine format type. If it's below 0xC0000 it's a standard format type.
                 // See here for details about the specific ranges: https://learn.microsoft.com/en-us/windows/win32/dataxchg/standard-clipboard-formats
@@ -3203,23 +3206,23 @@ namespace EditClipboardContents
             return string.Join(" | ", flags.Select(flag => flag.GetDescription()));
         }
 
-        public static string GetFlagDescriptionPairsListStringified(this Enum value)
+        public static string GetFlagDescriptionPairsListStringified(this Enum value, string indent = "")
         {
             if (!value.GetType().IsDefined(typeof(FlagsAttribute), false))
-                return $"{value}: {value.GetDescription()}";  // Return single description if not a flags enum
+                return $"{indent}{value}: {value.GetDescription()}";  // Return single description if not a flags enum
 
             var flags = value.ToString()
                 .Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(flag => Enum.Parse(value.GetType(), flag))
                 .Cast<Enum>();
 
-            return string.Join("\n", flags.Select(flag => $"{flag}: {flag.GetDescription()}"));
+            return string.Join("\n", flags.Select(flag => $"{indent}{flag}: {flag.GetDescription()}"));
         }
 
-        public static Dictionary<Enum, string> GetFlagDescriptionDictionary(this Enum value)
+        public static Dictionary<string, string> GetFlagDescriptionDictionary(this Enum value)
         {
             if (!value.GetType().IsDefined(typeof(FlagsAttribute), false))
-                return new Dictionary<Enum, string> { { value, value.GetDescription() } };
+                return new Dictionary<string, string> { { value.ToString(), value.GetDescription() } };
 
             Type enumType = Enum.GetUnderlyingType(value.GetType());
             dynamic numericValue = Convert.ChangeType(value, enumType);
@@ -3232,7 +3235,7 @@ namespace EditClipboardContents
                 return flagValue != 0 && (numericValue & flagValue) == flagValue;
             })
             .ToDictionary(
-                flag => flag,
+                flag => flag.ToString(),
                 flag => flag.GetDescription()
             );
         }
@@ -3295,6 +3298,7 @@ namespace EditClipboardContents
         public int OriginalIndex { get; set; } = -1;
         public ViewMode PreferredViewMode { get; set; } = ViewMode.None;
         public IClipboardFormat? ClipDataObject { get; set; } = null ;
+        public Enum? ClipEnumObject { get; set; } = null;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
@@ -3322,7 +3326,8 @@ namespace EditClipboardContents
                 ErrorDiagnosisReport = this.ErrorDiagnosisReport,
                 OriginalIndex = this.OriginalIndex,
                 PreferredViewMode = this.PreferredViewMode,
-                ClipDataObject = this.ClipDataObject // If it's null, set to null, otherwise clone
+                ClipDataObject = this.ClipDataObject,
+                ClipEnumObject = this.ClipEnumObject
             };
 
             // Manually set the UniqueID to match the original
