@@ -478,9 +478,16 @@ namespace EditClipboardContents
                         pixelFormat = PixelFormat.Format1bppIndexed;
                         paletteSize = 2 * Marshal.SizeOf(typeof(RGBQUAD));
                         break;
+                    case 4:
+                        pixelFormat = PixelFormat.Format4bppIndexed;
+                        paletteSize = 16 * Marshal.SizeOf(typeof(RGBQUAD));
+                        break;
                     case 8:
                         pixelFormat = PixelFormat.Format8bppIndexed;
                         paletteSize = 256 * Marshal.SizeOf(typeof(RGBQUAD));
+                        break;
+                    case 16:
+                        pixelFormat = PixelFormat.Format16bppRgb555;
                         break;
                     case 24:
                         pixelFormat = PixelFormat.Format24bppRgb;
@@ -533,6 +540,110 @@ namespace EditClipboardContents
             }
         }
 
+        public static Bitmap Bitmap_From_CF_BITMAP_RawData(byte[] rawData)
+        {
+            if (rawData == null)
+                throw new ArgumentNullException(nameof(rawData));
+
+            // Get the offset of bmBits in the BITMAP structure
+            int bmBitsOffset = Marshal.OffsetOf<BITMAP>("bmBits").ToInt32();
+
+            if (rawData.Length <= bmBitsOffset)
+                throw new ArgumentException("Invalid raw data", nameof(rawData));
+
+            // Extract the BITMAP_HEADER from rawData
+            byte[] bitmapHeaderData = new byte[bmBitsOffset];
+            Array.Copy(rawData, 0, bitmapHeaderData, 0, bmBitsOffset);
+
+            _BitmapHeader bitmapHeader;
+            GCHandle headerHandle = GCHandle.Alloc(bitmapHeaderData, GCHandleType.Pinned);
+            try
+            {
+                bitmapHeader = Marshal.PtrToStructure<_BitmapHeader>(headerHandle.AddrOfPinnedObject());
+            }
+            finally
+            {
+                headerHandle.Free();
+            }
+
+            // Extract the bitmap bits from rawData
+            int bitsSize = rawData.Length - bmBitsOffset;
+            byte[] bitmapBits = new byte[bitsSize];
+            Array.Copy(rawData, bmBitsOffset, bitmapBits, 0, bitsSize);
+
+            int width = bitmapHeader.bmWidth;
+            int height = Math.Abs(bitmapHeader.bmHeight);
+            bool isBottomUp = bitmapHeader.bmHeight > 0;
+
+            // Determine the pixel format
+            PixelFormat pixelFormat;
+            switch (bitmapHeader.bmBitsPixel)
+            {
+                case 1:
+                    pixelFormat = PixelFormat.Format1bppIndexed;
+                    break;
+                case 4:
+                    pixelFormat = PixelFormat.Format4bppIndexed;
+                    break;
+                case 8:
+                    pixelFormat = PixelFormat.Format8bppIndexed;
+                    break;
+                case 16:
+                    pixelFormat = PixelFormat.Format16bppRgb565; // Adjust as needed
+                    break;
+                case 24:
+                    pixelFormat = PixelFormat.Format24bppRgb;
+                    break;
+                case 32:
+                    pixelFormat = PixelFormat.Format32bppArgb; // Adjust based on actual alpha usage
+                    break;
+                default:
+                    throw new NotSupportedException($"Bit depth {bitmapHeader.bmBitsPixel} is not supported.");
+            }
+
+            Bitmap bitmap = new Bitmap(width, height, pixelFormat);
+
+            BitmapData bitmapData = bitmap.LockBits(
+                new Rectangle(0, 0, width, height),
+                ImageLockMode.WriteOnly,
+                pixelFormat);
+
+            try
+            {
+                int bytesPerPixel = bitmapHeader.bmBitsPixel / 8;
+                int sourceStride = bitmapHeader.bmWidthBytes; // Stride from the BITMAP structure
+                int destStride = bitmapData.Stride; // Stride of the locked bitmap
+
+                // Ensure source stride is correctly aligned
+                int expectedSourceStride = ((bitmapHeader.bmWidth * bitmapHeader.bmBitsPixel + 31) / 32) * 4;
+                if (sourceStride != expectedSourceStride)
+                {
+                    sourceStride = expectedSourceStride;
+                }
+
+                // Copy the bitmap bits into the Bitmap object
+                for (int y = 0; y < height; y++)
+                {
+                    int sourceY = isBottomUp ? (height - 1 - y) : y;
+                    int sourceIndex = sourceY * sourceStride;
+                    IntPtr destPtr = new IntPtr(bitmapData.Scan0.ToInt64() + y * destStride);
+
+                    if (sourceIndex + sourceStride > bitmapBits.Length)
+                        throw new ArgumentException("Bitmap bits are not sufficient for the specified dimensions.");
+
+                    Marshal.Copy(bitmapBits, sourceIndex, destPtr, Math.Min(sourceStride, destStride));
+                }
+            }
+            finally
+            {
+                bitmap.UnlockBits(bitmapData);
+            }
+
+            return bitmap;
+        }
+
+
+
         public static Bitmap BitmapFile_From_CF_DIB_RawData(byte[] data)
         {
             GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
@@ -546,9 +657,20 @@ namespace EditClipboardContents
 
                 switch (bmi.bmiHeader.biBitCount)
                 {
+                    case 1:
+                        pixelFormat = PixelFormat.Format1bppIndexed;
+                        paletteSize = 2 * Marshal.SizeOf(typeof(RGBQUAD));
+                        break;
+                    case 4:
+                        pixelFormat = PixelFormat.Format4bppIndexed;
+                        paletteSize = 16 * Marshal.SizeOf(typeof(RGBQUAD));
+                        break;
                     case 8:
                         pixelFormat = PixelFormat.Format8bppIndexed;
                         paletteSize = 256 * Marshal.SizeOf(typeof(RGBQUAD));
+                        break;
+                    case 16:
+                        pixelFormat = PixelFormat.Format16bppRgb555;
                         break;
                     case 24:
                         pixelFormat = PixelFormat.Format24bppRgb;
@@ -705,7 +827,7 @@ namespace EditClipboardContents
             return hBitmap;
         }
 
-        public static byte[]? BITMAP_RawData_FromHandle(IntPtr hBitmap)
+        public static byte[]? CF_BITMAP_RawData_FromHandle(IntPtr hBitmap)
         {
             if (hBitmap == IntPtr.Zero)
             {

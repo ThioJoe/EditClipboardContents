@@ -837,7 +837,7 @@ namespace EditClipboardContents
                 switch (formatId)
                 {
                     case 2: // CF_BITMAP
-                        rawData = FormatConverters.BITMAP_RawData_FromHandle(hData);
+                        rawData = FormatConverters.CF_BITMAP_RawData_FromHandle(hData);
                         dataSize = (ulong)(rawData?.Length ?? 0);
 
                         break;
@@ -2639,17 +2639,11 @@ namespace EditClipboardContents
             else if (itemToExport.FormatName == "CF_BITMAP") // CF_BITMAP
             {
                 string extension = FormatInfoHardcoded.KnownBinaryExtensionAssociations[itemToExport.FormatName];
+                Bitmap bitmap = FormatConverters.Bitmap_From_CF_BITMAP_RawData(itemToExport.RawData);
                 SaveFileDialog saveFileDialogResult = SaveFileDialog(extension: extension, defaultFileNameStem: nameStem);
                 if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
                 {
-                    using (MemoryStream ms = new MemoryStream(itemToExport.RawData))
-                    {
-                        using (Bitmap bitmap = new Bitmap(ms))
-                        {
-                            bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
-
-                        }
-                    }
+                    bitmap.Save(saveFileDialogResult.FileName, ImageFormat.Bmp);
                 }
                 return;
             }
