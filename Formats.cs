@@ -234,7 +234,7 @@ namespace EditClipboardContents
             public DWORD bV5GammaRed { get; set; }
             public DWORD bV5GammaGreen { get; set; }
             public DWORD bV5GammaBlue { get; set; }
-            public DWORD bV5Intent { get; set; }
+            public LCSGAMUTMATCH bV5Intent { get; set; }
             public DWORD bV5ProfileData { get; set; }
             public DWORD bV5ProfileSize { get; set; }
             public DWORD bV5Reserved { get; set; }
@@ -820,7 +820,9 @@ namespace EditClipboardContents
             // Can be one of the following values
             LCS_CALIBRATED_RGB = 0x00000000,
             LCS_sRGB = 0x73524742,
-            LCS_WINDOWS_COLOR_SPACE = 0x57696E20
+            LCS_WINDOWS_COLOR_SPACE = 0x57696E20,
+            PROFILE_LINKED = 0x4C494E4B,
+            PROFILE_EMBEDDED = 0x4D424544
         }
 
         [StructName("GamutMappingIntent")]
