@@ -283,7 +283,7 @@ namespace EditClipboardContents
                 
                 string knownStructIcon = "";
                 string knownStructTooltip = "";
-                if (formatItem.ClipDataObject != null)
+                if (formatItem.ClipDataObject != null || formatItem.ClipEnumObject != null)
                 {
                     knownStructIcon = "✓";
                     knownStructTooltip = MyStrings.KnownStructTooltip;
@@ -578,6 +578,8 @@ namespace EditClipboardContents
 
             RefreshDataGridViewContents();
             UpdateSplitterPosition_FitDataGrid();
+
+            UpdateAnyPendingChangesFlag();
 
             //UpdateEditControlsVisibility_AndPendingGridAppearance(); // Occurrs in RefreshDataGridViewContents
         }
@@ -1044,8 +1046,10 @@ namespace EditClipboardContents
             //RefreshDataGridViewContents();
         }
 
-        public static DiagnosticsInfo DiagnoseClipboardState(uint format, string formatName = "")
+        public static DiagnosticsInfo DiagnoseClipboardState(uint format = 0, string formatName = "")
         {
+            // Format is allowed to be zero, in which case it will just check general info about the clipboard state
+
             DiagnosticsInfo diagnostics = new DiagnosticsInfo();
             StringBuilder diagnosisString = new StringBuilder();
             int currentError;
@@ -1057,15 +1061,22 @@ namespace EditClipboardContents
             {
                 diagnosisString.AppendLine($"Diagnosing clipboard state for format: {formatName} ({format})");
             }
-            else
+            else if (format != 0)
             {
                 diagnosisString.AppendLine($"Diagnosing clipboard state for format: {format}");
             }
+            else
+            {
+                diagnosisString.AppendLine("Clipboard State Info:");
+            }
 
-            // Check if the format is available
-            bool isFormatAvailable = NativeMethods.IsClipboardFormatAvailable(format);
-            diagnosisString.AppendLine($"Is format available: {isFormatAvailable}");
-            diagnostics.IsFormatAvailable = isFormatAvailable;
+            if (format != 0)
+            {
+                // Check if the format is available
+                bool isFormatAvailable = NativeMethods.IsClipboardFormatAvailable(format);
+                diagnosisString.AppendLine($"Is format available: {isFormatAvailable}");
+                diagnostics.IsFormatAvailable = isFormatAvailable;
+            }
 
             // Clipboard should already be opened by the caller
 
@@ -1158,15 +1169,16 @@ namespace EditClipboardContents
                 }
                 NativeMethods.SetLastErrorEx(0, 0); // Clear last error
 
-                // Attempt to get clipboard data
-                IntPtr hData = NativeMethods.GetClipboardData(format);
-                diagnosisString.AppendLine($"GetClipboardData result: 0x{hData.ToInt64():X}");
-                currentError = Marshal.GetLastWin32Error();
-                if (currentError != 0)
-                {
-                    diagnosisString.AppendLine($"GetClipboardData failed. Error: {currentError} | {ErrMsg(currentError)}");
+                if (format != 0){
+                    // Attempt to get clipboard data
+                    IntPtr hData = NativeMethods.GetClipboardData(format);
+                    diagnosisString.AppendLine($"GetClipboardData result: 0x{hData.ToInt64():X}");
+                    currentError = Marshal.GetLastWin32Error();
+                    if (currentError != 0)
+                    {
+                        diagnosisString.AppendLine($"GetClipboardData failed. Error: {currentError} | {ErrMsg(currentError)}");
+                    }
                 }
-
             }
             catch (Exception ex)
             {
@@ -3065,7 +3077,7 @@ namespace EditClipboardContents
 
             SaveClipboardData(importing: true);
             RefreshClipboardItems(); // This occurs in ProcessClipboardData but we do it again after Saving the clipboard
-            anyPendingChanges = false;
+            //anyPendingChanges = false; // Moved into RefreshClipboardItems
             // UpdateEditControlsVisibility_AndPendingGridAppearance(); Occurs in RefreshClipboardItems > RefreshDataGridViewContents
         }
 
@@ -3091,7 +3103,41 @@ namespace EditClipboardContents
             }
         }
 
+        public void RefreshClipboardAndRestoreSelection()
+        {
+            int selectedFormatId = -1;
+            int selectedViewMode = dropdownContentsViewMode.SelectedIndex;
+            // New scope, only need item for this operation
+            {
+                ClipboardItem? item = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
+                if (item != null)
+                {
+                    selectedFormatId = (int)item.FormatId;
+                }
+            }
 
+            RefreshClipboardItems();
+            //anyPendingChanges = false; // Moved into RefreshClipboardItems
+
+            // If the new clipboard data contains the same format as the previously selected item, re-select it
+            // Need to go by format ID because the object and unique IDs will be new after refreshing the items
+            if (selectedFormatId > 0 && clipboardItems != null && clipboardItems.Any(ci => ci.FormatId == selectedFormatId))
+            {
+                // If format id is still in the new clipboard, select it
+                int rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells[colName.FormatId].Value.ToString() == selectedFormatId.ToString());
+                if (rowIndex >= 0)
+                {
+                    dataGridViewClipboard.ClearSelection();
+                    dataGridViewClipboard.Rows[rowIndex].Selected = true;
+                    dataGridViewClipboard.FirstDisplayedScrollingRowIndex = rowIndex;
+                    // Also update the view mode to the previously selected view mode
+                    dropdownContentsViewMode.SelectedIndex = selectedViewMode;
+                }
+            }
+            //UpdateEditControlsVisibility_AndPendingGridAppearance();
+        }
+
+        
     } // ---------------------------------------------------------------------------------------------------
     // --------------------------------------- End of MainForm Class ---------------------------------------
     // -----------------------------------------------------------------------------------------------------
@@ -3177,6 +3223,15 @@ namespace EditClipboardContents
         public int ColumnIndex { get; set; } = columnIndex;
     }
 
+    public class RedirectDataInfo //byte[]? dataTouseAtRedirect = null // Maybe for future use
+    {
+        public int OffsetToRedirect { get; set; }
+        //public byte[]? DataToUseAtRedirect { get; set; } = dataTouseAtRedirect;
+        // The Type that was in the original struct that will be replaced in the object version, such as a handle being replaced with its data
+        public Type? OriginalRedirectedType { get; set; }
+        public IClipboardFormat? ObjectToReplaceWith { get; set; }
+    }
+
     // Extension method to get the description attribute of an enum value
     public static class EnumExtensions
     {
@@ -3184,7 +3239,14 @@ namespace EditClipboardContents
         {
             var field = value.GetType().GetField(value.ToString());
             var attribute = field?.GetCustomAttribute<DescriptionAttribute>();
-            return attribute?.Description ?? value.ToString();
+            if (attribute?.Description != null)
+            {
+                return attribute.Description;
+            }
+            else
+            {
+                return "";
+            }
         }
 
         public static string GetFlagDescriptions(this Enum value)

@@ -73,6 +73,7 @@
             this.toolStripButtonAddFormat = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonSaveEdited = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonExportSelected = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonTimedRefresh = new System.Windows.Forms.ToolStripButton();
             this.richTextBoxContents = new System.Windows.Forms.RichTextBox();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
             this.labelLoading = new System.Windows.Forms.Label();
@@ -95,6 +96,7 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.labelVersion = new System.Windows.Forms.Label();
             this.buttonTest = new System.Windows.Forms.Button();
+            this.menuHelp_DebugInfo = new System.Windows.Forms.MenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.contextMenuStrip_dataGridView.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -452,7 +454,8 @@
             this.menuItemHelp.Index = 3;
             this.menuItemHelp.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this.menuHelp_About,
-            this.menuHelp_WhyTakingLong});
+            this.menuHelp_WhyTakingLong,
+            this.menuHelp_DebugInfo});
             this.menuItemHelp.Text = "Help";
             // 
             // menuHelp_About
@@ -477,7 +480,8 @@
             this.toolStripButtonDelete,
             this.toolStripButtonAddFormat,
             this.toolStripButtonSaveEdited,
-            this.toolStripButtonExportSelected});
+            this.toolStripButtonExportSelected,
+            this.toolStripButtonTimedRefresh});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Padding = new System.Windows.Forms.Padding(12, 0, 3, 0);
@@ -548,6 +552,17 @@
             this.toolStripButtonExportSelected.Text = "Export selected item data as file";
             this.toolStripButtonExportSelected.ToolTipText = "Export selected item data as file";
             this.toolStripButtonExportSelected.Click += new System.EventHandler(this.toolStripButtonExportSelected_Click);
+            // 
+            // toolStripButtonTimedRefresh
+            // 
+            this.toolStripButtonTimedRefresh.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonTimedRefresh.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonTimedRefresh.Image")));
+            this.toolStripButtonTimedRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonTimedRefresh.Name = "toolStripButtonTimedRefresh";
+            this.toolStripButtonTimedRefresh.Size = new System.Drawing.Size(46, 46);
+            this.toolStripButtonTimedRefresh.Text = "Time Delayed Refresh";
+            this.toolStripButtonTimedRefresh.ToolTipText = "Refresh the clipboard after a specified number of seconds";
+            this.toolStripButtonTimedRefresh.Click += new System.EventHandler(this.toolStripButtonTimedRefresh_Click);
             // 
             // richTextBoxContents
             // 
@@ -704,7 +719,7 @@
             // 
             this.checkBoxPlainTextEditing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxPlainTextEditing.AutoSize = true;
-            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(-10, 397);
+            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(-22, 397);
             this.checkBoxPlainTextEditing.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.checkBoxPlainTextEditing.Name = "checkBoxPlainTextEditing";
             this.checkBoxPlainTextEditing.Size = new System.Drawing.Size(148, 24);
@@ -727,7 +742,7 @@
             "UTF-32 BE",
             "Codepage 1252",
             "System Default"});
-            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(256, 391);
+            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(244, 391);
             this.dropdownHexToTextEncoding.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dropdownHexToTextEncoding.Name = "dropdownHexToTextEncoding";
             this.dropdownHexToTextEncoding.Size = new System.Drawing.Size(217, 28);
@@ -738,7 +753,7 @@
             // 
             this.labelHexToPlaintextEncoding.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelHexToPlaintextEncoding.AutoSize = true;
-            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(169, 397);
+            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(157, 397);
             this.labelHexToPlaintextEncoding.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelHexToPlaintextEncoding.Name = "labelHexToPlaintextEncoding";
             this.labelHexToPlaintextEncoding.Size = new System.Drawing.Size(80, 20);
@@ -867,6 +882,12 @@
             this.buttonTest.Visible = false;
             this.buttonTest.Click += new System.EventHandler(this.buttonTest_Click);
             // 
+            // menuHelp_DebugInfo
+            // 
+            this.menuHelp_DebugInfo.Index = 2;
+            this.menuHelp_DebugInfo.Text = "Debug Info";
+            this.menuHelp_DebugInfo.Click += new System.EventHandler(this.menuHelp_DebugInfo_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -981,5 +1002,7 @@
         private System.Windows.Forms.ToolStripMenuItem contextMenu_copySelectedCurrentColumnOnly;
         private System.Windows.Forms.ToolStripMenuItem contextMenu_copyColumn;
         private System.Windows.Forms.ToolStripMenuItem contextMenu_copyColumnNoHeader;
+        private System.Windows.Forms.ToolStripButton toolStripButtonTimedRefresh;
+        private System.Windows.Forms.MenuItem menuHelp_DebugInfo;
     }
 }

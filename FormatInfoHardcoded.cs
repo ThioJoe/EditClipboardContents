@@ -71,6 +71,8 @@ namespace EditClipboardContents
             { "GamutMappingIntent", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/9fec0834-607d-427d-abd5-ab240fb0db38" },
             { "MetafileType ", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/2d09c51e-062b-4d9b-94c4-6ffd0e12dfb6" },
             { "BOOL", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/9d81be47-232e-42cf-8f0d-7a3b29bf2eb2" },
+            { "FORMATETC", "https://learn.microsoft.com/en-us/windows/win32/api/objidl/ns-objidl-formatetc" },
+            { "DVTARGETDEVICE", "https://learn.microsoft.com/en-us/windows/win32/api/objidl/ns-objidl-dvtargetdevice" },
             
         };
 

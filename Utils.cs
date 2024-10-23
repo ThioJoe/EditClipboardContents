@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -360,10 +361,21 @@ namespace EditClipboardContents
         }
 
         // Builds on AsHexString to add a space and the integer value in parentheses if it's not zero. Otherwise returns nothing
-        public static string AutoHexString(this object integerValue)
+        public static string AutoHexString(this object integerValue, bool truncate = false)
         {
             string hexValue = Utils.AsHexString(integerValue);
-            return string.IsNullOrEmpty(hexValue) ? string.Empty : $" ({hexValue})";
+            if (string.IsNullOrEmpty(hexValue))
+                return string.Empty;
+
+            if (truncate && hexValue.Length > 2)  // Check if we have more than just "0x"
+            {
+                // Remove "0x", trim leading zeros, then add "0x" back
+                string numberPart = hexValue.Substring(2).TrimStart('0');
+                // If it was all zeros, keep one
+                hexValue = "0x" + (numberPart.Length == 0 ? "0" : numberPart);
+            }
+
+            return $" ({hexValue})";
         }
 
         public static string GetWin32ErrorMessage(int? inputError)
@@ -405,6 +417,38 @@ namespace EditClipboardContents
             var field = value.GetType().GetField(value.ToString());
             var attribute = field?.GetCustomAttribute<DescriptionAttribute>();
             return attribute?.Description ?? value.ToString();
+        }
+
+        public static byte[]? GetDataFromStructHandle<T>(IntPtr? inputHandle) where T : struct
+        {
+            if (inputHandle == IntPtr.Zero || inputHandle is not IntPtr handle)
+            {
+                return null;
+            }
+
+            int size = Marshal.SizeOf<T>();
+            byte[] data = new byte[size];
+            Marshal.Copy(handle, data, 0, size);
+            return data;
+        }
+
+        public static T? GetStructFromData<T>(byte[] data) where T : struct
+        {
+            if (data == null || data.Length == 0)
+            {
+                return null;
+            }
+
+            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+            if (handle.AddrOfPinnedObject() == IntPtr.Zero)
+            {
+                handle.Free();
+                return null;
+            }
+
+            T result = Marshal.PtrToStructure<T>(handle.AddrOfPinnedObject());
+            handle.Free();
+            return result;
         }
 
 

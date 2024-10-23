@@ -60,7 +60,7 @@ namespace EditClipboardContents
                     dataInfoList.Add($"Encoding: ANSI");
                     dataInfoList.Add($"Chars: {ansiText.Length}");
                     preferredDisplayMode = ViewMode.Text;
-                    break;              
+                    break;
 
                 case "CF_BITMAP": // 2 - CF_BITMAP
                     BITMAP_OBJ CF_bitmapProcessed = BytesToObject<BITMAP_OBJ>(rawData);
@@ -316,7 +316,7 @@ namespace EditClipboardContents
                         {
                             dataInfo = $"Invalid LCID: {lcid}";
                         }
-                        catch(Exception ex)
+                        catch (Exception ex)
                         {
                             dataInfo = $"Error: {ex.Message}";
                         }
@@ -336,7 +336,7 @@ namespace EditClipboardContents
 
                 // ------------------- Non-Standard Clipboard Formats -------------------
 
-                case "FileGroupDescriptorW": 
+                case "FileGroupDescriptorW":
                     FILEGROUPDESCRIPTORW_OBJ fileGroupDescriptorWProcessed = BytesToObject<FILEGROUPDESCRIPTORW_OBJ>(rawData);
                     int fileCount = (int)fileGroupDescriptorWProcessed.cItems;
                     dataInfoList.Add($"File Count: {fileCount}");
@@ -416,7 +416,7 @@ namespace EditClipboardContents
 
                 case "Preferred DropEffect":
                     DROPEFFECT preferredDropEffectProcessed = BytesToObject<DROPEFFECT>(rawData);
-                    Dictionary <string,string> flagsDict = preferredDropEffectProcessed.GetFlagDescriptionDictionary();
+                    Dictionary<string, string> flagsDict = preferredDropEffectProcessed.GetFlagDescriptionDictionary();
                     if (flagsDict.Count > 0)
                     {
                         dataInfoList.Add($"Drop Effect: {flagsDict.Count} Flags");
@@ -428,6 +428,55 @@ namespace EditClipboardContents
                     processedEnum = preferredDropEffectProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
+
+                case "DataObject":
+                    // Convert the raw byte array to an int depending on 64 or 32 bit
+                    IntPtr hwndOwner = IntPtr.Size == 8
+                        ? new IntPtr(BitConverter.ToInt64(rawData, 0))
+                        : new IntPtr(BitConverter.ToInt32(rawData, 0));
+                    string hexStringHandle = Utils.AutoHexString(hwndOwner, truncate: true);
+                    dataInfoList.Add($"HWND: {hwndOwner}{hexStringHandle}");
+                    dataInfoList.Add("This is the HWND of the window that owns the data object.");
+                    dataInfoList.Add("See: https://learn.microsoft.com/en-us/office/vba/language/concepts/forms/what-is-the-difference-between-the-dataobject-and-the-clipboard");
+                    break;
+
+                //case // Whatever uses the FORMATETC struct
+                //    FORMATETC? formatEtcStructData = Utils.GetStructFromData<FORMATETC>(rawData);
+                //    // Get offset of DVTARGETDEVICE
+                //    int offsetToHandle = Marshal.OffsetOf<FORMATETC>(nameof(FORMATETC.ptd)).ToInt32();
+
+                //    RedirectDataInfo? redirectDataInfo = null;
+                //    if (formatEtcStructData != null)
+                //    {
+                //        // Get the DVTARGETDEVICE object
+                //        byte[]? DVTARGETDEVICE_data = Utils.GetDataFromStructHandle<DVTARGETDEVICE>(formatEtcStructData?.ptd);
+
+                //        if (DVTARGETDEVICE_data != null && DVTARGETDEVICE_data.Length > 0)
+                //        {
+                //            try
+                //            {
+                //                DVTARGETDEVICE_OBJ DVTARGETDEVICE_processed = BytesToObject<DVTARGETDEVICE_OBJ>(DVTARGETDEVICE_data);
+                //                // Get the FORMATETC object and pass in the DVTARGETDEVICE object as a redirect when at the DVTargetDevice pointer field
+                //                redirectDataInfo = new RedirectDataInfo
+                //                {
+                //                    OffsetToRedirect = offsetToHandle,
+                //                    OriginalRedirectedType = typeof(IntPtr),
+                //                    ObjectToReplaceWith = DVTARGETDEVICE_processed
+                //                };
+                //            }
+                //            catch (Exception ex)
+                //            {
+                //                dataInfoList.Add($"Error processing DVTARGETDEVICE: {ex.Message}");
+                //                redirectDataInfo = null;
+                //            }
+
+                //        }
+                //    }
+
+                //    FORMATETC_OBJ formatEtcProcessed = BytesToObject<FORMATETC_OBJ>(rawData, redirectInfo: redirectDataInfo);
+                //    processedObject = formatEtcProcessed;
+
+                //    break;
 
                 // Excel Related Formats
                 case "Biff5":
@@ -459,15 +508,18 @@ namespace EditClipboardContents
                 case "CanIncludeInClipboardHistory": // DWORD - Value of zero prevents all formats from being added to history, value of 1 explicitly requests all formats to be added to history
                     if (rawData != null && rawData.Length == 4)
                     {
-                        if (BitConverter.ToInt32(rawData, 0) == 0)
+                        BOOL canIncludeInClipboardHistory_bool = BytesToObject<BOOL>(rawData);
+                        if (canIncludeInClipboardHistory_bool == BOOL.FALSE)
                         {
                             dataInfoList.Add("Disables Clipboard History");
                             dataInfoList.Add("Applications add this format to the clipboard with a value of 0 to prevent the data from being added to the clipboard history.");
+                            processedEnum = canIncludeInClipboardHistory_bool;
                         }
-                        else if (BitConverter.ToInt32(rawData, 0) == 1)
+                        else if (canIncludeInClipboardHistory_bool == BOOL.TRUE)
                         {
                             dataInfoList.Add("Explicitly Allows Clipboard History");
                             dataInfoList.Add("Applications add this format to the clipboard with a value of 1 to explicitly request that the data be added to the clipboard history.");
+                            processedEnum = canIncludeInClipboardHistory_bool;
                         }
                         else
                         {
@@ -481,20 +533,24 @@ namespace EditClipboardContents
                         dataInfoList.Add("The value of this format should be a DWORD (4 bytes), but it is not. There could be a new feature or a problem.");
                     }
                     preferredDisplayMode = ViewMode.Object;
+                    
                     break;
 
                 case "CanUploadToCloudClipboard": // DWORD - Value of zero prevents all formats from being synced to other devices, value of 1 explicitly requests all formats to be synced to other devices
                     if (rawData != null && rawData.Length == 4)
                     {
-                        if (BitConverter.ToInt32(rawData, 0) == 0)
+                        BOOL canUploadToCloudClipboard_bool = BytesToObject<BOOL>(rawData);
+                        if (canUploadToCloudClipboard_bool == BOOL.FALSE)
                         {
                             dataInfoList.Add("Disables Cloud Sync");
                             dataInfoList.Add("Applications add this format to the clipboard with a value of 0 to prevent the data from being synced to other devices.");
+                            processedEnum = canUploadToCloudClipboard_bool;
                         }
-                        else if (BitConverter.ToInt32(rawData, 0) == 1)
+                        else if (canUploadToCloudClipboard_bool == BOOL.TRUE)
                         {
                             dataInfoList.Add("Explicitly Allows Cloud Sync");
                             dataInfoList.Add("Applications add this format to the clipboard with a value of 1 to explicitly request that the data be synced to other devices.");
+                            processedEnum = canUploadToCloudClipboard_bool;
                         }
                         else
                         {

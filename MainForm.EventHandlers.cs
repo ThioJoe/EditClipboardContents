@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -686,7 +687,7 @@ namespace EditClipboardContents
                 return;
             }
             SaveClipboardData();
-            anyPendingChanges = false;
+            //anyPendingChanges = false; // Moved into RefreshClipboardItems
             RefreshClipboardItems();
             //UpdateEditControlsVisibility_AndPendingGridAppearance(); // Occurs in RefreshClipboardItems
         }
@@ -765,38 +766,39 @@ namespace EditClipboardContents
 
         private void toolStripButtonRefresh_Click(object sender, EventArgs e)
         {
-            int selectedFormatId = -1;
-            int selectedViewMode = dropdownContentsViewMode.SelectedIndex;
-            // New scope, only need item for this operation
-            {
-                ClipboardItem? item = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
-                if (item != null)
-                {
-                    selectedFormatId = (int)item.FormatId;
-                }
-            }
-
-            RefreshClipboardItems();
-            anyPendingChanges = false;
-
-            // If the new clipboard data contains the same format as the previously selected item, re-select it
-            // Need to go by format ID because the object and unique IDs will be new after refreshing the items
-            if (selectedFormatId > 0 && clipboardItems != null && clipboardItems.Any(ci => ci.FormatId == selectedFormatId))
-            {
-                // If format id is still in the new clipboard, select it
-                int rowIndex = dataGridViewClipboard.Rows.Cast<DataGridViewRow>().ToList().FindIndex(r => r.Cells[colName.FormatId].Value.ToString() == selectedFormatId.ToString());
-                if (rowIndex >= 0)
-                {
-                    dataGridViewClipboard.ClearSelection();
-                    dataGridViewClipboard.Rows[rowIndex].Selected = true;
-                    dataGridViewClipboard.FirstDisplayedScrollingRowIndex = rowIndex;
-                    // Also update the view mode to the previously selected view mode
-                    dropdownContentsViewMode.SelectedIndex = selectedViewMode;
-                }
-            }
-            //UpdateEditControlsVisibility_AndPendingGridAppearance();
+            RefreshClipboardAndRestoreSelection();
         }
 
+        private void toolStripButtonTimedRefresh_Click(object sender, EventArgs e)
+        {
+            // Get input from the user from a message box. The user should input a number of seconds
+            string input = "";
+            DialogResult inputResult = Utils.ShowInputDialog(owner: this, ref input, instructions: "Enter a delay in seconds before refreshing:"); // Will put the user input in the "input" variable
+
+            if (inputResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
+            if (uint.TryParse(input, out uint delay))
+            {
+                // Create the timer
+                Timer refreshTimer = new Timer();
+                refreshTimer.Interval = (int)delay * 1000; // Convert seconds to milliseconds
+                refreshTimer.Tick += (object sender, EventArgs e) =>
+                {
+                    RefreshClipboardAndRestoreSelection();
+                    refreshTimer.Stop();
+                    refreshTimer.Dispose();
+                };
+                // Actually run the timer and code inside the tick event
+                refreshTimer.Start(); 
+            }
+            else
+            {
+                MessageBox.Show("Invalid input. Please enter a valid number of seconds.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
         private void toolStripButtonDelete_Click(object sender, EventArgs e)
         {
             if (dataGridViewClipboard.SelectedRows.Count > 0)
@@ -1361,11 +1363,20 @@ namespace EditClipboardContents
             ClearClipboard();
 
             RefreshClipboardItems();
-            UpdateAnyPendingChangesFlag();
+            //UpdateAnyPendingChangesFlag(); // Moved into RefreshClipboardItems
             //UpdateEditControlsVisibility_AndPendingGridAppearance(); // Occurs in RefreshClipboardItems > RefreshDataGridViewContents
         }
 
+        private void menuHelp_DebugInfo_Click(object sender, EventArgs e)
+        {
+            // Get the handle of the current window
+            IntPtr handle = Process.GetCurrentProcess().MainWindowHandle;
+            DiagnosticsInfo debugInfo = DiagnoseClipboardState();
 
+            string debugInfoString = debugInfo.ReportString;
+            
+            MessageBox.Show(debugInfoString, "Debug Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
 
 
         // --------------------------------------------- TEST BUTTON --------------------------------------------------------

@@ -47,6 +47,7 @@ namespace EditClipboardContents
     using UINT32 = System.UInt32;       // 4 Bytes
     using INT16 = System.Int16;         // 2 Bytes
     using UINT = System.UInt32;         // 4 Bytes
+    using CLIPFORMAT = System.UInt16;   // 2 Bytes, aka WORD
     using static System.Net.WebRequestMethods;
 
 
@@ -818,6 +819,29 @@ namespace EditClipboardContents
             protected override string GetStructName() => "DataObjectAttributes";
         }
 
+        public class FORMATETC_OBJ : ClipboardFormatBase
+        {
+            public CLIPFORMAT cfFormat { get; set; }
+            // DVTARGETDEVICE is a handle, so we will process it separately.
+            // Will use marshal to get the true struct with the pointer then put it into this object
+            public DVTARGETDEVICE_OBJ ptd { get; set; } = new DVTARGETDEVICE_OBJ();
+            public DWORD dwAspect { get; set; }
+            public LONG lindex { get; set; }
+            public DWORD tymed { get; set; }
+            protected override string GetStructName() => "FORMATETC";
+        }
+
+        public class DVTARGETDEVICE_OBJ : ClipboardFormatBase
+        {
+            public DWORD tdSize { get; set; }
+            public WORD tdDriverNameOffset { get; set; }
+            public WORD tdDeviceNameOffset { get; set; }
+            public WORD tdPortNameOffset { get; set; }
+            public WORD tdExtDevmodeOffset { get; set; }
+            public BYTE[] tdData { get; set; } = [];
+            protected override string GetStructName() => "DVTARGETDEVICE";
+        }
+
         // --------------------------------------------------------------------------------------------------------------------------
         // --------------------------------------------------- Enum Definitions -----------------------------------------------------
         // --------------------------------------------------------------------------------------------------------------------------
@@ -1115,7 +1139,9 @@ namespace EditClipboardContents
         [EnumName("BOOL")]
         public enum BOOL : UInt32
         {
+            [Description("Windows BOOL (aka DWORD, 4 Bytes) with a value of 0")]
             FALSE = 0x00000000,
+            [Description("Windows BOOL (aka DWORD, 4 Bytes) with a value of 1")]
             TRUE = 0x00000001
         }
         [EnumName("DROPEFFECT")]
@@ -1350,6 +1376,29 @@ namespace EditClipboardContents
             public WCHAR[] lcsFilename;
         }
 
+        // For CLIPFORMAT See: https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ff735541(v=vs.100)
+        [StructLayout(LayoutKind.Sequential)]
+        public struct FORMATETC
+        {
+            public CLIPFORMAT cfFormat;
+            public IntPtr ptd; // Handle to DVTARGETDEVICE
+            public DWORD dwAspect;
+            public LONG lindex;
+            public DWORD tymed;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DVTARGETDEVICE
+        {
+            public DWORD tdSize;
+            public WORD tdDriverNameOffset;
+            public WORD tdDeviceNameOffset;
+            public WORD tdPortNameOffset;
+            public WORD tdExtDevmodeOffset;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
+            public BYTE[] tdData;
+        }
+
         // --------------------------------------------------- Helper methods ---------------------------------------------------
 
         public const int MAX_PATH = 260;
@@ -1371,13 +1420,15 @@ namespace EditClipboardContents
             return Enum.GetName(enumType, value);
         }
 
-        public static T BytesToObject<T>(byte[] data) where T : new()
+        public static T BytesToObject<T>(byte[] data, RedirectDataInfo? redirectInfo = null) where T : new()
         {
             int offset = 0;
-            return (T)ReadValue(typeof(T), data, ref offset);
+            return (T)ReadValue(typeof(T), data, ref offset, redirectInfo: redirectInfo);
         }
 
-        private static object ReadValue(Type type, byte[] data, ref int offset, Type? callingClass = null, int collectionSize = -1)
+        // Parameter purposes:
+        // callingClass - Used to check the MaxStringLength() method for the specific class type in which a string is being read from
+        private static object ReadValue(Type type, byte[] data, ref int offset, RedirectDataInfo? redirectInfo, Type? callingClass = null, int collectionSize = -1)
         {
             int remainingBytes = data.Length - offset;
 
@@ -1522,7 +1573,7 @@ namespace EditClipboardContents
                     var array = Array.CreateInstance(elementType, collectionSize);
                     for (int i = 0; i < collectionSize; i++)
                     {
-                        array.SetValue(ReadValue(elementType, data, ref offset), i);
+                        array.SetValue(ReadValue(elementType, data, ref offset, redirectInfo: redirectInfo), i);
                     }
                     return array;
                 }
@@ -1535,7 +1586,7 @@ namespace EditClipboardContents
                     {
                         try
                         {
-                            object element = ReadValue(elementType, data, ref offset);
+                            object element = ReadValue(elementType, data, ref offset, redirectInfo: redirectInfo);
                             list.Add(element);
                             remainingBytes = data.Length - offset;
                         }
@@ -1559,7 +1610,7 @@ namespace EditClipboardContents
                 {
                     try
                     {
-                        object element = ReadValue(elementType, data, ref offset);
+                        object element = ReadValue(elementType, data, ref offset, redirectInfo: redirectInfo);
                         list.Add(element);
                         remainingBytes = data.Length - offset;
                     }
@@ -1570,6 +1621,32 @@ namespace EditClipboardContents
                     }
                 }
                 return list;
+            }
+            // If we're at the redirect offset and processing a valid thing we can redirect for
+            // For example we want to insert data that is pointed to by a pointer at a certain offset
+            // We'll increment the offset by the size of the specified original replaced type given in redirectInfo
+            else if (redirectInfo != null && redirectInfo.OffsetToRedirect == offset && type == (Type?)redirectInfo.ObjectToReplaceWith)
+            {
+                // Later might add way to use new instance of ReadValue to process in line, but for now will assume the replacement object has already been prepared
+                //int tempOffset = offset; // Save the current offset and use that so we don't change the original offset
+                //redirectedObj = (IClipboardFormat)ReadValue(type, redirectInfo.DataToUseAtRedirect, ref offset); 
+                //---------------------------------------------------------------------------------------------------
+
+                IClipboardFormat redirectedObj = redirectInfo.ObjectToReplaceWith;
+
+                int originalTypeSize;
+                // Manually check pointer because marshal.sizeof doesn't work for IntPtr apparently
+                if (redirectInfo.OriginalRedirectedType == typeof(IntPtr))
+                {
+                    originalTypeSize = IntPtr.Size;
+                }
+                else
+                {
+                    originalTypeSize = Marshal.SizeOf(redirectInfo.OriginalRedirectedType);
+                }
+
+                offset += originalTypeSize; // Reset the offset to what it was before
+                return redirectedObj;
             }
             else if (Activator.CreateInstance(type) is IClipboardFormat obj)
             {
@@ -1611,7 +1688,7 @@ namespace EditClipboardContents
                             }
                         }
 
-                        object value = ReadValue(typeToUse, data, ref offset, callingClass: type, collectionSize: collectionSizeToPassIn);
+                        object value = ReadValue(typeToUse, data, ref offset, callingClass: type, collectionSize: collectionSizeToPassIn, redirectInfo: redirectInfo);
                         type.GetProperty(propertyName).SetValue(obj, value);
                         remainingBytes = data.Length - offset;
                     }
@@ -1627,7 +1704,7 @@ namespace EditClipboardContents
             {
                 if (remainingBytes < Marshal.SizeOf(Enum.GetUnderlyingType(type)))
                     throw new ArgumentException("Not enough data to read enum");
-                object value = Enum.ToObject(type, ReadValue(Enum.GetUnderlyingType(type), data, ref offset));
+                object value = Enum.ToObject(type, ReadValue(Enum.GetUnderlyingType(type), data, ref offset, redirectInfo: redirectInfo));
                 return value;
             }
             else

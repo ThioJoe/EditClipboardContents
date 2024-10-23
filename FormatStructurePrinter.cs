@@ -138,7 +138,14 @@ namespace EditClipboardContents
                     structInfoString.AppendLine($"\nActive Enum Values/Flags:");
                     foreach (var flag in flagsDict)
                     {
-                        structInfoString.AppendLine($"{indent}{flag.Key}: {flag.Value}");
+                        if (!string.IsNullOrWhiteSpace(flag.Value))
+                        {
+                            structInfoString.AppendLine($"{indent}{flag.Key}: {flag.Value}");
+                        }
+                        else
+                        {
+                            structInfoString.AppendLine($"{indent}{flag.Key}");
+                        }
                     }
                 }
 
