@@ -73,7 +73,7 @@ namespace EditClipboardContents
                 Type type = this.GetType();
                 if (type.IsEnum)
                 {
-                    var attr = type.GetCustomAttribute<StructNameAttribute>();
+                    var attr = type.GetCustomAttribute<EnumNameAttribute>();
                     if (attr != null)
                         return attr.Name;
                     else
@@ -822,7 +822,7 @@ namespace EditClipboardContents
         // --------------------------------------------------- Enum Definitions -----------------------------------------------------
         // --------------------------------------------------------------------------------------------------------------------------
 
-        [StructName("LogicalColorSpace")]
+        [EnumName("LogicalColorSpace")]
         public enum LCSCSTYPE : uint // DWORD
         {
             // Can be one of the following values
@@ -833,7 +833,7 @@ namespace EditClipboardContents
             PROFILE_EMBEDDED = 0x4D424544
         }
 
-        [StructName("GamutMappingIntent")]
+        [EnumName("GamutMappingIntent")]
         public enum LCSGAMUTMATCH : uint // DWORD
         {
             // Can be one of the following values
@@ -843,7 +843,7 @@ namespace EditClipboardContents
             LCS_GM_IMAGES = 0x00000004
         }
 
-        [StructName("bV5Compression")]
+        [EnumName("bV5Compression")]
         public enum bV5Compression : uint // DWORD
         {
             BI_RGB = 0x0000,
@@ -857,14 +857,14 @@ namespace EditClipboardContents
             BI_CMYKRLE4 = 0x000D
         }
 
-        [StructName("MetafileType")]
+        [EnumName("MetafileType")]
         public enum MetaFileType : WORD
         {
             MEMORYMETAFILE = 0x0001, // Metafile is stored in memory
             DISKMETAFILE = 0x0002 // Metafile is stored on disk
         }
 
-        [StructName("RecordType (WMF)")]
+        [EnumName("RecordType (WMF)")]
         public enum WMF_RecordType: WORD
         {
             META_EOF = 0x0000,
@@ -939,7 +939,7 @@ namespace EditClipboardContents
             META_CREATEREGION = 0x06FF
         }
 
-        [StructName("RecordType (EMF)")]
+        [EnumName("RecordType (EMF)")]
         public enum EMF_RecordType: DWORD // 4 bytes
         {
             EMR_HEADER = 0x00000001,
@@ -1063,7 +1063,7 @@ namespace EditClipboardContents
             EMR_CREATECOLORSPACEW = 0x0000007A
         }
 
-        [StructName("ColorUsage")]
+        [EnumName("ColorUsage")]
         public enum ColorUsage : UINT
         {
             DIB_RGB_COLORS = 0x0000,
@@ -1071,7 +1071,7 @@ namespace EditClipboardContents
             DIB_PAL_INDICES = 0x0002
         }
 
-        [StructName("SFGAO")]
+        [EnumName("SFGAO")]
         [Flags] // These are a bitfield of flags
         public enum SFGAO: DWORD
         {
@@ -1112,13 +1112,13 @@ namespace EditClipboardContents
             SFGAO_PKEYSFGAOMASK = 0x81044000,
         }
 
-        [StructName("BOOL")]
+        [EnumName("BOOL")]
         public enum BOOL : UInt32
         {
             FALSE = 0x00000000,
             TRUE = 0x00000001
         }
-        [StructName("DROPEFFECT")]
+        [EnumName("DROPEFFECT")]
         [Flags]
         public enum DROPEFFECT : DWORD
         {
@@ -1356,11 +1356,11 @@ namespace EditClipboardContents
 
         // Define StructName for enums to be used when looking up URLs and such
         [AttributeUsage(AttributeTargets.Enum)]
-        public class StructNameAttribute : Attribute
+        public class EnumNameAttribute : Attribute
         {
             public string Name { get; }
 
-            public StructNameAttribute(string name)
+            public EnumNameAttribute(string name)
             {
                 Name = name;
             }

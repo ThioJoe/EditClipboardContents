@@ -3233,12 +3233,12 @@ namespace EditClipboardContents
                 flag => flag.GetDescription()
             );
         }
-        public static string? GetStructName(this Type enumType)
+        public static string? GetEnumStructName(this Type enumType)
         {
             if (!enumType.IsEnum)
                 throw new ArgumentException("Type must be an enum");
 
-            var attr = enumType.GetCustomAttribute<StructNameAttribute>();
+            var attr = enumType.GetCustomAttribute<EnumNameAttribute>();
             return attr?.Name;
         }
     }

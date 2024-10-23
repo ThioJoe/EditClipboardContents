@@ -121,7 +121,7 @@ namespace EditClipboardContents
             else if (fullItem?.ClipEnumObject != null)
             {
                 // Documentation links for the enum. In this case there will be only one
-                var enumTypeStructName = fullItem.ClipEnumObject.GetType().GetStructName();
+                var enumTypeStructName = fullItem.ClipEnumObject.GetType().GetEnumStructName();
                 if (enumTypeStructName != null && enumTypeStructName != "")
                 {
                     if (FormatInfoHardcoded.StructDocsLinks.ContainsKey(enumTypeStructName))

@@ -244,7 +244,7 @@ namespace EditClipboardContents
                 else if (value is Enum enumType) // Can add 
                 {
                     // Check if it has a StructName attribute on the enum
-                    var enumTypeStructName = enumType.GetType().GetStructName();
+                    var enumTypeStructName = enumType.GetType().GetEnumStructName();
                     if (enumTypeStructName != null && enumTypeStructName != "")
                     {
                         if (StructDocsLinks.ContainsKey(enumTypeStructName))
