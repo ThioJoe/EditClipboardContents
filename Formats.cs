@@ -1151,6 +1151,19 @@ namespace EditClipboardContents
         }
 
         [StructLayout(LayoutKind.Sequential)]
+        public struct _BitmapHeader
+        {
+            public LONG bmType;
+            public LONG bmWidth;
+            public LONG bmHeight;
+            public LONG bmWidthBytes;
+            public WORD bmPlanes;
+            public WORD bmBitsPixel;
+            // Not including the bmBits pointer
+        }
+
+
+        [StructLayout(LayoutKind.Sequential)]
         public struct BITMAPV5HEADER
         {
             public DWORD bV5Size;

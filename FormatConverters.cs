@@ -627,7 +627,85 @@ namespace EditClipboardContents
             }
         }
 
-        public static byte[]? BITMAP_FromHandle(IntPtr hBitmap)
+        
+        public static IntPtr CF_BITMAP_Handle_FromRawData(byte[] rawData)
+        {
+            if (rawData == null)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Get the offset of bmBits in the BITMAP structure
+            int bmBitsOffset = Marshal.OffsetOf<BITMAP>("bmBits").ToInt32();
+
+            if (rawData.Length <= bmBitsOffset)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Extract the BITMAP_HEADER from rawData
+            byte[] bitmapHeaderData = new byte[bmBitsOffset];
+            Array.Copy(rawData, 0, bitmapHeaderData, 0, bmBitsOffset);
+
+            _BitmapHeader bitmapHeader;
+            GCHandle headerHandle = GCHandle.Alloc(bitmapHeaderData, GCHandleType.Pinned);
+            try
+            {
+                bitmapHeader = Marshal.PtrToStructure<_BitmapHeader>(headerHandle.AddrOfPinnedObject());
+            }
+            finally
+            {
+                headerHandle.Free();
+            }
+
+            // Extract the bitmap bits from rawData
+            int bitsSize = rawData.Length - bmBitsOffset;
+            byte[] bitmapBits = new byte[bitsSize];
+            Array.Copy(rawData, bmBitsOffset, bitmapBits, 0, bitsSize);
+
+            // Calculate the stride (number of bytes per scanline)
+            int bytesPerPixel = (bitmapHeader.bmBitsPixel / 8);
+            int stride = bitmapHeader.bmWidth * bytesPerPixel;
+
+            // Adjust stride for padding to a multiple of 4 bytes
+            int padding = (4 - (stride % 4)) % 4;
+            int scanlineSize = stride + padding;
+
+            // Create a new array to hold the flipped bitmap bits. The bits are stored bottom-up, so we need to flip them or else it will be upside down.
+            byte[] flippedBitmapBits = new byte[bitmapBits.Length];
+
+            for (int y = 0; y < bitmapHeader.bmHeight; y++)
+            {
+                int sourceIndex = y * scanlineSize;
+                int destIndex = (bitmapHeader.bmHeight - 1 - y) * scanlineSize;
+
+                Array.Copy(bitmapBits, sourceIndex, flippedBitmapBits, destIndex, scanlineSize);
+            }
+
+            // Pin the flipped bitmap bits in memory
+            GCHandle bitsHandle = GCHandle.Alloc(flippedBitmapBits, GCHandleType.Pinned);
+
+            // Create the HBITMAP using the BITMAP_HEADER and flipped bitmap bits
+            IntPtr hBitmap = IntPtr.Zero;
+            try
+            {
+                hBitmap = NativeMethods.CreateBitmap(
+                    bitmapHeader.bmWidth,
+                    bitmapHeader.bmHeight,
+                    bitmapHeader.bmPlanes,
+                    bitmapHeader.bmBitsPixel,
+                    bitsHandle.AddrOfPinnedObject()
+                );
+            }
+            finally
+            {
+                bitsHandle.Free();
+            }
+
+            return hBitmap;
+        }
+
+        public static byte[]? BITMAP_RawData_FromHandle(IntPtr hBitmap)
         {
             if (hBitmap == IntPtr.Zero)
             {

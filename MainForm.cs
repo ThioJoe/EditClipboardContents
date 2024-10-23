@@ -837,21 +837,7 @@ namespace EditClipboardContents
                 switch (formatId)
                 {
                     case 2: // CF_BITMAP
-                        //Test getting raw data using GetDIBits
-                        //byte[] rawImageBitsOnly = FormatConverters.DIBits_From_HBitmap(hData);
-                        //string byteStringHex = BitConverter.ToString(rawImageBitsOnly).Replace("-", " ");
-
-                        //using (Bitmap bitmap = Image.FromHbitmap(hData))
-                        //{
-                        //    using (MemoryStream ms = new MemoryStream())
-                        //    {
-                        //        bitmap.Save(ms, ImageFormat.Bmp);
-                        //        rawData = ms.ToArray();
-                        //        dataSize = (ulong)rawData.Length;
-                        //    }
-                        //}
-
-                        rawData = FormatConverters.BITMAP_FromHandle(hData);
+                        rawData = FormatConverters.BITMAP_RawData_FromHandle(hData);
                         dataSize = (ulong)(rawData?.Length ?? 0);
 
                         break;
@@ -1640,11 +1626,7 @@ namespace EditClipboardContents
                         switch (item.FormatId)
                         {
                             case 2: // CF_BITMAP
-                                using (MemoryStream ms = new MemoryStream(item.RawData))
-                                using (Bitmap bmp = new Bitmap(ms))
-                                {
-                                    hGlobal = FormatConverters.Bitmap_hBitmapHandle_FromHandle(bmp.GetHbitmap());
-                                }
+                                hGlobal = FormatConverters.CF_BITMAP_Handle_FromRawData(item.RawData);
                                 break;
                             case 3: // CF_METAFILEPICT
                                 hGlobal = FormatConverters.MetafilePict_Handle_FromRawData(item.RawData);
