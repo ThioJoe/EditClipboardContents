@@ -456,7 +456,7 @@ namespace EditClipboardContents
         }
 
         //Function to fit processedData grid view to the form window
-        private void UpdateToolLocations(WhichPanelResize splitAnchor = WhichPanelResize.None, int sizeDiff = 0)
+        private void UpdateToolLocations(WhichPanelResize splitAnchor = WhichPanelResize.None)
         {
             splitContainerMain.SplitterMoved -= new SplitterEventHandler(splitContainerMain_SplitterMoved);
             int titlebarAccomodate = CompensateDPI(40);
@@ -645,7 +645,7 @@ namespace EditClipboardContents
             }
         }
 
-        private void RetryCopyClipboardFormat(uint formatId, string specifiedFormatName = "")
+        private void RetryCopyClipboardFormat(uint formatId)
         {
             bool successResult = false;
             // First open the clipboard
@@ -1738,7 +1738,7 @@ namespace EditClipboardContents
         private IntPtr SetCustomFormatToClipboard(uint formatId, string formatName, IntPtr handle)
         {
             bool registerCustomName;
-            IntPtr result = IntPtr.Zero;
+            IntPtr result;
             uint formatIDToUse;
 
             if (formatId == 0)
@@ -1806,7 +1806,7 @@ namespace EditClipboardContents
             splitContainerMain.SplitterDistance = newSize;
         }
 
-        private void UpdateEditControlsVisibility_AndPendingGridAppearance(ClipboardItem? selectedItem = null, ClipboardItem? selectedEditedItem = null)
+        private void UpdateEditControlsVisibility_AndPendingGridAppearance(ClipboardItem? selectedEditedItem = null)
         {
             if (selectedEditedItem == null)
             {
@@ -2863,7 +2863,7 @@ namespace EditClipboardContents
         private void ExportBackupFolder(List<ClipboardItem> itemsToExport, string path, bool zip)
         {
             // Local function to prepare the data for each item
-            (byte[] data, string fileName, StringBuilder exportTxt) PrepareItemData(ClipboardItem item, StringBuilder exportTxt)
+            static (byte[] data, string fileName, StringBuilder exportTxt) PrepareItemData(ClipboardItem item, StringBuilder exportTxt)
             {
                 byte[] rawData = item.RawData ?? new byte[0];
                 string name = item.FormatName;
@@ -3147,7 +3147,7 @@ namespace EditClipboardContents
         public const string DataNull = "[null]";
         public const string DataEmpty = "[Empty]";
         public const string KnownFileTooltip = "Can be properly exported as known file type.";
-        public const string KnownStructTooltip = "Details about underlying object/struct available.";
+        public const string KnownStructTooltip = "Details about underlying object/struct supported.";
         public const string DataTooLarge = "Data is too large to display preview.\nThis can be changed in the options menu, but the program may freeze for large amounts of data.";
     }
     
@@ -3171,16 +3171,10 @@ namespace EditClipboardContents
 
     // ----------------------------------- Utility Classes ---------------------------------------------------
 
-    public class RecentRightClickedCell
+    public class RecentRightClickedCell(int rowIndex = -1, int columnIndex = -1)
     {
-        public int RowIndex { get; set; }
-        public int ColumnIndex { get; set; }
-
-        public RecentRightClickedCell(int rowIndex = -1, int columnIndex = -1)
-        {
-            RowIndex = rowIndex;
-            ColumnIndex = columnIndex;
-        }
+        public int RowIndex { get; set; } = rowIndex;
+        public int ColumnIndex { get; set; } = columnIndex;
     }
 
     // Extension method to get the description attribute of an enum value

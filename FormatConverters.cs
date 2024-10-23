@@ -750,7 +750,7 @@ namespace EditClipboardContents
         }
 
         
-        public static IntPtr CF_BITMAP_Handle_FromRawData(byte[] rawData)
+        public static IntPtr CF_BITMAP_Handle_FromRawData(byte[]? rawData)
         {
             if (rawData == null)
             {
@@ -966,7 +966,6 @@ namespace EditClipboardContents
 
             // Determine the number of entries in the palette
             ushort numEntries = BitConverter.ToUInt16(rawData, 2);
-            int logPaletteSize = headerSize + (Marshal.SizeOf<PALETTEENTRY>() * numEntries);
             LOGPALETTE logPalette = new LOGPALETTE((ushort)numEntries);
             int rawByteIndex = 4; // Skip the first 4 bytes, which are the palVersion and palNumEntries
             for (int i = 0; i < numEntries; i++)

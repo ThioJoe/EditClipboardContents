@@ -22,6 +22,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 #pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about collection initialization
 #pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
 #pragma warning disable IDE0066 // Disable message about switch case expression
+#pragma warning disable IDE0017
 // Nullable reference types
 #nullable enable
 
@@ -83,11 +84,9 @@ namespace EditClipboardContents
                     splitAnchor = WhichPanelResize.Top;
                 }
 
-                int sizeDiff = this.Height - previousWindowHeight;
-
                 if (this.WindowState != FormWindowState.Minimized)
                 {
-                    UpdateToolLocations(splitAnchor: splitAnchor, sizeDiff: sizeDiff);
+                    UpdateToolLocations(splitAnchor: splitAnchor);
                 }
 
                 previousWindowHeight = this.Height;
@@ -450,7 +449,6 @@ namespace EditClipboardContents
 
             if (originalItem != null)
             {
-                guid = originalItem.UniqueID;
                 originalData = originalItem.RawData;
             }
             else // It must be a custom format so there is no original data. Assume user wants to reset the custom format data and removal status
@@ -1108,7 +1106,6 @@ namespace EditClipboardContents
 
         private void toolStripButtonFetchManualFormat_Click(object sender, EventArgs e)
         {
-            uint formatId;
             bool result;
             bool existingItem;
 
@@ -1122,7 +1119,7 @@ namespace EditClipboardContents
             }
 
             // Try to parse it as a uint first
-            if (uint.TryParse(input, out formatId))
+            if (uint.TryParse(input, out uint formatId))
             {
                 (result, existingItem) = ManuallyCopySpecifiedClipboardFormat(formatId: formatId);
 
@@ -1378,13 +1375,6 @@ namespace EditClipboardContents
         {
             Console.WriteLine(e.ToString());
 
-            DROPEFFECT test = DROPEFFECT.DROPEFFECT_COPY;
-            DROPEFFECT test2 = DROPEFFECT.DROPEFFECT_MOVE | DROPEFFECT.DROPEFFECT_COPY;
-
-            string testDescription = test.GetDescription();
-            string test2Desc = test2.GetFlagDescriptions();
-            string test3 = test2.GetFlagDescriptionPairsListStringified();
-            var test4 = test2.GetFlagDescriptionDictionary();
 
             Console.WriteLine("");
             Console.WriteLine("");
