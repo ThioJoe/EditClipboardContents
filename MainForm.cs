@@ -3186,6 +3186,8 @@ namespace EditClipboardContents
         public const uint RegisteredFormatMaxID = 0xFFFF;
     }
 
+    // ----------------------------------- Utility Classes ---------------------------------------------------
+
     public class RecentRightClickedCell
     {
         public int RowIndex { get; set; }
@@ -3198,9 +3200,74 @@ namespace EditClipboardContents
         }
     }
 
-    // ---------------------------------------------------------------------------------------------------
+    // Extension method to get the description attribute of an enum value
+    public static class EnumExtensions
+    {
+        public static string GetDescription(this Enum value)
+        {
+            var field = value.GetType().GetField(value.ToString());
+            var attribute = field?.GetCustomAttribute<DescriptionAttribute>();
+            return attribute?.Description ?? value.ToString();
+        }
 
-    // ----------------------------------- Object Definitions---------------------------------------------------
+        public static string GetFlagDescriptions(this Enum value)
+        {
+            if (!value.GetType().IsDefined(typeof(FlagsAttribute), false))
+                return value.GetDescription();  // Return single description if not a flags enum
+
+            var flags = value.ToString()
+                .Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(flag => Enum.Parse(value.GetType(), flag))
+                .Cast<Enum>();
+
+            return string.Join(" | ", flags.Select(flag => flag.GetDescription()));
+        }
+
+        public static string GetFlagDescriptionPairsListStringified(this Enum value)
+        {
+            if (!value.GetType().IsDefined(typeof(FlagsAttribute), false))
+                return $"{value}: {value.GetDescription()}";  // Return single description if not a flags enum
+
+            var flags = value.ToString()
+                .Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(flag => Enum.Parse(value.GetType(), flag))
+                .Cast<Enum>();
+
+            return string.Join("\n", flags.Select(flag => $"{flag}: {flag.GetDescription()}"));
+        }
+
+        public static Dictionary<Enum, string> GetFlagDescriptionDictionary(this Enum value)
+        {
+            if (!value.GetType().IsDefined(typeof(FlagsAttribute), false))
+                return new Dictionary<Enum, string> { { value, value.GetDescription() } };
+
+            Type enumType = Enum.GetUnderlyingType(value.GetType());
+            dynamic numericValue = Convert.ChangeType(value, enumType);
+
+            var values = Enum.GetValues(value.GetType()).Cast<Enum>();
+
+            return values.Where(flag =>
+            {
+                dynamic flagValue = Convert.ChangeType(flag, enumType);
+                return flagValue != 0 && (numericValue & flagValue) == flagValue;
+            })
+            .ToDictionary(
+                flag => flag,
+                flag => flag.GetDescription()
+            );
+        }
+        public static string? GetStructName(this Enum enumValue)
+        {
+            Type enumType = enumValue.GetType();
+            var attr = enumType.GetCustomAttribute<StructNameAttribute>();
+            return attr?.Name;
+        }
+    }
+
+    
+
+
+    // ----------------------------------- Clipboard Related Object Definitions---------------------------------------------------
 
     public class DiagnosticsInfo
     {

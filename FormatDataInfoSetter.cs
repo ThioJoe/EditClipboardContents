@@ -408,9 +408,16 @@ namespace EditClipboardContents
                     break;
 
                 case "AsyncFlag":
-                    WINDOWS_BOOL boolVal = BytesToObject<WINDOWS_BOOL>(rawData);
-                    dataInfoList.Add($"Boolean: {boolVal}");
+                    WINDOWS_BOOL AsyncBoolVal = BytesToObject<WINDOWS_BOOL>(rawData);
+                    dataInfoList.Add($"Boolean: {AsyncBoolVal}");
                     dataInfoList.Add("Possibly has to do with telling Explorer whether to paste in the background.");
+                    preferredDisplayMode = ViewMode.Object;
+                    break;
+
+                case "UIDisplayed":
+                    WINDOWS_BOOL UIBoolVal = BytesToObject<WINDOWS_BOOL>(rawData);
+                    dataInfoList.Add($"Boolean: {UIBoolVal}");
+                    preferredDisplayMode = ViewMode.Object;
                     break;
 
                 case "DataObjectAttributes":

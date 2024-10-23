@@ -63,7 +63,14 @@ namespace EditClipboardContents
             { "MS-EMF" , "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/daaf9447-0c47-446e-b72e-ac6bd7a2e8f1"},
             { "MetafileType", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/2d09c51e-062b-4d9b-94c4-6ffd0e12dfb6" },
             { "RecordType (WMF)", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/77db8158-96df-4656-a36c-3066de3d5f59" },
-            { "RecordType (EMF)", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/1eec80ba-799b-4784-a9ac-91597d590ae1" }
+            { "RecordType (EMF)", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/1eec80ba-799b-4784-a9ac-91597d590ae1" },
+            { "SFGAO", "https://learn.microsoft.com/en-us/windows/win32/shell/sfgao" },
+            { "DROPEFFECT", "https://learn.microsoft.com/en-us/windows/win32/com/dropeffect-constants" },
+            { "ColorUsage", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/30403797-a408-40ca-b024-dd8a1acb39be" },
+            { "LogicalColorSpace ", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/eb4bbd50-b3ce-4917-895c-be31f214797f" },
+            { "GamutMappingIntent", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/9fec0834-607d-427d-abd5-ab240fb0db38" },
+            { "MetafileType ", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/2d09c51e-062b-4d9b-94c4-6ffd0e12dfb6" },
+            
         };
 
         // Dictionary for docs to non-standard registered formats other than structs
@@ -232,9 +239,16 @@ namespace EditClipboardContents
                 {
                     propertyResults = RecurseThroughArray(value);
                 }
-                else if (propertyType.IsEnum)
+                // If it's an enum, check if we added a StructNameAttribute to it, and use that
+                else if (propertyType.IsEnum) // Can add 
                 {
-                    continue; // Later figure out how to get documentation for enums
+                    // Check if it has a StructName attribute on the enum
+                    //var structNameAttribute = propertyType.GetCustomAttribute<StructNameAttribute>();
+                    //if (structNameAttribute != null)
+                    //{
+                    //    propertyResults[propertyType.Name] = structNameAttribute.StructName;
+                    //}
+                    continue;
                 }
 
                 // Add the results to the main dictionary. If a key already exists then don't add it

@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static EditClipboardContents.ClipboardFormats;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
@@ -1376,9 +1377,17 @@ namespace EditClipboardContents
         private void buttonTest_Click(object sender, EventArgs e)
         {
             Console.WriteLine(e.ToString());
-            // Local function to use nameof a specified ClipboardItem property as string
-            //string GetPropertyName<T>(T item, string propertyName) => item.GetType().GetProperty(propertyName)?.Name ?? "";
-            //Console.WriteLine("");
+
+            DROPEFFECT test = DROPEFFECT.DROPEFFECT_COPY;
+            DROPEFFECT test2 = DROPEFFECT.DROPEFFECT_MOVE | DROPEFFECT.DROPEFFECT_COPY;
+
+            string testDescription = test.GetDescription();
+            string test2Desc = test2.GetFlagDescriptions();
+            string test3 = test2.GetFlagDescriptionPairsListStringified();
+            var test4 = test2.GetFlagDescriptionDictionary();
+
+            Console.WriteLine("");
+            Console.WriteLine("");
         }
 
 

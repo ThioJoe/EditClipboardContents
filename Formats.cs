@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -54,7 +55,7 @@ namespace EditClipboardContents
         public interface IClipboardFormat
         {
             string? GetDocumentationUrl();
-            string StructName();
+            string? StructName();
             Dictionary<string, string> DataDisplayReplacements();
             List<string> PropertiesNoProcess();
             void SetCacheStructObjectDisplayInfo(string structInfo);
@@ -66,11 +67,25 @@ namespace EditClipboardContents
 
         public abstract class ClipboardFormatBase : IClipboardFormat
         {
-            // Protected method to be implemented by derived classes
-            protected abstract string GetStructName();
+            // Protected method to be implemented by derived classes. But if it's en enum then check for StructNameAttribute
+            protected virtual string? GetStructName()
+            {
+                Type type = this.GetType();
+                if (type.IsEnum)
+                {
+                    var attr = type.GetCustomAttribute<StructNameAttribute>();
+                    if (attr != null)
+                        return attr.Name;
+                    else
+                        return null;
+                }
+                // If it's not an enum or doesn't have the attribute, derived classes should override this
+                throw new NotImplementedException(
+                    $"Type {type.Name} must either be an enum with StructNameAttribute or override GetStructName()");
+            }
 
             // Public method to access the struct name
-            public string StructName() => GetStructName();
+            public string? StructName() => GetStructName();
 
             // MaxStringLength method
             public virtual int MaxStringLength() => 0;
@@ -84,7 +99,7 @@ namespace EditClipboardContents
             // Common methods apply to all classes of the type
             public virtual string? GetDocumentationUrl()
             {
-                string structName = StructName();
+                string? structName = StructName();
                 if (structName == null || !FormatInfoHardcoded.StructDocsLinks.ContainsKey(structName))
                 {
                     return null;
@@ -780,6 +795,7 @@ namespace EditClipboardContents
         // --------------------------------------------------- Enum Definitions -----------------------------------------------------
         // --------------------------------------------------------------------------------------------------------------------------
 
+        [StructName("LogicalColorSpace")]
         public enum LCSCSTYPE : uint // DWORD
         {
             // Can be one of the following values
@@ -788,6 +804,7 @@ namespace EditClipboardContents
             LCS_WINDOWS_COLOR_SPACE = 0x57696E20
         }
 
+        [StructName("GamutMappingIntent")]
         public enum LCSGAMUTMATCH : uint // DWORD
         {
             // Can be one of the following values
@@ -797,6 +814,7 @@ namespace EditClipboardContents
             LCS_GM_IMAGES = 0x00000004
         }
 
+        [StructName("bV5Compression")]
         public enum bV5Compression : uint // DWORD
         {
             BI_RGB = 0x0000,
@@ -810,12 +828,14 @@ namespace EditClipboardContents
             BI_CMYKRLE4 = 0x000D
         }
 
+        [StructName("MetafileType")]
         public enum MetaFileType : WORD
         {
             MEMORYMETAFILE = 0x0001, // Metafile is stored in memory
             DISKMETAFILE = 0x0002 // Metafile is stored on disk
         }
 
+        [StructName("RecordType (WMF)")]
         public enum WMF_RecordType: WORD
         {
             META_EOF = 0x0000,
@@ -890,6 +910,7 @@ namespace EditClipboardContents
             META_CREATEREGION = 0x06FF
         }
 
+        [StructName("RecordType (EMF)")]
         public enum EMF_RecordType: DWORD // 4 bytes
         {
             EMR_HEADER = 0x00000001,
@@ -1013,6 +1034,7 @@ namespace EditClipboardContents
             EMR_CREATECOLORSPACEW = 0x0000007A
         }
 
+        [StructName("ColorUsage")]
         public enum ColorUsage : UINT
         {
             DIB_RGB_COLORS = 0x0000,
@@ -1020,6 +1042,7 @@ namespace EditClipboardContents
             DIB_PAL_INDICES = 0x0002
         }
 
+        [StructName("SFGAO")]
         [Flags] // These are a bitfield of flags
         public enum SFGAO: DWORD
         {
@@ -1060,17 +1083,33 @@ namespace EditClipboardContents
             SFGAO_PKEYSFGAOMASK = 0x81044000,
         }
 
+        [StructName("BOOL")]
         public enum WINDOWS_BOOL : UInt32
         {
             FALSE = 0x00000000,
             TRUE = 0x00000001
         }
+        [StructName("DROPEFFECT")]
+        [Flags]
+        public enum DROPEFFECT : DWORD
+        {
+            [Description("Drop target cannot accept the data.")]
+            DROPEFFECT_NONE = 0,
+            [Description("Drop results in a copy.")]
+            DROPEFFECT_COPY = 1,
+            [Description("Drop results in a move.")]
+            DROPEFFECT_MOVE = 2,
+            [Description("Drop results in a link to the original data.")]
+            DROPEFFECT_LINK = 4,
+            [Description("Scrolling is about to start or is currently occurring in the target. This value is used in addition to the other values.")]
+            DROPEFFECT_SCROLL = 0x80000000
+        }
 
-    // --------------------------------------------------------------------------------------------------------------------------
-    // --------------------------------------------------- Struct definitions ---------------------------------------------------
-    // --------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------- Struct definitions ---------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------------
 
-    [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential)]
         public struct BITMAP
         {
             public LONG bmType;
@@ -1272,6 +1311,18 @@ namespace EditClipboardContents
         // --------------------------------------------------- Helper methods ---------------------------------------------------
 
         public const int MAX_PATH = 260;
+
+        // Define StructName for enums to be used when looking up URLs and such
+        [AttributeUsage(AttributeTargets.Enum)]
+        public class StructNameAttribute : Attribute
+        {
+            public string Name { get; }
+
+            public StructNameAttribute(string name)
+            {
+                Name = name;
+            }
+        }
 
         public static string EnumLookup(Type enumType, uint value)
         {

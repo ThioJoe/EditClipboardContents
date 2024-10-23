@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Numerics;
+using System.Reflection;
 
 // Nullable reference types
 #nullable enable
@@ -352,7 +353,6 @@ namespace EditClipboardContents
 
         public static string GetWin32ErrorMessage(int? inputError)
         {
-
             int errorCode;
             if (inputError == null)
             {
@@ -383,6 +383,13 @@ namespace EditClipboardContents
             }
 
             return sb.ToString().Trim();
+        }
+
+        private static string GetEnumDescription(Enum value)
+        {
+            var field = value.GetType().GetField(value.ToString());
+            var attribute = field?.GetCustomAttribute<DescriptionAttribute>();
+            return attribute?.Description ?? value.ToString();
         }
 
     } // ----------------- End of class -----------------
