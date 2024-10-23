@@ -209,6 +209,14 @@ namespace EditClipboardContents
             public LPVOID bmBits { get; set; }
 
             protected override string GetStructName() => "BITMAP";
+
+            public override Dictionary<string, string> DataDisplayReplacements()
+            {
+                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "bmBits", "[Bitmap Data]" }
+                };
+            }
         }
 
         public class BITMAPV5HEADER_OBJ : ClipboardFormatBase

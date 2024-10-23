@@ -63,26 +63,10 @@ namespace EditClipboardContents
 
                 case "CF_BITMAP": // 2 - CF_BITMAP
                     BITMAP_OBJ CF_bitmapProcessed = BytesToObject<BITMAP_OBJ>(rawData);
-                    
-                    //dataInfoList.Add($"{CF_bitmapProcessed.bmWidth}x{CF_bitmapProcessed.bmHeight}, {CF_bitmapProcessed.bmBitsPixel} bpp");
-                    using (MemoryStream ms = new MemoryStream(rawData))
-                    {
-                        byte[] msbytes = ms.ToArray();
-                        using (Bitmap bmp = new Bitmap(ms))
-                        {
-                            byte[] bmpBytes = ms.ToArray();
-                            // Setting the contents of the data info list explicitly instead of using Add. It could be done the other way too.
-                            dataInfoList = new List<string>
-                            {
-                                $"{bmp.Width}x{bmp.Height}, {bmp.PixelFormat}",
-                                $"Size: {bmp.Width}x{bmp.Height}",
-                                $"Image Format: {bmp.PixelFormat}"
-                            };
-                        }
+                    dataInfoList.Add($"{CF_bitmapProcessed.bmWidth}x{CF_bitmapProcessed.bmHeight}, {CF_bitmapProcessed.bmBitsPixel} bpp");
+                    dataInfoList.Add($"Size: {CF_bitmapProcessed.bmWidth}x{CF_bitmapProcessed.bmHeight}");
 
-                        processedObject = CF_bitmapProcessed;
-
-                    }
+                    processedObject = CF_bitmapProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
 

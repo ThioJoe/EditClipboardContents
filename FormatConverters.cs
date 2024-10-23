@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 // My classes
 using static EditClipboardContents.ClipboardFormats;
 using System.Windows.Forms;
+using System.Xml.Linq;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -626,8 +627,72 @@ namespace EditClipboardContents
             }
         }
 
+        public static byte[]? BITMAP_FromHandle(IntPtr hBitmap)
+        {
+            if (hBitmap == IntPtr.Zero)
+            {
+                return null;
+            }
 
+            int bitmapSizeResult = NativeMethods.GetObject(hBitmap, 0, IntPtr.Zero); // Get the size of the BITMAP object
+            if (bitmapSizeResult == 0)
+            {
+                return null;
+            }
 
+            IntPtr pBitmap = Marshal.AllocHGlobal(bitmapSizeResult); // Allocate memory for GetObject to put BITMAP struct into
+            try
+            {
+                int result = NativeMethods.GetObject(hBitmap, bitmapSizeResult, pBitmap);
+                if (result == 0)
+                {
+                    return null;
+                }
+
+                byte[] rawData = new byte[bitmapSizeResult];
+                Marshal.Copy(pBitmap, rawData, 0, bitmapSizeResult);
+
+                // Get the the pointer from the bits at the end of the BITMAP struct
+                if (Marshal.SizeOf(typeof(BITMAP)) <= bitmapSizeResult)
+                {
+                    BITMAP bitmap = Marshal.PtrToStructure<BITMAP>(pBitmap);
+                    // If the pointer is included in the struct, use that to get the actual bitmap data
+                    if (bitmap.bmBits != IntPtr.Zero)
+                    {
+                        int bitsSize = (int)bitmap.bmWidthBytes * bitmap.bmHeight;
+                        byte[] bits = new byte[bitsSize];
+                        Marshal.Copy(bitmap.bmBits, bits, 0, bitsSize);
+                    }
+                    // Otherwise separately call GetDIBits to get the bitmap data and append to rawdata if received
+                    else
+                    {
+                        byte[]? rawImageBitsOnly = FormatConverters.DIBits_From_HBitmap(hBitmap);
+                        if (rawImageBitsOnly != null)
+                        {
+                            // Get the index of bmbits in the BITMAP struct
+                            int bmBitsIndex = Marshal.OffsetOf<BITMAP>("bmBits").ToInt32();
+                            // Copy the BITMAP struct to a new array
+                            byte[] newRawData = new byte[bmBitsIndex + rawImageBitsOnly.Length];
+                            Array.Copy(rawData, newRawData, bmBitsIndex);
+                            Array.Copy(rawImageBitsOnly, 0, newRawData, bmBitsIndex, rawImageBitsOnly.Length);
+                            rawData = newRawData;
+
+                            //byte[] newRawData = new byte[rawData.Length + rawImageBitsOnly.Length];
+                            //Array.Copy(rawData, newRawData, rawData.Length);
+                            //Array.Copy(rawImageBitsOnly, 0, newRawData, rawData.Length, rawImageBitsOnly.Length);
+                            //rawData = newRawData;
+                        }
+                    }
+                }
+
+                return rawData;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pBitmap);
+            }
+
+        }
         public static byte[]? CF_PALETTE_RawData_FromHandle(IntPtr hPalette)
         {
             if (hPalette == IntPtr.Zero)
