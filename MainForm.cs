@@ -960,7 +960,7 @@ namespace EditClipboardContents
             {
                 byte[]? processedData = null;
                 IClipboardFormat? processedObject = null;
-                Enum? usedEnum = null;
+                Enum? processedEnum = null;
                 ViewMode preferredDisplayMode = ViewMode.None;
 
                 // Data info list contains metadata about the data. First item will show in the data info column, all will show in the text box in object/struct view mode
@@ -969,7 +969,7 @@ namespace EditClipboardContents
                 // If there is data, process it and get the data info
                 if (item?.RawData != null && item.RawData.Length > 0)
                 {
-                    (dataInfoList, preferredDisplayMode, processedData, processedObject, usedEnum) = SetDataInfo(formatName: item.FormatName, rawData: item.RawData);
+                    (dataInfoList, preferredDisplayMode, processedData, processedObject, processedEnum) = SetDataInfo(formatName: item.FormatName, rawData: item.RawData);
                 }
                 // If there is no data, and there is an error message
                 else if (item != null && !string.IsNullOrEmpty(item.ErrorReason))
@@ -995,7 +995,7 @@ namespace EditClipboardContents
                 item.ProcessedData = processedData;
                 item.DataInfoList = dataInfoList;
                 item.PreferredViewMode = preferredDisplayMode;
-                item.ClipEnumObject = usedEnum;
+                item.ClipEnumObject = processedEnum;
 
                 // Determine format type. If it's below 0xC0000 it's a standard format type.
                 // See here for details about the specific ranges: https://learn.microsoft.com/en-us/windows/win32/dataxchg/standard-clipboard-formats
@@ -3281,7 +3281,6 @@ namespace EditClipboardContents
         public byte[]? RawData { get; set; }
         public bool AssumedSynthesized { get; set; }
         public List<string> DataInfoList { get; set; } = new List<string>();
-        public string DataInfoLinesString => string.Join("\n", DataInfoList ?? new List<string>());
         public bool HasPendingEdit { get; set; } = false;
         public bool PendingRemoval { get; set; } = false;
         public bool PendingReOrder { get; set; } = false;

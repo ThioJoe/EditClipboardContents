@@ -33,7 +33,7 @@ namespace EditClipboardContents
 {
     // Win32 API Types defined explicitly to avoid confusion and ensure compatibility with Win32 API, and it matches with documentation
     // See: https://learn.microsoft.com/en-us/windows/win32/winprog/windows-data-types
-    using BOOL = System.Int32;          // 4 Bytes
+    //using BOOL = System.Int32;          // 4 Bytes
     using LONG = System.Int32;          // 4 Bytes
     using DWORD = System.UInt32;        // 4 Bytes, aka uint, uint32
     using WORD = System.UInt16;         // 2 Bytes
@@ -1113,7 +1113,7 @@ namespace EditClipboardContents
         }
 
         [StructName("BOOL")]
-        public enum WINDOWS_BOOL : UInt32
+        public enum BOOL : UInt32
         {
             FALSE = 0x00000000,
             TRUE = 0x00000001
@@ -1421,14 +1421,14 @@ namespace EditClipboardContents
                 offset += sizeof(LONG);
                 return value;
             }
-            else if (type == typeof(BOOL))
-            {
-                if (remainingBytes < sizeof(BOOL))
-                    throw new ArgumentException("Not enough data to read BOOL");
-                BOOL value = BitConverter.ToInt32(data, offset);
-                offset += sizeof(BOOL);
-                return value;
-            }
+            //else if (type == typeof(BOOL))
+            //{
+            //    if (remainingBytes < sizeof(BOOL))
+            //        throw new ArgumentException("Not enough data to read BOOL");
+            //    BOOL value = BitConverter.ToInt32(data, offset);
+            //    offset += sizeof(BOOL);
+            //    return value;
+            //}
             else if (type == typeof(Int16))
             {
                 if (remainingBytes < sizeof(Int16))
@@ -1582,7 +1582,7 @@ namespace EditClipboardContents
                     string propertyName = property.Name;
                     //var _ = property.Value;
                     Type propertyType = property.Type;
-                    BOOL? arraySize = property.ArraySize;
+                    LONG? arraySize = property.ArraySize;
 
                     if (remainingBytes <= 0)
                         break;  // Stop reading if we've reached the end of the data

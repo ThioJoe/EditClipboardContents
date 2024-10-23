@@ -38,7 +38,7 @@ namespace EditClipboardContents
             byte[] processedData = rawData;
             IClipboardFormat? processedObject = null;
             ViewMode preferredDisplayMode = ViewMode.None;
-            Enum usedEnum = null;
+            Enum? processedEnum = null;
 
             switch (formatName) // Process based on format name because format ID can be different for non-standard (registered) formats
             {
@@ -393,16 +393,18 @@ namespace EditClipboardContents
                     break;
 
                 case "AsyncFlag":
-                    WINDOWS_BOOL AsyncBoolVal = BytesToObject<WINDOWS_BOOL>(rawData);
+                    BOOL AsyncBoolVal = BytesToObject<BOOL>(rawData);
                     dataInfoList.Add($"Boolean: {AsyncBoolVal}");
                     dataInfoList.Add("Possibly has to do with telling Explorer whether to paste in the background.");
                     preferredDisplayMode = ViewMode.Object;
+                    processedEnum = AsyncBoolVal;
                     break;
 
                 case "UIDisplayed":
-                    WINDOWS_BOOL UIBoolVal = BytesToObject<WINDOWS_BOOL>(rawData);
+                    BOOL UIBoolVal = BytesToObject<BOOL>(rawData);
                     dataInfoList.Add($"Boolean: {UIBoolVal}");
                     preferredDisplayMode = ViewMode.Object;
+                    processedEnum = UIBoolVal;
                     break;
 
                 case "DataObjectAttributes":
@@ -423,7 +425,7 @@ namespace EditClipboardContents
                     {
                         dataInfoList.Add("No flags set");
                     }
-                    usedEnum = preferredDropEffectProcessed;
+                    processedEnum = preferredDropEffectProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
 
@@ -524,7 +526,7 @@ namespace EditClipboardContents
 
             } // End switch (formatName)
 
-            return (dataInfoList, preferredDisplayMode, processedData, processedObject, usedEnum);
+            return (dataInfoList, preferredDisplayMode, processedData, processedObject, processedEnum);
 
         }
     }
