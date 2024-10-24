@@ -75,6 +75,9 @@ namespace EditClipboardContents
             { "DVTARGETDEVICE", "https://learn.microsoft.com/en-us/windows/win32/api/objidl/ns-objidl-dvtargetdevice" },
             { "DROPDESCRIPTION", "https://learn.microsoft.com/is-is/windows/win32/api/shlobj_core/ns-shlobj_core-dropdescription" },
             { "DROPIMAGETYPE", "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ne-shlobj_core-dropimagetype" },
+            { "OBJECTDESCRIPTOR", "https://learn.microsoft.com/en-us/windows/win32/api/oleidl/ns-oleidl-objectdescriptor" },
+            { "DVASPECT", "https://learn.microsoft.com/en-us/windows/win32/api/wtypes/ne-wtypes-dvaspect" },
+            { "OLEMISC", "https://learn.microsoft.com/en-us/windows/win32/api/oleidl/ne-oleidl-olemisc" },
             
         };
 
@@ -84,7 +87,8 @@ namespace EditClipboardContents
             { "HTML Format", "https://learn.microsoft.com/en-us/windows/win32/dataxchg/html-clipboard-format" },
             { "CanIncludeInClipboardHistory", "https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats" },
             { "CanUploadToCloudClipboard", "https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats" },
-            { "ExcludeClipboardContentFromMonitorProcessing", "https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats" }
+            { "ExcludeClipboardContentFromMonitorProcessing", "https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats" },
+            { "Paste Succeeded", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_pastesucceeded" },
         };
 
         public static readonly Dictionary<string, string> FormatDescriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)

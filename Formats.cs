@@ -35,6 +35,7 @@ namespace EditClipboardContents
     // See: https://learn.microsoft.com/en-us/windows/win32/winprog/windows-data-types
     //using BOOL = System.Int32;          // 4 Bytes
     using LONG = System.Int32;          // 4 Bytes
+    using ULONG = System.UInt32;        // 4 Bytes
     using DWORD = System.UInt32;        // 4 Bytes, aka uint, uint32
     using WORD = System.UInt16;         // 2 Bytes
     using BYTE = System.Byte;           // 1 Byte
@@ -852,9 +853,59 @@ namespace EditClipboardContents
             public override int MaxStringLength() => MAX_PATH;
         }
 
+        public class OBJECTDESCRIPTOR_OBJ : ClipboardFormatBase
+        {
+            public ULONG cbSize { get; set; }
+            public CLSID_OBJ clsid { get; set; } = new CLSID_OBJ();
+            public DVASPECT dwDrawAspect { get; set; }
+            public SIZEL_OBJ sizel { get; set; } = new SIZEL_OBJ();
+            public POINTL_OBJ pointl { get; set; } = new POINTL_OBJ();
+            public OLEMISC dwStatus { get; set; }
+            public DWORD dwFullUserTypeName { get; set; }
+            public DWORD dwSrcOfCopy { get; set; }
+            protected override string GetStructName() => "OBJECTDESCRIPTOR";
+        }
+
         // --------------------------------------------------------------------------------------------------------------------------
         // --------------------------------------------------- Enum Definitions -----------------------------------------------------
         // --------------------------------------------------------------------------------------------------------------------------
+
+        [EnumName("DVASPECT")]
+        public enum DVASPECT : DWORD
+        {
+            DVASPECT_CONTENT = 1,
+            DVASPECT_THUMBNAIL = 2,
+            DVASPECT_ICON = 4,
+            DVASPECT_DOCPRINT = 8
+        }
+
+        [Flags]
+        [EnumName("OLEMISC")]
+        public enum OLEMISC : DWORD
+        {
+            OLEMISC_RECOMPOSEONRESIZE = 0x1,
+            OLEMISC_ONLYICONIC = 0x2,
+            OLEMISC_INSERTNOTREPLACE = 0x4,
+            OLEMISC_STATIC = 0x8,
+            OLEMISC_CANTLINKINSIDE = 0x10,
+            OLEMISC_CANLINKBYOLE1 = 0x20,
+            OLEMISC_ISLINKOBJECT = 0x40,
+            OLEMISC_INSIDEOUT = 0x80,
+            OLEMISC_ACTIVATEWHENVISIBLE = 0x100,
+            OLEMISC_RENDERINGISDEVICEINDEPENDENT = 0x200,
+            OLEMISC_INVISIBLEATRUNTIME = 0x400,
+            OLEMISC_ALWAYSRUN = 0x800,
+            OLEMISC_ACTSLIKEBUTTON = 0x1000,
+            OLEMISC_ACTSLIKELABEL = 0x2000,
+            OLEMISC_NOUIACTIVATE = 0x4000,
+            OLEMISC_ALIGNABLE = 0x8000,
+            OLEMISC_SIMPLEFRAME = 0x10000,
+            OLEMISC_SETCLIENTSITEFIRST = 0x20000,
+            OLEMISC_IMEMODE = 0x40000,
+            OLEMISC_IGNOREACTIVATEWHENVISIBLE = 0x80000,
+            OLEMISC_WANTSTOMENUMERGE = 0x100000,
+            OLEMISC_SUPPORTSMULTILEVELUNDO = 0x200000
+        }
 
         [EnumName("LogicalColorSpace")]
         public enum LCSCSTYPE : uint // DWORD

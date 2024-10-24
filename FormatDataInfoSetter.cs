@@ -423,20 +423,22 @@ namespace EditClipboardContents
                     preferredDisplayMode = ViewMode.Object;
                     break;
 
+                case "Performed DropEffect":
+                case "Logical Performed DropEffect":
+                case "Paste Succeeded":
                 case "Preferred DropEffect":
+                {
                     DROPEFFECT preferredDropEffectProcessed = BytesToObject<DROPEFFECT>(rawData);
                     Dictionary<string, string> flagsDict = preferredDropEffectProcessed.GetFlagDescriptionDictionary();
                     if (flagsDict.Count > 0)
-                    {
                         dataInfoList.Add($"Drop Effect: {flagsDict.Count} Flags");
-                    }
                     else
-                    {
                         dataInfoList.Add("No flags set");
-                    }
+
                     processedEnum = preferredDropEffectProcessed;
                     preferredDisplayMode = ViewMode.Object;
-                    break;
+                        break;
+                }
 
                 case "DataObject":
                     // Convert the raw byte array to an int depending on 64 or 32 bit
@@ -457,6 +459,14 @@ namespace EditClipboardContents
                     preferredDisplayMode = ViewMode.Object;
                     break;
 
+                case "Link Source Descriptor":
+                case "Object Descriptor":
+                    OBJECTDESCRIPTOR_OBJ objectDescriptorProcessed = BytesToObject<OBJECTDESCRIPTOR_OBJ>(rawData);
+                    dataInfoList.Add($"Class: {objectDescriptorProcessed.clsid}");
+                    dataInfoList.Add($"Size: {objectDescriptorProcessed.sizel.cx}x{objectDescriptorProcessed.sizel.cy}");
+                    processedObject = objectDescriptorProcessed;
+                    preferredDisplayMode = ViewMode.Object;
+                    break;
                 //case // Whatever uses the FORMATETC struct
                 //    FORMATETC? formatEtcStructData = Utils.GetStructFromData<FORMATETC>(rawData);
                 //    // Get offset of DVTARGETDEVICE
