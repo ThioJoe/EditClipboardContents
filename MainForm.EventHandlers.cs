@@ -7,10 +7,12 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 using System.Windows.Forms;
 using static EditClipboardContents.ClipboardFormats;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
@@ -1385,12 +1387,19 @@ namespace EditClipboardContents
         private void buttonTest_Click(object sender, EventArgs e)
         {
             Console.WriteLine(e.ToString());
-            //DropImageType dropImageType = DropImageType.Invalid;
+
+
+            var test = Utils.GetExtensions("AUDIO/aiff");
+
 
             Console.WriteLine("");
             Console.WriteLine("");
         }
 
+        
+
 
     } // ----------------------------- End of MainForm partial class -----------------------------
+
+
 }

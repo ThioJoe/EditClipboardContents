@@ -15,6 +15,7 @@ using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using static EditClipboardContents.ClipboardFormats;
+using System.Web;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -466,6 +467,51 @@ namespace EditClipboardContents
             return $"{clsid.Data1:X8}-{clsid.Data2:X4}-{clsid.Data3:X4}-{clsid.Data4[0]:X2}{clsid.Data4[1]:X2}-{clsid.Data4[2]:X2}{clsid.Data4[3]:X2}{clsid.Data4[4]:X2}{clsid.Data4[5]:X2}{clsid.Data4[6]:X2}{clsid.Data4[7]:X2}";
         }
 
+        public static IEnumerable<string> GetExtensions(this string mimeType)
+        {
+            var mappingDictionaryField = typeof(MimeMapping).GetField("_mappingDictionary", BindingFlags.NonPublic | BindingFlags.Static);
+            if (mappingDictionaryField == null)
+                return new string[0];
+
+            var mappingDictionary = mappingDictionaryField.GetValue(null);
+            if (mappingDictionary == null)
+                return new string[0];
+
+            var dictionaryType = mappingDictionary.GetType().BaseType;
+            if (dictionaryType == null)
+                return new string[0];
+
+            var mappingField = dictionaryType.GetField("_mappings", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (mappingField == null)
+                return new string[0];
+
+            var mapping = mappingField.GetValue(mappingDictionary) as IDictionary<string, string>;
+
+            // Check if the mappings are already populated
+            if (mapping == null || mapping.Count == 0)
+            {
+                var populateMethod = dictionaryType.GetMethod("PopulateMappings", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (populateMethod != null)
+                {
+                    try
+                    {
+                        populateMethod.Invoke(mappingDictionary, null);
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Ignore the exception if it occurs because mappings are already populated
+                    }
+                }
+                mapping = mappingField.GetValue(mappingDictionary) as IDictionary<string, string>;
+                if (mapping == null)
+                    return new string[0];
+            }
+
+            var extensions = mapping.Where(x =>
+                string.Equals(x.Value, mimeType, StringComparison.OrdinalIgnoreCase)) // Case insensitive comparison
+                      .Select(x => x.Key);
+            return extensions;
+        }
 
 
     } // ----------------- End of class -----------------
