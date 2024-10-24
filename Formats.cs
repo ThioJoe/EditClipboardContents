@@ -501,12 +501,25 @@ namespace EditClipboardContents
             public DWORD Data1 { get; set; }
             public WORD Data2 { get; set; }
             public WORD Data3 { get; set; }
-            public double Data4 { get; set; } // 8 bytes
+            public byte[] Data4 { get; set; } = new byte[8];
 
             // Method for total size
             public static int GetSize()
             {
                 return 16;
+            }
+
+            public override Dictionary<string, string> DataDisplayReplacements()
+            {
+                string data4String = BitConverter.ToString(Data4).Replace("-", "");
+
+                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "Data1", Data1.ToString("X8") },
+                    { "Data2", Data2.ToString("X4") },
+                    { "Data3", Data3.ToString("X4") },
+                    { "Data4", data4String }
+                };
             }
 
             protected override string GetStructName() => "CLSID";

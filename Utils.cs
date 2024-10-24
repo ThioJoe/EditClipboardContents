@@ -14,6 +14,7 @@ using System.Windows.Forms;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using static EditClipboardContents.ClipboardFormats;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -450,6 +451,11 @@ namespace EditClipboardContents
             handle.Free();
             return result;
         }
+        public static string FormatCLSID(CLSID_OBJ clsid)
+        {
+            return $"{clsid.Data1:X8}-{clsid.Data2:X4}-{clsid.Data3:X4}-{clsid.Data4[0]:X2}{clsid.Data4[1]:X2}-{clsid.Data4[2]:X2}{clsid.Data4[3]:X2}{clsid.Data4[4]:X2}{clsid.Data4[5]:X2}{clsid.Data4[6]:X2}{clsid.Data4[7]:X2}";
+        }
+
 
 
     } // ----------------- End of class -----------------

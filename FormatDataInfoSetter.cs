@@ -118,7 +118,7 @@ namespace EditClipboardContents
                     metaFile.METARECORD = allMetaRecordsArray;
                     metafilePictProcessed.hMF = metaFile;
 
-                    dataInfoList.Add($"Mode: {metafilePictProcessed.mm}");
+                    dataInfoList.Add($"{allMetaRecordsArray.Length} Records, Mode: {metafilePictProcessed.mm}");
 
                     processedObject = metafilePictProcessed;
                     preferredDisplayMode = ViewMode.Object;
@@ -242,7 +242,9 @@ namespace EditClipboardContents
                     ENHMETARECORD_OBJ[] allEnhMetaRecordsArray = allEnhMetaRecords.ToArray();
                     enhMetafile.ENHMETARECORD = allEnhMetaRecordsArray;
 
-                    processedObject = enhMetafile;
+                    dataInfoList.Add($"{allEnhMetaRecordsArray.Length} Records");
+
+                        processedObject = enhMetafile;
                     preferredDisplayMode = ViewMode.Object;
 
                     break;
@@ -471,8 +473,14 @@ namespace EditClipboardContents
                 case "Link Source Descriptor":
                 case "Object Descriptor":
                     OBJECTDESCRIPTOR_OBJ objectDescriptorProcessed = BytesToObject<OBJECTDESCRIPTOR_OBJ>(rawData);
-                    dataInfoList.Add($"Class: {objectDescriptorProcessed.clsid}");
-                    dataInfoList.Add($"Size: {objectDescriptorProcessed.sizel.cx}x{objectDescriptorProcessed.sizel.cy}");
+                    // Convert CLSID data to string
+                    string clsidString = Utils.FormatCLSID(objectDescriptorProcessed.clsid);
+                    Dictionary<string, string> OLEStatus = objectDescriptorProcessed.dwStatus.GetFlagDescriptionDictionary();
+                    string firstStatus = OLEStatus.Count > 0 ? OLEStatus.First().Key : "No Status Flag";
+
+                    dataInfoList.Add($"Flag: {firstStatus}");
+                    dataInfoList.Add($"Class ID (CLSID): {clsidString}");
+
                     processedObject = objectDescriptorProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
@@ -518,6 +526,8 @@ namespace EditClipboardContents
                         //        }
                         //    }
                         //}
+
+                        dataInfoList.Add($"{arrayCount} entries");
 
                         processedObject = oledPrivateDataProcessed;
                         preferredDisplayMode = ViewMode.Object;
