@@ -81,9 +81,10 @@ namespace EditClipboardContents
                     else
                         return null;
                 }
-                // If it's not an enum or doesn't have the attribute, derived classes should override this
-                throw new NotImplementedException(
-                    $"Type {type.Name} must either be an enum with StructNameAttribute or override GetStructName()");
+                else
+                {
+                    return null;
+                }
             }
 
             // Public method to access the struct name
@@ -831,6 +832,7 @@ namespace EditClipboardContents
             public LONG lindex { get; set; }
             public DWORD tymed { get; set; }
             protected override string GetStructName() => "FORMATETC";
+            public FORMATETC_OBJ() { }
         }
 
         public class DVTARGETDEVICE_OBJ : ClipboardFormatBase
@@ -896,6 +898,9 @@ namespace EditClipboardContents
             public DWORD first_use { get; set; } // Has this cf been added to the list already
             public DWORD unknown1 { get; set; }
             public DWORD unknown2 { get; set; }
+
+            // Need a parameterless constructor for serialization
+            public OLE_ENTRY_OBJ() { }
         }
 
 
@@ -904,7 +909,7 @@ namespace EditClipboardContents
         // --------------------------------------------------- Enum Definitions -----------------------------------------------------
         // --------------------------------------------------------------------------------------------------------------------------
 
-            [EnumName("DVASPECT")]
+        [EnumName("DVASPECT")]
         public enum DVASPECT : DWORD
         {
             DVASPECT_CONTENT = 1,
@@ -1550,15 +1555,53 @@ namespace EditClipboardContents
         public static T BytesToObject<T>(byte[] data, RedirectDataInfo? redirectInfo = null) where T : new()
         {
             int offset = 0;
-            return (T)ReadValue(typeof(T), data, ref offset, redirectInfo: redirectInfo);
+            var instance = Activator.CreateInstance<T>();
+            //var instance = new T();
+            return (T)ReadValue(instance, data, ref offset, redirectInfo: redirectInfo);
+        }
+
+        // Takes a direct instance of the object, like one pre-prepared with variable sized arrays
+        public static T BytesToObjectInstance<T>(T instance, byte[] data, RedirectDataInfo? redirectInfo = null)
+        {
+            int offset = 0;
+            return (T)ReadValue(instance, data, ref offset, redirectInfo: redirectInfo);
         }
 
         // Parameter purposes:
         // callingClass - Used to check the MaxStringLength() method for the specific class type in which a string is being read from
-        private static object ReadValue(Type type, byte[] data, ref int offset, RedirectDataInfo? redirectInfo, Type? callingClass = null, int collectionSize = -1)
+        private static object ReadValue(object? instance, byte[] data, ref int offset, RedirectDataInfo? redirectInfo = null, Type? callingClass = null, int collectionSize = -1)
         {
+            Type type;
+            if (instance is Type typeInstance)
+            {
+                if (typeInstance.IsArray)
+                {
+                    // Create array of the correct size
+                    var elementType = typeInstance.GetElementType();
+                    var array = Array.CreateInstance(elementType!, collectionSize > 0 ? collectionSize : 0);
+                    instance = array;
+                    type = typeInstance;
+                }
+                // Need to specially handle strings or else it will say it needs a constructor
+                else if (typeInstance == typeof(string))
+                {
+                    instance = string.Empty;
+                    type = typeInstance;
+                }
+                else
+                {
+                    instance = Activator.CreateInstance(typeInstance);
+                    type = typeInstance;
+                }
+            }
+            else
+            {
+                type = instance.GetType();
+            }
+
             int remainingBytes = data.Length - offset;
 
+            // For primitive types, we can just return the new value since the instance doesn't matter
             if (type == typeof(BYTE))
             {
                 if (remainingBytes < sizeof(BYTE))
@@ -1599,14 +1642,6 @@ namespace EditClipboardContents
                 offset += sizeof(LONG);
                 return value;
             }
-            //else if (type == typeof(BOOL))
-            //{
-            //    if (remainingBytes < sizeof(BOOL))
-            //        throw new ArgumentException("Not enough data to read BOOL");
-            //    BOOL value = BitConverter.ToInt32(data, offset);
-            //    offset += sizeof(BOOL);
-            //    return value;
-            //}
             else if (type == typeof(Int16))
             {
                 if (remainingBytes < sizeof(Int16))
@@ -1775,7 +1810,7 @@ namespace EditClipboardContents
                 offset += originalTypeSize; // Reset the offset to what it was before
                 return redirectedObj;
             }
-            else if (Activator.CreateInstance(type) is IClipboardFormat obj)
+            else if (instance is IClipboardFormat obj)
             {
                 //object obj = Activator.CreateInstance(type);
                 var propertiesNoProcess = obj.PropertiesNoProcess();
@@ -1831,7 +1866,12 @@ namespace EditClipboardContents
             {
                 if (remainingBytes < Marshal.SizeOf(Enum.GetUnderlyingType(type)))
                     throw new ArgumentException("Not enough data to read enum");
-                object value = Enum.ToObject(type, ReadValue(Enum.GetUnderlyingType(type), data, ref offset, redirectInfo: redirectInfo));
+
+                var underlyingType = Enum.GetUnderlyingType(type);
+                var underlyingInstance = Activator.CreateInstance(underlyingType);
+
+                object value = Enum.ToObject(type,
+                    ReadValue(underlyingInstance, data, ref offset, redirectInfo: redirectInfo));
                 return value;
             }
             else

@@ -470,7 +470,6 @@ namespace EditClipboardContents
 
                 case "Ole Private Data":
                     {
-                        OLE_PRIVATE_DATA_OBJ olePrivateDataProcessed = BytesToObject<OLE_PRIVATE_DATA_OBJ>(rawData);
                         int headerSize = Marshal.SizeOf(typeof(_OLEPrivateDataHeader));
                         byte[] headerData = new byte[headerSize];
                         Array.Copy(rawData, headerData, headerSize);
@@ -485,9 +484,10 @@ namespace EditClipboardContents
 
                         // Create OLE_PRIVATE_DATA_OBJ where entries array is of size arrayCount
                         OLE_PRIVATE_DATA_OBJ oledPrivateDataSized = new OLE_PRIVATE_DATA_OBJ(arrayCount);
-                        
 
-                        processedObject = olePrivateDataProcessed;
+                        OLE_PRIVATE_DATA_OBJ oledPrivateDataProcessed = BytesToObjectInstance<OLE_PRIVATE_DATA_OBJ>(oledPrivateDataSized, rawData);
+
+                        processedObject = oledPrivateDataProcessed;
                         preferredDisplayMode = ViewMode.Object;
                         break;
                     }
