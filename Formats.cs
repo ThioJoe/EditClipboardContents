@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Serialization;
 using System.Security.Claims;
+using System.Security.Policy;
 using System.Text;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
@@ -829,11 +830,17 @@ namespace EditClipboardContents
             // Will use marshal to get the true struct with the pointer then put it into this object
             //public DVTARGETDEVICE_OBJ ptd { get; set; } = new DVTARGETDEVICE_OBJ();
             public LPVOID ptd { get; set; }
+            //public DVTARGETDEVICE_OBJ? DVTARGETDEVICE { get; set; } = null;
             public DWORD dwAspect { get; set; }
             public LONG lindex { get; set; }
             public TYMED tymed { get; set; }
             protected override string GetStructName() => "FORMATETC";
             public FORMATETC_OBJ() { }
+
+            public override List<string> PropertiesNoProcess()
+            {
+                return ["DVTARGETDEVICE"]; // We'll manually process this based on the pointer
+            }
         }
 
         public class DVTARGETDEVICE_OBJ : ClipboardFormatBase
@@ -845,6 +852,7 @@ namespace EditClipboardContents
             public WORD tdExtDevmodeOffset { get; set; }
             public BYTE[] tdData { get; set; } = [];
             protected override string GetStructName() => "DVTARGETDEVICE";
+            public override bool FillEmptyArrayWithRemainingBytes() => true;
         }
 
         public class DROPDESCRIPTION_OBJ : ClipboardFormatBase

@@ -353,6 +353,7 @@ namespace EditClipboardContents
                     preferredDisplayMode = ViewMode.Object;
                     break;
 
+                case "Autoplay Enumerated IDList Array":
                 case "Shell IDList Array":
                 {
                     CIDA_OBJ cidaProcessed = BytesToObject<CIDA_OBJ>(rawData);
@@ -408,8 +409,15 @@ namespace EditClipboardContents
                     preferredDisplayMode = ViewMode.Object;
                     processedEnum = AsyncBoolVal;
                     break;
-
+                
+                // Formats that use BOOL enum - With no special notes
                 case "UIDisplayed":
+                case "DisableDragText":
+                case "InShellDragLoop":
+                case "IsComputingImage":
+                case "IsShowingLayered":
+                case "IsShowingText":
+                case "UsingDefaultDragImage":  
                     BOOL UIBoolVal = BytesToObject<BOOL>(rawData);
                     dataInfoList.Add($"Boolean: {UIBoolVal}");
                     preferredDisplayMode = ViewMode.Object;
@@ -423,6 +431,7 @@ namespace EditClipboardContents
                     preferredDisplayMode = ViewMode.Object;
                     break;
 
+                // Foramts that use DROPEFFECT enum
                 case "Performed DropEffect":
                 case "Logical Performed DropEffect":
                 case "Paste Succeeded":
@@ -484,8 +493,31 @@ namespace EditClipboardContents
 
                         // Create OLE_PRIVATE_DATA_OBJ where entries array is of size arrayCount
                         OLE_PRIVATE_DATA_OBJ oledPrivateDataSized = new OLE_PRIVATE_DATA_OBJ(arrayCount);
-
                         OLE_PRIVATE_DATA_OBJ oledPrivateDataProcessed = BytesToObjectInstance<OLE_PRIVATE_DATA_OBJ>(oledPrivateDataSized, rawData);
+
+                        //if (oledPrivateDataProcessed != null)
+                        //{
+                        //    // Go through and process all the entries - Get ptd pointer and process the DVTARGETDEVICE object
+                        //    foreach (OLE_ENTRY_OBJ entry in oledPrivateDataSized.entries)
+                        //    {
+                        //        if (entry.fmtetc?.ptd != IntPtr.Zero)
+                        //        {
+                        //            byte[]? DVTARGETDEVICE_data = Utils.GetDataFromStructHandle<DVTARGETDEVICE>(entry.fmtetc?.ptd);
+                        //            if (DVTARGETDEVICE_data != null && DVTARGETDEVICE_data.Length > 0)
+                        //            {
+                        //                try
+                        //                {
+                        //                    DVTARGETDEVICE_OBJ DVTARGETDEVICE_processed = BytesToObject<DVTARGETDEVICE_OBJ>(DVTARGETDEVICE_data);
+                        //                    entry.fmtetc.DVTARGETDEVICE = DVTARGETDEVICE_processed;
+                        //                }
+                        //                catch (Exception ex)
+                        //                {
+                        //                    dataInfoList.Add($"Error processing DVTARGETDEVICE: {ex.Message}");
+                        //                }
+                        //            }
+                        //        }
+                        //    }
+                        //}
 
                         processedObject = oledPrivateDataProcessed;
                         preferredDisplayMode = ViewMode.Object;

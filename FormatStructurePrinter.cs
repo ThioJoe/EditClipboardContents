@@ -63,6 +63,17 @@ namespace EditClipboardContents
             StringBuilder dataInfoString = new StringBuilder();
             dataInfoString.AppendLine($"Format: {formatName}");
 
+            if (FormatInfoHardcoded.ShellFormatNameMap.TryGetValue(formatName, out string? shellFormatName))
+            {
+                dataInfoString.AppendLine($"{indent}Shell Format Definition Name: {shellFormatName}");
+                anyFormatInfoAvailable = true;
+
+                if (FormatInfoHardcoded.ShellDefinitionDocLink.TryGetValue(shellFormatName, out string? shellDocURL))
+                {
+                    dataInfoString.AppendLine($"{indent}Shell Format Info: {shellDocURL}");
+                }
+            }
+
             if (FormatInfoHardcoded.FormatDescriptions.TryGetValue(formatName, out string formatDescription))
             {
                 dataInfoString.AppendLine($"Description: {formatDescription}");

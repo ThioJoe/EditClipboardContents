@@ -1,10 +1,13 @@
-﻿using System;
+﻿using EditClipboardContents.Properties;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Xml.Serialization;
 using static EditClipboardContents.ClipboardFormats;
 using static System.Net.WebRequestMethods;
 
@@ -146,6 +149,88 @@ namespace EditClipboardContents
             { "CF_DIB", "bmp" },
             { "CF_BITMAP", "bmp" },
             { "image/x-xcf", "xcf" }
+        };
+
+        public static readonly Dictionary<string, string> ShellFormatNameMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "Shell IDList Array", "CFSTR_SHELLIDLIST" },
+            { "Shell Object Offsets", "CFSTR_SHELLIDLISTOFFSET" },
+            { "Net Resource", "CFSTR_NETRESOURCES" },
+            //{ "FileGroupDescriptor", "CFSTR_FILEDESCRIPTORA" },
+            //{ "FileGroupDescriptorW", "CFSTR_FILEDESCRIPTORW" },
+            { "FileContents", "CFSTR_FILECONTENTS" },
+            //{ "FileName", "CFSTR_FILENAMEA" },
+            { "FileNameW", "CFSTR_FILENAMEW" },
+            { "PrinterFriendlyName", "CFSTR_PRINTERGROUP" },
+            //{ "FileNameMap", "CFSTR_FILENAMEMAPA" },
+            //{ "FileNameMapW", "CFSTR_FILENAMEMAPW" },
+            //{ "UniformResourceLocator", "CFSTR_SHELLURL" },
+            //{ "UniformResourceLocator", "CFSTR_INETURLA" },
+            //{ "UniformResourceLocatorW", "CFSTR_INETURLW" },
+            { "Preferred DropEffect", "CFSTR_PREFERREDDROPEFFECT" },
+            { "Performed DropEffect", "CFSTR_PERFORMEDDROPEFFECT" },
+            { "Paste Succeeded", "CFSTR_PASTESUCCEEDED" },
+            { "InShellDragLoop", "CFSTR_INDRAGLOOP" },
+            { "MountedVolume", "CFSTR_MOUNTEDVOLUME" },
+            { "PersistedDataObject", "CFSTR_PERSISTEDDATAOBJECT" },
+            { "TargetCLSID", "CFSTR_TARGETCLSID" },
+            { "Logical Performed DropEffect", "CFSTR_LOGICALPERFORMEDDROPEFFECT" },
+            { "Autoplay Enumerated IDList Array", "CFSTR_AUTOPLAY_SHELLIDLISTS" },
+            { "UntrustedDragDrop", "CFSTR_UNTRUSTEDDRAGDROP" },
+            { "File Attributes Array", "CFSTR_FILE_ATTRIBUTES_ARRAY" },
+            { "InvokeCommand DropParam", "CFSTR_INVOKECOMMAND_DROPPARAM" },
+            { "DropHandlerCLSID", "CFSTR_SHELLDROPHANDLER" },
+            { "DropDescription", "CFSTR_DROPDESCRIPTION" },
+            { "ZoneIdentifier", "CFSTR_ZONEIDENTIFIER" },
+            { "FileGroupDescriptorW", "CFSTR_FILEDESCRIPTOR" },
+            //{ "FileNameW", "CFSTR_FILENAME" },
+            { "FileNameMapW", "CFSTR_FILENAMEMAP" },
+            { "UniformResourceLocatorW", "CFSTR_INETURL" },
+            { "FileGroupDescriptor", "CFSTR_FILEDESCRIPTOR" },
+            { "FileName", "CFSTR_FILENAME" },
+            { "FileNameMap", "CFSTR_FILENAMEMAP" },
+            { "UniformResourceLocator", "CFSTR_INETURL" },
+        };
+
+        public static readonly Dictionary<string, string> ShellDefinitionDocLink = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "CFSTR_SHELLIDLIST", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_shellidlist" },
+            { "CFSTR_SHELLIDLISTOFFSET", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_shellidlistoffset" },
+            { "CFSTR_NETRESOURCES", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_netresources" },
+            { "CFSTR_FILEDESCRIPTORA", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_filedescriptor" },
+            { "CFSTR_FILEDESCRIPTORW", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_filedescriptor" },
+            { "CFSTR_FILECONTENTS", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_filecontents" },
+            { "CFSTR_FILENAMEA", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_filename" },
+            { "CFSTR_FILENAMEW", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_filename" },
+            { "CFSTR_PRINTERGROUP", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_printergroup" },
+            { "CFSTR_FILENAMEMAPA", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_filenamemap" },
+            { "CFSTR_FILENAMEMAPW", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_filenamemap" },
+            { "CFSTR_SHELLURL", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_shellurl-deprecated" },
+            { "CFSTR_INETURLA", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_ineturl" },
+            { "CFSTR_INETURLW", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_ineturl" },
+            { "CFSTR_PREFERREDDROPEFFECT", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_preferreddropeffect" },
+            { "CFSTR_PERFORMEDDROPEFFECT", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_performeddropeffect" },
+            { "CFSTR_PASTESUCCEEDED", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_pastesucceeded" },
+            { "CFSTR_INDRAGLOOP", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_indragloop" },
+            { "CFSTR_MOUNTEDVOLUME", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_mountedvolume" },
+            //{ "CFSTR_PERSISTEDDATAOBJECT", "" },
+            { "CFSTR_TARGETCLSID", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_targetclsid" },
+            { "CFSTR_LOGICALPERFORMEDDROPEFFECT", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_logicalperformeddropeffect" },
+            //{ "CFSTR_AUTOPLAY_SHELLIDLISTS", "" },
+            { "CFSTR_UNTRUSTEDDRAGDROP", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_untrusteddragdrop" },
+            //{ "CFSTR_FILE_ATTRIBUTES_ARRAY", "" },
+            //{ "CFSTR_INVOKECOMMAND_DROPPARAM", "" },
+            //{ "CFSTR_SHELLDROPHANDLER", "" },
+            //{ "CFSTR_DROPDESCRIPTION", "" },
+            //{ "CFSTR_ZONEIDENTIFIER", "" },
+            { "CFSTR_FILEDESCRIPTOR", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_filedescriptor" },
+            { "CFSTR_FILENAME", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_filename" },
+            { "CFSTR_FILENAMEMAP", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_filenamemap" },
+            { "CFSTR_INETURL", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_ineturl" },
+            //{ "CFSTR_FILEDESCRIPTOR", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_filedescriptor" },
+            //{ "CFSTR_FILENAME", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_filename" },
+            //{ "CFSTR_FILENAMEMAP", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_filenamemap" },
+            //{ "CFSTR_INETURL", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_ineturl" },
         };
 
         public static object? CheckIfProblematicValue(PropertyInfo property, object obj)
