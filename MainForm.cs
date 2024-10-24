@@ -3331,14 +3331,20 @@ namespace EditClipboardContents
 
     }
 
+    // Store miscellanous information about the format or its data
+    public class FormatAnalysis
+    {
+        public List<string>? PossibleFileExtensions { get; set; } = null;
+        public string? KnownFileExtension { get; set; } = null;
+
+    }
+
     public class ClipboardItem : ICloneable, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
-
         // Using a unique ID for each object instance just in case it's needed for tracking
         // Like an edited item where the ID or name might change
         public Guid UniqueID { get; init; } = Guid.NewGuid();
-
         public string FormatName { get; set; } = "";
         public uint FormatId { get; set; }
         public IntPtr Handle { get; set; }
@@ -3358,6 +3364,7 @@ namespace EditClipboardContents
         public ViewMode PreferredViewMode { get; set; } = ViewMode.None;
         public IClipboardFormat? ClipDataObject { get; set; } = null ;
         public Enum? ClipEnumObject { get; set; } = null;
+        public FormatAnalysis? FormatAnalysis { get; set; } = null;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {

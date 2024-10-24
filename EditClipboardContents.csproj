@@ -77,6 +77,7 @@
   <ItemGroup>
     <Compile Include="External\OpenFolderDialogueClass.cs" />
     <Compile Include="External\SortableBindingList.cs" />
+    <Compile Include="FileSignatureID.cs" />
     <Compile Include="MainForm.EventHandlers.cs">
       <SubType>Form</SubType>
     </Compile>
