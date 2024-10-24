@@ -29,9 +29,14 @@ namespace EditClipboardContents
     public enum SignatureType
     {
         Generic,
+        GenericWildCard,
         BigEndian,
+        BigEndianWildcard,
         LittleEndian,
-        // Add other signature types if needed
+        LittleEndianWildcard,
+        zipEmpty,
+        zipSpanned,
+
     }
 
     public class Cell
@@ -293,6 +298,8 @@ namespace EditClipboardContents
             return cell;
         }
 
+        private readonly string wikiPattern = @"{{[^}]+}}|\[\[(?:[^|\]]*\|)?([^\]]+)\]\]|={2,}.*?={2,}|Category:.*?(?=\||}}|\n|$)";
+
         private string CleanUpText(string input)
         {
             if (string.IsNullOrEmpty(input))
@@ -302,7 +309,6 @@ namespace EditClipboardContents
             string nobreak = input.Replace("<br />", "; ").Replace("<br/>", "; ");
             string noHtml = Regex.Replace(nobreak, "<.*?>", "");
             // Remove wiki tags
-            string wikiPattern = @"{{[^}]+}}|\[\[(?:[^|\]]*\|)?([^\]]+)\]\]|={2,}.*?={2,}|Category:.*?(?=\||}}|\n|$)";
             string noWiki = Regex.Replace(noHtml, wikiPattern, "$1");
             // Remove text that is surrounded by two single quotes
             string cleaned = Regex.Replace(noWiki, "''[^']*''", "");
@@ -320,7 +326,8 @@ namespace EditClipboardContents
 
             // Replace <br /> tags with line breaks
             string noBreaks = extensionCell.Replace("<br />", "\n").Replace("<br/>", "\n");
-            string content = Regex.Replace(noBreaks, "''[^']*''", "");
+            string noWiki = Regex.Replace(noBreaks, wikiPattern, "$1");
+            string content = Regex.Replace(noWiki, "''[^']*''", "");
             // Remove HTML tags
             content = Regex.Replace(content, "<.*?>", "");
             // Split by line breaks
@@ -372,10 +379,12 @@ namespace EditClipboardContents
             foreach (Match match in matches)
             {
                 string labelBefore = match.Groups["labelBefore"].Value.Trim();
+                string labelAfter = match.Groups["labelAfter"].Value.Trim();
+
                 string codeContent = match.Groups["code1"].Success
                     ? match.Groups["code1"].Value.Trim()
                     : match.Groups["code2"].Value.Trim();
-                string labelAfter = match.Groups["labelAfter"].Value.Trim();
+                string cleanedCodeContent = codeContent.Replace("<br />", "").Replace("<br/>", "");
 
                 string label = "";
                 if (!string.IsNullOrEmpty(labelBefore))
@@ -388,9 +397,9 @@ namespace EditClipboardContents
                 }
 
                 label = label.Trim('(', ')').Trim().ToLower();
-                SignatureType sigType = GetSignatureTypeFromLabel(label);
+                SignatureType sigType = DetermineSignatureType(label, cleanedCodeContent);
 
-                string cleanedCodeContent = codeContent.Replace("<br />", "").Replace("<br/>", "");
+                
 
                 signatures.Add(new Signature
                 {
@@ -403,17 +412,33 @@ namespace EditClipboardContents
         }
 
 
-        private SignatureType GetSignatureTypeFromLabel(string label)
+        private SignatureType DetermineSignatureType(string label, string signature)
         {
             switch (label)
             {
                 case "big-endian":
-                    return SignatureType.BigEndian;
+                    if (signature.Contains("??"))
+                        return SignatureType.BigEndianWildcard;
+                    else
+                        return SignatureType.BigEndian;
+
                 case "little-endian":
-                    return SignatureType.LittleEndian;
-                // Add other cases as needed
+                    if (signature.Contains("??"))
+                        return SignatureType.LittleEndianWildcard;
+                    else
+                        return SignatureType.LittleEndian;
+
+                case "empty archive":
+                    return SignatureType.zipEmpty;
+
+                case "spanned archive":
+                    return SignatureType.zipSpanned;
+
                 default:
-                    return SignatureType.Generic;
+                    if (signature.Contains("??"))
+                        return SignatureType.GenericWildCard;
+                    else
+                        return SignatureType.Generic;
             }
         }
     }
