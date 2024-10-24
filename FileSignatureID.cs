@@ -305,13 +305,12 @@ namespace EditClipboardContents
             if (string.IsNullOrEmpty(input))
                 return "";
 
-            // Remove HTML tags
-            string nobreak = input.Replace("<br />", "; ").Replace("<br/>", "; ");
-            string noHtml = Regex.Replace(nobreak, "<.*?>", "");
-            // Remove wiki tags
-            string noWiki = Regex.Replace(noHtml, wikiPattern, "$1");
-            // Remove text that is surrounded by two single quotes
-            string cleaned = Regex.Replace(noWiki, "''[^']*''", "");
+
+            string nobreak = input.Replace("<br />", "; ").Replace("<br/>", "; "); // Replace <br /> tags with semicolons
+            string noref = Regex.Replace(nobreak, "<ref[^>]*?>.*?</ref>", ""); //Remove anything between <ref> tags
+            string noHtml = Regex.Replace(noref, "<.*?>", ""); // Remove HTML tags
+            string noWiki = Regex.Replace(noHtml, wikiPattern, "$1"); // Remove wiki formatting
+            string cleaned = Regex.Replace(noWiki, "''[^']*''", ""); // Remove text that is surrounded by two single quotes
             // Trim whitespace
             cleaned = cleaned.Trim();
             return cleaned;
@@ -346,10 +345,9 @@ namespace EditClipboardContents
             if (string.IsNullOrEmpty(offsetCell))
                 return offsets;
 
-            // Replace <br /> tags with line breaks
-            string content = offsetCell.Replace("<br />", "\n").Replace("<br/>", "\n");
-            // Remove HTML tags
-            content = Regex.Replace(content, "<.*?>", "");
+            string nobreak = offsetCell.Replace("<br />", "\n").Replace("<br/>", "\n"); // Replace <br /> tags with line breaks
+            string noHtml = Regex.Replace(nobreak, "<.*?>", ""); // Remove HTML tags
+            string content = Regex.Replace(noHtml, wikiPattern, "$1");
             // Split by line breaks
             string[] offsetArray = content.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (string offset in offsetArray)

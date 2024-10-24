@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using System.Windows.Forms;
+using System.Text.Json;
 using static EditClipboardContents.ClipboardFormats;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
@@ -1413,6 +1414,10 @@ namespace EditClipboardContents
             }
 
             File.WriteAllText("ParsedSignatures.txt", output.ToString());
+
+            // Serialize the file signatures
+            string json = JsonSerializer.Serialize(fileSignatures, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText("ParsedSignatures.json", json);
 
             Console.WriteLine("");
             Console.WriteLine("");
