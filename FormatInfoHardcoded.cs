@@ -78,6 +78,7 @@ namespace EditClipboardContents
             { "OBJECTDESCRIPTOR", "https://learn.microsoft.com/en-us/windows/win32/api/oleidl/ns-oleidl-objectdescriptor" },
             { "DVASPECT", "https://learn.microsoft.com/en-us/windows/win32/api/wtypes/ne-wtypes-dvaspect" },
             { "OLEMISC", "https://learn.microsoft.com/en-us/windows/win32/api/oleidl/ne-oleidl-olemisc" },
+            { "TYMED", "https://learn.microsoft.com/en-us/windows/win32/api/objidl/ne-objidl-tymed" },
             
         };
 

@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Serialization;
 using System.Security.Claims;
 using System.Text;
@@ -830,7 +831,7 @@ namespace EditClipboardContents
             public LPVOID ptd { get; set; }
             public DWORD dwAspect { get; set; }
             public LONG lindex { get; set; }
-            public DWORD tymed { get; set; }
+            public TYMED tymed { get; set; }
             protected override string GetStructName() => "FORMATETC";
             public FORMATETC_OBJ() { }
         }
@@ -908,6 +909,20 @@ namespace EditClipboardContents
         // --------------------------------------------------------------------------------------------------------------------------
         // --------------------------------------------------- Enum Definitions -----------------------------------------------------
         // --------------------------------------------------------------------------------------------------------------------------
+
+        [Flags]
+        [EnumName("TYMED")]
+        public enum TYMED : DWORD
+        {
+            TYMED_HGLOBAL = 1,
+            TYMED_FILE = 2,
+            TYMED_ISTREAM = 4,
+            TYMED_ISTORAGE = 8,
+            TYMED_GDI = 16,
+            TYMED_MFPICT = 32,
+            TYMED_ENHMF = 64,
+            TYMED_NULL = 0
+        }
 
         [EnumName("DVASPECT")]
         public enum DVASPECT : DWORD
