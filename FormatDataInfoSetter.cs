@@ -467,8 +467,34 @@ namespace EditClipboardContents
                     processedObject = objectDescriptorProcessed;
                     preferredDisplayMode = ViewMode.Object;
                     break;
+
+                case "Ole Private Data":
+                    {
+                        OLE_PRIVATE_DATA_OBJ olePrivateDataProcessed = BytesToObject<OLE_PRIVATE_DATA_OBJ>(rawData);
+                        int headerSize = Marshal.SizeOf(typeof(_OLEPrivateDataHeader));
+                        byte[] headerData = new byte[headerSize];
+                        Array.Copy(rawData, headerData, headerSize);
+
+                        _OLEPrivateDataHeader? header = Utils.GetStructFromData<_OLEPrivateDataHeader>(rawData);
+                        if (header == null)
+                        {
+                            dataInfoList.Add("Error processing OLE Private Data Header");
+                            break;
+                        }
+                        uint arrayCount = header?.count ?? 0;
+
+                        // Create OLE_PRIVATE_DATA_OBJ where entries array is of size arrayCount
+                        OLE_PRIVATE_DATA_OBJ oledPrivateDataSized = new OLE_PRIVATE_DATA_OBJ(arrayCount);
+                        
+
+                        processedObject = olePrivateDataProcessed;
+                        preferredDisplayMode = ViewMode.Object;
+                        break;
+                    }
+
+
                 //case // Whatever uses the FORMATETC struct
-                //    FORMATETC? formatEtcStructData = Utils.GetStructFromData<FORMATETC>(rawData);
+                //    FORMATETC ? formatEtcStructData = Utils.GetStructFromData<FORMATETC>(rawData);
                 //    // Get offset of DVTARGETDEVICE
                 //    int offsetToHandle = Marshal.OffsetOf<FORMATETC>(nameof(FORMATETC.ptd)).ToInt32();
 

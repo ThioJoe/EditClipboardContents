@@ -646,7 +646,7 @@ namespace EditClipboardContents
             protected override string GetStructName() => "MS-WMF";
         }
 
-        public class METARECORD_OBJ: ClipboardFormatBase
+        public class METARECORD_OBJ : ClipboardFormatBase
         {
             public DWORD rdSize { get; set; }
             public WMF_RecordType rdFunction { get; set; }
@@ -678,7 +678,7 @@ namespace EditClipboardContents
             }
         }
 
-        
+
         public class METAHEADER_OBJ : ClipboardFormatBase
         {
             public MetaFileType mtType { get; set; }
@@ -748,7 +748,7 @@ namespace EditClipboardContents
                 iType = GetFunctionValue(rawBytes);
                 //nSize = GetnSize(rawBytes);
                 nSize = nSizeInput;
-                dParm = new DWORD[nSizeInput - (sizeof(DWORD)*2)];
+                dParm = new DWORD[nSizeInput - (sizeof(DWORD) * 2)];
             }
             // ----------------------------------------------------------
             private EMF_RecordType GetFunctionValue(byte[] rawBytes)
@@ -825,7 +825,8 @@ namespace EditClipboardContents
             public CLIPFORMAT cfFormat { get; set; }
             // DVTARGETDEVICE is a handle, so we will process it separately.
             // Will use marshal to get the true struct with the pointer then put it into this object
-            public DVTARGETDEVICE_OBJ ptd { get; set; } = new DVTARGETDEVICE_OBJ();
+            //public DVTARGETDEVICE_OBJ ptd { get; set; } = new DVTARGETDEVICE_OBJ();
+            public LPVOID ptd { get; set; }
             public DWORD dwAspect { get; set; }
             public LONG lindex { get; set; }
             public DWORD tymed { get; set; }
@@ -866,11 +867,44 @@ namespace EditClipboardContents
             protected override string GetStructName() => "OBJECTDESCRIPTOR";
         }
 
+        public class OLE_PRIVATE_DATA_OBJ : ClipboardFormatBase
+        {
+            public DWORD unknown1 { get; set; }
+            public DWORD size { get; set; }      // total structure size in bytes
+            public DWORD unknown2 { get; set; }
+            public DWORD count { get; set; }      // number of format entries
+            public DWORD unknown3 { get; set; }
+            public DWORD unknown4 { get; set; }
+            public OLE_ENTRY_OBJ[] entries { get; set; } = [];  // array of format entries
+
+            // Then follows any DVTARGETDEVICE structures referenced in the FORMATETCs
+
+            // Generic constructor that takes in number of entries
+            public OLE_PRIVATE_DATA_OBJ(uint entryCount)
+            {
+                entries = new OLE_ENTRY_OBJ[entryCount];
+            }
+
+            // Need a parameterless constructor for serialization
+            public OLE_PRIVATE_DATA_OBJ() { }
+
+        }
+
+        public class OLE_ENTRY_OBJ : ClipboardFormatBase
+        {
+            public FORMATETC_OBJ fmtetc { get; set; } = new FORMATETC_OBJ();
+            public DWORD first_use { get; set; } // Has this cf been added to the list already
+            public DWORD unknown1 { get; set; }
+            public DWORD unknown2 { get; set; }
+        }
+
+
+
         // --------------------------------------------------------------------------------------------------------------------------
         // --------------------------------------------------- Enum Definitions -----------------------------------------------------
         // --------------------------------------------------------------------------------------------------------------------------
 
-        [EnumName("DVASPECT")]
+            [EnumName("DVASPECT")]
         public enum DVASPECT : DWORD
         {
             DVASPECT_CONTENT = 1,
@@ -1245,6 +1279,17 @@ namespace EditClipboardContents
         // --------------------------------------------------------------------------------------------------------------------------
         // --------------------------------------------------- Struct definitions ---------------------------------------------------
         // --------------------------------------------------------------------------------------------------------------------------
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _OLEPrivateDataHeader
+        {
+            public DWORD unknown1;
+            public DWORD size;      // total structure size in bytes
+            public DWORD unknown2;
+            public DWORD count;      // number of format entries
+            public DWORD unknown3;
+            public DWORD unknown4;
+        }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct BITMAP

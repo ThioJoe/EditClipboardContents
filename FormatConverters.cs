@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using static EditClipboardContents.ClipboardFormats;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using System.Runtime.InteropServices.ComTypes;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -1120,6 +1121,11 @@ namespace EditClipboardContents
                 return null;
             }
         }
+
+        //public static string? HyperLinkFromRawData(byte[] rawData)
+        //{
+            
+        //}
 
         //------------------------------------------------------------------------------------------------------------------------------------------------------
     }
