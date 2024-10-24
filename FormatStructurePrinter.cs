@@ -308,13 +308,12 @@ namespace EditClipboardContents
             // For pointers never print the decimal version
             if (valueType == typeof(IntPtr) || valueType == typeof(UIntPtr))
             {
-                return Utils.AsHexString(value);
+                return Utils.AutoHexString(value, truncate: true);
             }
 
             // For nested structs, we'll return a placeholder
             if (valueType.IsValueType && !valueType.IsPrimitive && valueType != typeof(IntPtr))
             {
-                
                 return $"[{valueType.Name}]";
             }
 

@@ -364,6 +364,16 @@ namespace EditClipboardContents
         // Builds on AsHexString to add a space and the integer value in parentheses if it's not zero. Otherwise returns nothing
         public static string AutoHexString(this object integerValue, bool truncate = false)
         {
+            if (integerValue is IntPtr intPtr && intPtr == IntPtr.Zero && truncate)
+            {
+                return "0x0 (Null)";
+            }
+
+            if (integerValue is UIntPtr uintPtr && uintPtr == UIntPtr.Zero && truncate)
+            {
+                return "0x0 (Null)";
+            }
+
             string hexValue = Utils.AsHexString(integerValue);
             if (string.IsNullOrEmpty(hexValue))
                 return string.Empty;
