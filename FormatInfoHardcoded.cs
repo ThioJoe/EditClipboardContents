@@ -73,6 +73,8 @@ namespace EditClipboardContents
             { "BOOL", "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/9d81be47-232e-42cf-8f0d-7a3b29bf2eb2" },
             { "FORMATETC", "https://learn.microsoft.com/en-us/windows/win32/api/objidl/ns-objidl-formatetc" },
             { "DVTARGETDEVICE", "https://learn.microsoft.com/en-us/windows/win32/api/objidl/ns-objidl-dvtargetdevice" },
+            { "DROPDESCRIPTION", "https://learn.microsoft.com/is-is/windows/win32/api/shlobj_core/ns-shlobj_core-dropdescription" },
+            { "DROPIMAGETYPE", "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ne-shlobj_core-dropimagetype" },
             
         };
 

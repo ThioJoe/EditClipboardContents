@@ -1385,7 +1385,7 @@ namespace EditClipboardContents
         private void buttonTest_Click(object sender, EventArgs e)
         {
             Console.WriteLine(e.ToString());
-
+            //DropImageType dropImageType = DropImageType.Invalid;
 
             Console.WriteLine("");
             Console.WriteLine("");

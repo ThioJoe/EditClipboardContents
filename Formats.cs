@@ -842,6 +842,16 @@ namespace EditClipboardContents
             protected override string GetStructName() => "DVTARGETDEVICE";
         }
 
+        public class DROPDESCRIPTION_OBJ : ClipboardFormatBase
+        {
+            public DROPIMAGETYPE type { get; set; }
+            public string szMessage { get; set; } = string.Empty;
+            public string szInsert { get; set; } = string.Empty;
+            protected override string GetStructName() => "DROPDESCRIPTION";
+
+            public override int MaxStringLength() => MAX_PATH;
+        }
+
         // --------------------------------------------------------------------------------------------------------------------------
         // --------------------------------------------------- Enum Definitions -----------------------------------------------------
         // --------------------------------------------------------------------------------------------------------------------------
@@ -1158,6 +1168,27 @@ namespace EditClipboardContents
             DROPEFFECT_LINK = 4,
             [Description("Scrolling is about to start or is currently occurring in the target. This value is used in addition to the other values.")]
             DROPEFFECT_SCROLL = 0x80000000
+        }
+
+        [EnumName("DROPIMAGETYPE")]
+        public enum DROPIMAGETYPE : DWORD // Inferring DWORD because it appears to be 8 bytes and -1 as invalid
+        {
+            [Description("No drop image preference; use the default image.")]
+            DROPIMAGE_INVALID = 0xFFFFFFFF, // -1
+            [Description("A red bisected circle such as that found on a \"no smoking\" sign.")]
+            DROPIMAGE_NONE = 0,
+            [Description("A plus sign (+) that indicates a copy operation.")]
+            DROPIMAGE_COPY,
+            [Description("An arrow that indicates a move operation.")]
+            DROPIMAGE_MOVE,
+            [Description("An arrow that indicates a link.")]
+            DROPIMAGE_LINK,
+            [Description("A tag icon that indicates that the metadata will be changed.")]
+            DROPIMAGE_LABEL = 6,
+            [Description("A yellow exclamation mark that indicates that a problem has been encountered in the operation.")]
+            DROPIMAGE_WARNING = 7,
+            [Description("Windows 7 and later. Use no drop image.")]
+            DROPIMAGE_NOIMAGE = 8
         }
 
         // --------------------------------------------------------------------------------------------------------------------------

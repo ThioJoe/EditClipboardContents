@@ -450,6 +450,13 @@ namespace EditClipboardContents
                     preferredDisplayMode = ViewMode.Object;
                     break;
 
+                case "DropDescription":
+                    DROPDESCRIPTION_OBJ dropDescriptionProcessed = BytesToObject<DROPDESCRIPTION_OBJ>(rawData);
+                    dataInfoList.Add($"Type: {dropDescriptionProcessed.type}");
+                    processedObject = dropDescriptionProcessed;
+                    preferredDisplayMode = ViewMode.Object;
+                    break;
+
                 //case // Whatever uses the FORMATETC struct
                 //    FORMATETC? formatEtcStructData = Utils.GetStructFromData<FORMATETC>(rawData);
                 //    // Get offset of DVTARGETDEVICE
