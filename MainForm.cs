@@ -615,12 +615,13 @@ namespace EditClipboardContents
                 actuallyLoadableCount++; // Only increments if the format is successfully enumerated. Not if it reached end, or there was an error
 
                 // Update label to show progress
-                labelLoading.Text = $"{defaultLoadingLabelText}\n\n" + $"Loading: {actuallyLoadableCount} of {formatCount}...";
+                string formatName = Utils.GetClipboardFormatNameFromId(format);
+                labelLoading.Text = $"{defaultLoadingLabelText}\n\n" + $"Loading: {actuallyLoadableCount} of {formatCount}...\n{formatName}";
                 // Update the form to show the new label
                 this.Update();
 
                 // -------- Start / Continue Enumeration ------------
-                bool successResutl = CopyIndividualClipboardFormat(formatId: format, loadedFormatCount: actuallyLoadableCount);
+                bool successResutl = CopyIndividualClipboardFormat(formatId: format, formatName: formatName,loadedFormatCount: actuallyLoadableCount);
                 if (!successResutl)
                 {
                     formatsToRetry.Add(format);
@@ -784,9 +785,12 @@ namespace EditClipboardContents
         }
 
 
-        private bool CopyIndividualClipboardFormat(uint formatId, int loadedFormatCount = -1, bool retryMode = false)
+        private bool CopyIndividualClipboardFormat(uint formatId, string? formatName = null,  int loadedFormatCount = -1, bool retryMode = false)
         {
-            string formatName = Utils.GetClipboardFormatNameFromId(formatId);
+            if (formatName == null || string.IsNullOrEmpty(formatName))
+            {
+                formatName = Utils.GetClipboardFormatNameFromId(formatId);
+            }
             ulong dataSize = 0;
             byte[]? rawData = null;
             int? error; // Initializes as null anyway
