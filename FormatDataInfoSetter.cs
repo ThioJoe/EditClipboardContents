@@ -447,6 +447,7 @@ namespace EditClipboardContents
                     dataInfoList.Add($"HWND: {hwndOwner}{hexStringHandle}");
                     dataInfoList.Add("This is the HWND of the window that owns the data object.");
                     dataInfoList.Add("See: https://learn.microsoft.com/en-us/office/vba/language/concepts/forms/what-is-the-difference-between-the-dataobject-and-the-clipboard");
+                    preferredDisplayMode = ViewMode.Object;
                     break;
 
                 //case // Whatever uses the FORMATETC struct
@@ -517,7 +518,7 @@ namespace EditClipboardContents
                     {
                         int width = img.Width;
                         int height = img.Height;
-                        // or img.HorizontalResolution, img.VerticalResolution, etc.
+                        dataInfoList.Add($"{width}x{height} PNG");
                     }
                     break;
                 }

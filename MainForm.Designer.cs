@@ -66,6 +66,7 @@
             this.menuItemHelp = new System.Windows.Forms.MenuItem();
             this.menuHelp_About = new System.Windows.Forms.MenuItem();
             this.menuHelp_WhyTakingLong = new System.Windows.Forms.MenuItem();
+            this.menuHelp_DebugInfo = new System.Windows.Forms.MenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonRefresh = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonFetchManualFormat = new System.Windows.Forms.ToolStripButton();
@@ -96,7 +97,6 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.labelVersion = new System.Windows.Forms.Label();
             this.buttonTest = new System.Windows.Forms.Button();
-            this.menuHelp_DebugInfo = new System.Windows.Forms.MenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.contextMenuStrip_dataGridView.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -470,18 +470,24 @@
             this.menuHelp_WhyTakingLong.Text = "Why Is It Taking So Long?";
             this.menuHelp_WhyTakingLong.Click += new System.EventHandler(this.menuHelp_WhyTakingLong_Click);
             // 
+            // menuHelp_DebugInfo
+            // 
+            this.menuHelp_DebugInfo.Index = 2;
+            this.menuHelp_DebugInfo.Text = "Debug Info";
+            this.menuHelp_DebugInfo.Click += new System.EventHandler(this.menuHelp_DebugInfo_Click);
+            // 
             // toolStrip1
             // 
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip1.ImageScalingSize = new System.Drawing.Size(42, 42);
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripButtonRefresh,
+            this.toolStripButtonTimedRefresh,
             this.toolStripButtonFetchManualFormat,
             this.toolStripButtonDelete,
             this.toolStripButtonAddFormat,
             this.toolStripButtonSaveEdited,
-            this.toolStripButtonExportSelected,
-            this.toolStripButtonTimedRefresh});
+            this.toolStripButtonExportSelected});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Padding = new System.Windows.Forms.Padding(12, 0, 3, 0);
@@ -506,7 +512,7 @@
             this.toolStripButtonFetchManualFormat.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonFetchManualFormat.Name = "toolStripButtonFetchManualFormat";
             this.toolStripButtonFetchManualFormat.Size = new System.Drawing.Size(46, 46);
-            this.toolStripButtonFetchManualFormat.Text = "Manually Fetch Specific Clipboard Format";
+            this.toolStripButtonFetchManualFormat.Text = "Manually fetch or re-fetch a specific format by name or ID";
             this.toolStripButtonFetchManualFormat.ToolTipText = "Manually fetch or re-fetch a specific format by name or ID";
             this.toolStripButtonFetchManualFormat.Click += new System.EventHandler(this.toolStripButtonFetchManualFormat_Click);
             // 
@@ -538,8 +544,7 @@
             this.toolStripButtonSaveEdited.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonSaveEdited.Name = "toolStripButtonSaveEdited";
             this.toolStripButtonSaveEdited.Size = new System.Drawing.Size(46, 46);
-            this.toolStripButtonSaveEdited.Text = "Save Edits To Clipboard";
-            this.toolStripButtonSaveEdited.ToolTipText = "Re-Write clipboard with edited data";
+            this.toolStripButtonSaveEdited.Text = "Re-Write clipboard with edited data";
             this.toolStripButtonSaveEdited.Click += new System.EventHandler(this.toolStripButtonSaveEdited_Click);
             // 
             // toolStripButtonExportSelected
@@ -550,7 +555,6 @@
             this.toolStripButtonExportSelected.Name = "toolStripButtonExportSelected";
             this.toolStripButtonExportSelected.Size = new System.Drawing.Size(46, 46);
             this.toolStripButtonExportSelected.Text = "Export selected item data as file";
-            this.toolStripButtonExportSelected.ToolTipText = "Export selected item data as file";
             this.toolStripButtonExportSelected.Click += new System.EventHandler(this.toolStripButtonExportSelected_Click);
             // 
             // toolStripButtonTimedRefresh
@@ -560,8 +564,8 @@
             this.toolStripButtonTimedRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButtonTimedRefresh.Name = "toolStripButtonTimedRefresh";
             this.toolStripButtonTimedRefresh.Size = new System.Drawing.Size(46, 46);
-            this.toolStripButtonTimedRefresh.Text = "Time Delayed Refresh";
-            this.toolStripButtonTimedRefresh.ToolTipText = "Refresh the clipboard after a specified number of seconds";
+            this.toolStripButtonTimedRefresh.Text = "Reload from clipboard after a specified number of seconds";
+            this.toolStripButtonTimedRefresh.ToolTipText = "Reload from clipboard after a specified number of seconds";
             this.toolStripButtonTimedRefresh.Click += new System.EventHandler(this.toolStripButtonTimedRefresh_Click);
             // 
             // richTextBoxContents
@@ -719,7 +723,7 @@
             // 
             this.checkBoxPlainTextEditing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxPlainTextEditing.AutoSize = true;
-            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(-22, 397);
+            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(-28, 397);
             this.checkBoxPlainTextEditing.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.checkBoxPlainTextEditing.Name = "checkBoxPlainTextEditing";
             this.checkBoxPlainTextEditing.Size = new System.Drawing.Size(148, 24);
@@ -742,7 +746,7 @@
             "UTF-32 BE",
             "Codepage 1252",
             "System Default"});
-            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(244, 391);
+            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(238, 391);
             this.dropdownHexToTextEncoding.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dropdownHexToTextEncoding.Name = "dropdownHexToTextEncoding";
             this.dropdownHexToTextEncoding.Size = new System.Drawing.Size(217, 28);
@@ -753,7 +757,7 @@
             // 
             this.labelHexToPlaintextEncoding.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelHexToPlaintextEncoding.AutoSize = true;
-            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(157, 397);
+            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(151, 397);
             this.labelHexToPlaintextEncoding.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelHexToPlaintextEncoding.Name = "labelHexToPlaintextEncoding";
             this.labelHexToPlaintextEncoding.Size = new System.Drawing.Size(80, 20);
@@ -881,12 +885,6 @@
             this.buttonTest.UseVisualStyleBackColor = true;
             this.buttonTest.Visible = false;
             this.buttonTest.Click += new System.EventHandler(this.buttonTest_Click);
-            // 
-            // menuHelp_DebugInfo
-            // 
-            this.menuHelp_DebugInfo.Index = 2;
-            this.menuHelp_DebugInfo.Text = "Debug Info";
-            this.menuHelp_DebugInfo.Click += new System.EventHandler(this.menuHelp_DebugInfo_Click);
             // 
             // MainForm
             // 
