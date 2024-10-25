@@ -704,25 +704,21 @@ namespace EditClipboardContents
             {
                 formatAnalysis.KnownFileExtension = extension;
             }
-            // Check if the format name is a mime type and get any extensions
-            //IEnumerable<string> extensions = Utils.GetExtensions(formatName);
-            else if (mimeExtensions != null)
+
+            // Look up the format name in the file signatures and mime types
+            if (rawData != null && rawData.Length > 0)
             {
-                possibleExtensions.AddRange(mimeExtensions);
-                formatAnalysis.PossibleFileExtensions = possibleExtensions;
-            }
-            // Look up the format name in the file signatures
-            else
-            {
-                if (rawData != null && rawData.Length > 0)
-                {
-                    resultSignature = parser.CheckSignatureMatch(rawData);
-                }
+                resultSignature = parser.CheckSignatureMatch(rawData);
                 if (resultSignature != null)
                 {
                     possibleExtensions.AddRange(resultSignature.Extensions);
                     formatAnalysis.PossibleFileExtensions = possibleExtensions;
                     formatAnalysis.FileTypeDescription = resultSignature.Description;
+                }
+                else if (mimeExtensions != null)
+                {
+                    possibleExtensions.AddRange(mimeExtensions);
+                    formatAnalysis.PossibleFileExtensions = possibleExtensions;
                 }
             }
 

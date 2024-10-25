@@ -65,6 +65,7 @@ namespace EditClipboardContents
         public int previousWindowHeight = 0;
         public int previousSplitterDistance = 0;
         public bool isResizing = false;
+        public int testCounter = 0; // For testing and displaying number of calls of random stuff
 
         // Get version number from assembly
         static readonly System.Version versionFull = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
@@ -105,6 +106,7 @@ namespace EditClipboardContents
             editedClipboardItems.ListChanged += EditedClipboardItems_ListChanged;
 
             #if DEBUG
+            labelTestCount.Visible = true;
             buttonMakeSignatureJson.Visible = true;
             menuEdit_RefreshDataTable.Visible = true;
             buttonTest.Visible = true;
@@ -210,7 +212,7 @@ namespace EditClipboardContents
             dataGridViewClipboard.Columns[colName.FormatName].DefaultCellStyle.Padding = formatNamePadding;
 
             //// Add a tooltip to display on the Known column
-            dataGridViewClipboard.Columns[colName.KnownBinary].ToolTipText = MyStrings.KnownFileTooltip;
+            dataGridViewClipboard.Columns[colName.KnownBinary].ToolTipText = MyStrings.KnownFileTooltipFull;
             dataGridViewClipboard.Columns[colName.KnownStruct].ToolTipText = MyStrings.KnownStructTooltip;
 
 
@@ -253,8 +255,7 @@ namespace EditClipboardContents
             {
                 SelectRowByUniqueID(selectedItemGUID.Value);
             }
-
-            /// <label>SetDataGridContents</label>
+            
             // Update cell values for columns that don't draw directly from the data source
             foreach (ClipboardItem formatItem in editedClipboardItems)
             {
@@ -279,15 +280,21 @@ namespace EditClipboardContents
                 string knownFileTooltip = "";
                 if (formatItem.FormatAnalysis?.HasPossibleOrKnownExtensions() == true)
                 {
-                    knownIcon = "✓"; //Could also use emoji: ✔️
-                    knownFileTooltip = MyStrings.KnownFileTooltip;
+                    knownIcon = "\u2713"; // ✓ (Regular, u2713) -- Also could use: ✔ (Bold, u2714), ✔ (Emoji)
+                    if (formatItem.FormatAnalysis?.ExtensionConfidence == FormatAnalysis.Confidence.Known)
+                    {
+                        knownIcon = "\u2714"; // Bold check
+                        knownFileTooltip = MyStrings.KnownFileTooltip;
+                    }
+                    else
+                        knownFileTooltip = MyStrings.KnownFileTooltipLikely;
                 }
                 
                 string knownStructIcon = "";
                 string knownStructTooltip = "";
                 if (formatItem.ClipDataObject != null || formatItem.ClipEnumObject != null)
                 {
-                    knownStructIcon = "✓";
+                    knownStructIcon = "\u2713"; // Regular check
                     knownStructTooltip = MyStrings.KnownStructTooltip;
                 }
 
@@ -1884,7 +1891,7 @@ namespace EditClipboardContents
             }
 
             // --------------- CONDITIONAL CELL COLORING AND STYLING --------------- 
-
+            TestCountAdd();
             // Individual cell appearance based on fixed values. Only for non-custom formats, because that will be handled later using the editedClipboardItems list
             foreach (DataGridViewRow row in dataGridViewClipboard.Rows)
             {
@@ -1930,8 +1937,9 @@ namespace EditClipboardContents
 
                     else if (columnName == colName.KnownBinary)
                     {
+                        cell.Style.Font = new Font("Segoe UI Symbol", 9, FontStyle.Regular);
                         // Set color of column based on confidence
-                        if (selectedEditedItem?.FormatAnalysis?.ExtensionConfidence == FormatAnalysis.Confidence.Known)
+                        if (cellValueString.Contains("\u2714"))
                         {
                             cell.Style.ForeColor = Color.Green;
                         }
@@ -3167,7 +3175,15 @@ namespace EditClipboardContents
             //UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
-        
+        private void TestCountAdd()
+        {
+            #if DEBUG
+            string currentTest = "Calls to grid update: ";
+            testCounter++;
+            labelTestCount.Text = currentTest + testCounter.ToString();
+            #endif
+        }
+
     } // ---------------------------------------------------------------------------------------------------
     // --------------------------------------- End of MainForm Class ---------------------------------------
     // -----------------------------------------------------------------------------------------------------
@@ -3222,7 +3238,9 @@ namespace EditClipboardContents
         public const string DataNotApplicable = "N/A";
         public const string DataNull = "[null]";
         public const string DataEmpty = "[Empty]";
-        public const string KnownFileTooltip = "Can be properly exported as known file type.";
+        public const string KnownFileTooltip = "Can be properly exported as known file type";
+        public const string KnownFileTooltipLikely = "Detected likely file type match. Can be exported";
+        public const string KnownFileTooltipFull = "Can be properly exported as known file type.\nGreen = Known , Black = Likely match";
         public const string KnownStructTooltip = "Details about underlying object/struct supported.";
         public const string DataTooLarge = "Data is too large to display preview.\nThis can be changed in the options menu, but the program may freeze for large amounts of data.";
     }
@@ -3360,21 +3378,24 @@ namespace EditClipboardContents
     // Store miscellanous information about the format or its data
     public class FormatAnalysis
     {
-        public List<string>? PossibleFileExtensions { get; set; } = null;
-        public string? FileTypeDescription { get; set; } = null;
-        public string? KnownFileExtension { get; set; } = null;
-        public Confidence ExtensionConfidence { get; set; } = Confidence.Null;
+        public List<string>? PossibleFileExtensions { get; set; }
+        public string? FileTypeDescription { get; set; }
+        public string? KnownFileExtension { get; set; }
 
+        public Confidence ExtensionConfidence =>
+            !string.IsNullOrWhiteSpace(KnownFileExtension) ? Confidence.Known :
+            (PossibleFileExtensions?.Count ?? 0) > 0 ? Confidence.Possible :
+            Confidence.Null;
 
         public enum Confidence
         {
             Null,       // No data
             Possible,   // Possible extensions is populated
             Known       // Known extension is populated
-        };
+        }
 
-        // Methods
         public bool HasPossibleOrKnownExtensions() => (PossibleFileExtensions?.Count ?? 0) > 0 || !string.IsNullOrWhiteSpace(KnownFileExtension);
+
     }
 
     public class ClipboardItem : ICloneable, INotifyPropertyChanged

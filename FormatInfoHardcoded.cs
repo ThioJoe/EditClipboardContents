@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using static EditClipboardContents.ClipboardFormats;
 using static System.Net.WebRequestMethods;
@@ -231,6 +232,11 @@ namespace EditClipboardContents
             //{ "CFSTR_FILENAME", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_filename" },
             //{ "CFSTR_FILENAMEMAP", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_filenamemap" },
             //{ "CFSTR_INETURL", "https://learn.microsoft.com/en-us/windows/win32/shell/clipboard#cfstr_ineturl" },
+        };
+
+        public static List<FileSignature> manualFileSignatures = new List<FileSignature>
+        {
+            new() { Extensions = ["SVM"], Signatures = [new() { SignatureType = SignatureType.Generic, SignatureValue = "56434C4D5446" }], Offsets = ["0"], Description = "StarView Metafile - A vector image file found in LibreOffice or OpenOffice" }
         };
 
         public static object? CheckIfProblematicValue(PropertyInfo property, object obj)

@@ -24,16 +24,18 @@ namespace EditClipboardContents
     public class FileSignature
     {
         public List<string> Extensions { get; set; }
+        public string? DefaultExtension { get; set; }
         public string? Description { get; set; }
-        public List<string> _Offsets { get; set; }
+        public List<string> Offsets { get; set; }
         public List<Signature> Signatures { get; set; }
 
         public FileSignature()
         {
             Extensions = new List<string>();
-            _Offsets = new List<string>();
+            Offsets = new List<string>();
             Signatures = new List<Signature>();
             Description = null;
+            DefaultExtension = null;
         }
     }
 
@@ -53,7 +55,6 @@ namespace EditClipboardContents
         LittleEndianWildcard,
         zipEmpty,
         zipSpanned,
-
     }
 
     public class Cell
@@ -125,7 +126,7 @@ namespace EditClipboardContents
             }
 
             // Remove any fileSignatures where everything is empty
-            fileSignatures.RemoveAll(fs => string.IsNullOrEmpty(fs.Description) && fs.Extensions.Count == 0 && fs._Offsets.Count == 0 && fs.Signatures.Count == 0);
+            fileSignatures.RemoveAll(fs => string.IsNullOrEmpty(fs.Description) && fs.Extensions.Count == 0 && fs.Offsets.Count == 0 && fs.Signatures.Count == 0);
             // Remove any where the signatures consist only of zeroes and spaces
             fileSignatures.RemoveAll(fs => fs.Signatures.TrueForAll(s => string.IsNullOrEmpty(s.SignatureValue) || s.SignatureValue.Replace("0", "").Replace(" ", "" ) == ""));
 
@@ -263,7 +264,7 @@ namespace EditClipboardContents
                 FileSignature fileSignature = new FileSignature();
                 fileSignature.Description = CleanUpText(descriptionCell);
                 fileSignature.Extensions = ParseExtensions(extensionCell);
-                fileSignature._Offsets = ParseOffsets(offsetCell);
+                fileSignature.Offsets = ParseOffsets(offsetCell);
                 fileSignature.Signatures = ParseSignatures(hexSignatureCell);
 
                 fileSignatures.Add(fileSignature);
@@ -458,6 +459,33 @@ namespace EditClipboardContents
             }
         }
 
+        // -------------------------------------------------------------------------------------------------------------------------------
+        private static List<FileSignature> AddManualProperties(List<FileSignature> fileSignatures)
+        {
+            if (fileSignatures == null)
+            {
+                return new List<FileSignature>();
+            }
+
+            fileSignatures.AddRange(FormatInfoHardcoded.manualFileSignatures);
+
+            // Manually add a few more properties to the file signatures
+            foreach (var fs in fileSignatures)
+            {
+                //-----------------------------------------------------------------------
+                // OLE filetype
+                if (fs.Signatures.Exists(s => s.SignatureValue == "D0CF11E0A1B11AE1"))
+                {
+                    fs.Extensions.Insert(0, "OLE");
+                    fs.DefaultExtension = fs.Extensions[0];
+                    break;
+                }
+                // ----------------------------------------------------------------------
+            }
+
+            return fileSignatures;
+        }
+
         private static List<FileSignature>? _cachedSignatures = null;
 
         public List<FileSignature> LoadFileSignatures()
@@ -480,6 +508,19 @@ namespace EditClipboardContents
                 {
                     fileSignatures = new List<FileSignature>();
                 }
+                else
+                {
+                    fileSignatures = AddManualProperties(fileSignatures);
+                }
+
+                // Remove any periods from the beginning of the extensions in case i forgot to remove them
+                foreach (var fs in fileSignatures)
+                {
+                    for (int i = 0; i < fs.Extensions.Count; i++)
+                    {
+                        fs.Extensions[i] = fs.Extensions[i].TrimStart('.');
+                    }
+                }
 
                 _cachedSignatures = fileSignatures;
                 return fileSignatures;
@@ -495,20 +536,28 @@ namespace EditClipboardContents
 
             List<FileSignature> fileSignatures = LoadFileSignatures();
 
-            // Convert the first 75 bytes of raw data to a string of hex characters
-            string rawDataString = BitConverter.ToString(rawData, 0, 75).Replace("-", "");
+            // Convert up to the first 75 bytes of raw data to a string of hex characters
+            string rawDataString;
+            if (rawData.Length >= 75)
+            {
+                rawDataString = BitConverter.ToString(rawData, 0, 75).Replace("-", "");
+            }
+            else
+            {
+                rawDataString = BitConverter.ToString(rawData).Replace("-", "");
+            }
 
             foreach (var fileSignatureObj in fileSignatures)
             {
                 int offset = 0;
                 // Make sure at least one of the offsets is 0 where the data is longer than the signature
-                if (fileSignatureObj._Offsets.Count == 0)
+                if (fileSignatureObj.Offsets.Count == 0)
                 {
                     continue;
                 }
 
                 bool found = false;
-                foreach (var offsetProperty in fileSignatureObj._Offsets)
+                foreach (var offsetProperty in fileSignatureObj.Offsets)
                 {
                     if (offsetProperty == "0")
                     {
@@ -573,10 +622,19 @@ namespace EditClipboardContents
         private void buttonMakeSignatureJson_Click(object sender, EventArgs e)
         {
             Console.WriteLine(e.ToString());
+            string fileName = "Signatures.txt";
+            // Check if file exists
+            if (!File.Exists(fileName))
+            {
+                MessageBox.Show("Signatures.txt file not found. Need the table from wikipedia:\n" +
+                    "https://en.wikipedia.org/wiki/List_of_file_signatures",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             FileSignatureParser parser = new FileSignatureParser();
             //string tableData = File.ReadAllText("Signatures.txt");
-            string tableData = File.ReadAllText("Signatures.txt");
+            string tableData = File.ReadAllText(fileName);
 
             var fileSignatures = parser.ParseFileSignatures(tableData);
 
@@ -589,13 +647,12 @@ namespace EditClipboardContents
                     output.AppendLine($"{new string('-', 20)} {index} {new string('-', 20)}");
                     output.AppendLine("Description: " + fs.Description);
                     output.AppendLine("Extensions: " + string.Join(", ", fs.Extensions));
-                    output.AppendLine("Offsets: " + string.Join(", ", fs._Offsets));
+                    output.AppendLine("Offsets: " + string.Join(", ", fs.Offsets));
                     output.AppendLine("Signatures:");
                     foreach (var sig in fs.Signatures)
                     {
                         output.AppendLine($"  Type: {sig.SignatureType}, Value: {sig.SignatureValue}");
                     }
-                    //output.AppendLine(new string('-', 40));
                     index++;
                 }
                 return output;
@@ -606,11 +663,11 @@ namespace EditClipboardContents
 
             // Serialize the file signatures
             string json = JsonSerializer.Serialize(fileSignatures, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText("ParsedSignatures.json", json);
+            File.WriteAllText("FileSignatures.json", json);
 
             //// Test loading and deserializing the file signatures
-            string jsonFromFile = File.ReadAllText("ParsedSignatures.json");
-            List<FileSignature>? fileSignaturesFromJson = JsonSerializer.Deserialize<List<FileSignature>>(jsonFromFile);
+            //string jsonFromFile = File.ReadAllText("ParsedSignatures.json");
+            //List<FileSignature>? fileSignaturesFromJson = JsonSerializer.Deserialize<List<FileSignature>>(jsonFromFile);
 
             //if (fileSignaturesFromJson == null)
             //{
