@@ -24,7 +24,7 @@ namespace EditClipboardContents
     public class FileSignature
     {
         public List<string> Extensions { get; set; }
-        public string Description { get; set; }
+        public string? Description { get; set; }
         public List<string> _Offsets { get; set; }
         public List<Signature> Signatures { get; set; }
 
@@ -33,13 +33,14 @@ namespace EditClipboardContents
             Extensions = new List<string>();
             _Offsets = new List<string>();
             Signatures = new List<Signature>();
+            Description = null;
         }
     }
 
     public class Signature
     {
         public SignatureType SignatureType { get; set; }
-        public string SignatureValue { get; set; }
+        public string? SignatureValue { get; set; }
     }
 
     public enum SignatureType
@@ -399,6 +400,7 @@ namespace EditClipboardContents
                     ? match.Groups["code1"].Value.Trim()
                     : match.Groups["code2"].Value.Trim();
                 string cleanedCodeContent = codeContent.Replace("<br />", "").Replace("<br/>", "");
+                string contentNoSpaces = cleanedCodeContent.Replace(" ", "").Trim();
 
                 string label = "";
                 if (!string.IsNullOrEmpty(labelBefore))
@@ -411,14 +413,14 @@ namespace EditClipboardContents
                 }
 
                 label = label.Trim('(', ')').Trim().ToLower();
-                SignatureType sigType = DetermineSignatureType(label, cleanedCodeContent);
+                SignatureType sigType = DetermineSignatureType(label, contentNoSpaces);
 
                 
 
                 signatures.Add(new Signature
                 {
                     SignatureType = sigType,
-                    SignatureValue = cleanedCodeContent
+                    SignatureValue = contentNoSpaces
                 });
             }
 
@@ -482,6 +484,85 @@ namespace EditClipboardContents
                 _cachedSignatures = fileSignatures;
                 return fileSignatures;
             }
+        }
+
+        public FileSignature? CheckSignatureMatch(byte[] rawData)
+        {
+            if (rawData == null || rawData.Length == 0)
+            {
+                return null;
+            }
+
+            List<FileSignature> fileSignatures = LoadFileSignatures();
+
+            // Convert the first 75 bytes of raw data to a string of hex characters
+            string rawDataString = BitConverter.ToString(rawData, 0, 75).Replace("-", "");
+
+            foreach (var fileSignatureObj in fileSignatures)
+            {
+                int offset = 0;
+                // Make sure at least one of the offsets is 0 where the data is longer than the signature
+                if (fileSignatureObj._Offsets.Count == 0)
+                {
+                    continue;
+                }
+
+                bool found = false;
+                foreach (var offsetProperty in fileSignatureObj._Offsets)
+                {
+                    if (offsetProperty == "0")
+                    {
+                        found = true;
+                        offset = 0;
+                        break;
+                    }
+                }
+                if (!found)
+                    continue;
+
+                // Check each signature
+                foreach (var signature in fileSignatureObj.Signatures)
+                {
+                    SignatureType sigType = signature.SignatureType;
+                    string sigString;
+
+                    if (signature.SignatureValue != null)
+                        sigString = signature.SignatureValue;
+                    else
+                        continue;
+
+                    // Skip if the signature is longer than the data
+                    if (signature?.SignatureValue?.Length > rawDataString.Length)
+                    continue;
+
+                    // Check non-wildcard signature types
+                    if (sigType == SignatureType.Generic
+                        || sigType == SignatureType.BigEndian
+                        || sigType == SignatureType.LittleEndian
+                        || sigType == SignatureType.zipEmpty
+                        || sigType == SignatureType.zipSpanned)
+                    {
+                        if (rawDataString.Substring(offset, sigString.Length).ToLower() == sigString.ToLower())
+                        {
+                            return fileSignatureObj;
+                        }
+                    }
+                    else if (sigType == SignatureType.GenericWildCard
+                        || sigType == SignatureType.BigEndianWildcard
+                        || sigType == SignatureType.LittleEndianWildcard)
+                    {
+                        // Construct regex pattern from signature where ?? is replaced with .{2} and it checks from the offset
+                        string pattern = "^" + sigString?.Replace("??", ".{2}");
+                        Regex regex = new Regex(pattern, RegexOptions.IgnoreCase);
+                        if (regex.IsMatch(rawDataString.Substring(offset)))
+                        {
+                            return fileSignatureObj;
+                        }
+                    }
+                }
+
+            }
+            return null;
         }
 
 

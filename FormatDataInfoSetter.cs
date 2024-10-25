@@ -32,15 +32,14 @@ namespace EditClipboardContents
     public partial class MainForm : Form
     {
         // -------------------------------------- Set Data Info ---------------------------------------------------
-        private static (List<string>, ViewMode, byte[], IClipboardFormat?, Enum?) SetDataInfo(string formatName, byte[] rawData)
+        private static (List<string>, ViewMode, byte[], IClipboardFormat?, Enum?, FormatAnalysis) SetDataInfo(string formatName, byte[] rawData)
         {
             List<string> dataInfoList = new List<string>();
             byte[] processedData = rawData;
             IClipboardFormat? processedObject = null;
             ViewMode preferredDisplayMode = ViewMode.None;
             Enum? processedEnum = null;
-
-            List<FileSignature> fileSignatures = new FileSignatureParser().LoadFileSignatures();
+            FormatAnalysis formatAnalysis = new FormatAnalysis();
 
             switch (formatName) // Process based on format name because format ID can be different for non-standard (registered) formats
             {
@@ -693,9 +692,41 @@ namespace EditClipboardContents
                     }
                     break;
 
-            } // End switch (formatName)
+            } // ------------------------------------------ End switch (formatName) ------------------------------------------
 
-            return (dataInfoList, preferredDisplayMode, processedData, processedObject, processedEnum);
+            // Do format analysis operations
+            List<string> possibleExtensions = new List<string>();
+            FileSignature? resultSignature = null;
+            FileSignatureParser parser = new FileSignatureParser();
+            IEnumerable<string> mimeExtensions = Utils.GetExtensions(formatName);
+
+            if (FormatInfoHardcoded.KnownBinaryExtensionAssociations.TryGetValue(formatName, out string? extension))
+            {
+                formatAnalysis.KnownFileExtension = extension;
+            }
+            // Check if the format name is a mime type and get any extensions
+            //IEnumerable<string> extensions = Utils.GetExtensions(formatName);
+            else if (mimeExtensions != null)
+            {
+                possibleExtensions.AddRange(mimeExtensions);
+                formatAnalysis.PossibleFileExtensions = possibleExtensions;
+            }
+            // Look up the format name in the file signatures
+            else
+            {
+                if (rawData != null && rawData.Length > 0)
+                {
+                    resultSignature = parser.CheckSignatureMatch(rawData);
+                }
+                if (resultSignature != null)
+                {
+                    possibleExtensions.AddRange(resultSignature.Extensions);
+                    formatAnalysis.PossibleFileExtensions = possibleExtensions;
+                    formatAnalysis.FileTypeDescription = resultSignature.Description;
+                }
+            }
+
+            return (dataInfoList, preferredDisplayMode, processedData, processedObject, processedEnum, formatAnalysis);
 
         }
     }

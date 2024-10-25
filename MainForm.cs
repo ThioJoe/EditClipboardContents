@@ -254,6 +254,7 @@ namespace EditClipboardContents
                 SelectRowByUniqueID(selectedItemGUID.Value);
             }
 
+            /// <label>SetDataGridContents</label>
             // Update cell values for columns that don't draw directly from the data source
             foreach (ClipboardItem formatItem in editedClipboardItems)
             {
@@ -276,7 +277,7 @@ namespace EditClipboardContents
                 // "Known" Column - Display icon if the format can be exported as known binary file
                 string knownIcon = "";
                 string knownFileTooltip = "";
-                if (FormatInfoHardcoded.KnownBinaryExtensionAssociations.ContainsKey(formatItem.FormatName))
+                if (formatItem.FormatAnalysis?.HasPossibleOrKnownExtensions() == true)
                 {
                     knownIcon = "✓"; //Could also use emoji: ✔️
                     knownFileTooltip = MyStrings.KnownFileTooltip;
@@ -969,6 +970,7 @@ namespace EditClipboardContents
                 IClipboardFormat? processedObject = null;
                 Enum? processedEnum = null;
                 ViewMode preferredDisplayMode = ViewMode.None;
+                FormatAnalysis formatAnalysis = new FormatAnalysis();
 
                 // Data info list contains metadata about the data. First item will show in the data info column, all will show in the text box in object/struct view mode
                 List<string> dataInfoList = new List<string>();
@@ -976,7 +978,7 @@ namespace EditClipboardContents
                 // If there is data, process it and get the data info
                 if (item?.RawData != null && item.RawData.Length > 0)
                 {
-                    (dataInfoList, preferredDisplayMode, processedData, processedObject, processedEnum) = SetDataInfo(formatName: item.FormatName, rawData: item.RawData);
+                    (dataInfoList, preferredDisplayMode, processedData, processedObject, processedEnum, formatAnalysis) = SetDataInfo(formatName: item.FormatName, rawData: item.RawData);
                 }
                 // If there is no data, and there is an error message
                 else if (item != null && !string.IsNullOrEmpty(item.ErrorReason))
@@ -1003,6 +1005,7 @@ namespace EditClipboardContents
                 item.DataInfoList = dataInfoList;
                 item.PreferredViewMode = preferredDisplayMode;
                 item.ClipEnumObject = processedEnum;
+                item.FormatAnalysis = formatAnalysis;
 
                 // Determine format type. If it's below 0xC0000 it's a standard format type.
                 // See here for details about the specific ranges: https://learn.microsoft.com/en-us/windows/win32/dataxchg/standard-clipboard-formats
@@ -1880,7 +1883,7 @@ namespace EditClipboardContents
                 buttonResetOrder.Enabled = false;
             }
 
-            // --------------- CONDITIONAL CELL COLORING AND STYLING ---------------
+            // --------------- CONDITIONAL CELL COLORING AND STYLING --------------- 
 
             // Individual cell appearance based on fixed values. Only for non-custom formats, because that will be handled later using the editedClipboardItems list
             foreach (DataGridViewRow row in dataGridViewClipboard.Rows)
@@ -1912,7 +1915,7 @@ namespace EditClipboardContents
                     }
 
                     // Color index column gray except in certain cases like pending ReOrder
-                    if (columnName == colName.Index) // Index column
+                    else if (columnName == colName.Index) // Index column
                     {
                         ClipboardItem item = editedClipboardItems.SingleOrDefault(i => i.UniqueID == rowUniqueID);
                         if (item.PendingReOrder == true)
@@ -1922,6 +1925,15 @@ namespace EditClipboardContents
                         else
                         {
                             cell.Style.ForeColor = Color.Gray;
+                        }
+                    }
+
+                    else if (columnName == colName.KnownBinary)
+                    {
+                        // Set color of column based on confidence
+                        if (selectedEditedItem?.FormatAnalysis?.ExtensionConfidence == FormatAnalysis.Confidence.Known)
+                        {
+                            cell.Style.ForeColor = Color.Green;
                         }
                     }
                 }
@@ -2080,7 +2092,11 @@ namespace EditClipboardContents
                 Filter = "All files (*.*)|*.*",
                 FilterIndex = 1,
                 RestoreDirectory = true,
-                FileName = defaultFileName
+                FileName = defaultFileName,
+                DefaultExt = extension,
+                SupportMultiDottedExtensions = true,
+                ValidateNames = true,
+
             };
 
             return saveFileDialog;
@@ -2691,9 +2707,18 @@ namespace EditClipboardContents
             string fileExt = "dat"; // Default extension if not in the list of known formats
 
             // Check the dictionary for known binary file associations for which to save directly as files with given extensions
-            if (FormatInfoHardcoded.KnownBinaryExtensionAssociations.TryGetValue(itemToExport.FormatName.ToLower(), out string ext))
+            if (itemToExport.FormatAnalysis?.KnownFileExtension != null)
             {
-                fileExt = ext;
+                fileExt = itemToExport.FormatAnalysis.KnownFileExtension;
+            }
+            else if (itemToExport.FormatAnalysis?.PossibleFileExtensions?.Count > 0)
+            {
+                fileExt = itemToExport.FormatAnalysis.PossibleFileExtensions[0];
+            }
+
+            if (string.IsNullOrWhiteSpace(fileExt))
+            {
+                fileExt = "dat";
             }
 
             // Sanitize the name stem
@@ -3336,8 +3361,20 @@ namespace EditClipboardContents
     public class FormatAnalysis
     {
         public List<string>? PossibleFileExtensions { get; set; } = null;
+        public string? FileTypeDescription { get; set; } = null;
         public string? KnownFileExtension { get; set; } = null;
+        public Confidence ExtensionConfidence { get; set; } = Confidence.Null;
 
+
+        public enum Confidence
+        {
+            Null,       // No data
+            Possible,   // Possible extensions is populated
+            Known       // Known extension is populated
+        };
+
+        // Methods
+        public bool HasPossibleOrKnownExtensions() => (PossibleFileExtensions?.Count ?? 0) > 0 || !string.IsNullOrWhiteSpace(KnownFileExtension);
     }
 
     public class ClipboardItem : ICloneable, INotifyPropertyChanged
@@ -3394,7 +3431,8 @@ namespace EditClipboardContents
                 OriginalIndex = this.OriginalIndex,
                 PreferredViewMode = this.PreferredViewMode,
                 ClipDataObject = this.ClipDataObject,
-                ClipEnumObject = this.ClipEnumObject
+                ClipEnumObject = this.ClipEnumObject,
+                FormatAnalysis = this.FormatAnalysis
             };
 
             // Manually set the UniqueID to match the original

@@ -56,6 +56,7 @@ namespace EditClipboardContents
         public static string CreateDataString(string formatName, ClipboardItem? fullItem)
         {
             bool anyFormatInfoAvailable = false;
+            FormatAnalysis? analysis = fullItem?.FormatAnalysis;
 
             string indent = "   ";
             string originalIndent = indent; // Save the original indent for later, otherwise it will keep doubling in recursive functions
@@ -74,16 +75,40 @@ namespace EditClipboardContents
                 }
             }
 
+            // Check for any hard coded format
             if (FormatInfoHardcoded.FormatDescriptions.TryGetValue(formatName, out string formatDescription))
             {
                 dataInfoString.AppendLine($"Description: {formatDescription}");
+                anyFormatInfoAvailable = true;
+            }
+            else if (analysis?.KnownFileExtension != null)
+            {
+                dataInfoString.AppendLine($"File Type Extension: {analysis.KnownFileExtension}");
+                anyFormatInfoAvailable = true;
+            }
+            // Otherwise check for any info from prior format analysis in SetDataInfo()
+            else if (analysis?.PossibleFileExtensions != null && analysis.PossibleFileExtensions.Count > 0)
+            {
+                // If Both description and extensions are available, add a header
+                if (analysis.FileTypeDescription != null && analysis.PossibleFileExtensions.Count > 0)
+                {
+                    anyFormatInfoAvailable = true;
+                    dataInfoString.AppendLine($"Found Likely File Type:");
+                    dataInfoString.AppendLine($"{indent}File Extension(s): {string.Join(", ", analysis.PossibleFileExtensions)}");
+                    dataInfoString.AppendLine($"{indent}Description: {analysis.FileTypeDescription}");
+                }
+                // If both aren't available it means it was a mime lookup so there won't be a description
+                else
+                {
+                    dataInfoString.AppendLine($"Possible File Extensions: {string.Join(", ", analysis.PossibleFileExtensions)}");
+                }
                 anyFormatInfoAvailable = true;
             }
 
             // Add URL Link if it exists by dictionary lookup
             if (FormatInfoHardcoded.FormatDocsLinks.TryGetValue(formatName, out string docURL))
             {
-                dataInfoString.AppendLine($"Details: " + FormatInfoHardcoded.FormatDocsLinks[formatName]);
+                dataInfoString.AppendLine($"Details: " + docURL);
                 anyFormatInfoAvailable = true;
             }
 
