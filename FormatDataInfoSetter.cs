@@ -40,6 +40,8 @@ namespace EditClipboardContents
             ViewMode preferredDisplayMode = ViewMode.None;
             Enum? processedEnum = null;
 
+            List<FileSignature> fileSignatures = new FileSignatureParser().LoadFileSignatures();
+
             switch (formatName) // Process based on format name because format ID can be different for non-standard (registered) formats
             {
                 case "CF_TEXT": // 1 - CF_TEXT

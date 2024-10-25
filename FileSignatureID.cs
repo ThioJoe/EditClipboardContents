@@ -1,10 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+
+// Disable IDE warnings that showed up after going from C# 7 to C# 9
+#pragma warning disable IDE0079 // Disable message about unnecessary suppression
+#pragma warning disable IDE1006 // Disable messages about capitalization of control names
+#pragma warning disable IDE0063 // Disable messages about Using expression simplification
+#pragma warning disable IDE0090 // Disable messages about New expression simplification
+#pragma warning disable IDE0028,IDE0300,IDE0305 // Disable message about inputArray initialization
+#pragma warning disable IDE0074 // Disable message about compound assignment for checking if null
+#pragma warning disable IDE0066 // Disable message about switch case expression
+// Nullable reference types
+#nullable enable
 
 
 namespace EditClipboardContents
@@ -443,7 +455,37 @@ namespace EditClipboardContents
                         return SignatureType.Generic;
             }
         }
-    }
+
+        private static List<FileSignature>? _cachedSignatures = null;
+
+        public List<FileSignature> LoadFileSignatures()
+        {
+            if (_cachedSignatures != null)
+            {
+                return _cachedSignatures;
+            }
+            else
+            {
+                _cachedSignatures = new List<FileSignature>();
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                string resourceName = "EditClipboardContents.FileSignatures.json";
+                StreamReader streamReader = new StreamReader(assembly.GetManifestResourceStream(resourceName));
+
+                string json = streamReader.ReadToEnd();
+                List<FileSignature>? fileSignatures = JsonSerializer.Deserialize<List<FileSignature>>(json);
+
+                if (fileSignatures == null)
+                {
+                    fileSignatures = new List<FileSignature>();
+                }
+
+                _cachedSignatures = fileSignatures;
+                return fileSignatures;
+            }
+        }
+
+
+    } // -------------------------------------------------------- End of FileSignatureParser class --------------------------------------------------------
 
     public partial class MainForm : Form
     {
@@ -486,8 +528,8 @@ namespace EditClipboardContents
             File.WriteAllText("ParsedSignatures.json", json);
 
             //// Test loading and deserializing the file signatures
-            //string jsonFromFile = File.ReadAllText("ParsedSignatures.json");
-            //List<FileSignature>? fileSignaturesFromJson = JsonSerializer.Deserialize<List<FileSignature>>(jsonFromFile);
+            string jsonFromFile = File.ReadAllText("ParsedSignatures.json");
+            List<FileSignature>? fileSignaturesFromJson = JsonSerializer.Deserialize<List<FileSignature>>(jsonFromFile);
 
             //if (fileSignaturesFromJson == null)
             //{

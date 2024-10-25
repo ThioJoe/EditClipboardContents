@@ -1,0 +1,5005 @@
+﻿[
+  {
+    "Extensions": [],
+    "Description": "Script or data to be passed to the program following the shebang (#!)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "23 21"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "cwk"
+    ],
+    "Description": "Claris Works word processing doc",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "02 00 5a 57 52 54 00 00 00 00 00 00 00 00 00 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "wk1"
+    ],
+    "Description": "Lotus 1-2-3 spreadsheet (v1) file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 00 02 00 06 04 06 00 08 00 00 00 00 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "wk3"
+    ],
+    "Description": "Lotus 1-2-3 spreadsheet (v3) file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 00 1A 00 00 10 04 00 00 00 00 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "wk4",
+      "wk5"
+    ],
+    "Description": "Lotus 1-2-3 spreadsheet (v4, v5) file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 00 1A 00 02 10 04 00 00 00 00 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "123"
+    ],
+    "Description": "Lotus 1-2-3 spreadsheet (v9) file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 00 1A 00 05 10 04"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Amiga Hunk executable file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 00 03 F3"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "qxd"
+    ],
+    "Description": "Quark Express document",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 00 49 49 58 50 52"
+      },
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 00 4D 4D 58 50 52"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "psafe3"
+    ],
+    "Description": "Password Gorilla Password Database",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "50 57 53 33"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pcap"
+    ],
+    "Description": "Libpcap File Format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "D4 C3 B2 A1"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pcap"
+    ],
+    "Description": "Libpcap File Format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "A1 B2 C3 D4"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pcap"
+    ],
+    "Description": "Libpcap File Format (nanosecond-resolution)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 4,
+        "SignatureValue": "4D 3C B2 A1"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pcap"
+    ],
+    "Description": "Libpcap File Format (nanosecond-resolution)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 2,
+        "SignatureValue": "A1 B2 3C 4D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pcapng"
+    ],
+    "Description": "PCAP Next Generation Dump File Format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "0A 0D 0D 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "rpm"
+    ],
+    "Description": "RedHat Package Manager (RPM) package",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "ED AB EE DB"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "sqlitedb",
+      "sqlite",
+      "db"
+    ],
+    "Description": "SQLite Database",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "53 51 4C 69 74 65 20 66 6F 72 6D 61 74 20 33 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "bin"
+    ],
+    "Description": "Amazon Kindle Update Package",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "53 50 30 31"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "wad"
+    ],
+    "Description": "internal WAD (main resource file of Doom)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "49 57 41 44"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "DBA"
+    ],
+    "Description": "Palm Desktop Calendar Archive",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "BE BA FE CA"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "DBA"
+    ],
+    "Description": "Palm Desktop To Do Archive",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 01 42 44"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "TDA"
+    ],
+    "Description": "Palm Desktop Calendar Archive",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 01 44 54"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "TDF$"
+    ],
+    "Description": "Telegram Desktop File",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "54 44 46 24"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "TDEF"
+    ],
+    "Description": "Telegram Desktop Encrypted File",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "54 44 45 46"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Palm Desktop Data File (Access format)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 01 00 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ico"
+    ],
+    "Description": "Computer icon encoded in ICO file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 00 01 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "icns"
+    ],
+    "Description": "Apple Icon Image format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "69 63 6e 73"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "3gp",
+      "3g2"
+    ],
+    "Description": "3rd Generation Partnership Project 3GPP and 3GPP2 multimedia files",
+    "_Offsets": [
+      "4"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "66 74 79 70 33 67"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "heic"
+    ],
+    "Description": "High Efficiency Image Container (HEIC)",
+    "_Offsets": [
+      "4"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "66 74 79 70 68 65 69 63"
+      },
+      {
+        "SignatureType": 0,
+        "SignatureValue": "66 74 79 70 6d"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "z",
+      "tar.z"
+    ],
+    "Description": "compressed file (often tar zip) using Lempel-Ziv-Welch algorithm",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "1F 9D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "z",
+      "tar.z"
+    ],
+    "Description": "Compressed file (often tar zip) using LZH algorithm",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "1F A0"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "lzh"
+    ],
+    "Description": "Lempel Ziv Huffman archive file Method 0 (No compression)",
+    "_Offsets": [
+      "2"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2D 68 6C 30 2D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "lzh"
+    ],
+    "Description": "Lempel Ziv Huffman archive file Method 5 (8\u0026nbsp;KiB sliding window)",
+    "_Offsets": [
+      "2"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2D 68 6C 35 2D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "bac"
+    ],
+    "Description": "AmiBack Amiga Backup data file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "42 41 43 4B 4D 49 4B 45 44 49 53 4B"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "idx"
+    ],
+    "Description": "AmiBack Amiga Backup index file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "49 4E 44 58"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "plist"
+    ],
+    "Description": "Binary Property List file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "62 70 6C 69 73 74"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "bz2"
+    ],
+    "Description": "Compressed file using Bzip2 algorithm",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "42 5A 68"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "gif"
+    ],
+    "Description": "Image file encoded in the Graphics Interchange Format (GIF)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "47 49 46 38 37 61"
+      },
+      {
+        "SignatureType": 0,
+        "SignatureValue": "47 49 46 38 39 61"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "tif",
+      "tiff"
+    ],
+    "Description": "Tagged Image File Format (TIFF)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 4,
+        "SignatureValue": "49 49 2A 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "tif",
+      "tiff"
+    ],
+    "Description": "Tagged Image File Format (TIFF)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 2,
+        "SignatureValue": "4D 4D 00 2A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "tif",
+      "tiff"
+    ],
+    "Description": "BigTIFF",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 4,
+        "SignatureValue": "49 49 2B 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "tif",
+      "tiff"
+    ],
+    "Description": "BigTIFF",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 2,
+        "SignatureValue": "4D 4D 00 2B"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "cr2"
+    ],
+    "Description": "Canon RAW Format Version 2; Canon\u0027s RAW format is based on TIFF.",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "49 49 2A 00 10 00 00 00 43 52"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "cin"
+    ],
+    "Description": "Kodak Cineon image",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "80 2A 5F D7"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Compressed file using Rob Northen Compression (version 1 and 2) algorithm",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "52 4E 43 01"
+      },
+      {
+        "SignatureType": 0,
+        "SignatureValue": "52 4E 43 02"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "nui",
+      "nup"
+    ],
+    "Description": "nuru ASCII/ANSI image and palette files",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4E 55 52 55 49 4D 47"
+      },
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4E 55 52 55 50 41 4C"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "dpx"
+    ],
+    "Description": "SMPTE DPX image",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "53 44 50 58"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "dpx"
+    ],
+    "Description": "SMPTE DPX image",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "58 50 44 53"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "exr"
+    ],
+    "Description": "OpenEXR image",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "76 2F 31 01"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "bpg"
+    ],
+    "Description": "Better Portable Graphics format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "42 50 47 FB"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "jpg",
+      "jpeg"
+    ],
+    "Description": "JPEG raw or in the JFIF or Exif file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FF D8 FF DB"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "jpg",
+      "jpeg"
+    ],
+    "Description": "JPEG raw or in the JFIF or Exif file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FF D8 FF E0 00 10 4A 46 49 46 00 01"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "jpg",
+      "jpeg"
+    ],
+    "Description": "JPEG raw or in the JFIF or Exif file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FF D8 FF EE"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "jpg",
+      "jpeg"
+    ],
+    "Description": "JPEG raw or in the JFIF or Exif file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "FF D8 FF E1 ?? ?? 45 78 69 66 00 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "jpg"
+    ],
+    "Description": "JPEG raw or in the JFIF or Exif file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FF D8 FF E0"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "jp2",
+      "j2k",
+      "jpf",
+      "jpm",
+      "jpg2",
+      "j2c",
+      "jpc",
+      "jpx",
+      "mj2"
+    ],
+    "Description": "JPEG 2000 format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 00 00 0C 6A 50 20 20 0D 0A 87 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "jp2",
+      "j2k",
+      "jpf",
+      "jpm",
+      "jpg2",
+      "j2c",
+      "jpc",
+      "jpx",
+      "mj2"
+    ],
+    "Description": "JPEG 2000 format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FF 4F FF 51"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "qoi"
+    ],
+    "Description": "QOI - The \u201CQuite OK Image Format\u201D",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "71 6f 69 66"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ilbm",
+      "lbm",
+      "ibm",
+      "iff"
+    ],
+    "Description": "IFF Interleaved Bitmap Image",
+    "_Offsets": [
+      "0",
+      "any"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "46 4F 52 4D ?? ?? ?? ?? 49 4C 42 4D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "8svx",
+      "8sv",
+      "svx",
+      "snd",
+      "iff"
+    ],
+    "Description": "IFF 8-Bit Sampled Voice",
+    "_Offsets": [
+      "0",
+      "any"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "46 4F 52 4D ?? ?? ?? ?? 38 53 56 58"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "acbm",
+      "iff"
+    ],
+    "Description": "Amiga Contiguous Bitmap",
+    "_Offsets": [
+      "0",
+      "any"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "46 4F 52 4D ?? ?? ?? ?? 41 43 42 4D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "anbm",
+      "iff"
+    ],
+    "Description": "IFF Animated Bitmap",
+    "_Offsets": [
+      "0",
+      "any"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "46 4F 52 4D ?? ?? ?? ?? 41 4E 42 4D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "anim",
+      "iff"
+    ],
+    "Description": "IFF CEL Animation",
+    "_Offsets": [
+      "0",
+      "any"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "46 4F 52 4D ?? ?? ?? ?? 41 4E 49 4D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "faxx",
+      "fax",
+      "iff"
+    ],
+    "Description": "IFF Facsimile Image",
+    "_Offsets": [
+      "0",
+      "any"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "46 4F 52 4D ?? ?? ?? ?? 46 41 58 58"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ftxt",
+      "iff"
+    ],
+    "Description": "IFF Formatted Text",
+    "_Offsets": [
+      "0",
+      "any"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "46 4F 52 4D ?? ?? ?? ?? 46 54 58 54"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "smus",
+      "smu",
+      "mus",
+      "iff"
+    ],
+    "Description": "IFF Simple Musical Score",
+    "_Offsets": [
+      "0",
+      "any"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "46 4F 52 4D ?? ?? ?? ?? 53 4D 55 53"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "cmus",
+      "mus",
+      "iff"
+    ],
+    "Description": "IFF Musical Score",
+    "_Offsets": [
+      "0",
+      "any"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "46 4F 52 4D ?? ?? ?? ?? 43 4D 55 53"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "yuvn",
+      "yuv",
+      "iff"
+    ],
+    "Description": "IFF YUV Image",
+    "_Offsets": [
+      "0",
+      "any"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "46 4F 52 4D ?? ?? ?? ?? 59 55 56 4E"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "iff"
+    ],
+    "Description": "Amiga Fantavision Movie",
+    "_Offsets": [
+      "0",
+      "any"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "46 4F 52 4D ?? ?? ?? ?? 46 41 4E 54"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "aiff",
+      "aif",
+      "aifc",
+      "snd",
+      "iff"
+    ],
+    "Description": "Audio Interchange File Format",
+    "_Offsets": [
+      "0",
+      "any"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "46 4F 52 4D ?? ?? ?? ?? 41 49 46 46"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "lz"
+    ],
+    "Description": "lzip compressed file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4C 5A 49 50"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "cpio"
+    ],
+    "Description": "cpio archive file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "30 37 30 37 30 37"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "exe",
+      "dll",
+      "mui",
+      "sys",
+      "scr",
+      "cpl",
+      "ocx",
+      "ax",
+      "iec",
+      "ime",
+      "rs",
+      "tsp",
+      "fon",
+      "efi"
+    ],
+    "Description": "DOS MZ executable and its descendants (including NE and PE)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4D 5A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ssp"
+    ],
+    "Description": "SmartSniff Packets File",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "53 4D 53 4E 46 32 30 30"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "exe"
+    ],
+    "Description": "DOS ZM executable and its descendants (rare)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "5A 4D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "zip",
+      "aar",
+      "apk",
+      "docx",
+      "epub",
+      "ipa",
+      "jar",
+      "kmz",
+      "maff",
+      "msix",
+      "odp",
+      "ods",
+      "odt",
+      "pk3",
+      "pk4",
+      "pptx",
+      "usdz",
+      "vsdx",
+      "xlsx",
+      "xpi"
+    ],
+    "Description": "zip file format and formats based on it, such as EPUB, JAR, ODF, OOXML",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "50 4B 03 04"
+      },
+      {
+        "SignatureType": 6,
+        "SignatureValue": "50 4B 05 06"
+      },
+      {
+        "SignatureType": 7,
+        "SignatureValue": "50 4B 07 08"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "rar"
+    ],
+    "Description": "Roshal ARchive compressed archive v1.50 onwards",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "52 61 72 21 1A 07 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "rar"
+    ],
+    "Description": "Roshal ARchive compressed archive v5.00 onwards",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "52 61 72 21 1A 07 01 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "none, .axf, .bin, .elf, .o, .out, .prx, .puff, .ko, .mod, .so"
+    ],
+    "Description": "Executable and Linkable Format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "7F 45 4C 46"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "png"
+    ],
+    "Description": "Image encoded in the Portable Network Graphics format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "89 50 4E 47 0D 0A 1A 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "hdf4",
+      "h4"
+    ],
+    "Description": "Data stored in version 4 of the Hierarchical Data Format.",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "0E 03 13 01"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "hdf5",
+      "h5"
+    ],
+    "Description": "Data stored in version 5 of the Hierarchical Data Format.",
+    "_Offsets": [
+      "0, 512, 1024, 2048, ..."
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "89 48 44 46 0D 0A 1A 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "com"
+    ],
+    "Description": "CP/M 3 and higher with overlays",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "C9"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "class"
+    ],
+    "Description": "Java class file, Mach-O Fat Binary",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "CA FE BA BE"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "txt"
+    ],
+    "Description": "UTF-8 byte order mark, commonly seen in text files.",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "EF BB BF"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "txt"
+    ],
+    "Description": "UTF-16LE byte order mark, commonly seen in text files.",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FF FE"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "txt"
+    ],
+    "Description": "UTF-16BE byte order mark, commonly seen in text files.",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FE FF"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "txt"
+    ],
+    "Description": "UTF-32LE byte order mark for text",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FF FE 00 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "txt"
+    ],
+    "Description": "UTF-32BE byte order mark for text",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 00 FE FF"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "UTF-7 byte order mark for text",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2B 2F 76 38"
+      },
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2B 2F 76 39"
+      },
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2B 2F 76 2B"
+      },
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2B 2F 76 2F"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "txt"
+    ],
+    "Description": "SCSU byte order mark for text",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "0E FE FF"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "UTF-EBCDIC byte order mark for text",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "DD 73 66 73"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Mach-O binary (32-bit)",
+    "_Offsets": [
+      "0",
+      "0x1000"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FE ED FA CE"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Mach-O binary (64-bit)",
+    "_Offsets": [
+      "0",
+      "0x1000"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FE ED FA CF"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "JKS Javakey Store",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FE ED FE ED"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Mach-O binary (reverse byte ordering scheme, 32-bit)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "CE FA ED FE"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Mach-O binary (reverse byte ordering scheme, 64-bit)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "CF FA ED FE"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ps"
+    ],
+    "Description": "PostScript document",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "25 21 50 53"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "epsepsf"
+    ],
+    "Description": "Encapsulated PostScript file version 3.0",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "25 21 50 53 2D 41 64 6F 62 65 2D 33 2E 30 20 45 50 53 46 2D 33 2E 30"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "epsepsf"
+    ],
+    "Description": "Encapsulated PostScript file version 3.1",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "25 21 50 53 2D 41 64 6F 62 65 2D 33 2E 31 20 45 50 53 46 2D 33 2E 30"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "chm"
+    ],
+    "Description": "MS Windows HtmlHelp Data",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "49 54 53 46 03 00 00 00 60 00 00 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "hlp"
+    ],
+    "Description": "Windows 3.x/95/98 Help file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "3F 5F"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pdf"
+    ],
+    "Description": "PDF document",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "25 50 44 46 2D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "asf",
+      "wma",
+      "wmv"
+    ],
+    "Description": "Advanced Systems Format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "30 26 B2 75 8E 66 CF 11 A6 D9 00 AA 00 62 CE 6C"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "System Deployment Image, a disk image format used by Microsoft",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "24 53 44 49 30 30 30 31"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ogg",
+      "oga",
+      "ogv"
+    ],
+    "Description": "Ogg, an open source media container format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4F 67 67 53"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "psd"
+    ],
+    "Description": "Photoshop Document file, Adobe Photoshop\u0027s native file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "38 42 50 53"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "wav"
+    ],
+    "Description": "Waveform Audio File Format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "52 49 46 46 ?? ?? ?? ?? 57 41 56 45"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "avi"
+    ],
+    "Description": "Audio Video Interleave video format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "52 49 46 46 ?? ?? ?? ?? 41 56 49 20"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "mp3"
+    ],
+    "Description": "MPEG-1 Layer 3 file without an ID3 tag or with an ID3v1 tag (which is appended at the end of the file)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FF FB"
+      },
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FF F3"
+      },
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FF F2"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "mp3"
+    ],
+    "Description": "MP3 file with an ID3v2 container",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "49 44 33"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "bmp",
+      "dib"
+    ],
+    "Description": "BMP file, a bitmap format used mostly in the Windows world",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "42 4D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "iso"
+    ],
+    "Description": "ISO9660 CD/DVD image file",
+    "_Offsets": [
+      "0x8001",
+      "0x8801",
+      "0x9001"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "43 44 30 30 31"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "cdi"
+    ],
+    "Description": "CD-i CD image file",
+    "_Offsets": [
+      "0x5EAC9"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "43 44 30 30 31"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "mgw"
+    ],
+    "Description": "Nintendo Game \u0026 Watch image file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "6D 61 69 6E 2E 62 73"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "nes"
+    ],
+    "Description": "Nintendo Entertainment System image file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4E 45 53"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "d64"
+    ],
+    "Description": "Commodore 64 1541 disk image (D64 format)",
+    "_Offsets": [
+      "0x165A4"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "A0 32 41 A0 A0 A0"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "g64"
+    ],
+    "Description": "Commodore 64 1541 disk image (G64 format)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "47 53 52 2D 31 35 34 31"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "d81"
+    ],
+    "Description": "Commodore 64 1581 disk image (D81 format)",
+    "_Offsets": [
+      "0x61819"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "A0 33 44 A0 A0"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "t64"
+    ],
+    "Description": "Commodore 64 tape image",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "43 36 34 20 74 61 70 65 20 69 6D 61 67 65 20 66 69 6C 65"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "crt"
+    ],
+    "Description": "Commodore 64 cartridge image",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "43 36 34 20 43 41 52 54 52 49 44 47 45 20 20 20"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "fits"
+    ],
+    "Description": "Flexible Image Transport System (FITS)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "53 49 4D 50 4C 45 20 20 3D 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 54"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "flac"
+    ],
+    "Description": "Free Lossless Audio Codec",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "66 4C 61 43"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "mid",
+      "midi"
+    ],
+    "Description": "MIDI sound file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4D 54 68 64"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "doc",
+      "xls",
+      "ppt",
+      "msi",
+      "msg"
+    ],
+    "Description": "Compound File Binary Format, a container format defined by Microsoft COM. It can contain the equivalent of files and directories. It is used by Windows Installer and for documents in older versions of Microsoft Office. It can be used by other programs as well that rely on the COM and OLE API\u0027s.",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "D0 CF 11 E0 A1 B1 1A E1"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "dex"
+    ],
+    "Description": "Dalvik Executable",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "64 65 78 0A 30 33 35 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "vmdk"
+    ],
+    "Description": "VMDK files",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4B 44 4D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "vmdk"
+    ],
+    "Description": "VMware 4 Virtual Disk description file (split disk)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "23 20 44 69 73 6B 20 44 65 73 63 72 69 70 74 6F"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "crx"
+    ],
+    "Description": "Google Chrome extension or packaged app",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "43 72 32 34"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "fh8"
+    ],
+    "Description": "FreeHand 8 document",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "41 47 44 33"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "cwk"
+    ],
+    "Description": "AppleWorks 5 document",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "05 07 00 00 42 4F 42 4F 05 07 00 00 00 00 00 00 00 00 00 00 00 01"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "cwk"
+    ],
+    "Description": "AppleWorks 6 document",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "06 07 E1 00 42 4F 42 4F 06 07 E1 00 00 00 00 00 00 00 00 00 00 01"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "toast"
+    ],
+    "Description": "Roxio Toast disc image file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "45 52 02 00 00 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "toast"
+    ],
+    "Description": "Roxio Toast disc image file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "8B 45 52 02 00 00 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "dmg"
+    ],
+    "Description": "Apple Disk Image file",
+    "_Offsets": [
+      "end\u2013512"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "6B 6F 6C 79"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "xar"
+    ],
+    "Description": "eXtensible ARchive format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "78 61 72 21"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "dat"
+    ],
+    "Description": "Windows Files And Settings Transfer Repository See also USMT 3.0 (Win XP) and USMT 4.0 (Win 7) User Guides",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "50 4D 4F 43 43 4D 4F 43"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "nes"
+    ],
+    "Description": "Nintendo Entertainment System ROM file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4E 45 53 1A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "tar"
+    ],
+    "Description": "tar archive",
+    "_Offsets": [
+      "257"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "75 73 74 61 72 00 30 30"
+      },
+      {
+        "SignatureType": 0,
+        "SignatureValue": "75 73 74 61 72 20 20 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "oar"
+    ],
+    "Description": "OAR file archive format, where ?? is the format version.",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "4F 41 52 ??"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "tox"
+    ],
+    "Description": "Open source portable voxel file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "74 6F 78 33"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "MLV"
+    ],
+    "Description": "Magic Lantern Video file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4D 4C 56 49"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Windows Update Binary Delta Compression file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "44 43 4D 01 50 41 33 30"
+      },
+      {
+        "SignatureType": 0,
+        "SignatureValue": "50 41 33 30"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "7z"
+    ],
+    "Description": "7-Zip File Format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "37 7A BC AF 27 1C"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "gz",
+      "tar.gz"
+    ],
+    "Description": "GZIP compressed file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "1F 8B"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "xz",
+      "tar.xz"
+    ],
+    "Description": "XZ compression utility;  using LZMA2 compression",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FD 37 7A 58 5A 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "lz4"
+    ],
+    "Description": "LZ4 Frame Format; Remark: LZ4 block format does not offer any magic bytes.",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "04 22 4D 18"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "cab"
+    ],
+    "Description": "Microsoft Cabinet file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4D 53 43 46"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "??_"
+    ],
+    "Description": "Microsoft compressed file in Quantum format, used prior to Windows XP. File can be decompressed using Extract.exe or Expand.exe distributed with earlier versions of Windows. After compression, the last character of the original filename extension is replaced with an underscore, e.g. \u2018Setup.exe\u2019 becomes \u2018Setup.ex_\u2019.",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "53 5A 44 44 88 F0 27 33"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "flif"
+    ],
+    "Description": "Free Lossless Image Format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "46 4C 49 46"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "mkv",
+      "mka",
+      "mks",
+      "mk3d",
+      "webm"
+    ],
+    "Description": "Matroska media container, including WebM",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "1A 45 DF A3"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "stg"
+    ],
+    "Description": "\u0022SEAN : Session Analysis\u0022 Training file. Also used in compatible software \u0022Rpw : Rowperfect for Windows\u0022 and \u0022RP3W : ROWPERFECT3 for Windows\u0022.",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4D 49 4C 20"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "djvu",
+      "djv"
+    ],
+    "Description": "DjVu document; The following byte is either 55 (U) for single-page or 4D (M) for multi-page documents.",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "41 54 26 54 46 4F 52 4D ?? ?? ?? ?? 44 4A 56"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "der"
+    ],
+    "Description": "DER encoded X.509 certificate",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "30 82"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "crtpem"
+    ],
+    "Description": "PEM encoded X.509 certificate",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2D 2D 2D 2D 2D 42 45 47 49 4E 20 43 45 52 54 49 46 49 43 41 54 45 2D 2D 2D 2D 2D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "csrpem"
+    ],
+    "Description": "PEM encoded X.509 Certificate Signing Request",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2D 2D 2D 2D 2D 42 45 47 49 4E 20 43 45 52 54 49 46 49 43 41 54 45 20 52 45 51 55 45 53 54 2D 2D 2D 2D 2D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "keypem"
+    ],
+    "Description": "PEM encoded X.509 PKCS#8 private key",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2D 2D 2D 2D 2D 42 45 47 49 4E 20 50 52 49 56 41 54 45 20 4B 45 59 2D 2D 2D 2D 2D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "keypem"
+    ],
+    "Description": "PEM encoded X.509 PKCS#1 DSA private key",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2D 2D 2D 2D 2D 42 45 47 49 4E 20 44 53 41 20 50 52 49 56 41 54 45 20 4B 45 59 2D 2D 2D 2D 2D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "keypem"
+    ],
+    "Description": "PEM encoded X.509 PKCS#1 RSA private key",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2D 2D 2D 2D 2D 42 45 47 49 4E 20 52 45 41 20 50 52 49 56 41 54 45 20 4B 45 59 2D 2D 2D 2D 2D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ppk"
+    ],
+    "Description": "PuTTY private key file version 2",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "50 75 54 54 59 2D 55 73 65 72 2D 4B 65 79 2D 46 69 6C 65 2D 32 3A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ppk"
+    ],
+    "Description": "PuTTY private key file version 3",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "50 75 54 54 59 2D 55 73 65 72 2D 4B 65 79 2D 46 69 6C 65 2D 33 3A"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "OpenSSH private key file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2D 2D 2D 2D 2D 42 45 47 49 4E 20 4F 50 45 4E 53 53 48 20 50 52 49 56 41 54 45 20 4B 45 59 2D 2D 2D 2D 2D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pub"
+    ],
+    "Description": "OpenSSH public key file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2D 2D 2D 2D 2D 42 45 47 49 4E 20 53 53 48 32 20 4B 45 59 2D 2D 2D 2D 2D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "dcm"
+    ],
+    "Description": "DICOM Medical File Format",
+    "_Offsets": [
+      "128"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "44 49 43 4D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "woff"
+    ],
+    "Description": "WOFF File Format 1.0",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "77 4F 46 46"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "woff2"
+    ],
+    "Description": "WOFF File Format 2.0",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "77 4F 46 32"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "xml (UTF-8 or other 8-bit encodings)"
+    ],
+    "Description": "eXtensible Markup Language",
+    "_Offsets": [
+      "0",
+      "after BOM"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "3C 3F 78 6D 6C 20"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "xml (UTF-16LE)"
+    ],
+    "Description": "eXtensible Markup Language",
+    "_Offsets": [
+      "0",
+      "after BOM"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "3C 00 3F 00 78 00 6D 00 6C 00 20"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "xml (UTF-16BE)"
+    ],
+    "Description": "eXtensible Markup Language",
+    "_Offsets": [
+      "0",
+      "after BOM"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 3C 00 3F 00 78 00 6D 00 6C 00 20"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "xml (UTF-32LE)"
+    ],
+    "Description": "eXtensible Markup Language",
+    "_Offsets": [
+      "0",
+      "after BOM"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "3C 00 00 00 3F 00 00 00 78 00 00 00 6D 00 00 00 6C 00 00 00 20 00 00 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "xml (UTF-32BE)"
+    ],
+    "Description": "eXtensible Markup Language",
+    "_Offsets": [
+      "0",
+      "after BOM"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 00 00 3C 00 00 00 3F 00 00 00 78 00 00 00 6D 00 00 00 6C 00 00 00 20"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "xml (EBCDIC)"
+    ],
+    "Description": "eXtensible Markup Language",
+    "_Offsets": [
+      "0",
+      "after BOM"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4C 6F A7 94 93 40"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "wasm"
+    ],
+    "Description": "WebAssembly binary format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 61 73 6D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "lep"
+    ],
+    "Description": "Lepton compressed JPEG image",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "CF 84 01"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "swf"
+    ],
+    "Description": "Adobe Flash .swf",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "43 57 53"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "swf"
+    ],
+    "Description": "Adobe Flash .swf",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "46 57 53"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "deb"
+    ],
+    "Description": "linux deb file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "21 3C 61 72 63 68 3E 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "webp"
+    ],
+    "Description": "Google WebP image file, where ?? ?? ?? ?? is the file size. More information on [https://developers.google.com/speed/webp/docs/riff_container#webp_file_header WebP File Header]",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "52 49 46 46 ?? ?? ?? ?? 57 45 42 50"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "U-Boot / uImage. Das U-Boot Universal Boot Loader.",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "27 05 19 56"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "rtf"
+    ],
+    "Description": "Rich Text Format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "7B 5C 72 74 66 31"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Microsoft Tape Format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "54 41 50 45"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ts",
+      "tsv",
+      "tsa",
+      "mpg",
+      "mpeg"
+    ],
+    "Description": "MPEG Transport Stream (MPEG-2 Part 1)",
+    "_Offsets": [
+      "0",
+      "0xBC",
+      "0x178",
+      "...",
+      "(every 188th byte)"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "47"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "m2p",
+      "vob",
+      "mpg",
+      "mpeg"
+    ],
+    "Description": "MPEG Program Stream (MPEG-1 Part 1 (essentially identical) and MPEG-2 Part 1)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 00 01 BA"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "mpg",
+      "mpeg"
+    ],
+    "Description": "MPEG-1 video and MPEG-2 video (MPEG-1 Part 2 and MPEG-2 Part 2)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 00 01 B3"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "mp4"
+    ],
+    "Description": "ISO Base Media file (MPEG-4)",
+    "_Offsets": [
+      "4"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "66 74 79 70 69 73 6F 6D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "mp4"
+    ],
+    "Description": "MPEG-4 video file",
+    "_Offsets": [
+      "4"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "66 74 79 70 4D 53 4E 56"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "zlib"
+    ],
+    "Description": "No Compression (no preset dictionary)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "78 01"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "zlib"
+    ],
+    "Description": "Best speed (no preset dictionary)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "78 5E"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "zlib"
+    ],
+    "Description": "Default Compression (no preset dictionary)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "78 9C"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "zlib"
+    ],
+    "Description": "Best Compression (no preset dictionary)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "78 DA"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "zlib"
+    ],
+    "Description": "No Compression (with preset dictionary)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "78 20"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "zlib"
+    ],
+    "Description": "Best speed (with preset dictionary)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "78 7D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "zlib"
+    ],
+    "Description": "Default Compression (with preset dictionary)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "78 BB"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "zlib"
+    ],
+    "Description": "Best Compression (with preset dictionary)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "78 F9"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "lzfse"
+    ],
+    "Description": "LZFSE - Lempel-Ziv style data compression algorithm using Finite State Entropy coding. OSS by Apple.",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "62 76 78 32"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "orc"
+    ],
+    "Description": "Apache ORC (Optimized Row Columnar) file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4F 52 43"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "avro"
+    ],
+    "Description": "Apache Avro binary file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4F 62 6A 01"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "rc"
+    ],
+    "Description": "RCFile columnar file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "53 45 51 36"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "rbxl"
+    ],
+    "Description": "Roblox place file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "3C 72 6F 62 6C 6F 78 21"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "p25",
+      "obt"
+    ],
+    "Description": "PhotoCap Object Templates",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "65 87 78 56"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pcv"
+    ],
+    "Description": "PhotoCap Vector",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "55 55 AA AA"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pbt",
+      "pdt",
+      "pea",
+      "peb",
+      "pet",
+      "pgt",
+      "pict",
+      "pjt",
+      "pkt",
+      "pmt"
+    ],
+    "Description": "PhotoCap Template",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "78 56 34"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Apache Parquet columnar file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "50 41 52 31"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ez2"
+    ],
+    "Description": "Emulator Emaxsynth samples",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "45 4D 58 32"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ez3",
+      "iso"
+    ],
+    "Description": "Emulator III synth samples",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "45 4D 55 33"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "luac"
+    ],
+    "Description": "Lua bytecode",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "1B 4C 75 61"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "alias"
+    ],
+    "Description": "macOS file Alias (Symbolic link)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "62 6F 6F 6B 00 00 00 00 6D 61 72 6B 00 00 00 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "Identifier"
+    ],
+    "Description": "Microsoft Zone Identifier for URL Security Zones",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "5B 5A 6F 6E 65 54 72 61 6E 73 66 65 72 5D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "eml"
+    ],
+    "Description": "Email Message var5",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "52 65 63 65 69 76 65 64 3A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "tde"
+    ],
+    "Description": "Tableau Datasource",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "20 02 01 62 A0 1E AB 07 02 00 00 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "kdb"
+    ],
+    "Description": "KDB file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "37 48 03 02 00 00 00 00 58 35 30 39 4B 45 59"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pgp"
+    ],
+    "Description": "PGP file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "85 ?? ?? 03"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "zst"
+    ],
+    "Description": "Zstandard compress",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "28 B5 2F FD"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "rs"
+    ],
+    "Description": "QuickZip rs compressed archive",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "52 53 56 4B 44 41 54 41"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "sml"
+    ],
+    "Description": "Smile file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "3A 29 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Preferred Executable Format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4A 6F 79 21"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "srt"
+    ],
+    "Description": "SubRip File",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "31 0A 30 30"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "vpk"
+    ],
+    "Description": "VPK file, used to store game data for some Source Engine games",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "34 12 AA 55"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ace"
+    ],
+    "Description": "ACE (compressed file format)",
+    "_Offsets": [
+      "7"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2A 2A 41 43 45 2A 2A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "arj"
+    ],
+    "Description": "ARJ",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "60 EA"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "cab"
+    ],
+    "Description": "InstallShield CAB Archive File",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "49 53 63 28"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "??_"
+    ],
+    "Description": "Windows 3.1x Compressed File",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4B 57 41 4A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "??_"
+    ],
+    "Description": "Windows 9x Compressed File",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "53 5A 44 44"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "zoo"
+    ],
+    "Description": "Zoo (file format)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "5A 4F 4F"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pbm"
+    ],
+    "Description": "Portable bitmap ASCII",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "50 31 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pbm"
+    ],
+    "Description": "Portable bitmap binary",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "50 34 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pgm"
+    ],
+    "Description": "Portable Gray Map ASCII",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "50 32 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pgm"
+    ],
+    "Description": "Portable Gray Map binary",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "50 35 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ppm"
+    ],
+    "Description": "Portable Pixmap ASCII",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "50 33 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ppm"
+    ],
+    "Description": "Portable Pixmap binary",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "50 36 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "wmf"
+    ],
+    "Description": "Windows Metafile",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "D7 CD C6 9A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "xcf"
+    ],
+    "Description": "XCF (file format)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "67 69 6D 70 20 78 63 66"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "xpm"
+    ],
+    "Description": "X PixMap",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2F 2A 20 58 50 4D 20 2A 2F"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "aff"
+    ],
+    "Description": "Advanced Forensics Format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "41 46 46"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "Ex01"
+    ],
+    "Description": "EnCase EWF version 2 format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "45 56 46 32"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "e01"
+    ],
+    "Description": "EnCase EWF version 1 format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "45 56 46"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "qcow"
+    ],
+    "Description": "qcow file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "51 46 49"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ani"
+    ],
+    "Description": "Animated cursor",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "52 49 46 46 ?? ?? ?? ?? 41 43 4F 4E"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "cda"
+    ],
+    "Description": ".cda file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "52 49 46 46 ?? ?? ?? ?? 43 44 44 41"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "qcp"
+    ],
+    "Description": "Qualcomm PureVoice file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "52 49 46 46 ?? ?? ?? ?? 51 4C 43 4D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "dcr"
+    ],
+    "Description": "Adobe Shockwave",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 3,
+        "SignatureValue": "52 49 46 58 ?? ?? ?? ?? 46 47 44 4D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "dcr"
+    ],
+    "Description": "Adobe Shockwave",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 5,
+        "SignatureValue": "58 46 49 52 ?? ?? ?? ?? 4D 44 47 46"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "dir",
+      "dxr",
+      "drx"
+    ],
+    "Description": "Macromedia Director file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 3,
+        "SignatureValue": "52 49 46 58 ?? ?? ?? ?? 4D 56 39 33"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "dir",
+      "dxr",
+      "drx"
+    ],
+    "Description": "Macromedia Director file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 5,
+        "SignatureValue": "58 46 49 52 ?? ?? ?? ?? 33 39 56 4D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "flv"
+    ],
+    "Description": "Flash Video file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "46 4C 56"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "vdi"
+    ],
+    "Description": "VirtualBox Virtual Hard Disk file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "3C 3C 3C 20 4F 72 61 63 6C 65 20 56 4D 20 56 69 72 74 75 61 6C 42 6F 78 20 44 69 73 6B 20 49 6D 61 67 65 20 3E 3E 3E"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "vhd"
+    ],
+    "Description": "Windows Virtual PC Virtual Hard Disk file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "63 6F 6E 65 63 74 69 78"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "vhdx"
+    ],
+    "Description": "Windows Virtual PC Windows 8 Virtual Hard Disk file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "76 68 64 78 66 69 6C 65"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "isz"
+    ],
+    "Description": "Compressed ISO image",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "49 73 5A 21"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "daa"
+    ],
+    "Description": "Direct Access Archive PowerISO",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "44 41 41"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "evt"
+    ],
+    "Description": "Windows Event Viewer file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4C 66 4C 65"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "evtx"
+    ],
+    "Description": "Windows Event Viewer XML file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "45 6C 66 46 69 6C 65"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "sdb"
+    ],
+    "Description": "Windows customized database",
+    "_Offsets": [
+      "8"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "73 64 62 66"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "grp"
+    ],
+    "Description": "Windows 3.x Program Manager Program Group file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "50 4D 43 43"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "icm"
+    ],
+    "Description": "ICC profile",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4B 43 4D 53"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "dathiv"
+    ],
+    "Description": "Windows Registry file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "72 65 67 66"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pst"
+    ],
+    "Description": "Microsoft Outlook Personal Storage Table file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "21 42 44 4E"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "drc"
+    ],
+    "Description": "3D model compressed with Google Draco",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "44 52 41 43 4F"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "grib",
+      "grib2"
+    ],
+    "Description": "Gridded data (commonly weather observations or forecasts) in the WMO GRIB or GRIB2 format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "47 52 49 42"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "blend"
+    ],
+    "Description": "Blender File Format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "42 4C 45 4E 44 45 52"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "jxl"
+    ],
+    "Description": "Image encoded in the JPEG XL format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 00 00 0C 4A 58 4C 20 0D 0A 87 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "jxl"
+    ],
+    "Description": "Image encoded in the JPEG XL format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "FF 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ttf",
+      "tte",
+      "dfont"
+    ],
+    "Description": "TrueType font",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 01 00 00 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "otf"
+    ],
+    "Description": "OpenType font",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4F 54 54 4F"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Modulefile for Environment Modules",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "23 25 4D 6F 64 75 6C 65"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "wim",
+      "swm",
+      "esd"
+    ],
+    "Description": "Windows Imaging Format file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4D 53 57 49 4D 00 00 00 D0 00 00 00 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "slob"
+    ],
+    "Description": "Slob (sorted list of blobs) is a read-only, compressed data store with dictionary-like interface",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "21 2D 31 53 4C 4F 42 1F"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Serialized Java Data",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "AC ED"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "voc"
+    ],
+    "Description": "Creative Voice file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "43 72 65 61 74 69 76 65 20 56 6F 69 63 65 20 46 69 6C 65 1A 1A 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ausnd"
+    ],
+    "Description": "Au audio file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2E 73 6E 64"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "OpenGL Iris Perfomer .PFB (Performer Fast Binary)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "DB 0A CE 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "hazelrules"
+    ],
+    "Description": "Noodlesoft Hazel",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "48 5a 4c 52 00 00 00 18"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "flp"
+    ],
+    "Description": "FL Studio Project File",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "46 4C 68 64"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "flm"
+    ],
+    "Description": "FL Studio Mobile Project File",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "31 30 4C 46"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Vormetric Encryption DPM Version 2.1 Header",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "52 4b 4d 43 32 31 30"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "mny"
+    ],
+    "Description": "Microsoft Money file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 01 00 00 4D 53 49 53 41 4D 20 44 61 74 61 62 61 73 65"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "accdb"
+    ],
+    "Description": "Microsoft Access 2007 Database",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 01 00 00 53 74 61 6E 64 61 72 64 20 41 43 45 20 44 42"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "mdb"
+    ],
+    "Description": "Microsoft Access Database",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "00 01 00 00 53 74 61 6E 64 61 72 64 20 4A 65 74 20 44 42"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "drw"
+    ],
+    "Description": "Micrografx vector graphic file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "01 FF 02 04 03 02"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "dss"
+    ],
+    "Description": "Digital Speech Standard (Olympus, Grundig, \u0026 Phillips) v2",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "02 64 73 73"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "dss"
+    ],
+    "Description": "Digital Speech Standard (Olympus, Grundig, \u0026 Phillips) v3",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "03 64 73 73"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "adx"
+    ],
+    "Description": "Approach index file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "03 00 00 00 41 50 50 52"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "indd"
+    ],
+    "Description": "Adobe InDesign document",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "06 06 ED F5 D8 1D 46 E5 BD 31 EF E7 FE 74 B7 1D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "mxf"
+    ],
+    "Description": "Material Exchange Format file",
+    "_Offsets": [
+      "0-65535 (run-in)"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "06 0E 2B 34 02 05 01 01 0D 01 02 01 01 02"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "skf"
+    ],
+    "Description": "SkinCrafter skin file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "07 53 4B 46"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "dtd"
+    ],
+    "Description": "DesignTools 2D Design file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "07 64 74 32 64 64 74 64"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "wallet"
+    ],
+    "Description": "MultiBit Bitcoin wallet file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "0A 16 6F 72 67 2E 62 69 74 63 6F 69 6E 2E 70 72"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "doc"
+    ],
+    "Description": "DeskMate Document file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "0D 44 4F 43"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "nri"
+    ],
+    "Description": "Nero CD Compilation",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "0E 4E 65 72 6F 49 53 4F"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "wks"
+    ],
+    "Description": "DeskMate Worksheet",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "0E 57 4B 53"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "sib"
+    ],
+    "Description": "Sibelius Music - Score file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "0F 53 49 42 45 4C 49 55 53"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "dsp"
+    ],
+    "Description": "Microsoft Developer Studio project file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "23 20 4D 69 63 72 6F 73 6F 66 74 20 44 65 76 65 6C 6F 70 65 72 20 53 74 75 64 69 6F"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "amr"
+    ],
+    "Description": "Adaptive Multi-Rate ACELP (Algebraic Code Excited Linear Prediction) Codec, commonly audio format with GSM cell phones.",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "23 21 41 4D 52"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "sil"
+    ],
+    "Description": "Audio compression format developed by Skype",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "23 21 53 49 4C 4B 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "hdr"
+    ],
+    "Description": "Radiance High Dynamic Range image file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "23 3F 52 41 44 49 41 4E 43 45 0A"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "vbe"
+    ],
+    "Description": "VBScript Encoded script",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "23 40 7E 5E"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "cdb"
+    ],
+    "Description": "MikroTik WinBox Connection Database (Address Book)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "0D F0 1D C0"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "m3u",
+      "m3u8"
+    ],
+    "Description": "Multimedia playlist",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "23 45 58 54 4D 33 55"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "m"
+    ],
+    "Description": "M2 Archive, used by game developer M2",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "6D 64 66 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pak"
+    ],
+    "Description": "Capcom RE Engine game data archives",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4B 50 4B 41"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "arc"
+    ],
+    "Description": "Capcom MT Framework game data archives",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "41 52 43"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pl"
+    ],
+    "Description": "Interleaf PrinterLeaf / WorldView document format (now Broadvision QuickSilver)",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "D0 4F 50 53"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "nii"
+    ],
+    "Description": "Single file NIfTI format, used extensively in biomedical imaging.",
+    "_Offsets": [
+      "344"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "6E 2B 31 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "hdr"
+    ],
+    "Description": "Header file of a .hdr/.img pair in NIfTI format, used extensively in biomedical imaging.",
+    "_Offsets": [
+      "344"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "6E 69 31 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Report Builder file from [https://www.digital-metaphors.com/ Digital Metaphors]",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "52 41 46 36 34"
+      }
+    ]
+  },
+  {
+    "Extensions": [],
+    "Description": "Resource file [https://www.visionaire-studio.net/ Visionaire 3.x Engine]",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "56 49 53 33"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "hl7"
+    ],
+    "Description": "Health Level Seven (HL7) Standard for electronic data exchange [https://www.hl7.eu/HL7v2x/v25/std25/hl7.html]",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "4D 53 48 7C"
+      },
+      {
+        "SignatureType": 0,
+        "SignatureValue": "42 53 48 7C"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "pwrdata"
+    ],
+    "Description": "SAP [https://github.com/SAP/power-monitoring-tool-for-macos Power Monitor] (version 1.1.0 and higher) data file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "70 77 72 64 61 74 61"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "arc"
+    ],
+    "Description": "ARC archive file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "1a 08"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "asc"
+    ],
+    "Description": "Armored PGP public key",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2d 2d 2d 2d 2d 42 45 47 49 4e 20 50 47 50 20 50 55 42 4c 49 43 20 4b 45 49 20 42 4c 4f 43 4b 2d 2d 2d 2d 2d"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "cnt"
+    ],
+    "Description": "Windows 3.x - Windows 95 Help Contents",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "3a 42 61 73 65 20"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "vdr"
+    ],
+    "Description": "VirtualDub",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "52 49 46 46 ?? ?? ?? ?? 56 44 52 4d"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "trd"
+    ],
+    "Description": "TrID",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "52 59 46 46 ?? ?? ?? ?? 54 52 49 44"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "shw"
+    ],
+    "Description": "Corel SHOW! 4.0",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "52 49 46 46 ?? ?? ?? ?? 73 68 77 34"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "shw"
+    ],
+    "Description": "Corel SHOW! 5.0",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "52 49 46 46 ?? ?? ?? ?? 73 68 77 35"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "shr"
+    ],
+    "Description": "Corel SHOW! 5.0 player",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "52 49 46 46 ?? ?? ?? ?? 73 68 72 35"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "shb"
+    ],
+    "Description": "Corel SHOW! 5.0 background",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "52 49 46 46 ?? ?? ?? ?? 73 68 62 35"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "mmm"
+    ],
+    "Description": "MacroMind Multimedia Movie or Microsoft Multimedia Movie",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 1,
+        "SignatureValue": "52 49 46 46 ?? ?? ?? ?? 52 4d 4d 50"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "e57"
+    ],
+    "Description": "ASTM E57 3D file format",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "41 53 54 4d 2d 45 35 37"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "sys"
+    ],
+    "Description": "Crowdstrike Channel File",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "aa aa aa aa"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "ucas"
+    ],
+    "Description": "Unreal Engine Compressed Asset Storage file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "8C 0A 00"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "utoc"
+    ],
+    "Description": "Unreal Engine Table of Contents file",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "2D 3D 3D 2D 2D 3D 3D 2D 2D 3D 3D 2D 2D 3D 3D 2D"
+      }
+    ]
+  },
+  {
+    "Extensions": [
+      "P00 (P01, P02,...)"
+    ],
+    "Description": "Commodore 64 binary file (source:\r\n[https://www.salto.at/Power64/Documentation/Power64-Leggimi/AE-Formati_File.html#Section%20E.1 *.P00 format for Power64 emulator])",
+    "_Offsets": [
+      "0"
+    ],
+    "Signatures": [
+      {
+        "SignatureType": 0,
+        "SignatureValue": "43 36 34 46 69 6C 65 00"
+      }
+    ]
+  }
+]
