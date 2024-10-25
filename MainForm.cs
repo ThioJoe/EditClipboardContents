@@ -105,8 +105,9 @@ namespace EditClipboardContents
             editedClipboardItems.ListChanged += EditedClipboardItems_ListChanged;
 
             #if DEBUG
-            buttonTest.Visible = true;
+            buttonMakeSignatureJson.Visible = true;
             menuEdit_RefreshDataTable.Visible = true;
+            buttonTest.Visible = true;
             #endif
 
             // Set init only GUI state variables

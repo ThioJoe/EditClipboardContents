@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
+
 
 namespace EditClipboardContents
 {
@@ -438,6 +442,65 @@ namespace EditClipboardContents
                     else
                         return SignatureType.Generic;
             }
+        }
+    }
+
+    public partial class MainForm : Form
+    {
+        private void buttonMakeSignatureJson_Click(object sender, EventArgs e)
+        {
+            Console.WriteLine(e.ToString());
+
+            FileSignatureParser parser = new FileSignatureParser();
+            //string tableData = File.ReadAllText("Signatures.txt");
+            string tableData = File.ReadAllText("Signatures.txt");
+
+            var fileSignatures = parser.ParseFileSignatures(tableData);
+
+            StringBuilder PrintSignatures(List<FileSignature> fileSignatures)
+            {
+                StringBuilder output = new StringBuilder();
+                int index = 0;
+                foreach (var fs in fileSignatures)
+                {
+                    output.AppendLine($"{new string('-', 20)} {index} {new string('-', 20)}");
+                    output.AppendLine("Description: " + fs.Description);
+                    output.AppendLine("Extensions: " + string.Join(", ", fs.Extensions));
+                    output.AppendLine("Offsets: " + string.Join(", ", fs._Offsets));
+                    output.AppendLine("Signatures:");
+                    foreach (var sig in fs.Signatures)
+                    {
+                        output.AppendLine($"  Type: {sig.SignatureType}, Value: {sig.SignatureValue}");
+                    }
+                    //output.AppendLine(new string('-', 40));
+                    index++;
+                }
+                return output;
+            }
+
+            StringBuilder output1 = PrintSignatures(fileSignatures);
+            File.WriteAllText("ParsedSignatures.txt", output1.ToString());
+
+            // Serialize the file signatures
+            string json = JsonSerializer.Serialize(fileSignatures, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText("ParsedSignatures.json", json);
+
+            //// Test loading and deserializing the file signatures
+            //string jsonFromFile = File.ReadAllText("ParsedSignatures.json");
+            //List<FileSignature>? fileSignaturesFromJson = JsonSerializer.Deserialize<List<FileSignature>>(jsonFromFile);
+
+            //if (fileSignaturesFromJson == null)
+            //{
+            //    throw new InvalidOperationException("Deserialization returned null.");
+            //}
+
+            //string json2 = JsonSerializer.Serialize(fileSignaturesFromJson, new JsonSerializerOptions { WriteIndented = true });
+            //File.WriteAllText("Re-Serialized-ParsedSignatures.json", json2);
+
+            //StringBuilder output2 = PrintSignatures(fileSignaturesFromJson);
+            //File.WriteAllText("Re-Serialized-ParsedSignatures.txt", output2.ToString());
+
+            Console.WriteLine("");
         }
     }
 }

@@ -1387,43 +1387,8 @@ namespace EditClipboardContents
         // Using for testing random things during development via a button
         private void buttonTest_Click(object sender, EventArgs e)
         {
-            Console.WriteLine(e.ToString());
 
-            FileSignatureParser parser = new FileSignatureParser();
-            //string tableData = File.ReadAllText("Signatures.txt");
-            string tableData = File.ReadAllText("SignaturesTest.txt");
-
-            var fileSignatures = parser.ParseFileSignatures(tableData);
-
-            StringBuilder output = new StringBuilder();
-
-            int index = 0;
-            foreach (var fs in fileSignatures)
-            {
-                output.AppendLine($"{new string('-', 20)} {index} {new string('-', 20)}");
-                output.AppendLine("Description: " + fs.Description);
-                output.AppendLine("Extensions: " + string.Join(", ", fs.Extensions));
-                output.AppendLine("Offsets: " + string.Join(", ", fs._Offsets));
-                output.AppendLine("Signatures:");
-                foreach (var sig in fs.Signatures)
-                {
-                    output.AppendLine($"  Type: {sig.SignatureType}, Value: {sig.SignatureValue}");
-                }
-                //output.AppendLine(new string('-', 40));
-                index++;
-            }
-
-            File.WriteAllText("ParsedSignatures.txt", output.ToString());
-
-            // Serialize the file signatures
-            string json = JsonSerializer.Serialize(fileSignatures, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText("ParsedSignatures.json", json);
-
-            Console.WriteLine("");
-            Console.WriteLine("");
         }
-
-        
 
 
     } // ----------------------------- End of MainForm partial class -----------------------------

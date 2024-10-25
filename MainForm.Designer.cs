@@ -69,12 +69,12 @@
             this.menuHelp_DebugInfo = new System.Windows.Forms.MenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonRefresh = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonTimedRefresh = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonFetchManualFormat = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonAddFormat = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonSaveEdited = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonExportSelected = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButtonTimedRefresh = new System.Windows.Forms.ToolStripButton();
             this.richTextBoxContents = new System.Windows.Forms.RichTextBox();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
             this.labelLoading = new System.Windows.Forms.Label();
@@ -96,6 +96,7 @@
             this.labelPendingChanges = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.labelVersion = new System.Windows.Forms.Label();
+            this.buttonMakeSignatureJson = new System.Windows.Forms.Button();
             this.buttonTest = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewClipboard)).BeginInit();
             this.contextMenuStrip_dataGridView.SuspendLayout();
@@ -505,6 +506,17 @@
             this.toolStripButtonRefresh.Text = "Reload From Clipboard";
             this.toolStripButtonRefresh.Click += new System.EventHandler(this.toolStripButtonRefresh_Click);
             // 
+            // toolStripButtonTimedRefresh
+            // 
+            this.toolStripButtonTimedRefresh.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonTimedRefresh.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonTimedRefresh.Image")));
+            this.toolStripButtonTimedRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonTimedRefresh.Name = "toolStripButtonTimedRefresh";
+            this.toolStripButtonTimedRefresh.Size = new System.Drawing.Size(46, 46);
+            this.toolStripButtonTimedRefresh.Text = "Reload from clipboard after a specified number of seconds";
+            this.toolStripButtonTimedRefresh.ToolTipText = "Reload from clipboard after a specified number of seconds";
+            this.toolStripButtonTimedRefresh.Click += new System.EventHandler(this.toolStripButtonTimedRefresh_Click);
+            // 
             // toolStripButtonFetchManualFormat
             // 
             this.toolStripButtonFetchManualFormat.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
@@ -556,17 +568,6 @@
             this.toolStripButtonExportSelected.Size = new System.Drawing.Size(46, 46);
             this.toolStripButtonExportSelected.Text = "Export selected item data as file";
             this.toolStripButtonExportSelected.Click += new System.EventHandler(this.toolStripButtonExportSelected_Click);
-            // 
-            // toolStripButtonTimedRefresh
-            // 
-            this.toolStripButtonTimedRefresh.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButtonTimedRefresh.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonTimedRefresh.Image")));
-            this.toolStripButtonTimedRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonTimedRefresh.Name = "toolStripButtonTimedRefresh";
-            this.toolStripButtonTimedRefresh.Size = new System.Drawing.Size(46, 46);
-            this.toolStripButtonTimedRefresh.Text = "Reload from clipboard after a specified number of seconds";
-            this.toolStripButtonTimedRefresh.ToolTipText = "Reload from clipboard after a specified number of seconds";
-            this.toolStripButtonTimedRefresh.Click += new System.EventHandler(this.toolStripButtonTimedRefresh_Click);
             // 
             // richTextBoxContents
             // 
@@ -723,7 +724,7 @@
             // 
             this.checkBoxPlainTextEditing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxPlainTextEditing.AutoSize = true;
-            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(-28, 397);
+            this.checkBoxPlainTextEditing.Location = new System.Drawing.Point(-46, 397);
             this.checkBoxPlainTextEditing.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.checkBoxPlainTextEditing.Name = "checkBoxPlainTextEditing";
             this.checkBoxPlainTextEditing.Size = new System.Drawing.Size(148, 24);
@@ -746,7 +747,7 @@
             "UTF-32 BE",
             "Codepage 1252",
             "System Default"});
-            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(238, 391);
+            this.dropdownHexToTextEncoding.Location = new System.Drawing.Point(220, 391);
             this.dropdownHexToTextEncoding.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dropdownHexToTextEncoding.Name = "dropdownHexToTextEncoding";
             this.dropdownHexToTextEncoding.Size = new System.Drawing.Size(217, 28);
@@ -757,7 +758,7 @@
             // 
             this.labelHexToPlaintextEncoding.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelHexToPlaintextEncoding.AutoSize = true;
-            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(151, 397);
+            this.labelHexToPlaintextEncoding.Location = new System.Drawing.Point(133, 397);
             this.labelHexToPlaintextEncoding.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelHexToPlaintextEncoding.Name = "labelHexToPlaintextEncoding";
             this.labelHexToPlaintextEncoding.Size = new System.Drawing.Size(80, 20);
@@ -875,12 +876,23 @@
             this.labelVersion.TabIndex = 13;
             this.labelVersion.Text = "Version:";
             // 
+            // buttonMakeSignatureJson
+            // 
+            this.buttonMakeSignatureJson.Location = new System.Drawing.Point(804, 13);
+            this.buttonMakeSignatureJson.Name = "buttonMakeSignatureJson";
+            this.buttonMakeSignatureJson.Size = new System.Drawing.Size(99, 31);
+            this.buttonMakeSignatureJson.TabIndex = 14;
+            this.buttonMakeSignatureJson.Text = "Make Sig";
+            this.buttonMakeSignatureJson.UseVisualStyleBackColor = true;
+            this.buttonMakeSignatureJson.Visible = false;
+            this.buttonMakeSignatureJson.Click += new System.EventHandler(this.buttonMakeSignatureJson_Click);
+            // 
             // buttonTest
             // 
-            this.buttonTest.Location = new System.Drawing.Point(817, 12);
+            this.buttonTest.Location = new System.Drawing.Point(456, 12);
             this.buttonTest.Name = "buttonTest";
-            this.buttonTest.Size = new System.Drawing.Size(82, 31);
-            this.buttonTest.TabIndex = 14;
+            this.buttonTest.Size = new System.Drawing.Size(96, 29);
+            this.buttonTest.TabIndex = 15;
             this.buttonTest.Text = "Test";
             this.buttonTest.UseVisualStyleBackColor = true;
             this.buttonTest.Visible = false;
@@ -892,6 +904,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1573, 968);
             this.Controls.Add(this.buttonTest);
+            this.Controls.Add(this.buttonMakeSignatureJson);
             this.Controls.Add(this.labelVersion);
             this.Controls.Add(this.splitContainerMain);
             this.Controls.Add(this.labelPendingChanges);
@@ -987,7 +1000,7 @@
         private System.Windows.Forms.Button buttonIncreaseIndexNumber;
         private System.Windows.Forms.MenuItem menuItem2;
         private System.Windows.Forms.MenuItem menuEdit_RefreshDataTable;
-        private System.Windows.Forms.Button buttonTest;
+        private System.Windows.Forms.Button buttonMakeSignatureJson;
         private System.Windows.Forms.Button buttonResetOrder;
         private System.Windows.Forms.MenuItem menuItem6;
         private System.Windows.Forms.MenuItem menuItem5;
@@ -1002,5 +1015,6 @@
         private System.Windows.Forms.ToolStripMenuItem contextMenu_copyColumnNoHeader;
         private System.Windows.Forms.ToolStripButton toolStripButtonTimedRefresh;
         private System.Windows.Forms.MenuItem menuHelp_DebugInfo;
+        private System.Windows.Forms.Button buttonTest;
     }
 }
