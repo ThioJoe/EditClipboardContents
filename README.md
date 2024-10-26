@@ -12,7 +12,7 @@
 
 ## Screenshot:
 <p align="center">
-<img alt="Main application Window Screenshot" width=750 src="https://github.com/user-attachments/assets/0dafd3ef-15be-4576-b764-b8c3a722a967">
+<img alt="Main application Window Screenshot" width=750 src="https://github.com/user-attachments/assets/0b7bb7b7-d9db-4be0-818f-f9bf2a61264f">
 </p>
 
 ## 🔍 Main Features
