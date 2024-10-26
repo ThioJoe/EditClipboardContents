@@ -105,12 +105,15 @@ namespace EditClipboardContents
             InitializeComponent();
             editedClipboardItems.ListChanged += EditedClipboardItems_ListChanged;
 
+            // ----------------- Debugging mode stuff -----------------
             #if DEBUG
             labelTestCount.Visible = true;
-            buttonMakeSignatureJson.Visible = true;
             menuEdit_RefreshDataTable.Visible = true;
-            buttonTest.Visible = true;
+            labelTestMiscellaneous.Visible = true;
+            menuItemDebug.Visible = true;
             #endif
+            // -------------------------------------------------------
+
 
             // Set init only GUI state variables
             hexTextBoxTopBuffer = richTextBoxContents.Height - richTextBox_HexPlaintext.Height;
@@ -137,13 +140,19 @@ namespace EditClipboardContents
             // Other initializations
             labelVersion.Text = $"Version {versionString}";
             previousWindowHeight = this.Height;
-            
+            labelTestMiscellaneous.Text = $"Toolstrip size: {toolStrip1.Height.ToString()} Scaling: {ScaleFactor()}";
+
         }
 
         public int CompensateDPI(int originalValue)
         {
             float scaleFactor = this.DeviceDpi / 96f; // 96 is the default DPI
             return (int)(originalValue * scaleFactor);
+        }
+
+        public decimal ScaleFactor()
+        {
+            return this.DeviceDpi / 96m;
         }
 
         public static int CompensateDPIStatic(int originalValue)
@@ -3175,14 +3184,6 @@ namespace EditClipboardContents
             //UpdateEditControlsVisibility_AndPendingGridAppearance();
         }
 
-        private void TestCountAdd()
-        {
-            #if DEBUG
-            string currentTest = "Calls to grid update: ";
-            testCounter++;
-            labelTestCount.Text = currentTest + testCounter.ToString();
-            #endif
-        }
 
     } // ---------------------------------------------------------------------------------------------------
     // --------------------------------------- End of MainForm Class ---------------------------------------

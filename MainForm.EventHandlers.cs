@@ -1381,15 +1381,27 @@ namespace EditClipboardContents
         }
 
 
-        // --------------------------------------------- TEST BUTTON --------------------------------------------------------
+        // --------------------------------------------- DEBUG CONTROLS AND BUTTONS --------------------------------------------------------
 
         // Using for testing random things during development via a button
-        private void buttonTest_Click(object sender, EventArgs e)
+        private void menuDebug_TestButton_Click(object sender, EventArgs e)
         {
 
+        }
 
 
+        private void menuDebug_TooltipDimensionsMode_Click(object sender, EventArgs e)
+        {
+            menuDebug_TooltipDimensionsMode.Checked = !menuDebug_TooltipDimensionsMode.Checked;
 
+            if (menuDebug_TooltipDimensionsMode.Checked)
+            {
+                DebugUtils.SetDebugTooltips(this);
+            }
+            else
+            {
+                DebugUtils.RestoreOriginalTooltips(this);
+            }
         }
 
 

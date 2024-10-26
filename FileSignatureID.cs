@@ -636,7 +636,7 @@ namespace EditClipboardContents
 
     public partial class MainForm : Form
     {
-        private void buttonMakeSignatureJson_Click(object sender, EventArgs e)
+        private void menuDebug_MakeSig_Click(object sender, EventArgs e)
         {
             Console.WriteLine(e.ToString());
             string fileName = "Signatures.txt";
