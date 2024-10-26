@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 
 // Disable IDE warnings that showed up after going from C# 7 to C# 9
 #pragma warning disable IDE0079 // Disable message about unnecessary suppression
@@ -21,12 +22,18 @@ using System.Windows.Forms;
 
 namespace EditClipboardContents
 {
+    [DataContract]
     public class FileSignature
     {
+        [DataMember]
         public List<string> Extensions { get; set; }
+        [DataMember]
         public string? DefaultExtension { get; set; }
+        [DataMember]
         public string? Description { get; set; }
+        [DataMember]
         public List<string> Offsets { get; set; }
+        [DataMember]
         public List<Signature> Signatures { get; set; }
 
         public FileSignature()
@@ -39,21 +46,33 @@ namespace EditClipboardContents
         }
     }
 
+    [DataContract]
     public class Signature
     {
+        [DataMember]
         public SignatureType SignatureType { get; set; }
+        [DataMember]
         public string? SignatureValue { get; set; }
     }
 
+    [DataContract]
     public enum SignatureType
     {
+        [EnumMember]
         Generic,
+        [EnumMember]
         GenericWildCard,
+        [EnumMember]
         BigEndian,
+        [EnumMember]
         BigEndianWildcard,
+        [EnumMember]
         LittleEndian,
+        [EnumMember]
         LittleEndianWildcard,
+        [EnumMember]
         zipEmpty,
+        [EnumMember]
         zipSpanned,
     }
 
@@ -499,31 +518,29 @@ namespace EditClipboardContents
                 _cachedSignatures = new List<FileSignature>();
                 Assembly assembly = Assembly.GetExecutingAssembly();
                 string resourceName = "EditClipboardContents.FileSignatures.json";
-                StreamReader streamReader = new StreamReader(assembly.GetManifestResourceStream(resourceName));
-
-                string json = streamReader.ReadToEnd();
-                List<FileSignature>? fileSignatures = JsonSerializer.Deserialize<List<FileSignature>>(json);
-
-                if (fileSignatures == null)
+                using (Stream stream = assembly.GetManifestResourceStream(resourceName))
                 {
-                    fileSignatures = new List<FileSignature>();
-                }
-                else
-                {
-                    fileSignatures = AddManualProperties(fileSignatures);
-                }
-
-                // Remove any periods from the beginning of the extensions in case i forgot to remove them
-                foreach (var fs in fileSignatures)
-                {
-                    for (int i = 0; i < fs.Extensions.Count; i++)
+                    var serializer = new DataContractJsonSerializer(typeof(List<FileSignature>));
+                    var fileSignatures = (List<FileSignature>)serializer.ReadObject(stream);
+                    if (fileSignatures == null)
                     {
-                        fs.Extensions[i] = fs.Extensions[i].TrimStart('.');
+                        fileSignatures = new List<FileSignature>();
                     }
+                    else
+                    {
+                        fileSignatures = AddManualProperties(fileSignatures);
+                    }
+                    // Remove any periods from the beginning of the extensions in case i forgot to remove them
+                    foreach (var fs in fileSignatures)
+                    {
+                        for (int i = 0; i < fs.Extensions.Count; i++)
+                        {
+                            fs.Extensions[i] = fs.Extensions[i].TrimStart('.');
+                        }
+                    }
+                    _cachedSignatures = fileSignatures;
+                    return fileSignatures;
                 }
-
-                _cachedSignatures = fileSignatures;
-                return fileSignatures;
             }
         }
 
@@ -662,8 +679,13 @@ namespace EditClipboardContents
             File.WriteAllText("ParsedSignatures.txt", output1.ToString());
 
             // Serialize the file signatures
-            string json = JsonSerializer.Serialize(fileSignatures, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText("FileSignatures.json", json);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                var serializer = new DataContractJsonSerializer(typeof(List<FileSignature>));
+                serializer.WriteObject(ms, fileSignatures);
+                string json = Encoding.UTF8.GetString(ms.ToArray());
+                File.WriteAllText("FileSignatures.json", json);
+            }
 
             //// Test loading and deserializing the file signatures
             //string jsonFromFile = File.ReadAllText("ParsedSignatures.json");

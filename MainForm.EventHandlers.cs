@@ -14,7 +14,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using System.Windows.Forms;
-using System.Text.Json;
 using static EditClipboardContents.ClipboardFormats;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
