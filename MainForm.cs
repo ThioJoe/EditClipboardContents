@@ -108,6 +108,7 @@ namespace EditClipboardContents
 
         public MainForm()
         {
+            isResizing = true; // Set to true so our window resize logic in MainForm_Resize event doesn't trigger until the form is fully initialized
             InitializeComponent();
             editedClipboardItems.ListChanged += EditedClipboardItems_ListChanged;
 
@@ -120,9 +121,6 @@ namespace EditClipboardContents
             #endif
             // -------------------------------------------------------
 
-            // Manually set certain button locations because they don't get placed properly on different scalings
-            ManuallyPositionCertainControls();
-
             // Set init only GUI state variables
             hexTextBoxTopBuffer = richTextBoxContents.Height - richTextBox_HexPlaintext.Height;
             defaultLoadingLabelText = labelLoading.Text;
@@ -133,12 +131,15 @@ namespace EditClipboardContents
             defaultToolstripSize = toolStrip1.Size;
             splitContainerInnerTextBoxesDefaultLocation = splitterContainer_InnerTextBoxes.Location;
 
+            // Manually set certain button locations because they don't get placed properly on different scalings
+            splitterContainer_InnerTextBoxes.SplitterDistance = CompensateDPI(splitterContainer_InnerTextBoxes.SplitterDistance);
+            //ManuallyPositionCertainControls();
+
             // Early initializations
             recentRightClickedCell = new RecentRightClickedCell(rowIndex: -1, columnIndex: -1);
             ScaleToolstripButtons();
 
             InitializeDataGridView();
-            UpdateToolLocations();
 
             // Initial tool settings
             dropdownContentsViewMode.SelectedIndexChanged -= dropdownContentsViewMode_SelectedIndexChanged;
@@ -156,6 +157,9 @@ namespace EditClipboardContents
             previousWindowHeight = this.Height;
             labelTestMiscellaneous.Text = $"Toolstrip size: {toolStrip1.Height.ToString()} | Scaling: {ScaleFactor()} | ImageScale: {toolStrip1.ImageScalingSize}";
 
+            isResizing = false; // Set to false so our window resize logic in MainForm_Resize event can trigger
+
+            UpdateToolLocations();
         }
 
         public int CompensateDPI(int originalValue)
@@ -574,8 +578,11 @@ namespace EditClipboardContents
         private void UpdateToolLocations(WhichPanelResize splitAnchor = WhichPanelResize.None)
         {
             splitContainerMain.SplitterMoved -= new SplitterEventHandler(splitContainerMain_SplitterMoved);
-            //splitContainerMain.SuspendLayout();
-            //splitterContainer_InnerTextBoxes.SuspendLayout();
+            splitContainerMain.SuspendLayout();
+            splitterContainer_InnerTextBoxes.SuspendLayout();
+            richTextBoxContents.SuspendLayout();
+            richTextBox_HexPlaintext.SuspendLayout();
+            dataGridViewClipboard.SuspendLayout();
 
             int titlebarAccomodate = CompensateDPI(SystemInformation.MenuHeight);
             int bottomBuffer = CompensateDPI(30); // Adjust this value to set the desired buffer size
@@ -639,8 +646,11 @@ namespace EditClipboardContents
 
             previousSplitterDistance = splitContainerMain.SplitterDistance;
 
-            //splitContainerMain.ResumeLayout();
-            //splitterContainer_InnerTextBoxes.ResumeLayout();
+            splitContainerMain.ResumeLayout();
+            splitterContainer_InnerTextBoxes.ResumeLayout();
+            richTextBoxContents.ResumeLayout();
+            richTextBox_HexPlaintext.ResumeLayout();
+            dataGridViewClipboard.ResumeLayout();
             splitContainerMain.SplitterMoved += new SplitterEventHandler(splitContainerMain_SplitterMoved);
         }
 
