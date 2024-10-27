@@ -120,6 +120,8 @@ namespace EditClipboardContents
             #endif
             // -------------------------------------------------------
 
+            // Manually set certain button locations because they don't get placed properly on different scalings
+            ManuallyPositionCertainControls();
 
             // Set init only GUI state variables
             hexTextBoxTopBuffer = richTextBoxContents.Height - richTextBox_HexPlaintext.Height;
@@ -170,6 +172,31 @@ namespace EditClipboardContents
         public decimal ScaleFactor()
         {
             return this.DeviceDpi / 96m;
+        }
+
+        private void ManuallyPositionCertainControls()
+        {
+            this.SuspendLayout(); // Might not be necessary but just in case
+
+            Point RelativeToRight(int rightOffset) => new Point(this.Width - rightOffset, 2);
+
+            void SetAnchors(List<Control> controls, AnchorStyles anchor)
+            {
+                foreach (Control control in controls)
+                    control.Anchor = anchor;
+            }
+            List<Control> buttonsToAdjust = new List<Control> { buttonApplyEdit, buttonResetEdit, buttonDecreaseIndexNumber, buttonIncreaseIndexNumber, buttonResetOrder };
+
+            
+            SetAnchors(buttonsToAdjust, AnchorStyles.None); // Set anchor points to none temporarily or else it seems to mess up the position of buttonResetOrder especially
+            buttonApplyEdit.Location = RelativeToRight(CompensateDPI(298));
+            buttonResetEdit.Location = RelativeToRight(CompensateDPI(218));
+            buttonDecreaseIndexNumber.Location = RelativeToRight(CompensateDPI(118));
+            buttonIncreaseIndexNumber.Location = RelativeToRight(CompensateDPI(87));
+            buttonResetOrder.Location = RelativeToRight(CompensateDPI(55));
+            SetAnchors(buttonsToAdjust, AnchorStyles.Top | AnchorStyles.Right);
+
+            this.ResumeLayout();
         }
 
         private void ScaleToolstripButtons()
@@ -3356,6 +3383,22 @@ namespace EditClipboardContents
         // The Type that was in the original struct that will be replaced in the object version, such as a handle being replaced with its data
         public Type? OriginalRedirectedType { get; set; }
         public IClipboardFormat? ObjectToReplaceWith { get; set; }
+    }
+
+    // Creating a custom SplitContainer to address possible bug with nested controls not working with anchoring
+    // See: https://stackoverflow.com/a/2507864/17312053  and  https://web.archive.org/web/20140818095718/http://support.microsoft.com/kb/953934
+    public class MySplitContainer : SplitContainer
+    {
+        protected override void OnSizeChanged(EventArgs e)
+        {
+            if (this.Handle != null)
+            {
+                this.BeginInvoke((MethodInvoker)delegate
+                {
+                    base.OnSizeChanged(e);
+                });
+            }
+        }
     }
 
     // Extension method to get the description attribute of an enum value

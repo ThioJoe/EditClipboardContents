@@ -68,6 +68,7 @@ namespace EditClipboardContents
         {
             if (isResizing) return; // Prevent re-entry
             isResizing = true;
+            splitContainerMain.SuspendLayout();
 
             try
             {
@@ -98,6 +99,7 @@ namespace EditClipboardContents
             finally
             {
                 isResizing = false;
+                splitContainerMain.ResumeLayout();
             }
         }
 

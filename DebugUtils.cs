@@ -27,7 +27,7 @@ namespace EditClipboardContents
                     {
                         tooltipOriginalState[control] = toolTip.GetToolTip(control);
                     }
-                    string dimensions = $"Button: {control.Width}x{control.Height}";
+                    string dimensions = $"Button: {control.Width}x{control.Height}\nLocation: {control.Location.X} , {control.Location.Y}";
 
                     // If there's an image on the button or control, also show the image dimensions
                     if (control is Button button && button.Image != null)
