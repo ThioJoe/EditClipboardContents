@@ -1386,7 +1386,13 @@ namespace EditClipboardContents
         // Using for testing random things during development via a button
         private void menuDebug_TestButton_Click(object sender, EventArgs e)
         {
-
+            string input = "";
+            Utils.ShowInputDialog(owner: this, ref input, instructions: "Enter new toolstrip height:");
+            if (int.TryParse(input, out int newHeight))
+            {
+                toolStrip1.Height = newHeight;
+                ScaleToolstripButtons();
+            }
         }
 
 

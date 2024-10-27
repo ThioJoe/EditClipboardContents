@@ -27,7 +27,13 @@ namespace EditClipboardContents
                     {
                         tooltipOriginalState[control] = toolTip.GetToolTip(control);
                     }
-                    string dimensions = $"{control.Width}x{control.Height}";
+                    string dimensions = $"Button: {control.Width}x{control.Height}";
+
+                    // If there's an image on the button or control, also show the image dimensions
+                    if (control is Button button && button.Image != null)
+                    {
+                        dimensions += $"\nImage: {button.Image.Width}x{button.Image.Height}";
+                    }
                     toolTip.SetToolTip(control, dimensions);
                 }
 
@@ -73,7 +79,18 @@ namespace EditClipboardContents
                     {
                         tooltipOriginalState[toolStrip] = item.ToolTipText;
                     }
-                    item.ToolTipText = $"{item.Width}x{item.Height}";
+                    item.ToolTipText = $"Button: {item.Width}x{item.Height}";
+
+                    if (item is ToolStripButton toolStripButton && toolStripButton.Image != null)
+                    {
+                        item.ToolTipText += $"\nImage: {toolStripButton.Image.Width}x{toolStripButton.Image.Height}";
+                        item.ToolTipText += $"\nPhysical Dimensions: {toolStripButton.Image.PhysicalDimension.Width}x{toolStripButton.Image.PhysicalDimension.Height}";
+                        // Show all other image properties
+                        foreach (var property in toolStripButton.Image.PropertyItems)
+                        {
+                            item.ToolTipText += $"\n{property.Id}: {property.Type} - {property.Len}";
+                        }
+                    }
                 }
                 else
                 {
@@ -84,8 +101,6 @@ namespace EditClipboardContents
                 }
             }
         }
-
-        
     }
 
     public partial class MainForm : Form

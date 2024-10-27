@@ -37,6 +37,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.IO.Compression;
 using System.CodeDom.Compiler;
+using System.Drawing.Drawing2D;
 
 
 namespace EditClipboardContents
@@ -60,6 +61,11 @@ namespace EditClipboardContents
         public int hexTextBoxTopBuffer { get; init; }
         public string defaultLoadingLabelText { get; init; }
         public Color defaultCellForeColor { get; init; }
+        public Size defaultToolstripButtonSize { get; init; }
+        public Size defaultToolstripButtonImageSize { get; init; }
+        public Point splitContainerMainDefaultPosition { get; init; }
+        public Size defaultToolstripSize { get; init; }
+        public Point splitContainerInnerTextBoxesDefaultLocation { get; init; }
 
         // Store recent GUI states
         public int previousWindowHeight = 0;
@@ -119,9 +125,15 @@ namespace EditClipboardContents
             hexTextBoxTopBuffer = richTextBoxContents.Height - richTextBox_HexPlaintext.Height;
             defaultLoadingLabelText = labelLoading.Text;
             defaultCellForeColor = dataGridViewClipboard.DefaultCellStyle.ForeColor;
+            defaultToolstripButtonSize = toolStripButtonRefresh.Size;
+            defaultToolstripButtonImageSize = toolStripButtonRefresh.Image.Size;
+            splitContainerMainDefaultPosition = splitContainerMain.Location;
+            defaultToolstripSize = toolStrip1.Size;
+            splitContainerInnerTextBoxesDefaultLocation = splitterContainer_InnerTextBoxes.Location;
 
             // Early initializations
             recentRightClickedCell = new RecentRightClickedCell(rowIndex: -1, columnIndex: -1);
+            ScaleToolstripButtons();
 
             InitializeDataGridView();
             UpdateToolLocations();
@@ -140,7 +152,7 @@ namespace EditClipboardContents
             // Other initializations
             labelVersion.Text = $"Version {versionString}";
             previousWindowHeight = this.Height;
-            labelTestMiscellaneous.Text = $"Toolstrip size: {toolStrip1.Height.ToString()} Scaling: {ScaleFactor()}";
+            labelTestMiscellaneous.Text = $"Toolstrip size: {toolStrip1.Height.ToString()} | Scaling: {ScaleFactor()} | ImageScale: {toolStrip1.ImageScalingSize}";
 
         }
 
@@ -149,11 +161,71 @@ namespace EditClipboardContents
             float scaleFactor = this.DeviceDpi / 96f; // 96 is the default DPI
             return (int)(originalValue * scaleFactor);
         }
+        public int inverseDPI(int originalValue)
+        {
+            float scaleFactor = this.DeviceDpi / 96f; // 96 is the default DPI
+            return (int)(originalValue / scaleFactor);
+        }
 
         public decimal ScaleFactor()
         {
             return this.DeviceDpi / 96m;
         }
+
+        private void ScaleToolstripButtons()
+        {
+            // Calculate the relation between default splitter panel location and default toolstrip height
+            Point containerLocation = splitContainerMainDefaultPosition;
+            int splitContainerPositionOffset = splitContainerMainDefaultPosition.Y - defaultToolstripSize.Height;
+
+            int toolstripHeight = toolStrip1.Height;
+
+            Size buttonSize = defaultToolstripButtonSize;
+            //buttonSize.Width = toolstripHeight;
+            //buttonSize.Height = toolstripHeight;
+            buttonSize.Width = CompensateDPI(32);
+            buttonSize.Height = CompensateDPI(32);
+
+            toolStrip1.SuspendLayout();
+            toolStrip1.AutoSize = true;
+
+            foreach (ToolStripItem item in toolStrip1.Items)
+            {
+                if (item is ToolStripButton button)
+                {
+                    button.Size = buttonSize;
+                    button.ImageScaling = ToolStripItemImageScaling.SizeToFit;
+                    
+                    //button.Image = ResizeSquareImage(button.Image, buttonSize);
+                    button.AutoSize = true;
+                }
+            }
+
+            toolStrip1.ImageScalingSize = buttonSize;
+            toolStrip1.ResumeLayout();
+
+            // Finally set the location of the data grid view to be below the toolstrip. All other tools will adjust accordingly
+            toolStrip1.Height = buttonSize.Height + CompensateDPI(3);
+            splitContainerMain.Location = new Point(containerLocation.X, toolStrip1.Height + splitContainerPositionOffset);
+
+            labelTestMiscellaneous.Text = $"Toolstrip size: {toolStrip1.Height.ToString()} | Scaling: {ScaleFactor()} | ImageScale: {toolStrip1.ImageScalingSize}";
+        }
+
+        private Image ResizeSquareImage(Image original, Size newSize)
+        {
+            //Test
+            //newSize.Width = newSize.Width / 2;
+            //newSize.Height = newSize.Height / 2;
+
+            var bitmap = new Bitmap(newSize.Width, newSize.Height);
+            using (var graphics = Graphics.FromImage(bitmap))
+            {
+                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphics.DrawImage(original, 0, 0, newSize.Width, newSize.Height);
+            }
+            return bitmap;
+        }
+
 
         public static int CompensateDPIStatic(int originalValue)
         {
@@ -183,8 +255,6 @@ namespace EditClipboardContents
 
         private void InitializeDataGridView()
         {
-
-
             dataGridViewClipboard.AutoGenerateColumns = false;
             dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.OriginalIndex), Name = colName.Index, HeaderText = "" });
             dataGridViewClipboard.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = nameof(ClipboardItem.UniqueID), Name = colName.UniqueID, HeaderText = "", Visible = false });
@@ -477,9 +547,14 @@ namespace EditClipboardContents
         private void UpdateToolLocations(WhichPanelResize splitAnchor = WhichPanelResize.None)
         {
             splitContainerMain.SplitterMoved -= new SplitterEventHandler(splitContainerMain_SplitterMoved);
-            int titlebarAccomodate = CompensateDPI(40);
+            //splitContainerMain.SuspendLayout();
+            //splitterContainer_InnerTextBoxes.SuspendLayout();
+
+            int titlebarAccomodate = CompensateDPI(SystemInformation.MenuHeight);
             int bottomBuffer = CompensateDPI(30); // Adjust this value to set the desired buffer size
-            int splitterPanelsBottomPosition = this.Height - toolStrip1.Height - titlebarAccomodate;
+            int middlespacerSize = CompensateDPI(30);
+            int splitterPanelsBottomPosition = this.Height - toolStrip1.Height - inverseDPI(titlebarAccomodate) - inverseDPI(middlespacerSize);
+            
 
             //int splitDistancebeforeToolAdjust = splitContainerMain.SplitterDistance;
             int splitDistancebeforeToolAdjust = previousSplitterDistance;
@@ -489,8 +564,7 @@ namespace EditClipboardContents
 
             // Resize splitContainerMain to fit the form
             splitContainerMain.Width = this.Width - CompensateDPI(32);
-            splitContainerMain.Height = splitterPanelsBottomPosition - bottomBuffer;
-
+            splitContainerMain.Height = splitterPanelsBottomPosition - titlebarAccomodate;
 
             // "Anchors" the splitter to prevent either top or bottom panel from resizing based on visibility of data grid view cells
             // This only applies if the window is being resized, not if the splitter is being moved manually
@@ -516,7 +590,7 @@ namespace EditClipboardContents
 
             // Resize splitterContainer_InnerTextBoxes to fit the form
             splitterContainer_InnerTextBoxes.Width = splitContainerMain.Width;
-            splitterContainer_InnerTextBoxes.Height = splitContainerMain.Panel2.Height - bottomBuffer;
+            splitterContainer_InnerTextBoxes.Height = splitContainerMain.Panel2.Height - middlespacerSize;
 
             // If the hex view is disabled, force the hex panel to zero width
             if (!enableSplitHexView)
@@ -534,9 +608,12 @@ namespace EditClipboardContents
 
             // Resize processedData grid within panel to match panel size
             dataGridViewClipboard.Width = splitContainerMain.Panel1.Width;
-            dataGridViewClipboard.Height = splitContainerMain.Panel1.Height - CompensateDPI(3);
+            dataGridViewClipboard.Height = splitContainerMain.Panel1.Height;// - CompensateDPI(3);
 
             previousSplitterDistance = splitContainerMain.SplitterDistance;
+
+            //splitContainerMain.ResumeLayout();
+            //splitterContainer_InnerTextBoxes.ResumeLayout();
             splitContainerMain.SplitterMoved += new SplitterEventHandler(splitContainerMain_SplitterMoved);
         }
 
