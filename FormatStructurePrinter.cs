@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static EditClipboardContents.ClipboardFormats;
 
@@ -22,9 +23,13 @@ using static EditClipboardContents.ClipboardFormats;
 
 namespace EditClipboardContents
 {
+    
+
     public static class FormatStructurePrinter
     {
-        public static string GetDataStringForTextbox(string formatName, ClipboardItem? fullItem)
+        public static string rtfHeader = @"{\rtf1\utf8\viewkind4\uc1\pard ";
+
+        public static string GetDataStringForTextbox(string formatName, ClipboardItem? fullItem, bool plaintext = false)
         {
             string displayText;
 
@@ -38,19 +43,55 @@ namespace EditClipboardContents
                 return displayText;
             }
 
-            // At this point we know the data object exists - Check if the fullItem has the data info cached in its data object first
-            if (!string.IsNullOrEmpty(displayText))
-            {
-                return displayText;
-            }
-            // Otherwise put it in the cache after generating
-            else
+            // Create the data string if it doesn't exist then put it into the cache
+            if (string.IsNullOrEmpty(displayText))
             {
                 displayText = CreateDataString(formatName, fullItem);
-
                 fullItem.ClipDataObject.SetCacheStructObjectDisplayInfo(displayText);
-                return displayText;
             }
+            
+            if (plaintext == true) 
+            {
+                // Check if the rtf header is even there
+                var headerMatch = System.Text.RegularExpressions.Regex.Match(displayText, Regex.Escape(rtfHeader));
+
+                if (headerMatch.Success)
+                {
+                    // First remove the RTF header
+                    displayText = System.Text.RegularExpressions.Regex.Replace(displayText, Regex.Escape(rtfHeader), "");
+
+                    // Remove RTF formatting tags
+                    // First remove assuming there is a space after start tags and before end tags, then remove regardless of space
+                    // Need to remove the end tags first because they have the 0, and if we remove the start tags then it will leave the 0
+                    displayText = displayText
+                        // End Tags:
+                        .Replace(@" \b0", "")
+                        .Replace(@"\b0", "")
+                        .Replace(@" \ul0", "")
+                        .Replace(@"\ul0", "")
+                        .Replace(@" \i0", "")
+                        .Replace(@"\i0", "")
+                        // Start Tags:
+                        .Replace(@"\ul ", "")
+                        .Replace(@"\ul", "")
+                        .Replace(@"\i ", "")
+                        .Replace(@"\i", "")
+                        .Replace(@"\b ", "")
+                        .Replace(@"\b", "")
+                        // Other Tags:
+                        .Replace(@"\line ", "\n")
+                        .Replace(@"\line", "\n");
+
+                    // Remove the last curly brace if it's there. But be sure to only remove 1
+                    if (displayText.TrimEnd().EndsWith("}"))
+                    {
+                        displayText = displayText.TrimEnd().Substring(0, displayText.TrimEnd().Length - 1);
+                    }
+                }
+            }
+
+            return displayText;
+
         }
 
         public static string CreateDataString(string formatName, ClipboardItem? fullItem)
@@ -120,7 +161,7 @@ namespace EditClipboardContents
                 foreach (string dataInfoItem in fullItem.DataInfoList)
                 {
                     // Replace newlines with newline plus same indent
-                    dataInfoString.AppendLine($"{indent}{dataInfoItem}".Replace("\n", $"\n{indent}"));
+                    dataInfoString.AppendLine($"{indent}{dataInfoItem}".Replace("\n", @$"line {indent}"));
                 }
                 anyFormatInfoAvailable = true;
             }
@@ -151,7 +192,7 @@ namespace EditClipboardContents
                     }
                 }
 
-                structInfoString.AppendLine($"\nStruct Info:");
+                structInfoString.AppendLine(@$"\line\b Struct Info: \b0");
                 RecursivePrintClipDataObject(fullItem.ClipDataObject, indent);
             }
             else if (fullItem?.ClipEnumObject != null)
@@ -163,7 +204,7 @@ namespace EditClipboardContents
                     if (FormatInfoHardcoded.StructDocsLinks.ContainsKey(enumTypeStructName))
                     {
                         string structDocsURL = FormatInfoHardcoded.StructDocsLinks[enumTypeStructName];
-                        dataInfoString.AppendLine($"\nStruct Documentation:");
+                        dataInfoString.AppendLine(@$"\line\b Struct Documentation: \b0");
                         dataInfoString.AppendLine($"{indent}{enumTypeStructName}: {structDocsURL}");
                     }
                 }
@@ -171,7 +212,7 @@ namespace EditClipboardContents
                 Dictionary<string, string> flagsDict = fullItem.ClipEnumObject.GetFlagDescriptionDictionary();
                 if (flagsDict.Count > 0)
                 {
-                    structInfoString.AppendLine($"\nActive Enum Values/Flags:");
+                    structInfoString.AppendLine(@$"\line\b Active Enum Values/Flags: \b0");
                     foreach (var flag in flagsDict)
                     {
                         if (!string.IsNullOrWhiteSpace(flag.Value))
@@ -192,11 +233,11 @@ namespace EditClipboardContents
 
             // Add together datainfostring and alignedstructinfo
             StringBuilder finalResult = new StringBuilder();
-            finalResult.Append(@"{\rtf1\utf8\viewkind4\uc1\pard "); // RTF header
+            finalResult.Append(rtfHeader); // RTF header
             finalResult.Append(dataInfoString.ToString());
             finalResult.Append(alignedStructInfo.ToString());
             //finalResult.AppendLine("}"); // RTF ending
-            string finalString = finalResult.ToString().Replace("\r\n", @" \line ").Replace("\n", @" \line ");
+            string finalString = finalResult.ToString().Replace("\r\n", @"\line ").Replace("\n", @"\line ");
             finalString += "}";
             return finalString;
 

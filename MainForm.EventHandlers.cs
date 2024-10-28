@@ -591,7 +591,7 @@ namespace EditClipboardContents
                 return;
             }
             // Get the struct / object info that would be displayed in object view of rich text box and copy it to clipboard
-            string data = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatNameFromId(itemToCopy.FormatId), fullItem: itemToCopy);
+            string data = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatNameFromId(itemToCopy.FormatId), fullItem: itemToCopy, plaintext:true);
             Clipboard.SetText(data);
         }
 
@@ -728,7 +728,7 @@ namespace EditClipboardContents
             if (saveFileDialogResult.ShowDialog() == DialogResult.OK)
             {
                 // Get the hex information
-                string data = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatNameFromId(itemToExport.FormatId), fullItem: itemToExport);
+                string data = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatNameFromId(itemToExport.FormatId), fullItem: itemToExport, plaintext:true);
                 // TO DO - Export details of each object in the struct
 
                 // Save the data to a file
@@ -1410,6 +1410,21 @@ namespace EditClipboardContents
             sb.Append(@"\ul Underlined text\ul0 "); // Note space before \ul0
             sb.Append("}"); // RTF closing
             richTextBoxContents.Rtf = sb.ToString();
+        }
+
+        private void menuDebug_CopyRTFStructInfo_Click(object sender, EventArgs e)
+        {
+            // Get the clipboard selectedItem and its info
+            ClipboardItem? itemToCopy = GetSelectedClipboardItemObject(returnEditedItemVersion: false);
+            if (itemToCopy == null)
+            {
+                return;
+            }
+            // Get the struct / object info that would be displayed in object view of rich text box and copy it to clipboard
+            string data = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatNameFromId(itemToCopy.FormatId), fullItem: itemToCopy, plaintext: false);
+            // Add in newlines for readability wherever there's a \line
+            data = Regex.Replace(data, @"\\line ?", @"\line" + "\n"); // For both with space and not
+            Clipboard.SetText(data);
         }
 
 
