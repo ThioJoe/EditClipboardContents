@@ -513,6 +513,15 @@ namespace EditClipboardContents
             return extensions;
         }
 
+        // Show the tooltip for a control if there is one
+        public static void ShowToolTip(object sender, System.Windows.Forms.ToolTip toolTipTouse)
+        {
+            if (sender is Label label)
+            {
+                toolTipTouse.Show(toolTipTouse.GetToolTip(label), label);
+            }
+        }
+
 
     } // ----------------- End of class -----------------
 } // ----------------- End of namespace -----------------

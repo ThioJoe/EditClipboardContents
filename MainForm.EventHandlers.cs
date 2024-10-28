@@ -1382,6 +1382,20 @@ namespace EditClipboardContents
             MessageBox.Show(debugInfoString, "Debug Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
+        private void labelPendingChanges_Click(object sender, EventArgs e)
+        {
+            Utils.ShowToolTip(sender, toolTip1);
+        }
+
+        private void labelCustomFormatNameID_Click(object sender, EventArgs e)
+        {
+            Utils.ShowToolTip(sender, toolTip1);
+        }
+
+        private void labelSynthesizedTypeWarn_Click(object sender, EventArgs e)
+        {
+            Utils.ShowToolTip(sender, toolTip1);
+        }
 
         // --------------------------------------------- DEBUG CONTROLS AND BUTTONS --------------------------------------------------------
 

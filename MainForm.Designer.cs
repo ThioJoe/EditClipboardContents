@@ -737,6 +737,7 @@
             // labelCustomFormatNameID
             // 
             this.labelCustomFormatNameID.AutoSize = true;
+            this.labelCustomFormatNameID.Cursor = System.Windows.Forms.Cursors.Help;
             this.labelCustomFormatNameID.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelCustomFormatNameID.ForeColor = System.Drawing.Color.DarkRed;
             this.labelCustomFormatNameID.Location = new System.Drawing.Point(317, 3);
@@ -747,6 +748,7 @@
             this.labelCustomFormatNameID.Text = "⚠️ Note: You can specify a custom Format Name or ID, but not both";
             this.toolTip1.SetToolTip(this.labelCustomFormatNameID, resources.GetString("labelCustomFormatNameID.ToolTip"));
             this.labelCustomFormatNameID.Visible = false;
+            this.labelCustomFormatNameID.Click += new System.EventHandler(this.labelCustomFormatNameID_Click);
             // 
             // checkBoxAutoViewMode
             // 
@@ -858,6 +860,7 @@
             // labelSynthesizedTypeWarn
             // 
             this.labelSynthesizedTypeWarn.AutoSize = true;
+            this.labelSynthesizedTypeWarn.Cursor = System.Windows.Forms.Cursors.Help;
             this.labelSynthesizedTypeWarn.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelSynthesizedTypeWarn.Location = new System.Drawing.Point(301, 6);
             this.labelSynthesizedTypeWarn.Name = "labelSynthesizedTypeWarn";
@@ -866,6 +869,7 @@
             this.labelSynthesizedTypeWarn.Text = "⚠️ Synthesized Format";
             this.toolTip1.SetToolTip(this.labelSynthesizedTypeWarn, resources.GetString("labelSynthesizedTypeWarn.ToolTip"));
             this.labelSynthesizedTypeWarn.Visible = false;
+            this.labelSynthesizedTypeWarn.Click += new System.EventHandler(this.labelSynthesizedTypeWarn_Click);
             // 
             // labelViewMode
             // 
@@ -900,6 +904,7 @@
             this.labelPendingChanges.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.labelPendingChanges.AutoSize = true;
             this.labelPendingChanges.BackColor = System.Drawing.Color.Transparent;
+            this.labelPendingChanges.Cursor = System.Windows.Forms.Cursors.Help;
             this.labelPendingChanges.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelPendingChanges.ForeColor = System.Drawing.Color.Firebrick;
             this.labelPendingChanges.Location = new System.Drawing.Point(621, 10);
@@ -907,7 +912,9 @@
             this.labelPendingChanges.Size = new System.Drawing.Size(314, 15);
             this.labelPendingChanges.TabIndex = 12;
             this.labelPendingChanges.Text = "*Pending Changes - Click Save Icon to apply to clipboard";
+            this.toolTip1.SetToolTip(this.labelPendingChanges, resources.GetString("labelPendingChanges.ToolTip"));
             this.labelPendingChanges.Visible = false;
+            this.labelPendingChanges.Click += new System.EventHandler(this.labelPendingChanges_Click);
             // 
             // labelVersion
             // 
