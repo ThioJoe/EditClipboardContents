@@ -58,6 +58,7 @@
 ### 5. Advanced Features
 - Timed refresh capability
   - Set custom delay for automatic clipboard refresh
+  - This might be useful to see if an app sets different clipboard data while certain actions are occurring, during which you wouldn't be able to normally click the refresh button
 - Progress tracking for format loading
 - Debug console available (launch with `-console` argument)
 - Presentation of underlying data structures for supported formats
@@ -72,3 +73,21 @@
 - Native file export for certain formats
   - Example: The three native bitmap formats (CF_BITMAP, CF_DIB, CF_DIBV5) don't directly contain the same data that would be found by opening a `.bmp` file, but rather the image data as well as other struct metadata. But the app will use the Native Windows API to output each format to a BMP file, and each may be slightly different despite supposedly containing the same image data.
 - Export a list of all registered clipboard format names on the system
+
+-----
+
+## How To Compile:
+
+### Requirements:
+ - Only requires Visual Studio 2022
+   - At the moment there are no external dependencies beyond the .NET Framework 4.8 built into windows (no need to download anything extra, install any Nuget packages, etc)
+
+### Instructions:
+1. Open the "Solution" file (`EditClipboardContents.sln`) with Visual Studio 2022
+   - The entire solution/project is included with the repo, so after opening it should be ready to compile and run immediately after opening it
+2. Optional: Choose the build "configuration" mode (Either `Release` or `Debug`)
+    - The Debug configuration is for during development, and you'll notice the app will have an additional menu called `[Debugging]` with some various options and modes that do not appear in release mode, and an additional label in the UI with some layout info at the top. Debugging menu examples:
+       - An option to have the tooltip show the dimensions and location coordinates of Windows Forms controls when hovering over them, like when debugging scaling or layout issues
+       - A "Test" button you can use to run miscelaneous code you can put in that button's event handler
+       - A button used to parse the table from a wikipedia page containing file signatures and convert it to JSON, so it can be used as an embedded reference by the program
+3. Compile by going to `Build` (top menu) > `Build Solution`, or if in Debug configuration, `Debug` > `Start Debugging` (Or just click the toolbar button that says "Start" with the green triangle)
