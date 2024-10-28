@@ -1590,7 +1590,12 @@ namespace EditClipboardContents
                     break;
                 case 3: // Object / Struct View
                     richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
-                    richTextBoxContents.Text = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatNameFromId(item.FormatId), fullItem: item);
+                    string textString = FormatStructurePrinter.GetDataStringForTextbox(formatName: Utils.GetClipboardFormatNameFromId(item.FormatId), fullItem: item);
+                    if (textString.StartsWith(@"{\rtf1\"))
+                        richTextBoxContents.Rtf = textString;
+                    else
+                        richTextBoxContents.Text = textString;
+
                     richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
                     richTextBoxContents.BackColor = SystemColors.ControlLight;
 

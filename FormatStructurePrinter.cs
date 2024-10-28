@@ -192,10 +192,13 @@ namespace EditClipboardContents
 
             // Add together datainfostring and alignedstructinfo
             StringBuilder finalResult = new StringBuilder();
-            finalResult.AppendLine(dataInfoString.ToString());
-            finalResult.AppendLine(alignedStructInfo.ToString());
-
-            return finalResult.ToString();
+            finalResult.Append(@"{\rtf1\utf8\viewkind4\uc1\pard "); // RTF header
+            finalResult.Append(dataInfoString.ToString());
+            finalResult.Append(alignedStructInfo.ToString());
+            //finalResult.AppendLine("}"); // RTF ending
+            string finalString = finalResult.ToString().Replace("\r\n", @" \line ").Replace("\n", @" \line ");
+            finalString += "}";
+            return finalString;
 
 
             // -------------------- LOCAL FUNCTIONS --------------------
@@ -483,6 +486,7 @@ namespace EditClipboardContents
                     if (colonIndex == -1)
                     {
                         // Line doesn't have a colon, output as is
+                        //outputStringBuilder.AppendLine($@" \ul {line} \ul0 ");
                         outputStringBuilder.AppendLine(line);
                         continue;
                     }
@@ -502,12 +506,21 @@ namespace EditClipboardContents
                         hexValue = rest.Substring(parenIndex).Trim();
                     }
 
-                    // Format the line
-                    string formattedLine = $"{leadingSpaces}{propertyName.PadRight(group.MaxPropertyNameLength)}: {decimalValue.PadRight(group.MaxDecimalValueLength)}";
-
+                    // Format the line. Underline headers and bold the property name
+                    string formattedLine;
+                    if (string.IsNullOrEmpty(decimalValue) && string.IsNullOrEmpty(hexValue))
+                    {
+                        // Ensures the padding doesn't get underlined also
+                        formattedLine = $@"{leadingSpaces}\b\ul {propertyName}\ul0\b0 {new string(' ', group.MaxPropertyNameLength - propertyName.Length)}:";
+                    }
+                    else
+                    {
+                        formattedLine = @$"{leadingSpaces}\b {propertyName.PadRight(group.MaxPropertyNameLength)} \b0: {decimalValue.PadRight(group.MaxDecimalValueLength)}";
+                    }
+                    
                     if (!string.IsNullOrEmpty(hexValue))
                     {
-                        formattedLine += $" {hexValue}";
+                        formattedLine += @$" \i {hexValue}\i0";
                     }
 
                     outputStringBuilder.AppendLine(formattedLine);

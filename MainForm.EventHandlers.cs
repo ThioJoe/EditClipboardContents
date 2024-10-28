@@ -1402,13 +1402,14 @@ namespace EditClipboardContents
         // Using for testing random things during development via a button
         private void menuDebug_TestButton_Click(object sender, EventArgs e)
         {
-            string input = "";
-            Utils.ShowInputDialog(owner: this, ref input, instructions: "Enter new toolstrip height:");
-            if (int.TryParse(input, out int newHeight))
-            {
-                toolStrip1.Height = newHeight;
-                ScaleToolstripButtons();
-            }
+            StringBuilder sb = new StringBuilder();
+            sb.Append(@"{\rtf1\utf8 "); // RTF header
+            sb.Append("Normal text ");
+            sb.Append(@"\b Bold text\b0 "); // Note space before \b0
+            sb.Append(@"\i Italic text\i0 "); // Note space before \i0
+            sb.Append(@"\ul Underlined text\ul0 "); // Note space before \ul0
+            sb.Append("}"); // RTF closing
+            richTextBoxContents.Rtf = sb.ToString();
         }
 
 
