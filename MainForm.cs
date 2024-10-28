@@ -805,9 +805,9 @@ namespace EditClipboardContents
                 {
                     IntPtr windowHandle;
                     // Send a delayed rendering request to the application. The window handle should be available in the diagnostics report
-                    if (item.ErrorDiagnosisReport != null && item.ErrorDiagnosisReport.OwnerWindowHandle != null)
+                    if (item.LoadErrorDiagnosisReport != null && item.LoadErrorDiagnosisReport.OwnerWindowHandle != null)
                     {
-                        windowHandle = item.ErrorDiagnosisReport.OwnerWindowHandle;
+                        windowHandle = item.LoadErrorDiagnosisReport.OwnerWindowHandle;
                     }
                     else
                     {
@@ -1039,8 +1039,8 @@ namespace EditClipboardContents
                     DataSize = dataSize,
                     RawData = rawData,
                     ProcessedData = null,
-                    ErrorReason = errorString,
-                    ErrorDiagnosisReport = diagnosisReport,
+                    LoadErrorReason = errorString,
+                    LoadErrorDiagnosisReport = diagnosisReport,
                     OriginalIndex = originalIndex
                 };
                 clipboardItems.Add(item);
@@ -1054,8 +1054,8 @@ namespace EditClipboardContents
                 {
                     item.RawData = rawData;
                     item.DataSize = dataSize;
-                    item.ErrorReason = errorString;
-                    item.ErrorDiagnosisReport = diagnosisReport;
+                    item.LoadErrorReason = errorString;
+                    item.LoadErrorDiagnosisReport = diagnosisReport;
                 }
             }
 
@@ -1108,12 +1108,21 @@ namespace EditClipboardContents
                 // If there is data, process it and get the data info
                 if (item?.RawData != null && item.RawData.Length > 0)
                 {
-                    (dataInfoList, preferredDisplayMode, processedData, processedObject, processedEnum, formatAnalysis) = SetDataInfo(formatName: item.FormatName, rawData: item.RawData);
+                    try
+                    {
+                        (dataInfoList, preferredDisplayMode, processedData, processedObject, processedEnum, formatAnalysis) = SetDataInfo(formatName: item.FormatName, rawData: item.RawData);
+                    }
+                    catch (Exception ex)
+                    {
+                        dataInfoList.Insert(0, $"[Processing Error]");
+                        item.ProcessErrorReason = ex.Message;
+                    }
+
                 }
                 // If there is no data, and there is an error message
-                else if (item != null && !string.IsNullOrEmpty(item.ErrorReason))
+                else if (item != null && !string.IsNullOrEmpty(item.LoadErrorReason))
                 {
-                    dataInfoList.Add(item.ErrorReason ?? string.Empty);
+                    dataInfoList.Add(item.LoadErrorReason ?? string.Empty);
                 }
                 // If the data is null
                 else if (item?.RawData == null)
@@ -1473,9 +1482,14 @@ namespace EditClipboardContents
                 richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
                 richTextBoxContents.Text = "Data not available";
                 richTextBoxContents.ForeColor = Color.Red;
-                if (item?.ErrorDiagnosisReport != null && item.ErrorDiagnosisReport.ReportString != null)
+                if (item?.LoadErrorDiagnosisReport != null && item.LoadErrorDiagnosisReport.ReportString != null)
                 {
-                    richTextBoxContents.Text += "\n\n" + "   Info about error retrieving clipboard item:" + "\n" + item.ErrorDiagnosisReport.ReportString;
+                    richTextBoxContents.Text += "\n\n" + "   Info about error retrieving clipboard item:" + "\n" + item.LoadErrorDiagnosisReport.ReportString;
+                    richTextBoxContents.ForeColor = Color.DarkRed;
+                }
+                if (item?.ProcessErrorReason != null)
+                {
+                    richTextBoxContents.Text += "\n\n" + "   Error processing data: " + item.ProcessErrorReason;
                     richTextBoxContents.ForeColor = Color.DarkRed;
                 }
                 richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
@@ -1489,6 +1503,14 @@ namespace EditClipboardContents
                 checkBoxPlainTextEditing.Enabled = false;
                 dropdownHexToTextEncoding.Enabled = false;
 
+                return;
+            }
+            else if (item.ProcessErrorReason != null)
+            {
+                richTextBoxContents.TextChanged -= richTextBoxContents_TextChanged;
+                richTextBoxContents.Text = "Error while processing data: " + item.ProcessErrorReason;
+                richTextBoxContents.ForeColor = Color.DarkRed;
+                richTextBoxContents.TextChanged += richTextBoxContents_TextChanged;
                 return;
             }
 
@@ -3548,8 +3570,9 @@ namespace EditClipboardContents
         public bool PendingReOrder { get; set; } = false;
         public bool PendingCustomAddition { get; set; } = false;
         public string FormatType { get; set; } = "Unknown";
-        public string? ErrorReason { get; set; } = null;
-        public DiagnosticsInfo? ErrorDiagnosisReport { get; set; }
+        public string? LoadErrorReason { get; set; } = null;
+        public DiagnosticsInfo? LoadErrorDiagnosisReport { get; set; }
+        public string? ProcessErrorReason { get; set; } = null;
         public int OriginalIndex { get; set; } = -1;
         public ViewMode PreferredViewMode { get; set; } = ViewMode.None;
         public IClipboardFormat? ClipDataObject { get; set; } = null ;
@@ -3578,8 +3601,9 @@ namespace EditClipboardContents
                 PendingReOrder = this.PendingReOrder,
                 PendingCustomAddition = this.PendingCustomAddition,
                 FormatType = this.FormatType,
-                ErrorReason = this.ErrorReason,
-                ErrorDiagnosisReport = this.ErrorDiagnosisReport,
+                LoadErrorReason = this.LoadErrorReason,
+                LoadErrorDiagnosisReport = this.LoadErrorDiagnosisReport,
+                ProcessErrorReason = this.ProcessErrorReason,
                 OriginalIndex = this.OriginalIndex,
                 PreferredViewMode = this.PreferredViewMode,
                 ClipDataObject = this.ClipDataObject,

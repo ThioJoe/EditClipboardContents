@@ -453,13 +453,14 @@ namespace EditClipboardContents
                 }
 
                 case "DataObject":
-                    // Convert the raw byte array to an int depending on 64 or 32 bit
-                    IntPtr hwndOwner = IntPtr.Size == 8
+                    IntPtr hwndOwner = rawData.Length == 8 // Apparently the handle depends on the owner app's bitness
                         ? new IntPtr(BitConverter.ToInt64(rawData, 0))
                         : new IntPtr(BitConverter.ToInt32(rawData, 0));
+
                     string hexStringHandle = Utils.AutoHexString(hwndOwner, truncate: true);
                     dataInfoList.Add($"HWND: {hwndOwner}{hexStringHandle}");
                     dataInfoList.Add("This is the HWND of the window that owns the data object.");
+                    if (hwndOwner == IntPtr.Zero) { dataInfoList.Add("A null handle could indicate the owning app has been closed or didn't use a DataObject."); }
                     dataInfoList.Add("See: https://learn.microsoft.com/en-us/office/vba/language/concepts/forms/what-is-the-difference-between-the-dataobject-and-the-clipboard");
                     preferredDisplayMode = ViewMode.Object;
                     break;
