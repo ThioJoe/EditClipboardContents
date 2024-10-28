@@ -22,8 +22,9 @@ namespace EditClipboardContents
         static void Main(string[] args)
         {
             bool showConsole = args.Length > 0 && (args[0].ToLower() == "-console");
+            bool debugMode = args.Length > 0 && (args[0].ToLower() == "-debug");
 
-            if (showConsole)
+            if (showConsole || debugMode)
             {
                 AllocConsole();
                 Console.WriteLine("Debug console attached.");
@@ -40,9 +41,9 @@ namespace EditClipboardContents
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+            Application.Run(new MainForm(debugMode:debugMode));
 
-            if (showConsole)
+            if (showConsole || debugMode)
             {
                 FreeConsole();
             }

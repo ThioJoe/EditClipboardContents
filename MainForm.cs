@@ -49,6 +49,7 @@ namespace EditClipboardContents
         private SortableBindingList<ClipboardItem> editedClipboardItems = new SortableBindingList<ClipboardItem>();
 
         // Other globals
+        private readonly bool _debugMode;
         public static bool anyPendingChanges = false;
         public static bool enableSplitHexView = false;
         public ClipboardItem? itemBeforeCellEditClone = null;
@@ -106,19 +107,32 @@ namespace EditClipboardContents
         };
 
 
-        public MainForm()
+        public MainForm(bool debugMode)
         {
+            _debugMode = debugMode;
+
             isResizing = true; // Set to true so our window resize logic in MainForm_Resize event doesn't trigger until the form is fully initialized
             InitializeComponent();
             editedClipboardItems.ListChanged += EditedClipboardItems_ListChanged;
 
             // ----------------- Debugging mode stuff -----------------
+            // Always show these in DEBUG builds
             #if DEBUG
             labelTestCount.Visible = true;
             menuEdit_RefreshDataTable.Visible = true;
             labelTestMiscellaneous.Visible = true;
             menuItemDebug.Visible = true;
             #endif
+
+            // Show these when -debug flag is passed
+            if (_debugMode)
+            {
+                this.Text += " (Debug Mode)";
+                labelTestCount.Visible = true;
+                menuEdit_RefreshDataTable.Visible = true;
+                labelTestMiscellaneous.Visible = true;
+                menuItemDebug.Visible = true;
+            }
             // -------------------------------------------------------
 
             // Set init only GUI state variables
