@@ -62,28 +62,28 @@ namespace EditClipboardContents
             string originalIndent = indent; // Save the original indent for later, otherwise it will keep doubling in recursive functions
 
             StringBuilder dataInfoString = new StringBuilder();
-            dataInfoString.AppendLine($"Format: {formatName}");
+            dataInfoString.AppendLine(@$"\b Format: \b0 {formatName}");
 
             if (FormatInfoHardcoded.ShellFormatNameMap.TryGetValue(formatName, out string? shellFormatName))
             {
-                dataInfoString.AppendLine($"{indent}Shell Format Definition Name: {shellFormatName}");
+                dataInfoString.AppendLine(@$"{indent}\b Shell Format Definition Name: \b0 {shellFormatName}");
                 anyFormatInfoAvailable = true;
 
                 if (FormatInfoHardcoded.ShellDefinitionDocLink.TryGetValue(shellFormatName, out string? shellDocURL))
                 {
-                    dataInfoString.AppendLine($"{indent}Shell Format Info: {shellDocURL}");
+                    dataInfoString.AppendLine(@$"{indent}\b Shell Format Info: \b0 {shellDocURL}");
                 }
             }
 
             // Check for any hard coded format
             if (FormatInfoHardcoded.FormatDescriptions.TryGetValue(formatName, out string formatDescription))
             {
-                dataInfoString.AppendLine($"Description: {formatDescription}");
+                dataInfoString.AppendLine(@$"\b Description: \b0 {formatDescription}");
                 anyFormatInfoAvailable = true;
             }
             else if (analysis?.KnownFileExtension != null)
             {
-                dataInfoString.AppendLine($"File Type Extension: {analysis.KnownFileExtension}");
+                dataInfoString.AppendLine(@$"\b File Type Extension: \b0 {analysis.KnownFileExtension}");
                 anyFormatInfoAvailable = true;
             }
             // Otherwise check for any info from prior format analysis in SetDataInfo()
@@ -93,14 +93,14 @@ namespace EditClipboardContents
                 if (analysis.FileTypeDescription != null && analysis.PossibleFileExtensions.Count > 0)
                 {
                     anyFormatInfoAvailable = true;
-                    dataInfoString.AppendLine($"Found Likely File Type:");
-                    dataInfoString.AppendLine($"{indent}File Extension(s): {string.Join(", ", analysis.PossibleFileExtensions)}");
-                    dataInfoString.AppendLine($"{indent}Description: {analysis.FileTypeDescription}");
+                    dataInfoString.AppendLine(@$"\line\b Found Likely File Type: \b0");
+                    dataInfoString.AppendLine(@$"\b {indent}File Extension(s): \b0 {string.Join(", ", analysis.PossibleFileExtensions)}");
+                    dataInfoString.AppendLine(@$"\b {indent}Description: \b0 {analysis.FileTypeDescription}");
                 }
                 // If both aren't available it means it was a mime lookup so there won't be a description
                 else
                 {
-                    dataInfoString.AppendLine($"Possible File Extensions: {string.Join(", ", analysis.PossibleFileExtensions)}");
+                    dataInfoString.AppendLine(@$"\b Possible File Extensions: \b0 {string.Join(", ", analysis.PossibleFileExtensions)}");
                 }
                 anyFormatInfoAvailable = true;
             }
@@ -108,14 +108,14 @@ namespace EditClipboardContents
             // Add URL Link if it exists by dictionary lookup
             if (FormatInfoHardcoded.FormatDocsLinks.TryGetValue(formatName, out string docURL))
             {
-                dataInfoString.AppendLine($"Details: " + docURL);
+                dataInfoString.AppendLine(@$"\b Details: \b0 " + docURL);
                 anyFormatInfoAvailable = true;
             }
 
             if (fullItem?.DataInfoList.Count > 0 && !string.IsNullOrEmpty(fullItem.DataInfoList[0]))
             {
 
-                dataInfoString.AppendLine($"\nData Info:");
+                dataInfoString.AppendLine(@$"\line \b Data Info: \b0");
                 // Add each selectedItem in DataInfoList to the result indented
                 foreach (string dataInfoItem in fullItem.DataInfoList)
                 {
@@ -144,7 +144,7 @@ namespace EditClipboardContents
                 Dictionary<string, string> structDocs = FormatInfoHardcoded.GetDocumentationUrls_ForEntireObject(fullItem.ClipDataObject);
                 if (structDocs.Count > 0)
                 {
-                    dataInfoString.AppendLine($"\nStruct Documentation:");
+                    dataInfoString.AppendLine(@$"\line\b Struct Documentation: \b0");
                     foreach (var doc in structDocs)
                     {
                         dataInfoString.AppendLine($"{indent}{doc.Key}: {doc.Value}");
