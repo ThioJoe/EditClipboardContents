@@ -161,7 +161,7 @@ namespace EditClipboardContents
                 foreach (string dataInfoItem in fullItem.DataInfoList)
                 {
                     // Replace newlines with newline plus same indent
-                    dataInfoString.AppendLine($"{indent}{dataInfoItem}".Replace("\n", @$"line {indent}"));
+                    dataInfoString.AppendLine($"{indent}{dataInfoItem}".Replace("\n", @$"\line {indent}"));
                 }
                 anyFormatInfoAvailable = true;
             }
@@ -552,16 +552,21 @@ namespace EditClipboardContents
                     if (string.IsNullOrEmpty(decimalValue) && string.IsNullOrEmpty(hexValue))
                     {
                         // Ensures the padding doesn't get underlined also
-                        formattedLine = $@"{leadingSpaces}\b\ul {propertyName}\ul0\b0 {new string(' ', group.MaxPropertyNameLength - propertyName.Length)}:";
+                        formattedLine = $@"{leadingSpaces}\b\ul {propertyName}\ul0\b0{new string(' ', group.MaxPropertyNameLength - propertyName.Length)}:";
                     }
+                    // Where only one is present, don't add padding
+                    else if (string.IsNullOrEmpty(hexValue)) // Only decimal value present
+                    {
+                        formattedLine = @$"{leadingSpaces}\b {propertyName.PadRight(group.MaxPropertyNameLength)} \b0: {decimalValue}";
+                    }
+                    else if (string.IsNullOrEmpty(decimalValue)) // Only hex value present
+                    {
+                        formattedLine = @$"{leadingSpaces}\b {propertyName.PadRight(group.MaxPropertyNameLength)} \b0: {hexValue.Trim('(').Trim(')')}";
+                    }
+                    // Both are present. Print the hex with italics
                     else
                     {
-                        formattedLine = @$"{leadingSpaces}\b {propertyName.PadRight(group.MaxPropertyNameLength)} \b0: {decimalValue.PadRight(group.MaxDecimalValueLength)}";
-                    }
-                    
-                    if (!string.IsNullOrEmpty(hexValue))
-                    {
-                        formattedLine += @$" \i {hexValue}\i0";
+                        formattedLine = @$"{leadingSpaces}\b {propertyName.PadRight(group.MaxPropertyNameLength)} \b0: {decimalValue.PadRight(group.MaxDecimalValueLength)} \i{hexValue}\i0";
                     }
 
                     outputStringBuilder.AppendLine(formattedLine);
