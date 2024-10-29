@@ -673,8 +673,8 @@ namespace EditClipboardContents
         private void RefreshClipboardItems()
         {
             // Clear the text boxes
-            richTextBoxContents.Clear();
-            richTextBox_HexPlaintext.Clear();
+            richTextBoxContents.Text = "";
+            richTextBox_HexPlaintext.Text = "";
 
             ShowLoadingIndicator(true);
 
@@ -1446,7 +1446,7 @@ namespace EditClipboardContents
                         return;
                     }
 
-                    richTextBoxContents.Clear();
+                    richTextBoxContents.Text = "";
                     DisplayClipboardDataInTextBoxes(item);
 
                     // Check if it's a synthesized name in SynthesizedFormatNames and show a warning

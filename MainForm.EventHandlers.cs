@@ -502,7 +502,7 @@ namespace EditClipboardContents
 
             if (dataGridViewClipboard.SelectedRows.Count == 0)
             {
-                richTextBoxContents.Clear();
+                richTextBoxContents.Text = "";
                 // Disable menu buttons that require a selectedItem
                 buttonStatus_RequireSelection(enabledChoice: false);
                 return;
