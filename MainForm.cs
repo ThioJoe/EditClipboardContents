@@ -492,36 +492,38 @@ namespace EditClipboardContents
                 return "";
             }
 
-            // Create encodings that throw on invalid bytes
-            var utf8Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
-            var utf16Encoding = new UnicodeEncoding(bigEndian: false, byteOrderMark: true, throwOnInvalidBytes: true);
+            // Create encodings with desired parameters
+            var utf8Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+            var utf16Encoding = new UnicodeEncoding(bigEndian: false, byteOrderMark: true);
+
+            // Clone them to make mutable copies
+            utf8Encoding = (UTF8Encoding)utf8Encoding.Clone();
+            utf16Encoding = (UnicodeEncoding)utf16Encoding.Clone();
+
+            // Set the custom replacement fallbacks
+            string customInvalidChar = "[|\uFFFE\uFFFF\uFFFD|]"; // Something unique that won't be in the text
+            utf8Encoding.DecoderFallback = new DecoderReplacementFallback(customInvalidChar);
+            utf16Encoding.DecoderFallback = new DecoderReplacementFallback(customInvalidChar);
+
+            // Now you can use utf8Encoding and utf16Encoding with the custom replacement characters
 
             string utf8Result = "";
             string utf16Result = "";
 
             // Try UTF-8
-            try
+            utf8Result = utf8Encoding.GetString(rawData);
+            if (utf8Result.Contains(customInvalidChar))
             {
-                utf8Result = utf8Encoding.GetString(rawData);
-            }
-            catch (DecoderFallbackException)
-            {
-                // Invalid UTF-8, utf8Result remains empty
-                //invalidUTF8 = true;
-
+                utf8Result = "";
             }
 
             // Try UTF-16
-            try
+            utf16Result = utf16Encoding.GetString(rawData);
+            if (utf16Result.Contains(customInvalidChar))
             {
-                utf16Result = utf16Encoding.GetString(rawData);
+                utf16Result = "";
             }
-            catch (DecoderFallbackException)
 
-            {
-                // Invalid UTF-16, utf16Result remains empty
-                //invalidUTF16 = true;
-            }
 
             string result;
             bool likelyUTF16 = false;
