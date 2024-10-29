@@ -517,7 +517,7 @@ namespace EditClipboardContents
             {
                 _cachedSignatures = new List<FileSignature>();
                 Assembly assembly = Assembly.GetExecutingAssembly();
-                string resourceName = "EditClipboardContents.FileSignatures.json";
+                string resourceName = "EditClipboardContents.Resources.FileSignatures.json"; // Include folders like a namespace part
                 using (Stream stream = assembly.GetManifestResourceStream(resourceName))
                 {
                     var serializer = new DataContractJsonSerializer(typeof(List<FileSignature>));

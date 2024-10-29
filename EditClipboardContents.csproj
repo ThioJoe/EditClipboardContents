@@ -54,7 +54,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>EditClipboardMainIcon.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\EditClipboardMainIcon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -114,7 +114,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="FileSignatures.json" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -124,12 +123,10 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <EmbeddedResource Include="Resources\FileSignatures.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="EditClipboardMainIcon.ico" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.8">
@@ -150,7 +147,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>if $(ConfigurationName) == Release (
-    powershell.exe -ExecutionPolicy Bypass -File "$(ProjectDir)CheckVersionUpdated.ps1" -AssemblyInfoPath "$(ProjectDir)Properties\AssemblyInfo.cs" -GitHubRepo "ThioJoe/EditClipboardContents"
+    powershell.exe -ExecutionPolicy Bypass -File "$(ProjectDir)\Resources\CheckVersionUpdated.ps1" -AssemblyInfoPath "$(ProjectDir)Properties\AssemblyInfo.cs" -GitHubRepo "ThioJoe/EditClipboardContents"
 )</PostBuildEvent>
   </PropertyGroup>
 </Project>
