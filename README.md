@@ -1,4 +1,4 @@
-# 📋 Edit Clipboard Contents
+# 📋 Edit Clipboard Contents Tool
 #### Windows application for inspection and editing of raw clipboard contents
 
 ## ✔️ Key Features
